@@ -66,7 +66,7 @@ final class PreferencesManager: ObservableObject {
             formatter.formatOptions = [.withFullDate, .withTime]
             let dateString = formatter.string(from: Date()).replacingOccurrences(of: ":", with: "-")
             let url = FileManager.default.temporaryDirectory
-                .appendingPathComponent("ClassGod-Preferences-\(dateString).json")
+                .appendingPathComponent(String(format: String(localized: "export.filename"), dateString))
             try data.write(to: url)
             return url
         } catch {

@@ -38,10 +38,10 @@ struct MenuBarView: View {
                 .opacity(headerOpacity)
         }
         .frame(width: prefs.preferences.panelWidth)
-        .background(
-            RoundedRectangle(cornerRadius: 10)
-                .fill(Color(NSColor.controlBackgroundColor))
-                .shadow(color: .black.opacity(0.12), radius: 16, x: 0, y: 6)
+        .background(Color.black)
+        .overlay(
+            Rectangle()
+                .stroke(Color.white.opacity(0.15), lineWidth: 1)
         )
         .sheet(isPresented: $showAddSheet) {
             AddTabView(viewModel: viewModel, tab: nil)
@@ -49,25 +49,25 @@ struct MenuBarView: View {
         .sheet(item: $editingTab) { tab in
             AddTabView(viewModel: viewModel, tab: tab)
         }
-        .alert("Error", isPresented: $viewModel.showError) {
-            Button("OK", role: .cancel) {}
+        .alert(String(localized: "error.title"), isPresented: $viewModel.showError) {
+            Button(String(localized: "button.ok"), role: .cancel) {}
         } message: {
-            Text(viewModel.errorMessage ?? "Unknown error")
+            Text(viewModel.errorMessage ?? String(localized: "error.unknown"))
         }
-        .alert("Accessibility Permission Required", isPresented: $viewModel.showPermissionAlert) {
-            Button("Open Settings") {
+        .alert(String(localized: "permission.required.title"), isPresented: $viewModel.showPermissionAlert) {
+            Button(String(localized: "button.open_settings")) {
                 openAccessibilitySettings()
             }
-            Button("Cancel", role: .cancel) {}
+            Button(String(localized: "button.cancel"), role: .cancel) {}
         } message: {
-            Text("ClassGod needs Accessibility permission to detect and switch browser tabs. Please enable it in System Settings > Privacy & Security > Accessibility.")
+            Text(String(localized: "permission.required.message"))
         }
-        .alert("Delete Tab?", isPresented: .init(
+        .alert(String(localized: "delete.confirm.title"), isPresented: .init(
             get: { tabToDelete != nil },
             set: { if !$0 { tabToDelete = nil } }
         )) {
-            Button("Cancel", role: .cancel) { tabToDelete = nil }
-            Button("Delete", role: .destructive) {
+            Button(String(localized: "button.cancel"), role: .cancel) { tabToDelete = nil }
+            Button(String(localized: "button.delete"), role: .destructive) {
                 if let tab = tabToDelete {
                     Anim.with {
                         viewModel.deleteTab(tab)
@@ -78,7 +78,7 @@ struct MenuBarView: View {
                 tabToDelete = nil
             }
         } message: {
-            Text("Are you sure you want to delete \"\(tabToDelete?.title ?? "")\"?")
+            Text(String(format: String(localized: "delete.confirm.message"), tabToDelete?.title ?? ""))
         }
         .overlay(
             toastOverlay,
@@ -90,6 +90,8 @@ struct MenuBarView: View {
                 guard prefs.preferences.showToastNotifications else { return }
                 showToast(message: msg)
             }
+            
+            viewModel.checkPermissionOnShow()
             
             Anim.with {
                 headerScale = 1.0
@@ -110,25 +112,21 @@ struct MenuBarView: View {
             if showToast, let message = toastMessage {
                 HStack(spacing: 6) {
                     Image(systemName: "checkmark.circle.fill")
-                        .foregroundStyle(.green)
+                        .foregroundStyle(.white)
                     Text(message)
-                        .font(.system(size: 12, weight: .medium))
+                        .font(.system(size: 12, weight: .medium, design: .monospaced))
+                        .foregroundStyle(.white)
                 }
-                .foregroundStyle(.primary)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 7)
-                .background(
-                    .ultraThinMaterial,
-                    in: RoundedRectangle(cornerRadius: 8, style: .continuous)
-                )
+                .background(Color(white: 0.12))
                 .overlay(
-                    RoundedRectangle(cornerRadius: 8, style: .continuous)
-                        .stroke(Color.green.opacity(0.25), lineWidth: 1)
+                    Rectangle()
+                        .stroke(Color.white.opacity(0.3), lineWidth: 1)
                 )
-                .shadow(color: .black.opacity(0.08), radius: 6, x: 0, y: 3)
                 .padding(.bottom, 10)
                 .offset(y: toastOffset)
-                .transition(.move(edge: .bottom).combined(with: .opacity))
+                .transition(.opacity)
             }
         }
     }
@@ -159,12 +157,12 @@ struct MenuBarView: View {
         HStack(spacing: 10) {
             Image(systemName: prefs.preferences.menuBarIconStyle.systemImageName)
                 .font(.title2)
-                .foregroundStyle(Color.accentColor)
-                .symbolRenderingMode(.hierarchical)
-                .bounce(intensity: 1.05)
+                .foregroundStyle(.white)
+                .symbolRenderingMode(.monochrome)
             
             Text("ClassGod")
-                .font(prefs.preferences.useCompactMode ? .subheadline : .headline)
+                .font(.system(prefs.preferences.useCompactMode ? .subheadline : .headline, design: .monospaced))
+                .foregroundStyle(.white)
             
             Spacer()
             
@@ -173,13 +171,12 @@ struct MenuBarView: View {
                 _ = viewModel.checkAccessibilityPermission()
             }) {
                 Image(systemName: "checkmark.shield.fill")
-                    .foregroundStyle(.green)
-                    .symbolRenderingMode(.hierarchical)
+                    .foregroundStyle(viewModel.isAccessibilityTrusted ? .white : .red)
+                    .symbolRenderingMode(.monochrome)
             }
             .buttonStyle(.plain)
-            .pressScale(0.85)
-            .accessibilityLabel("Accessibility permission status")
-            .help("Accessibility permission status")
+            .accessibilityLabel(String(localized: "accessibility.check_permission"))
+            .help(String(localized: "accessibility.check_permission"))
         }
         .padding(.horizontal)
         .padding(.vertical, prefs.preferences.useCompactMode ? 6 : 10)
@@ -211,14 +208,14 @@ struct MenuBarView: View {
                             }
                         }
                         .contextMenu {
-                            Button("Open") {
+                            Button(String(localized: "context.open")) {
                                 viewModel.switchToTab(tab)
                             }
-                            Button("Edit") {
+                            Button(String(localized: "context.edit")) {
                                 editingTab = tab
                             }
                             Divider()
-                            Button("Delete", role: .destructive) {
+                            Button(String(localized: "button.delete"), role: .destructive) {
                                 if prefs.preferences.confirmBeforeDelete {
                                     tabToDelete = tab
                                 } else {
@@ -259,13 +256,13 @@ struct MenuBarView: View {
             }
             .bounce(intensity: 1.03)
             
-            Text("No saved tabs yet")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+            Text(String(localized: "empty.title"))
+                .font(.system(.subheadline, design: .monospaced))
+                .foregroundStyle(.white.opacity(0.7))
             
-            Text("Click \"Add Current Tab\" to save a browser tab")
-                .font(.caption)
-                .foregroundStyle(.tertiary)
+            Text(String(localized: "empty.subtitle"))
+                .font(.system(.caption, design: .monospaced))
+                .foregroundStyle(.white.opacity(0.5))
                 .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity, minHeight: prefs.preferences.useCompactMode ? 80 : 120)
@@ -286,7 +283,7 @@ struct MenuBarView: View {
                 HStack(spacing: 8) {
                     Image(systemName: "plus.circle.fill")
                         .font(.system(size: 14))
-                    Text("Add Current Tab")
+                    Text(String(localized: "button.save_current_tab"))
                         .font(.system(size: 13, weight: .semibold))
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -294,43 +291,37 @@ struct MenuBarView: View {
             .buttonStyle(.plain)
             .padding(.horizontal)
             .padding(.vertical, 10)
-            .background(
-                LinearGradient(
-                    colors: [Color.accentColor.opacity(0.1), Color.accentColor.opacity(0.04)],
-                    startPoint: .leading,
-                    endPoint: .trailing
-                )
+            .background(Color(white: 0.08))
+            .overlay(
+                Rectangle()
+                    .stroke(Color.white.opacity(0.1), lineWidth: 1)
             )
-            .pressScale(0.97)
             
             Divider()
             
             HStack(spacing: 12) {
-                Button("Settings...") {
+                Button(String(localized: "button.settings")) {
                     SoundEffectManager.shared.playButtonClick()
                     NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
                 }
                 .buttonStyle(.plain)
-                .foregroundStyle(.secondary)
-                .pressScale(0.9)
+                .foregroundStyle(.white.opacity(0.7))
                 
-                Button("Automation...") {
+                Button(String(localized: "button.automation")) {
                     SoundEffectManager.shared.playButtonClick()
                     openAutomationSettings()
                 }
                 .buttonStyle(.plain)
-                .foregroundStyle(.secondary)
-                .pressScale(0.9)
+                .foregroundStyle(.white.opacity(0.7))
                 
                 Spacer()
                 
-                Button("Quit") {
+                Button(String(localized: "button.quit")) {
                     SoundEffectManager.shared.playButtonClick()
                     NSApplication.shared.terminate(nil)
                 }
                 .buttonStyle(.plain)
-                .foregroundStyle(.secondary)
-                .pressScale(0.9)
+                .foregroundStyle(.white.opacity(0.7))
             }
             .padding(.horizontal)
             .padding(.vertical, 8)
@@ -380,13 +371,14 @@ struct TabRow: View {
                 
                 VStack(alignment: .leading, spacing: prefs.preferences.useCompactMode ? 0 : 2) {
                     Text(tab.title)
-                        .font(.system(size: prefs.preferences.useCompactMode ? 12 : 13, weight: .medium))
+                        .font(.system(size: prefs.preferences.useCompactMode ? 12 : 13, weight: .medium, design: .monospaced))
+                        .foregroundStyle(.white)
                         .lineLimit(1)
                     
                     if prefs.preferences.showURLPreview {
                         Text(tab.url)
-                            .font(.system(size: prefs.preferences.useCompactMode ? 9 : 10))
-                            .foregroundStyle(.secondary)
+                            .font(.system(size: prefs.preferences.useCompactMode ? 9 : 10, design: .monospaced))
+                            .foregroundStyle(.white.opacity(0.5))
                             .lineLimit(1)
                     }
                 }
@@ -395,17 +387,14 @@ struct TabRow: View {
                 
                 if prefs.preferences.showShortcutBadge && tab.isValidShortcut {
                     Text(tab.shortcutDisplayString)
-                        .font(.system(size: prefs.preferences.useCompactMode ? 10 : 11, weight: .semibold, design: .rounded))
-                        .foregroundStyle(.secondary)
+                        .font(.system(size: prefs.preferences.useCompactMode ? 10 : 11, weight: .semibold, design: .monospaced))
+                        .foregroundStyle(.white.opacity(0.8))
                         .padding(.horizontal, 7)
                         .padding(.vertical, 2)
-                        .background(
-                            RoundedRectangle(cornerRadius: 5, style: .continuous)
-                                .fill(Color.secondary.opacity(0.06))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 5, style: .continuous)
-                                        .stroke(Color.secondary.opacity(0.12), lineWidth: 0.5)
-                                )
+                        .background(Color(white: 0.15))
+                        .overlay(
+                            Rectangle()
+                                .stroke(Color.white.opacity(0.2), lineWidth: 0.5)
                         )
                 }
             }
@@ -414,8 +403,8 @@ struct TabRow: View {
             .frame(minHeight: prefs.preferences.rowHeight)
             .contentShape(Rectangle())
             .background(
-                RoundedRectangle(cornerRadius: 6, style: .continuous)
-                    .fill(isHovered ? Color.accentColor.opacity(0.08) : Color.clear)
+                Rectangle()
+                    .fill(isHovered ? Color.white.opacity(0.08) : Color.clear)
             )
             .scaleEffect(isPressed ? 0.98 : 1.0)
         }
@@ -439,18 +428,18 @@ struct TabRow: View {
             switch tab.browser {
             case .safari:
                 Image(systemName: "safari")
-                    .foregroundStyle(.blue)
+                    .foregroundStyle(.white.opacity(0.8))
             case .chrome:
                 Image(systemName: "globe")
-                    .foregroundStyle(.green)
+                    .foregroundStyle(.white.opacity(0.8))
             case .edge:
                 Image(systemName: "wave.3.forward")
-                    .foregroundStyle(.cyan)
+                    .foregroundStyle(.white.opacity(0.8))
             }
         }
         .font(.system(size: prefs.preferences.useCompactMode ? 14 : 16, weight: .medium))
         .frame(width: 20)
-        .symbolRenderingMode(.hierarchical)
+        .symbolRenderingMode(.monochrome)
     }
 }
 

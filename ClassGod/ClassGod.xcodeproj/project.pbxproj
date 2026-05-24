@@ -86,9 +86,20 @@
 				};
 			};
 			buildConfigurationList = F2BB6B4E2FC08AFC0059D551 /* Build configuration list for PBXProject "ClassGod" */;
-			developmentRegion = en;
+			developmentRegion = "zh-Hans";
 			hasScannedForEncodings = 0;
 			knownRegions = (
+				en,
+				"zh-Hans",
+				"zh-Hant",
+				ja,
+				ko,
+				fr,
+				de,
+				es,
+				ru,
+				pt,
+				Base,
 				en,
 				Base,
 			);
@@ -250,7 +261,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				CODE_SIGN_ENTITLEMENTS = ClassGod/ClassGod.entitlements;
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_PREVIEWS = YES;
@@ -264,7 +275,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.2.0;
+				MARKETING_VERSION = 0.3.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "Hanazar-Software.ClassGod";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
@@ -284,7 +295,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				CODE_SIGN_ENTITLEMENTS = ClassGod/ClassGod.entitlements;
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_PREVIEWS = YES;
@@ -298,7 +309,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.2.0;
+				MARKETING_VERSION = 0.3.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "Hanazar-Software.ClassGod";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;

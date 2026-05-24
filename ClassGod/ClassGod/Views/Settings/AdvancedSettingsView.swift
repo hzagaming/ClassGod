@@ -21,37 +21,37 @@ struct AdvancedSettingsView: View {
     
     var body: some View {
         Form {
-            Section("Data Management") {
+            Section(String(localized: "section.data_management")) {
                 HStack {
-                    Button("Export Preferences...") {
+                    Button(String(localized: "button.export")) {
                         exportPreferences()
                     }
                     
-                    Button("Import Preferences...") {
+                    Button(String(localized: "button.import")) {
                         importPreferences()
                     }
                 }
                 
-                Button("Reset All Preferences") {
+                Button(String(localized: "button.reset_all")) {
                     showResetConfirmation = true
                 }
                 .foregroundStyle(.red)
                 
-                Button("Clear All Saved Tabs", role: .destructive) {
+                Button(String(localized: "button.clear_all"), role: .destructive) {
                     showClearConfirmation = true
                 }
             }
             
-            Section("Debugging") {
-                Toggle("Enable debug logging", isOn: $prefs.preferences.enableDebugLogging)
+            Section(String(localized: "section.debug")) {
+                Toggle(String(localized: "setting.debug_logging"), isOn: $prefs.preferences.enableDebugLogging)
                 
                 if prefs.preferences.enableDebugLogging {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Debug logs are printed to Console.app")
+                        Text(String(localized: "debug.caption"))
                             .font(.caption)
                             .foregroundStyle(.secondary)
                         
-                        Button("Open Console.app") {
+                        Button(String(localized: "button.open_console")) {
                             NSWorkspace.shared.openApplication(at: URL(fileURLWithPath: "/System/Applications/Utilities/Console.app"), configuration: NSWorkspace.OpenConfiguration())
                         }
                         .font(.caption)
@@ -59,49 +59,67 @@ struct AdvancedSettingsView: View {
                 }
             }
             
-            Section("About") {
+            Section(String(localized: "section.about")) {
                 HStack {
-                    Text("Version")
+                    Text(String(localized: "about.version"))
                     Spacer()
-                    Text("0.1.0 (Build 1)")
+                    Text("\(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.3.0") (Build \(Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "3"))")
                         .foregroundStyle(.secondary)
                 }
                 
                 HStack {
-                    Text("Developer")
+                    Text(String(localized: "about.developer"))
                     Spacer()
                     Text("Hanazar Software")
                         .foregroundStyle(.secondary)
+                }
+                
+                Button(action: {
+                    NSWorkspace.shared.open(URL(string: "https://github.com/hzagaming/ClassGod/releases")!)
+                }) {
+                    Label(String(localized: "about.release_notes"), systemImage: "doc.text")
+                }
+                
+                Button(action: {
+                    NSWorkspace.shared.open(URL(string: "https://github.com/hzagaming/ClassGod")!)
+                }) {
+                    Label(String(localized: "about.github_repo"), systemImage: "link")
+                }
+                
+                Button(action: {
+                    NSWorkspace.shared.open(URL(string: "https://github.com/hzagaming")!)
+                }) {
+                    Label(String(localized: "about.github_profile"), systemImage: "person.circle")
                 }
             }
         }
         .formStyle(.grouped)
         .padding()
-        .alert("Reset Preferences?", isPresented: $showResetConfirmation) {
-            Button("Cancel", role: .cancel) {}
-            Button("Reset", role: .destructive) {
+        .alert(String(localized: "reset.confirm.title"), isPresented: $showResetConfirmation) {
+            Button(String(localized: "button.cancel"), role: .cancel) {}
+            Button(String(localized: "button.reset"), role: .destructive) {
                 prefs.resetToDefaults()
             }
         } message: {
-            Text("This will reset all settings to their default values. Your saved tabs will not be affected.")
+            Text(String(localized: "reset.confirm.message"))
         }
-        .alert("Clear All Tabs?", isPresented: $showClearConfirmation) {
-            Button("Cancel", role: .cancel) {}
-            Button("Clear", role: .destructive) {
+        .alert(String(localized: "clear.confirm.title"), isPresented: $showClearConfirmation) {
+            Button(String(localized: "button.cancel"), role: .cancel) {}
+            Button(String(localized: "button.clear"), role: .destructive) {
                 StorageManager.shared.saveTabs([])
                 ShortcutManager.shared.unregisterAllShortcuts()
             }
         } message: {
-            Text("This will permanently delete all saved tabs and shortcuts. This cannot be undone.")
+            Text(String(localized: "clear.confirm.message"))
         }
-        .alert("Import Result", isPresented: $showImportResult) {
-            Button("OK", role: .cancel) {}
+        .alert(String(localized: "import.result.title"), isPresented: $showImportResult) {
+            Button(String(localized: "button.ok"), role: .cancel) {}
         } message: {
             switch importResult {
             case .success:
-                Text("Preferences imported successfully.")
+                Text(String(localized: "import.success"))
             case .failure:
-                Text("Failed to import preferences. The file may be corrupted or incompatible.")
+                Text(String(localized: "import.failure"))
             case .none:
                 Text("")
             }
@@ -111,7 +129,7 @@ struct AdvancedSettingsView: View {
     private func exportPreferences() {
         guard let url = prefs.exportToFile() else { return }
         let panel = NSSavePanel()
-        panel.nameFieldStringValue = "ClassGod-Preferences.json"
+        panel.nameFieldStringValue = String(format: String(localized: "export.filename"), "")
         panel.allowedContentTypes = [.json]
         panel.directoryURL = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Downloads")
         

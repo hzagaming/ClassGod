@@ -33,8 +33,8 @@ struct ShortcutPicker: View {
                         startRecording()
                     }
                 }
-                .accessibilityLabel("Record shortcut")
-                .accessibilityHint(isRecording ? "Press your desired key combination" : "Tap to start recording a keyboard shortcut")
+                .accessibilityLabel(String(localized: "accessibility.record_shortcut"))
+                .accessibilityHint(isRecording ? String(localized: "accessibility.press_combination") : String(localized: "accessibility.tap_to_record"))
                 .accessibilityAddTraits(.isButton)
             
             Button(action: {
@@ -47,7 +47,7 @@ struct ShortcutPicker: View {
             }
             .buttonStyle(.plain)
             .disabled(key.isEmpty && modifiers == 0)
-            .accessibilityLabel("Clear shortcut")
+            .accessibilityLabel(String(localized: "button.clear"))
         }
         .onDisappear {
             stopRecording()
@@ -56,7 +56,7 @@ struct ShortcutPicker: View {
     
     private var displayString: String {
         if key.isEmpty && modifiers == 0 {
-            return isRecording ? "Press shortcut..." : "Click to set shortcut"
+            return isRecording ? String(localized: "shortcut.press") : String(localized: "shortcut.tap_to_set")
         }
         var parts: [String] = []
         let flags = NSEvent.ModifierFlags(rawValue: modifiers)

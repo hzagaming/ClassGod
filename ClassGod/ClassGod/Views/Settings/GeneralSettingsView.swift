@@ -12,26 +12,38 @@ struct GeneralSettingsView: View {
     
     var body: some View {
         Form {
-            Section("Behavior") {
-                Picker("Tab Switching", selection: $prefs.preferences.switchBehavior) {
+            Section(String(localized: "section.behavior")) {
+                Toggle(String(localized: "setting.auto_detect"), isOn: $prefs.preferences.autoDetectOnShow)
+                
+                Toggle(String(localized: "setting.keyboard_nav"), isOn: $prefs.preferences.enableKeyboardNavigation)
+                
+                HStack {
+                    Text(String(localized: "setting.switch_delay"))
+                    Slider(value: $prefs.preferences.switchDelayMs, in: 0...500, step: 50)
+                    Text("\(Int(prefs.preferences.switchDelayMs))ms")
+                        .frame(width: 50, alignment: .trailing)
+                        .foregroundStyle(.secondary)
+                }
+                
+                Picker(String(localized: "setting.switch_behavior"), selection: $prefs.preferences.switchBehavior) {
                     ForEach(SwitchBehavior.allCases) { behavior in
                         Text(behavior.displayName).tag(behavior)
                     }
                 }
                 .pickerStyle(.radioGroup)
                 
-                Picker("URL Matching", selection: $prefs.preferences.urlMatchPrecision) {
+                Picker(String(localized: "setting.url_match"), selection: $prefs.preferences.urlMatchPrecision) {
                     ForEach(URLMatchPrecision.allCases) { precision in
                         Text(precision.displayName).tag(precision)
                     }
                 }
                 .pickerStyle(.radioGroup)
                 
-                Toggle("Show toast notifications", isOn: $prefs.preferences.showToastNotifications)
+                Toggle(String(localized: "setting.toast"), isOn: $prefs.preferences.showToastNotifications)
                 
                 if prefs.preferences.showToastNotifications {
                     HStack {
-                        Text("Toast duration:")
+                        Text(String(localized: "setting.toast_duration"))
                         Slider(value: $prefs.preferences.toastDuration, in: 0.5...5.0, step: 0.5)
                         Text(String(format: "%.1fs", prefs.preferences.toastDuration))
                             .frame(width: 40, alignment: .trailing)
@@ -41,35 +53,37 @@ struct GeneralSettingsView: View {
                 }
             }
             
-            Section("Animation") {
-                Picker("Animation speed", selection: $prefs.preferences.animationSpeed) {
+            Section(String(localized: "section.animation")) {
+                Toggle(String(localized: "setting.instant_mode"), isOn: $prefs.preferences.useInstantAnimations)
+                
+                Picker(String(localized: "setting.animation_speed"), selection: $prefs.preferences.animationSpeed) {
                     ForEach(AnimationSpeed.allCases) { speed in
                         Text(speed.displayName).tag(speed)
                     }
                 }
                 .pickerStyle(.segmented)
                 
-                Text("\"Off\" disables all animations for maximum responsiveness.")
+                Text(String(localized: "animation.off_caption"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
             
-            Section("Startup") {
-                Toggle("Launch at login", isOn: $prefs.preferences.launchAtLogin)
+            Section(String(localized: "section.launch")) {
+                Toggle(String(localized: "setting.launch_at_login"), isOn: $prefs.preferences.launchAtLogin)
                     .disabled(true)
-                    .help("Coming in a future update")
+                    .help(String(localized: "launch.coming_soon"))
                 
-                Toggle("Show popover on launch", isOn: $prefs.preferences.showPopoverOnLaunch)
+                Toggle(String(localized: "setting.show_on_launch"), isOn: $prefs.preferences.showPopoverOnLaunch)
             }
             
-            Section("Safety") {
-                Toggle("Confirm before deleting a tab", isOn: $prefs.preferences.confirmBeforeDelete)
-                Toggle("Confirm before clearing all tabs", isOn: $prefs.preferences.confirmBeforeClear)
+            Section(String(localized: "section.safety")) {
+                Toggle(String(localized: "setting.confirm_delete"), isOn: $prefs.preferences.confirmBeforeDelete)
+                Toggle(String(localized: "setting.confirm_clear"), isOn: $prefs.preferences.confirmBeforeClear)
             }
             
-            Section("Feedback") {
-                Toggle("Enable sound effects", isOn: $prefs.preferences.enableSoundEffects)
-                Toggle("Enable haptic feedback", isOn: $prefs.preferences.enableHapticFeedback)
+            Section(String(localized: "section.feedback")) {
+                Toggle(String(localized: "setting.sound_effects"), isOn: $prefs.preferences.enableSoundEffects)
+                Toggle(String(localized: "setting.haptic"), isOn: $prefs.preferences.enableHapticFeedback)
             }
         }
         .formStyle(.grouped)

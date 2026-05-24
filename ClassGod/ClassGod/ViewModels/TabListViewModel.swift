@@ -16,6 +16,7 @@ final class TabListViewModel: ObservableObject {
     @Published var errorMessage: String?
     @Published var showError = false
     @Published var showPermissionAlert = false
+    @Published var isAccessibilityTrusted = false
     
     var onShowToast: ((String) -> Void)?
     
@@ -37,14 +38,14 @@ final class TabListViewModel: ObservableObject {
     func addTab(_ tab: BrowserTab) {
         tabs.append(tab)
         saveTabs()
-        onShowToast?("Saved \"\(tab.title)\"")
+        onShowToast?(String(format: String(localized: "toast.saved"), tab.title))
     }
     
     func updateTab(_ tab: BrowserTab) {
         if let index = tabs.firstIndex(where: { $0.id == tab.id }) {
             tabs[index] = tab
             saveTabs()
-            onShowToast?("Updated \"\(tab.title)\"")
+            onShowToast?(String(format: String(localized: "toast.updated"), tab.title))
         }
     }
     
@@ -77,7 +78,7 @@ final class TabListViewModel: ObservableObject {
                     self.tabs.append(newTab)
                 }
                 self.saveTabs()
-                self.onShowToast?("Saved current tab")
+                self.onShowToast?(String(localized: "toast.saved_current"))
                 SoundEffectManager.shared.playTabSaved()
                 HapticManager.shared.success()
             case .failure(let error):
@@ -93,7 +94,7 @@ final class TabListViewModel: ObservableObject {
         BrowserSwitcher.shared.switchToTab(tab) { [weak self] success, message in
             guard let self = self else { return }
             if success {
-                self.onShowToast?("Switched to \(tab.browser.displayName)")
+                self.onShowToast?(String(format: String(localized: "toast.switched"), tab.browser.displayName))
                 SoundEffectManager.shared.playSwitchSuccess()
                 HapticManager.shared.success()
             } else {
@@ -108,6 +109,7 @@ final class TabListViewModel: ObservableObject {
     func checkAccessibilityPermission() -> Bool {
         let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true]
         let trusted = AXIsProcessTrustedWithOptions(options as CFDictionary)
+        isAccessibilityTrusted = trusted
         if !trusted {
             showPermissionAlert = true
             SoundEffectManager.shared.playSwitchFailure()
@@ -117,6 +119,16 @@ final class TabListViewModel: ObservableObject {
             HapticManager.shared.success()
         }
         return trusted
+    }
+    
+    func checkPermissionOnShow() {
+        let trusted = AXIsProcessTrustedWithOptions(
+            [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: false] as CFDictionary
+        )
+        isAccessibilityTrusted = trusted
+        if !trusted {
+            showPermissionAlert = true
+        }
     }
     
     func hasShortcutConflict(excluding tabID: UUID?, key: String, modifiers: UInt) -> Bool {

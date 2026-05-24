@@ -1,0 +1,155 @@
+{
+  "sourceLanguage" : "zh-Hans",
+  "strings" : {
+    "CFBundleName" : {
+      "comment" : "Bundle name",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "ClassGod"
+          }
+        }
+      }
+    },
+    "NSAccessibilityUsageDescription" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ClassGod benötigt die Barrierefreiheitsberechtigung um den Browser im Vordergrund zu erkennen und zu bestimmten Tabs zu wechseln."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ClassGod needs Accessibility permission to detect the frontmost browser and switch to specific tabs."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ClassGod necesita permiso de Accesibilidad para detectar el navegador al frente y cambiar a pestañas específicas."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ClassGod a besoin de la permission Accessibilité pour détecter le navigateur au premier plan et basculer vers des onglets spécifiques."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ClassGod は最前面のブラウザを検出して特定のタブに切り替えるために、アクセシビリティ権限が必要だ。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ClassGod 는 맨 앞 브라우저를 감지하고 특정 탭으로 전환하기 위해 접근성 권한이 필요해."
+          }
+        },
+        "pt" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ClassGod precisa de permissão de Acessibilidade para detectar o navegador em primeiro plano e alternar para abas específicas."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ClassGod требуется разрешение Специальных возможностей для обнаружения браузера на переднем плане и переключения на конкретные вкладки."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ClassGod 需要 Accessibility 權限來探測最前面的瀏覽器並切換到指定標籤。"
+          }
+        }
+      }
+    },
+    "NSAppleEventsUsageDescription" : {
+      "comment" : "Privacy - AppleEvents Sending Usage Description",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ClassGod muss Safari, Chrome und Edge steuern um Browser-Tabs zu erkennen und zu wechseln."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ClassGod needs to control Safari, Chrome, and Edge to detect and switch browser tabs."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ClassGod necesita controlar Safari, Chrome y Edge para detectar y cambiar entre pestañas del navegador."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ClassGod doit contrôler Safari, Chrome et Edge pour détecter et basculer entre les onglets du navigateur."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ClassGod は Safari、Chrome、Edge を制御してブラウザタブを検出・切り替える必要がある。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ClassGod 는 Safari, Chrome, Edge 를 제어하여 브라우저 탭을 감지하고 전환해야 해."
+          }
+        },
+        "pt" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ClassGod precisa controlar Safari, Chrome e Edge para detectar e alternar entre abas do navegador."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ClassGod необходимо управлять Safari, Chrome и Edge для обнаружения и переключения вкладок браузера."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "ClassGod needs to control Safari, Chrome, and Edge to detect and switch browser tabs."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ClassGod 需要控制 Safari、Chrome 和 Edge 來探測和切換瀏覽器標籤。"
+          }
+        }
+      }
+    },
+    "NSHumanReadableCopyright" : {
+      "comment" : "Copyright (human-readable)",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : ""
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

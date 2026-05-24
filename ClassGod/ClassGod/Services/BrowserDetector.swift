@@ -17,13 +17,13 @@ enum BrowserDetectionError: Error, LocalizedError {
     var errorDescription: String? {
         switch self {
         case .noFrontmostBrowser:
-            return "No supported browser is currently frontmost."
+            return String(localized: "error.no_frontmost_browser")
         case .appleScriptFailed(let msg):
-            return "AppleScript failed: \(msg)"
+            return String(format: String(localized: "error.applescript_failed"), msg)
         case .invalidResponse:
-            return "Invalid response from browser."
+            return String(localized: "error.invalid_response")
         case .timeout:
-            return "Browser did not respond in time."
+            return String(localized: "error.timeout")
         }
     }
 }
@@ -114,13 +114,13 @@ final class BrowserDetector {
         
         var errorInfo: NSDictionary?
         guard let appleScript = NSAppleScript(source: scriptSource) else {
-            return .failure(.appleScriptFailed("Failed to create NSAppleScript"))
+            return .failure(.appleScriptFailed(String(localized: "error.create_applescript")))
         }
         
         let result = appleScript.executeAndReturnError(&errorInfo)
         
         if let error = errorInfo {
-            let msg = error["NSAppleScriptErrorMessage"] as? String ?? "Unknown error"
+            let msg = error["NSAppleScriptErrorMessage"] as? String ?? String(localized: "error.unknown")
             return .failure(.appleScriptFailed(msg))
         }
         

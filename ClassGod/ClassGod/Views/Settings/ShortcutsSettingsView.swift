@@ -27,14 +27,14 @@ struct ShortcutsSettingsView: View {
         if !keyName.isEmpty {
             parts.append(keyName)
         }
-        return parts.isEmpty ? "None" : parts.joined(separator: "")
+        return parts.isEmpty ? String(localized: "shortcut.none") : parts.joined(separator: "")
     }
     
     var body: some View {
         Form {
-            Section("Global Shortcut") {
+            Section(String(localized: "section.global_shortcut")) {
                 HStack {
-                    Text("Show menu bar panel:")
+                    Text(String(localized: "setting.show_panel"))
                     Spacer()
                     
                     ZStack {
@@ -49,7 +49,7 @@ struct ShortcutsSettingsView: View {
                                 .scaleEffect(pulseScale)
                         }
                         
-                        Text(isRecordingPopoverShortcut ? "Press keys..." : displayShortcut)
+                        Text(isRecordingPopoverShortcut ? String(localized: "shortcut.press_keys") : displayShortcut)
                             .font(.system(size: 14, weight: .medium, design: .monospaced))
                             .foregroundStyle(isRecordingPopoverShortcut ? Color.accentColor : .primary)
                             .lineLimit(1)
@@ -65,11 +65,11 @@ struct ShortcutsSettingsView: View {
                             startRecording()
                         }
                     }
-                    .accessibilityLabel("Record global shortcut")
-                    .accessibilityHint(isRecordingPopoverShortcut ? "Press your desired key combination" : "Tap to start recording")
+                    .accessibilityLabel(String(localized: "accessibility.record_global"))
+                    .accessibilityHint(isRecordingPopoverShortcut ? String(localized: "accessibility.press_combination") : String(localized: "accessibility.tap_to_start"))
                     .accessibilityAddTraits(.isButton)
                     
-                    Button("Reset") {
+                    Button(String(localized: "button.reset")) {
                         SoundEffectManager.shared.playButtonClick()
                         prefs.preferences.showPopoverKeyCode = AppPreferences.default.showPopoverKeyCode
                         prefs.preferences.showPopoverModifiers = AppPreferences.default.showPopoverModifiers
@@ -81,16 +81,16 @@ struct ShortcutsSettingsView: View {
                     .pressScale(0.9)
                 }
                 
-                Text("Click the shortcut box above to record a new global shortcut for opening the ClassGod panel.")
+                Text(String(localized: "shortcut.tip.caption"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
             
-            Section("Tips") {
+            Section(String(localized: "section.tips")) {
                 VStack(alignment: .leading, spacing: 6) {
-                    Label("Avoid conflicts with system shortcuts", systemImage: "exclamationmark.triangle")
-                    Label("Per-tab shortcuts are configured in the main panel", systemImage: "keyboard")
-                    Label("Restart app after changing this shortcut", systemImage: "arrow.clockwise")
+                    Label(String(localized: "tip.avoid_conflict"), systemImage: "exclamationmark.triangle")
+                    Label(String(localized: "tip.per_tab_shortcuts"), systemImage: "keyboard")
+                    Label(String(localized: "tip.restart"), systemImage: "arrow.clockwise")
                 }
                 .font(.callout)
                 .foregroundStyle(.secondary)
@@ -173,7 +173,7 @@ struct ShortcutsSettingsView: View {
             0x61: "F6", 0x62: "F7", 0x64: "F8", 0x65: "F9", 0x6D: "F10",
             0x67: "F11", 0x6F: "F12"
         ]
-        return map[keyCode] ?? "Key \(keyCode)"
+        return map[keyCode] ?? String(format: String(localized: "shortcut.key_format"), keyCode)
     }
 }
 

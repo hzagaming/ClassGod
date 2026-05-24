@@ -15,8 +15,8 @@ enum SwitchBehavior: String, Codable, CaseIterable, Identifiable {
     var id: String { rawValue }
     var displayName: String {
         switch self {
-        case .activateExisting: return "Activate existing tab if found"
-        case .alwaysNewTab: return "Always open in new tab"
+        case .activateExisting: return String(localized: "switch.activate_existing")
+        case .alwaysNewTab: return String(localized: "switch.always_new_tab")
         }
     }
 }
@@ -29,9 +29,9 @@ enum URLMatchPrecision: String, Codable, CaseIterable, Identifiable {
     var id: String { rawValue }
     var displayName: String {
         switch self {
-        case .exact: return "Exact URL match"
-        case .prefix: return "Prefix match (recommended)"
-        case .hostOnly: return "Host only (e.g. google.com)"
+        case .exact: return String(localized: "match.exact")
+        case .prefix: return String(localized: "match.prefix")
+        case .hostOnly: return String(localized: "match.host_only")
         }
     }
 }
@@ -44,9 +44,9 @@ enum BrowserNotRunningBehavior: String, Codable, CaseIterable, Identifiable {
     var id: String { rawValue }
     var displayName: String {
         switch self {
-        case .launchAndOpen: return "Launch browser and open URL"
-        case .launchOnly: return "Launch browser only"
-        case .doNothing: return "Do nothing"
+        case .launchAndOpen: return String(localized: "not_running.launch_open")
+        case .launchOnly: return String(localized: "not_running.launch_only")
+        case .doNothing: return String(localized: "not_running.do_nothing")
         }
     }
 }
@@ -61,11 +61,11 @@ enum MenuBarIconStyle: String, Codable, CaseIterable, Identifiable {
     var id: String { rawValue }
     var displayName: String {
         switch self {
-        case .default: return "Default (Link Circle)"
-        case .fill: return "Link Circle Fill"
-        case .plain: return "Link"
-        case .bolt: return "Lightning Bolt"
-        case .eye: return "Eye"
+        case .default: return String(localized: "icon.default")
+        case .fill: return String(localized: "icon.fill")
+        case .plain: return String(localized: "icon.plain")
+        case .bolt: return String(localized: "icon.bolt")
+        case .eye: return String(localized: "icon.eye")
         }
     }
     
@@ -88,9 +88,9 @@ enum AppTheme: String, Codable, CaseIterable, Identifiable {
     var id: String { rawValue }
     var displayName: String {
         switch self {
-        case .system: return "Follow System"
-        case .light: return "Light"
-        case .dark: return "Dark"
+        case .system: return String(localized: "theme.system")
+        case .light: return String(localized: "theme.light")
+        case .dark: return String(localized: "theme.dark")
         }
     }
 }
@@ -103,9 +103,9 @@ enum AnimationSpeed: String, Codable, CaseIterable, Identifiable {
     var id: String { rawValue }
     var displayName: String {
         switch self {
-        case .instant: return "Off (Instant)"
-        case .fast: return "Fast"
-        case .normal: return "Normal"
+        case .instant: return String(localized: "speed.instant")
+        case .fast: return String(localized: "speed.fast")
+        case .normal: return String(localized: "speed.normal")
         }
     }
     
@@ -130,6 +130,9 @@ struct AppPreferences: Codable, Equatable {
     var toastDuration: Double
     var switchBehavior: SwitchBehavior
     var urlMatchPrecision: URLMatchPrecision
+    var autoDetectOnShow: Bool
+    var enableKeyboardNavigation: Bool
+    var switchDelayMs: Double
     
     // MARK: - Shortcuts
     var showPopoverKeyCode: UInt32
@@ -143,12 +146,14 @@ struct AppPreferences: Codable, Equatable {
     var menuBarIconStyle: MenuBarIconStyle
     var panelWidth: Double
     var panelMaxHeight: Double
+    var panelCornerRadius: Double
     var theme: AppTheme
     var showURLPreview: Bool
     var rowHeight: Double
     var showBrowserIcon: Bool
     var showShortcutBadge: Bool
     var useCompactMode: Bool
+    var showTabCountBadge: Bool
     
     // MARK: - Version
     var version: Int
@@ -161,6 +166,7 @@ struct AppPreferences: Codable, Equatable {
     var confirmBeforeDelete: Bool
     var confirmBeforeClear: Bool
     var maxTabsInPopover: Int
+    var useInstantAnimations: Bool
     
     // MARK: - Defaults
     static let `default` = AppPreferences(
@@ -170,19 +176,24 @@ struct AppPreferences: Codable, Equatable {
         toastDuration: 1.5,
         switchBehavior: .activateExisting,
         urlMatchPrecision: .prefix,
-        showPopoverKeyCode: 0x08, // kVK_ANSI_C
+        autoDetectOnShow: true,
+        enableKeyboardNavigation: true,
+        switchDelayMs: 0,
+        showPopoverKeyCode: 0x08,
         showPopoverModifiers: UInt32(cmdKey | shiftKey),
         defaultBrowser: nil,
         browserNotRunningBehavior: .launchAndOpen,
         menuBarIconStyle: .fill,
         panelWidth: 320,
         panelMaxHeight: 400,
+        panelCornerRadius: 12,
         theme: .system,
         showURLPreview: true,
         rowHeight: 44,
         showBrowserIcon: true,
         showShortcutBadge: true,
         useCompactMode: false,
+        showTabCountBadge: false,
         version: 1,
         animationSpeed: .fast,
         enableDebugLogging: false,
@@ -190,6 +201,7 @@ struct AppPreferences: Codable, Equatable {
         enableHapticFeedback: true,
         confirmBeforeDelete: true,
         confirmBeforeClear: true,
-        maxTabsInPopover: 50
+        maxTabsInPopover: 50,
+        useInstantAnimations: false
     )
 }

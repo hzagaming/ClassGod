@@ -5,16 +5,16 @@
     <key>LSUIElement</key>
     <true/>
     <key>NSAppleEventsUsageDescription</key>
-    <string>ClassGod needs to control Safari, Chrome, and Edge to detect and switch browser tabs.</string>
+    <string>ClassGod 需要控制 Safari、Chrome 和 Edge 来探测和切换浏览器标签。</string>
     <key>NSAccessibilityUsageDescription</key>
-    <string>ClassGod needs Accessibility permission to detect the frontmost browser and switch to specific tabs.</string>
+    <string>ClassGod 需要 Accessibility 权限来探测最前面的浏览器并切换到指定标签。</string>
     <key>CFBundleIdentifier</key>
     <string>com.hanazar.classgod</string>
     <key>CFBundleName</key>
     <string>ClassGod</string>
     <key>CFBundleShortVersionString</key>
-    <string>0.2.0</string>
+    <string>0.3.0</string>
     <key>CFBundleVersion</key>
-    <string>2</string>
+    <string>3</string>
 </dict>
 </plist>

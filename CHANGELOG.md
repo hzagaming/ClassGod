@@ -1,69 +1,76 @@
-# Changelog
+# ClassGod 更新日志
 
-## [0.2.0] - 2026-05-22
+## v0.3.0 — 2025-05-22
 
-### 新增功能
+### 新增
+- **10 语言本地化**：支持简体中文（源）、繁体中文、英语、日语、韩语、法语、德语、西班牙语、俄语、葡萄牙语
+- **黑客风格黑白 UI**：纯黑背景 + 白色细线条边框 + 等宽字体，极简极酷
+- **2 秒启动动画**：全屏黑色开屏，显示 Hanazar Products / ClassGod，每次冷启动都有仪式感
+- **设置面板增强**：
+  - 面板圆角半径可调（0~24px）
+  - 菜单栏标签数量徽章开关
+  - 显示面板时自动探测当前标签
+  - 键盘上下箭头导航开关
+  - 切换前延迟（0~500ms）
+  - 极速模式（一键禁用所有动画）
+- **关于页面重构**：
+  - 版本号自动读取 Bundle
+  - Release Notes 链接按钮
+  - GitHub 仓库链接按钮
+  - 开发者 GitHub Profile（hzagaming）链接按钮
+- **权限实时检测**：主面板打开时自动检查 Accessibility 权限，未授权时图标变红并弹窗提醒
 
-- **完整设置面板**：5 个 Tab（General / Shortcuts / Appearance / Browser / Advanced），20+ 可调参数
-- **动画速度控制**：三档可调（Off / Fast / Normal），追求极致响应或保留动画反馈
-- **全局呼出快捷键自定义**：点击录制即可绑定新快捷键，动态生效
-- **音效系统**：10 种系统音效覆盖所有操作（切屏、保存、删除、冲突等）
-- **震动反馈**：成功/警告/通用三档震动模式
-- **快捷键冲突检测**：添加时自动检测，支持覆盖确认
-- **URL 匹配精度**：Exact / Prefix / Host only 三种模式
-- **浏览器未运行行为**：Launch & Open / Launch Only / Do Nothing
-- **外观自定义**：5 种菜单栏图标、面板尺寸、行高、紧凑模式、主题跟随系统
-- **数据导入/导出**：JSON 格式备份与恢复偏好设置
-- **Toast 通知**：切屏/保存成功时的视觉反馈，时长可调
-- **悬停发光效果**：标签行悬停时的柔和高亮
-- **删除确认**：可配置的单条删除和清空全部确认对话框
+### 优化
+- **动画速度大幅提升**：Fast 模式从 80ms 降至 30ms，Normal 从 200ms 降至 100ms
+- **极速模式**：新增全局开关，一键禁用所有动画，追求最快速度
+- **按钮响应优化**：减少 hover/press 动画延迟
 
-### 修复的 Bug
-
-- **Critical**: AppleScript 字符串转义错误（`"` → `""`），避免 URL 含引号时语法错误
-- **Critical**: Cocoa ModifierFlags 未转换直接传给 Carbon API，导致快捷键注册失败
-- **Critical**: Carbon Event Handler 从未移除，造成内存泄漏
-- **Critical**: NSEvent 本地/全局监听器在视图消失时未清理，造成内存泄漏和事件吞没
-- **Critical**: 菜单栏视图 retain cycle（`onShowToast` 闭包强引用 self）
-- **Critical**: `|||` 分隔符不安全，改为 ASCII Record Separator (`\u{001E}`)
-- **Critical**: `hostOnly` 匹配在 AppleScript 内循环调用 `do shell script`，存在 shell 注入风险，改为 Swift 层提取 host
-- **Critical**: `.doNothing` 偏好设置被错误地应用在所有情况下，现在只在浏览器未运行时生效
-- **High**: BrowserDetector 同步 AppleScript 阻塞主线程，改为后台异步执行
-- **High**: Info.plist 版本号（0.1.0）与 Xcode build settings（1.0）不一致，统一为 0.2.0
-- **High**: `ClassGod.entitlements` 包含无效的 `com.apple.security.accessibility`，已移除
-- **Medium**: `BrowserTab` 合成 `Equatable` 比较了 `createdAt`，改为仅比较 `id`
-- **Medium**: `BrowserType` rawValue 使用进程名（可能本地化变化），改为稳定英文代码
-- **Medium**: `BrowserSwitcher` 错误信息被丢弃，现在正确传递失败原因
-- **Medium**: `BrowserSwitcher` `make new window with properties {URL:...}` 兼容性差，改为 tell front window
-- **Medium**: `AnimationHelper` Shake/AnimatedNumber 动画无法取消，快速触发时错乱，改为可取消的 DispatchWorkItem
-- **Medium**: `MenuBarView` Toast 定时器在视图消失后仍触发，改为可取消的 DispatchWorkItem
-- **Medium**: `PreferencesManager` `onPreferencesChanged` 每次赋值都触发（即使值未变），现在只在值变化时触发
-- **Medium**: `PreferencesManager` 导出文件名含冒号，改为连字符
-- **Medium**: `PreferencesManager` 导入不验证文件大小，现在限制 10MB
-- **Low**: `AppDelegate` 缺少 `applicationWillTerminate`，现在正确注销热键和状态项
-- **Low**: `SoundEffectManager` 使用未文档化的系统 Sound ID，已添加注释说明风险
-
-### 架构改进
-
-- 新增 `PreferencesManager`：集中管理所有用户偏好设置（Codable + UserDefaults）
-- 新增 `SoundEffectManager` + `HapticManager`：统一反馈控制
-- 新增 `AnimationHelper`：全局动画引擎 `Anim.with()` / `Anim.enabled`
-- 新增 `AppPreferences` 数据模型：支持版本号和未来迁移
-- 重构 `BrowserSwitcher`：统一 AppleScript 执行层，分离切换/打开逻辑
-- 重构 `ShortcutManager`：添加 Cocoa→Carbon 修饰符转换，正确管理 EventHandlerRef
+### 变更
+- 主面板 UI 全面重构为黑白黑客风格
+- 所有用户可见文本提取到 `Localizable.xcstrings` String Catalog
+- `InfoPlist.xcstrings` 独立管理权限描述本地化
+- 版本号统一为 v0.3.0 (Build 3)
 
 ---
 
-## [0.1.0] - 2026-05-22
+## v0.2.0 — 2025-05-22
 
-### 初始版本
+### 新增
+- 5-Tab 设置面板（General / Shortcuts / Appearance / Browser / Advanced）
+- 20+ 可调参数（动画速度、音效、震动、主题、图标样式等）
+- 全局呼出快捷键自定义（默认 ⌘⇧C）
+- 快捷键冲突检测与覆盖提示
+- URL 匹配精度三档可调（Exact / Prefix / Host Only）
+- 浏览器未运行时的行为控制（Launch & Open / Launch Only / Do Nothing）
+- 外观自定义（图标样式、面板尺寸、主题、行高、紧凑模式）
+- 数据导入/导出（JSON 格式）
+- Toast 通知系统
+- 删除/清空确认对话框
+- 音效反馈（10 种系统音效）
+- 震动反馈（Haptic）
 
-- 菜单栏常驻应用，无 Dock 图标
-- 支持 Safari、Chrome、Edge 浏览器标签检测
-- 一键保存当前浏览器标签（标题 + URL）
-- 为每个标签绑定全局快捷键（⌘⌥⌃⇧ + 字母/数字/F键）
-- 按下快捷键自动切换回对应浏览器标签
-- 标签关闭时自动重新打开 URL
-- 本地 UserDefaults 持久化存储
-- 编辑/删除已保存的标签
-- Accessibility & AppleEvents 权限提示
+### 修复
+- AppleScript 字符串转义修复（`"` → `""`）
+- Cocoa→Carbon 修饰符转换修复
+- Carbon 事件处理器内存泄漏修复
+- ShortcutPicker 事件监听器泄漏修复
+- MenuBarView retain cycle 修复
+- 分隔符从 `|||` 改为 ASCII 记录分隔符 `\u{001E}`
+- `hostOnly` URL 匹配消除 shell 注入风险
+- `.doNothing` 逻辑修复
+- BrowserDetector 异步化
+- BrowserTab.Equatable 简化为仅比较 `id`
+
+---
+
+## v0.1.0 — 2025-05-22
+
+### 新增
+- 菜单栏常驻应用（LSUIElement，无 Dock 图标）
+- 探测前台浏览器标签（Safari / Chrome / Edge）
+- 保存标签并绑定全局快捷键
+- 按下快捷键切换回指定标签
+- 标签关闭后可重新打开
+- 编辑/删除已保存标签
+- 本地持久化存储（UserDefaults）
+- Accessibility / Automation 权限申请

@@ -11,11 +11,13 @@ import SwiftUI
 
 enum Anim {
     static var enabled: Bool {
-        PreferencesManager.shared.preferences.animationSpeed.isEnabled
+        !PreferencesManager.shared.preferences.useInstantAnimations && PreferencesManager.shared.preferences.animationSpeed.isEnabled
     }
     
     static var duration: Double {
-        PreferencesManager.shared.preferences.animationSpeed.duration
+        let prefs = PreferencesManager.shared.preferences
+        if prefs.useInstantAnimations { return 0 }
+        return prefs.animationSpeed.duration
     }
     
     static func with(_ body: @escaping () -> Void) {

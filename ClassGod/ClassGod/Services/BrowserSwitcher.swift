@@ -41,7 +41,7 @@ final class BrowserSwitcher {
         if !isRunning {
             switch prefs.browserNotRunningBehavior {
             case .doNothing:
-                completion?(false, "\(tab.browser.displayName) is not running")
+                completion?(false, String(format: String(localized: "error.browser_not_running"), tab.browser.displayName))
                 return
             case .launchOnly:
                 launchBrowser(tab.browser, completion: completion)
@@ -79,23 +79,23 @@ final class BrowserSwitcher {
             if output == "NOT_FOUND" {
                 self.openURLDirectly(tab: tab, url: safeURL, completion: completion)
             } else {
-                completion?(true, "Switched to \(tab.browser.displayName)")
+                completion?(true, String(format: String(localized: "toast.switched_browser"), tab.browser.displayName))
             }
         }
     }
     
     private func launchBrowser(_ browser: BrowserType, completion: ((Bool, String) -> Void)?) {
         guard let appURL = NSWorkspace.shared.urlForApplication(withBundleIdentifier: browser.bundleIdentifier) else {
-            completion?(false, "Could not find \(browser.displayName)")
+            completion?(false, String(format: String(localized: "error.browser_not_found"), browser.displayName))
             return
         }
         let configuration = NSWorkspace.OpenConfiguration()
         NSWorkspace.shared.openApplication(at: appURL, configuration: configuration) { app, error in
             DispatchQueue.main.async {
                 if let error = error {
-                    completion?(false, "Failed to launch \(browser.displayName): \(error.localizedDescription)")
+                    completion?(false, String(format: String(localized: "error.launch_failed"), browser.displayName, error.localizedDescription))
                 } else {
-                    completion?(true, "Launched \(browser.displayName)")
+                    completion?(true, String(format: String(localized: "toast.launched"), browser.displayName))
                 }
             }
         }
@@ -116,7 +116,7 @@ final class BrowserSwitcher {
             if let msg = errorMsg {
                 completion?(false, msg)
             } else {
-                completion?(true, "Opened URL in \(tab.browser.displayName)")
+                completion?(true, String(format: String(localized: "toast.opened_url"), tab.browser.displayName))
             }
         }
     }
@@ -126,7 +126,7 @@ final class BrowserSwitcher {
             var errorInfo: NSDictionary?
             guard let appleScript = NSAppleScript(source: source) else {
                 DispatchQueue.main.async {
-                    completion(nil, "Failed to create AppleScript")
+                    completion(nil, String(localized: "error.create_script"))
                 }
                 return
             }
@@ -135,7 +135,7 @@ final class BrowserSwitcher {
             
             DispatchQueue.main.async {
                 if let error = errorInfo {
-                    let msg = error["NSAppleScriptErrorMessage"] as? String ?? "Unknown error"
+                    let msg = error["NSAppleScriptErrorMessage"] as? String ?? String(localized: "error.unknown")
                     completion(nil, msg)
                 } else {
                     completion(result, nil)

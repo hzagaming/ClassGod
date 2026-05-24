@@ -26,29 +26,55 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var popover: NSPopover!
     var showPopoverHotKeyRef: EventHotKeyRef?
     
+    var splashWindow: NSWindow?
+    
     func applicationDidFinishLaunching(_ notification: Notification) {
-        setupStatusItem()
-        setupPopover()
-        setupShowPopoverShortcut()
+        showSplashScreen()
         
-        PreferencesManager.shared.onPreferencesChanged = { [weak self] _ in
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
+            self?.closeSplashScreen()
+            self?.setupStatusItem()
+            self?.setupPopover()
             self?.setupShowPopoverShortcut()
-            self?.updateStatusItemIcon()
-            self?.updatePopoverSize()
-        }
-        
-        let trusted = AXIsProcessTrustedWithOptions(
-            [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: false] as CFDictionary
-        )
-        if !trusted {
-            showPermissionReminder()
-        }
-        
-        if PreferencesManager.shared.preferences.showPopoverOnLaunch {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
-                self?.togglePopover()
+            
+            PreferencesManager.shared.onPreferencesChanged = { [weak self] _ in
+                self?.setupShowPopoverShortcut()
+                self?.updateStatusItemIcon()
+                self?.updatePopoverSize()
+            }
+            
+            let trusted = AXIsProcessTrustedWithOptions(
+                [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: false] as CFDictionary
+            )
+            if !trusted {
+                self?.showPermissionReminder()
+            }
+            
+            if PreferencesManager.shared.preferences.showPopoverOnLaunch {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+                    self?.togglePopover()
+                }
             }
         }
+    }
+    
+    private func showSplashScreen() {
+        let window = NSWindow(
+            contentRect: NSScreen.main?.frame ?? NSRect(x: 0, y: 0, width: 800, height: 600),
+            styleMask: [.borderless],
+            backing: .buffered,
+            defer: false
+        )
+        window.level = .popUpMenu
+        window.backgroundColor = .black
+        window.contentView = NSHostingView(rootView: SplashScreenView())
+        window.makeKeyAndOrderFront(nil)
+        splashWindow = window
+    }
+    
+    private func closeSplashScreen() {
+        splashWindow?.orderOut(nil)
+        splashWindow = nil
     }
     
     func applicationWillTerminate(_ notification: Notification) {
@@ -63,11 +89,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     
     private func showPermissionReminder() {
         let alert = NSAlert()
-        alert.messageText = "ClassGod Needs Permissions"
-        alert.informativeText = "ClassGod requires Accessibility and Automation permissions to detect browser tabs and switch to them. Please grant these permissions in System Settings."
+        alert.messageText = String(localized: "permission.alert.title")
+        alert.informativeText = String(localized: "permission.alert.message")
         alert.alertStyle = .informational
-        alert.addButton(withTitle: "Open Settings")
-        alert.addButton(withTitle: "Later")
+        alert.addButton(withTitle: String(localized: "button.go_settings"))
+        alert.addButton(withTitle: String(localized: "button.later"))
         
         let response = alert.runModal()
         if response == .alertFirstButtonReturn {
@@ -194,31 +220,31 @@ struct SettingsContainerView: View {
         TabView(selection: $selectedTab) {
             GeneralSettingsView()
                 .tabItem {
-                    Label("General", systemImage: "gear")
+                    Label(String(localized: "tab.general"), systemImage: "gear")
                 }
                 .tag(0)
             
             ShortcutsSettingsView()
                 .tabItem {
-                    Label("Shortcuts", systemImage: "keyboard")
+                    Label(String(localized: "tab.shortcuts"), systemImage: "keyboard")
                 }
                 .tag(1)
             
             AppearanceSettingsView()
                 .tabItem {
-                    Label("Appearance", systemImage: "paintbrush")
+                    Label(String(localized: "tab.appearance"), systemImage: "paintbrush")
                 }
                 .tag(2)
             
             BrowserSettingsView()
                 .tabItem {
-                    Label("Browser", systemImage: "globe")
+                    Label(String(localized: "tab.browser"), systemImage: "globe")
                 }
                 .tag(3)
             
             AdvancedSettingsView()
                 .tabItem {
-                    Label("Advanced", systemImage: "wrench.and.screwdriver")
+                    Label(String(localized: "tab.advanced"), systemImage: "wrench.and.screwdriver")
                 }
                 .tag(4)
         }

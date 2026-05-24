@@ -61,16 +61,16 @@ struct AddTabView: View {
         .padding()
         .frame(width: 420, height: 340)
         .background(Color(NSColor.controlBackgroundColor))
-        .alert("Shortcut Conflict", isPresented: $showConflictAlert) {
-            Button("Overwrite", role: .destructive) {
+        .alert(String(localized: "shortcut.conflict.title"), isPresented: $showConflictAlert) {
+            Button("覆盖", role: .destructive) {
                 SoundEffectManager.shared.playButtonClick()
                 performSave()
             }
-            Button("Cancel", role: .cancel) {
+            Button("算了", role: .cancel) {
                 SoundEffectManager.shared.playButtonClick()
             }
         } message: {
-            Text("Another tab is already using this shortcut. Overwrite?")
+            Text(String(localized: "shortcut.conflict.message"))
         }
         .onAppear {
             Anim.with {
@@ -88,7 +88,7 @@ struct AddTabView: View {
                 .symbolRenderingMode(.hierarchical)
                 .bounce(intensity: 1.08)
             
-            Text(isEditing ? "Edit Tab" : "Add Tab")
+            Text(isEditing ? String(localized: "edit_tab.title") : String(localized: "add_tab.title"))
                 .font(.title3)
                 .fontWeight(.semibold)
             
@@ -99,13 +99,13 @@ struct AddTabView: View {
     private var formContent: some View {
         Form {
             Section {
-                TextField("Title", text: $title)
+                TextField(String(localized: "field.title"), text: $title)
                     .textFieldStyle(.roundedBorder)
                 
-                TextField("URL", text: $url)
+                TextField(String(localized: "field.url"), text: $url)
                     .textFieldStyle(.roundedBorder)
                 
-                Picker("Browser", selection: $browser) {
+                Picker(String(localized: "field.browser"), selection: $browser) {
                     ForEach(BrowserType.allCases) { b in
                         HStack {
                             Image(systemName: b == .safari ? "safari" : b == .chrome ? "globe" : "wave.3.forward")
@@ -117,7 +117,7 @@ struct AddTabView: View {
                 .pickerStyle(.segmented)
             }
             
-            Section("Shortcut") {
+            Section(String(localized: "section.shortcut")) {
                 ShortcutPicker(
                     key: $shortcutKey,
                     modifiers: $shortcutModifiers,
@@ -129,7 +129,7 @@ struct AddTabView: View {
                     HStack(spacing: 6) {
                         Image(systemName: "exclamationmark.triangle.fill")
                             .foregroundStyle(.orange)
-                        Text("This shortcut is already used by another tab.")
+                        Text(String(localized: "shortcut.conflict.warning"))
                             .font(.caption)
                             .foregroundStyle(.orange)
                     }
@@ -146,7 +146,7 @@ struct AddTabView: View {
     
     private var actionButtons: some View {
         HStack {
-            Button("Cancel") {
+            Button(String(localized: "button.cancel")) {
                 SoundEffectManager.shared.playButtonClick()
                 dismiss()
             }
@@ -155,7 +155,7 @@ struct AddTabView: View {
             
             Spacer()
             
-            Button(isEditing ? "Save Changes" : "Add Tab") {
+            Button(isEditing ? String(localized: "button.save_changes") : String(localized: "button.add_tab")) {
                 SoundEffectManager.shared.playButtonClick()
                 if hasConflict {
                     shakeTrigger.toggle()

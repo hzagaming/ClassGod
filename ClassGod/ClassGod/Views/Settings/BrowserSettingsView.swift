@@ -12,34 +12,34 @@ struct BrowserSettingsView: View {
     
     var body: some View {
         Form {
-            Section("Default Browser") {
-                Picker("When adding manually", selection: $prefs.preferences.defaultBrowser) {
-                    Text("Auto-detect (none)").tag(Optional<BrowserType>.none)
+            Section(String(localized: "section.default_browser")) {
+                Picker(String(localized: "setting.when_adding"), selection: $prefs.preferences.defaultBrowser) {
+                    Text(String(localized: "browser.auto_detect")).tag(Optional<BrowserType>.none)
                     ForEach(BrowserType.allCases) { browser in
                         Text(browser.displayName).tag(Optional(browser))
                     }
                 }
                 .pickerStyle(.radioGroup)
                 
-                Text("The default browser is used when you manually add a tab without a browser currently open.")
+                Text(String(localized: "browser.default_caption"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
             
-            Section("Browser Not Running") {
-                Picker("Behavior", selection: $prefs.preferences.browserNotRunningBehavior) {
+            Section(String(localized: "section.browser_not_running")) {
+                Picker(String(localized: "setting.behavior"), selection: $prefs.preferences.browserNotRunningBehavior) {
                     ForEach(BrowserNotRunningBehavior.allCases) { behavior in
                         Text(behavior.displayName).tag(behavior)
                     }
                 }
                 .pickerStyle(.radioGroup)
                 
-                Text("Determines what happens when you trigger a shortcut for a browser that is not currently running.")
+                Text(String(localized: "browser.not_running_caption"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
             
-            Section("Supported Browsers") {
+            Section(String(localized: "section.supported_browsers")) {
                 VStack(alignment: .leading, spacing: 8) {
                     browserRow(name: "Safari", icon: "safari", bundleID: BrowserType.safari.bundleIdentifier)
                     browserRow(name: "Google Chrome", icon: "globe", bundleID: BrowserType.chrome.bundleIdentifier)
@@ -47,8 +47,8 @@ struct BrowserSettingsView: View {
                 }
             }
             
-            Section("Permissions") {
-                Button("Open Automation Settings...") {
+            Section(String(localized: "section.permissions")) {
+                Button(String(localized: "button.open_automation")) {
                     if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Automation") {
                         NSWorkspace.shared.open(url)
                     }
