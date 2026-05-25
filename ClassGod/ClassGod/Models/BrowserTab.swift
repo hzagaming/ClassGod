@@ -56,6 +56,6 @@ struct BrowserTab: Codable, Identifiable, Equatable {
     }
     
     var isValidShortcut: Bool {
-        !shortcutKey.isEmpty && shortcutModifiers != 0
+        !shortcutKey.isEmpty && (shortcutModifiers != 0 || shortcutKey.uppercased().hasPrefix("F"))
     }
 }

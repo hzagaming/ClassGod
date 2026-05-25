@@ -2,8 +2,6 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-    <key>LSUIElement</key>
-    <true/>
     <key>NSAppleEventsUsageDescription</key>
     <string>ClassGod 需要控制 Safari、Chrome 和 Edge 来探测和切换浏览器标签。</string>
     <key>NSAccessibilityUsageDescription</key>
@@ -13,8 +11,8 @@
     <key>CFBundleName</key>
     <string>ClassGod</string>
     <key>CFBundleShortVersionString</key>
-    <string>0.3.0</string>
+    <string>0.3.1</string>
     <key>CFBundleVersion</key>
-    <string>3</string>
+    <string>4</string>
 </dict>
 </plist>

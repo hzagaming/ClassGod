@@ -19,30 +19,39 @@ struct MenuBarView: View {
     @State private var headerScale: CGFloat = 0.98
     @State private var headerOpacity: Double = 0
     @State private var toastWorkItem: DispatchWorkItem?
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             header
                 .scaleEffect(headerScale)
                 .opacity(headerOpacity)
-            
+
+            if !viewModel.isAccessibilityTrusted {
+                permissionBanner
+                    .opacity(headerOpacity)
+            }
+
             Divider()
                 .opacity(headerOpacity)
-            
+
             tabList
-            
+
             Divider()
                 .opacity(headerOpacity)
-            
+
             footer
                 .opacity(headerOpacity)
         }
         .frame(width: prefs.preferences.panelWidth)
-        .background(Color.black)
+        .background(
+            RoundedRectangle(cornerRadius: prefs.preferences.panelCornerRadius)
+                .fill(Color.black)
+        )
         .overlay(
-            Rectangle()
+            RoundedRectangle(cornerRadius: prefs.preferences.panelCornerRadius)
                 .stroke(Color.white.opacity(0.15), lineWidth: 1)
         )
+        .preferredColorScheme(prefs.preferences.theme.colorScheme)
         .sheet(isPresented: $showAddSheet) {
             AddTabView(viewModel: viewModel, tab: nil)
         }
@@ -90,23 +99,25 @@ struct MenuBarView: View {
                 guard prefs.preferences.showToastNotifications else { return }
                 showToast(message: msg)
             }
-            
+
             viewModel.checkPermissionOnShow()
-            
+            if prefs.preferences.autoDetectOnShow {
+                viewModel.detectCurrentTabOnShowIfNeeded()
+            }
+
             Anim.with {
                 headerScale = 1.0
                 headerOpacity = 1.0
             }
-            SoundEffectManager.shared.playPopoverOpen()
         }
         .onDisappear {
             toastWorkItem?.cancel()
             toastWorkItem = nil
         }
     }
-    
+
     // MARK: - Toast Overlay
-    
+
     private var toastOverlay: some View {
         Group {
             if showToast, let message = toastMessage {
@@ -130,17 +141,17 @@ struct MenuBarView: View {
             }
         }
     }
-    
+
     private func showToast(message: String) {
         toastWorkItem?.cancel()
         toastMessage = message
         toastOffset = 20
         showToast = true
-        
+
         Anim.with {
             toastOffset = 0
         }
-        
+
         let item = DispatchWorkItem {
             Anim.with {
                 toastOffset = 20
@@ -150,22 +161,78 @@ struct MenuBarView: View {
         toastWorkItem = item
         DispatchQueue.main.asyncAfter(deadline: .now() + prefs.preferences.toastDuration, execute: item)
     }
-    
+
+    // MARK: - Permission Banner
+
+    private var permissionBanner: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: 11))
+                .foregroundStyle(.red)
+
+            Text(String(localized: "permission.banner.message"))
+                .font(.system(size: 11, weight: .medium, design: .monospaced))
+                .foregroundStyle(.red.opacity(0.9))
+
+            Spacer()
+
+            Button(String(localized: "permission.banner.button")) {
+                SoundEffectManager.shared.playButtonClick()
+                openAccessibilitySettings()
+            }
+            .font(.system(size: 11, weight: .semibold, design: .monospaced))
+            .foregroundStyle(.red)
+            .buttonStyle(.plain)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 6)
+        .background(Color.black)
+        .overlay(
+            Rectangle()
+                .stroke(Color.red.opacity(0.4), lineWidth: 1)
+        )
+    }
+
     // MARK: - Header
-    
+
     private var header: some View {
         HStack(spacing: 10) {
             Image(systemName: prefs.preferences.menuBarIconStyle.systemImageName)
                 .font(.title2)
                 .foregroundStyle(.white)
                 .symbolRenderingMode(.monochrome)
-            
+
             Text("ClassGod")
                 .font(.system(prefs.preferences.useCompactMode ? .subheadline : .headline, design: .monospaced))
                 .foregroundStyle(.white)
-            
+
+            if prefs.preferences.showTabCountBadge {
+                Text("\(viewModel.tabs.count)")
+                    .font(.system(size: 10, weight: .semibold, design: .monospaced))
+                    .foregroundStyle(.white.opacity(0.8))
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .background(Color(white: 0.14))
+                    .overlay(
+                        Rectangle()
+                            .stroke(Color.white.opacity(0.2), lineWidth: 0.5)
+                    )
+            }
+
             Spacer()
-            
+
+            Button(action: {
+                SoundEffectManager.shared.playButtonClick()
+                showAddSheet = true
+            }) {
+                Image(systemName: "plus.circle.fill")
+                    .foregroundStyle(.white)
+                    .symbolRenderingMode(.monochrome)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(String(localized: "button.add_tab"))
+            .help(String(localized: "button.add_tab"))
+
             Button(action: {
                 SoundEffectManager.shared.playButtonClick()
                 _ = viewModel.checkAccessibilityPermission()
@@ -181,9 +248,9 @@ struct MenuBarView: View {
         .padding(.horizontal)
         .padding(.vertical, prefs.preferences.useCompactMode ? 6 : 10)
     }
-    
+
     // MARK: - Tab List
-    
+
     private var tabList: some View {
         ScrollView {
             if viewModel.tabs.isEmpty {
@@ -239,27 +306,27 @@ struct MenuBarView: View {
         }
         .frame(maxHeight: prefs.preferences.panelMaxHeight)
     }
-    
+
     // MARK: - Empty State
-    
+
     private var emptyState: some View {
         VStack(spacing: 10) {
             ZStack {
                 Circle()
                     .fill(Color.accentColor.opacity(0.1))
                     .frame(width: 52, height: 52)
-                
+
                 Image(systemName: "link.badge.plus")
                     .font(.system(size: 24))
                     .foregroundStyle(Color.accentColor)
                     .symbolRenderingMode(.hierarchical)
             }
             .bounce(intensity: 1.03)
-            
+
             Text(String(localized: "empty.title"))
                 .font(.system(.subheadline, design: .monospaced))
                 .foregroundStyle(.white.opacity(0.7))
-            
+
             Text(String(localized: "empty.subtitle"))
                 .font(.system(.caption, design: .monospaced))
                 .foregroundStyle(.white.opacity(0.5))
@@ -269,9 +336,9 @@ struct MenuBarView: View {
         .padding()
         .slideIn(from: .bottom, delay: 0.05)
     }
-    
+
     // MARK: - Footer
-    
+
     private var footer: some View {
         VStack(spacing: 0) {
             Button(action: {
@@ -296,9 +363,9 @@ struct MenuBarView: View {
                 Rectangle()
                     .stroke(Color.white.opacity(0.1), lineWidth: 1)
             )
-            
+
             Divider()
-            
+
             HStack(spacing: 12) {
                 Button(String(localized: "button.settings")) {
                     SoundEffectManager.shared.playButtonClick()
@@ -306,16 +373,16 @@ struct MenuBarView: View {
                 }
                 .buttonStyle(.plain)
                 .foregroundStyle(.white.opacity(0.7))
-                
+
                 Button(String(localized: "button.automation")) {
                     SoundEffectManager.shared.playButtonClick()
                     openAutomationSettings()
                 }
                 .buttonStyle(.plain)
                 .foregroundStyle(.white.opacity(0.7))
-                
+
                 Spacer()
-                
+
                 Button(String(localized: "button.quit")) {
                     SoundEffectManager.shared.playButtonClick()
                     NSApplication.shared.terminate(nil)
@@ -327,12 +394,12 @@ struct MenuBarView: View {
             .padding(.vertical, 8)
         }
     }
-    
+
     private func openAccessibilitySettings() {
         guard let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") else { return }
         NSWorkspace.shared.open(url)
     }
-    
+
     private func openAutomationSettings() {
         guard let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Automation") else { return }
         NSWorkspace.shared.open(url)
@@ -346,11 +413,11 @@ struct TabRow: View {
     let onOpen: () -> Void
     let onEdit: () -> Void
     let onDelete: () -> Void
-    
+
     @State private var isHovered = false
     @State private var isPressed = false
     @ObservedObject private var prefs = PreferencesManager.shared
-    
+
     var body: some View {
         Button(action: {
             SoundEffectManager.shared.playButtonClick()
@@ -368,13 +435,13 @@ struct TabRow: View {
                 if prefs.preferences.showBrowserIcon {
                     browserIcon
                 }
-                
+
                 VStack(alignment: .leading, spacing: prefs.preferences.useCompactMode ? 0 : 2) {
                     Text(tab.title)
                         .font(.system(size: prefs.preferences.useCompactMode ? 12 : 13, weight: .medium, design: .monospaced))
                         .foregroundStyle(.white)
                         .lineLimit(1)
-                    
+
                     if prefs.preferences.showURLPreview {
                         Text(tab.url)
                             .font(.system(size: prefs.preferences.useCompactMode ? 9 : 10, design: .monospaced))
@@ -382,9 +449,9 @@ struct TabRow: View {
                             .lineLimit(1)
                     }
                 }
-                
+
                 Spacer()
-                
+
                 if prefs.preferences.showShortcutBadge && tab.isValidShortcut {
                     Text(tab.shortcutDisplayString)
                         .font(.system(size: prefs.preferences.useCompactMode ? 10 : 11, weight: .semibold, design: .monospaced))
@@ -409,6 +476,7 @@ struct TabRow: View {
             .scaleEffect(isPressed ? 0.98 : 1.0)
         }
         .buttonStyle(.plain)
+        .focusable(prefs.preferences.enableKeyboardNavigation)
         .help(tab.url)
         .onHover { hovering in
             if Anim.enabled {
@@ -422,7 +490,7 @@ struct TabRow: View {
         .padding(.horizontal, 4)
         .padding(.vertical, 1)
     }
-    
+
     private var browserIcon: some View {
         Group {
             switch tab.browser {

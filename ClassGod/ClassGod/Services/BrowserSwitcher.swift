@@ -10,14 +10,14 @@ import AppKit
 
 final class BrowserSwitcher {
     static let shared = BrowserSwitcher()
-    
+
     private init() {}
-    
+
     /// AppleScript strings use doubled quotes for escaping: " → ""
     private func appleScriptEscape(_ string: String) -> String {
         return string.replacingOccurrences(of: "\"", with: "\"\"")
     }
-    
+
     /// Extract host from URL in Swift (avoids shell injection in AppleScript)
     private func extractHost(from urlString: String) -> String {
         guard let url = URL(string: urlString), let host = url.host else {
@@ -25,18 +25,30 @@ final class BrowserSwitcher {
         }
         return host
     }
-    
+
     /// Check if browser is currently running
     private func isBrowserRunning(_ browser: BrowserType) -> Bool {
         return !NSRunningApplication.runningApplications(withBundleIdentifier: browser.bundleIdentifier).isEmpty
     }
-    
+
     /// Switch to the given tab. Behavior depends on user preferences.
     func switchToTab(_ tab: BrowserTab, completion: ((Bool, String) -> Void)? = nil) {
         let prefs = PreferencesManager.shared.preferences
+        let delay = max(0, prefs.switchDelayMs) / 1000
+
+        if delay > 0 {
+            DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+                self.performSwitchToTab(tab, prefs: prefs, completion: completion)
+            }
+        } else {
+            performSwitchToTab(tab, prefs: prefs, completion: completion)
+        }
+    }
+
+    private func performSwitchToTab(_ tab: BrowserTab, prefs: AppPreferences, completion: ((Bool, String) -> Void)? = nil) {
         let safeURL = appleScriptEscape(tab.url)
         let isRunning = isBrowserRunning(tab.browser)
-        
+
         // If browser not running, respect user preference
         if !isRunning {
             switch prefs.browserNotRunningBehavior {
@@ -50,13 +62,13 @@ final class BrowserSwitcher {
                 break // fall through to open URL
             }
         }
-        
+
         // If "always new tab" is selected, skip search and directly open URL
         if prefs.switchBehavior == .alwaysNewTab {
             openURLDirectly(tab: tab, url: safeURL, completion: completion)
             return
         }
-        
+
         // Otherwise try to find existing tab first
         let scriptSource: String
         switch tab.browser {
@@ -67,14 +79,14 @@ final class BrowserSwitcher {
         case .edge:
             scriptSource = buildEdgeSwitchScript(url: safeURL, precision: prefs.urlMatchPrecision)
         }
-        
+
         executeAppleScript(scriptSource) { result, errorMsg in
             if errorMsg != nil {
                 // Fallback: try to open URL directly
                 self.openURLDirectly(tab: tab, url: safeURL, completion: completion)
                 return
             }
-            
+
             let output = result?.stringValue ?? ""
             if output == "NOT_FOUND" {
                 self.openURLDirectly(tab: tab, url: safeURL, completion: completion)
@@ -83,7 +95,7 @@ final class BrowserSwitcher {
             }
         }
     }
-    
+
     private func launchBrowser(_ browser: BrowserType, completion: ((Bool, String) -> Void)?) {
         guard let appURL = NSWorkspace.shared.urlForApplication(withBundleIdentifier: browser.bundleIdentifier) else {
             completion?(false, String(format: String(localized: "error.browser_not_found"), browser.displayName))
@@ -100,7 +112,7 @@ final class BrowserSwitcher {
             }
         }
     }
-    
+
     private func openURLDirectly(tab: BrowserTab, url: String, completion: ((Bool, String) -> Void)? = nil) {
         let scriptSource: String
         switch tab.browser {
@@ -111,7 +123,7 @@ final class BrowserSwitcher {
         case .edge:
             scriptSource = buildEdgeOpenScript(url: url)
         }
-        
+
         executeAppleScript(scriptSource) { _, errorMsg in
             if let msg = errorMsg {
                 completion?(false, msg)
@@ -120,7 +132,7 @@ final class BrowserSwitcher {
             }
         }
     }
-    
+
     private func executeAppleScript(_ source: String, completion: @escaping (NSAppleEventDescriptor?, String?) -> Void) {
         DispatchQueue.global(qos: .userInitiated).async {
             var errorInfo: NSDictionary?
@@ -130,9 +142,9 @@ final class BrowserSwitcher {
                 }
                 return
             }
-            
+
             let result = appleScript.executeAndReturnError(&errorInfo)
-            
+
             DispatchQueue.main.async {
                 if let error = errorInfo {
                     let msg = error["NSAppleScriptErrorMessage"] as? String ?? String(localized: "error.unknown")
@@ -143,9 +155,9 @@ final class BrowserSwitcher {
             }
         }
     }
-    
+
     // MARK: - Switch Scripts (find existing tab)
-    
+
     private func buildSafariSwitchScript(url: String, precision: URLMatchPrecision) -> String {
         let matchCondition: String
         switch precision {
@@ -158,7 +170,7 @@ final class BrowserSwitcher {
             let safeHost = appleScriptEscape(host)
             matchCondition = "tabURL contains \"\(safeHost)\""
         }
-        
+
         return """
         tell application "Safari"
             activate
@@ -177,7 +189,7 @@ final class BrowserSwitcher {
         end tell
         """
     }
-    
+
     private func buildChromeSwitchScript(url: String, precision: URLMatchPrecision) -> String {
         let matchCondition: String
         switch precision {
@@ -190,7 +202,7 @@ final class BrowserSwitcher {
             let safeHost = appleScriptEscape(host)
             matchCondition = "tabURL contains \"\(safeHost)\""
         }
-        
+
         return """
         tell application "Google Chrome"
             activate
@@ -212,7 +224,7 @@ final class BrowserSwitcher {
         end tell
         """
     }
-    
+
     private func buildEdgeSwitchScript(url: String, precision: URLMatchPrecision) -> String {
         let matchCondition: String
         switch precision {
@@ -225,7 +237,7 @@ final class BrowserSwitcher {
             let safeHost = appleScriptEscape(host)
             matchCondition = "tabURL contains \"\(safeHost)\""
         }
-        
+
         return """
         tell application "Microsoft Edge"
             activate
@@ -247,38 +259,55 @@ final class BrowserSwitcher {
         end tell
         """
     }
-    
+
     // MARK: - Open Scripts (new tab/window)
-    
+
     private func buildSafariOpenScript(url: String) -> String {
         return """
         tell application "Safari"
             activate
-            tell front window
-                set current tab to (make new tab with properties {URL:"\(url)"})
-            end tell
+            set targetURL to "\(url)"
+            if (count of windows) = 0 then
+                make new document with properties {URL:targetURL}
+            else
+                tell front window
+                    set current tab to (make new tab with properties {URL:targetURL})
+                end tell
+            end if
         end tell
         """
     }
-    
+
     private func buildChromeOpenScript(url: String) -> String {
         return """
         tell application "Google Chrome"
             activate
-            tell front window
-                make new tab with properties {URL:"\(url)"}
-            end tell
+            set targetURL to "\(url)"
+            if (count of windows) = 0 then
+                make new window
+                set URL of active tab of front window to targetURL
+            else
+                tell front window
+                    make new tab with properties {URL:targetURL}
+                end tell
+            end if
         end tell
         """
     }
-    
+
     private func buildEdgeOpenScript(url: String) -> String {
         return """
         tell application "Microsoft Edge"
             activate
-            tell front window
-                make new tab with properties {URL:"\(url)"}
-            end tell
+            set targetURL to "\(url)"
+            if (count of windows) = 0 then
+                make new window
+                set URL of active tab of front window to targetURL
+            else
+                tell front window
+                    make new tab with properties {URL:targetURL}
+                end tell
+            end if
         end tell
         """
     }

@@ -14,8 +14,8 @@ struct ShortcutsSettingsView: View {
     @State private var isRecordingPopoverShortcut = false
     @State private var pulseScale: CGFloat = 1.0
     @State private var pulseOpacity: Double = 1.0
-    @State private var globalMonitor: Any?
-    
+    @State private var localMonitor: Any?
+
     var displayShortcut: String {
         let flags = NSEvent.ModifierFlags(rawValue: UInt(prefs.preferences.showPopoverModifiers))
         var parts: [String] = []
@@ -29,26 +29,26 @@ struct ShortcutsSettingsView: View {
         }
         return parts.isEmpty ? String(localized: "shortcut.none") : parts.joined(separator: "")
     }
-    
+
     var body: some View {
         Form {
             Section(String(localized: "section.global_shortcut")) {
                 HStack {
                     Text(String(localized: "setting.show_panel"))
                     Spacer()
-                    
+
                     ZStack {
                         RoundedRectangle(cornerRadius: 8)
                             .fill(isRecordingPopoverShortcut ? Color.accentColor.opacity(0.12) : Color.secondary.opacity(0.08))
                             .frame(width: 120, height: 36)
-                        
+
                         if isRecordingPopoverShortcut {
                             RoundedRectangle(cornerRadius: 8)
                                 .stroke(Color.accentColor.opacity(pulseOpacity), lineWidth: 2)
                                 .frame(width: 120, height: 36)
                                 .scaleEffect(pulseScale)
                         }
-                        
+
                         Text(isRecordingPopoverShortcut ? String(localized: "shortcut.press_keys") : displayShortcut)
                             .font(.system(size: 14, weight: .medium, design: .monospaced))
                             .foregroundStyle(isRecordingPopoverShortcut ? Color.accentColor : .primary)
@@ -68,7 +68,7 @@ struct ShortcutsSettingsView: View {
                     .accessibilityLabel(String(localized: "accessibility.record_global"))
                     .accessibilityHint(isRecordingPopoverShortcut ? String(localized: "accessibility.press_combination") : String(localized: "accessibility.tap_to_start"))
                     .accessibilityAddTraits(.isButton)
-                    
+
                     Button(String(localized: "button.reset")) {
                         SoundEffectManager.shared.playButtonClick()
                         prefs.preferences.showPopoverKeyCode = AppPreferences.default.showPopoverKeyCode
@@ -80,12 +80,12 @@ struct ShortcutsSettingsView: View {
                     )
                     .pressScale(0.9)
                 }
-                
+
                 Text(String(localized: "shortcut.tip.caption"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
-            
+
             Section(String(localized: "section.tips")) {
                 VStack(alignment: .leading, spacing: 6) {
                     Label(String(localized: "tip.avoid_conflict"), systemImage: "exclamationmark.triangle")
@@ -115,50 +115,55 @@ struct ShortcutsSettingsView: View {
             stopRecording()
         }
     }
-    
+
     private func startRecording() {
         guard !isRecordingPopoverShortcut else { return }
         isRecordingPopoverShortcut = true
         HapticManager.shared.generic()
-        
-        globalMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.keyDown, .flagsChanged]) { [self] event in
-            guard self.isRecordingPopoverShortcut else { return }
-            
-            let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
-            
-            if event.type == .keyDown {
-                let specialKeyCodes: Set<UInt16> = [
-                    0x24, 0x30, 0x31, 0x33, 0x35, 0x37, 0x38, 0x39, 0x3A, 0x3B, 0x3F,
-                    0x7B, 0x7C, 0x7D, 0x7E
-                ]
-                
-                if specialKeyCodes.contains(event.keyCode) {
-                    return
-                }
-                
-                let char = event.charactersIgnoringModifiers ?? ""
-                
-                if flags.subtracting([.function, .numericPad]).isEmpty && char.rangeOfCharacter(from: .letters) != nil {
-                    return
-                }
-                
-                self.prefs.preferences.showPopoverKeyCode = UInt32(event.keyCode)
-                self.prefs.preferences.showPopoverModifiers = UInt32(flags.rawValue)
-                SoundEffectManager.shared.playShortcutRecorded()
-                HapticManager.shared.success()
-                self.stopRecording()
-            }
+
+        localMonitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown, .flagsChanged]) { [self] event in
+            handleRecordingEvent(event)
         }
     }
-    
+
     private func stopRecording() {
         isRecordingPopoverShortcut = false
-        if let monitor = globalMonitor {
+        if let monitor = localMonitor {
             NSEvent.removeMonitor(monitor)
-            globalMonitor = nil
+            localMonitor = nil
         }
     }
-    
+
+    private func handleRecordingEvent(_ event: NSEvent) -> NSEvent? {
+        guard isRecordingPopoverShortcut else { return event }
+
+        let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+        guard event.type == .keyDown else { return nil }
+
+        let specialKeyCodes: Set<UInt16> = [
+            0x24, 0x30, 0x31, 0x33, 0x35, 0x37, 0x38, 0x39, 0x3A, 0x3B, 0x3F,
+            0x7B, 0x7C, 0x7D, 0x7E
+        ]
+
+        if specialKeyCodes.contains(event.keyCode) {
+            return nil
+        }
+
+        let char = event.charactersIgnoringModifiers ?? ""
+        let userModifiers = flags.subtracting([.function, .numericPad])
+
+        if userModifiers.isEmpty && char.rangeOfCharacter(from: .letters) != nil {
+            return nil
+        }
+
+        prefs.preferences.showPopoverKeyCode = UInt32(event.keyCode)
+        prefs.preferences.showPopoverModifiers = UInt32(flags.rawValue)
+        SoundEffectManager.shared.playShortcutRecorded()
+        HapticManager.shared.success()
+        stopRecording()
+        return nil
+    }
+
     private func keyCodeToString(_ keyCode: UInt32) -> String {
         let map: [UInt32: String] = [
             0x00: "A", 0x01: "S", 0x02: "D", 0x03: "F", 0x04: "H", 0x05: "G",

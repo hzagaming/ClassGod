@@ -27,7 +27,7 @@ struct SplashScreenView: View {
                     .foregroundStyle(.white.opacity(0.9))
                     .opacity(subtitleOpacity)
                 
-                Text("v\(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.3.0")")
+                Text("v\(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.3.1")")
                     .font(.caption)
                     .foregroundStyle(.gray)
                     .opacity(subtitleOpacity)

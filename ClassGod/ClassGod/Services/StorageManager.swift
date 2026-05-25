@@ -66,3 +66,7 @@ final class StorageManager {
         saveTabs(tabs)
     }
 }
+
+extension Notification.Name {
+    static let classGodTabsDidChange = Notification.Name("classGodTabsDidChange")
+}

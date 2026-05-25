@@ -10,6 +10,7 @@ import Carbon
 
 final class ShortcutManager {
     static let shared = ShortcutManager()
+    private static let hotKeySignature = FourCharCode(bitPattern: 0x434C4744) // 'CLGD'
     
     private var registeredHotKeys: [UUID: EventHotKeyRef] = [:]
     private var callbackMap: [UInt32: UUID] = [:]
@@ -41,7 +42,7 @@ final class ShortcutManager {
         let carbonModifiers = cocoaToCarbonModifiers(tab.shortcutModifiers)
         
         var hotKeyRef: EventHotKeyRef?
-        let hotKeyID = EventHotKeyID(signature: FourCharCode(bitPattern: 0x434C4744), id: nextHotKeyID) // 'CLGD'
+        let hotKeyID = EventHotKeyID(signature: Self.hotKeySignature, id: nextHotKeyID)
         nextHotKeyID += 1
         
         let status = RegisterEventHotKey(
@@ -85,6 +86,7 @@ final class ShortcutManager {
         }
         registeredHotKeys.removeAll()
         callbackMap.removeAll()
+        nextHotKeyID = 1
     }
     
     func refreshShortcuts(from tabs: [BrowserTab]) {
@@ -115,11 +117,13 @@ final class ShortcutManager {
             
             guard status == noErr else { return OSStatus(eventNotHandledErr) }
             
-            if let tabID = ShortcutManager.shared.callbackMap[hotKeyID.id] {
+            if hotKeyID.signature == ShortcutManager.hotKeySignature,
+               let tabID = ShortcutManager.shared.callbackMap[hotKeyID.id] {
                 ShortcutManager.shared.onHotKeyPressed?(tabID)
+                return noErr
             }
             
-            return noErr
+            return OSStatus(eventNotHandledErr)
         }
         
         var eventType = EventTypeSpec(eventClass: OSType(kEventClassKeyboard), eventKind: UInt32(kEventHotKeyPressed))
