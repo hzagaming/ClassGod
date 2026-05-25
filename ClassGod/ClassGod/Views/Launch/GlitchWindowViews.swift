@@ -13,7 +13,7 @@ import Combine
 struct TerminalGlitchView: View {
     @State private var lines: [String] = []
     @State private var timer: Timer?
-    private let maxLines = 12
+    private let maxLines = 10
     
     let seed: Int
     
@@ -38,13 +38,13 @@ struct TerminalGlitchView: View {
     }
     
     private func startGlitch() {
-        // Initial burst
+        // Fill initial lines
         for _ in 0..<maxLines {
             lines.append(randomHexLine())
         }
         
-        // Continuous update
-        timer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { _ in
+        // Slower update (0.15s) to reduce CPU usage
+        timer = Timer.scheduledTimer(withTimeInterval: 0.15, repeats: true) { _ in
             if lines.count >= maxLines {
                 lines.removeFirst()
             }
@@ -179,19 +179,18 @@ struct CrashGlitchView: View {
     }
 }
 
-// MARK: - Matrix Rain Glitch View
+// MARK: - Matrix Rain Glitch View (performance-optimized)
 
 struct MatrixRainGlitchView: View {
     @State private var drops: [MatrixDrop] = []
-    private let columns = 15
-    private let timer = Timer.publish(every: 0.06, on: .main, in: .common).autoconnect()
+    private let columns = 8
+    private let timer = Timer.publish(every: 0.12, on: .main, in: .common).autoconnect()
     
     struct MatrixDrop: Identifiable {
         let id = UUID()
         var column: Int
         var row: Int
         var chars: [Character]
-        var brightness: Double
     }
     
     var body: some View {
@@ -218,7 +217,7 @@ struct MatrixRainGlitchView: View {
                 updateDrops()
             }
             .onAppear {
-                for _ in 0..<8 {
+                for _ in 0..<6 {
                     drops.append(createDrop())
                 }
             }
@@ -227,19 +226,18 @@ struct MatrixRainGlitchView: View {
     
     private func createDrop() -> MatrixDrop {
         let chars = "ABCDEF0123456789!@#$%^&*()"
-        let length = Int.random(in: 3...8)
+        let length = Int.random(in: 3...7)
         return MatrixDrop(
             column: Int.random(in: 0..<columns),
-            row: Int.random(in: 0...20),
-            chars: (0..<length).map { _ in chars.randomElement()! },
-            brightness: Double.random(in: 0.3...1.0)
+            row: Int.random(in: 0...15),
+            chars: (0..<length).map { _ in chars.randomElement()! }
         )
     }
     
     private func updateDrops() {
         for i in drops.indices {
             drops[i].row += 1
-            if drops[i].row > 25 {
+            if drops[i].row > 20 {
                 drops[i] = createDrop()
             }
         }

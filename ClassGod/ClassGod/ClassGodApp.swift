@@ -51,10 +51,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 object: nil
             )
 
-            // Phase 2: Chaos glitch animation
+            // Phase 2: Setup main window first (hidden behind glitch windows)
+            self.setupMainWindow()
+            self.mainWindow?.alphaValue = 0
+            self.mainWindow?.orderFront(nil)
+            
+            // Phase 3: Chaos glitch animation
             LaunchAnimationManager.shared.startChaosAnimation { [weak self] in
-                // Phase 3: Reveal main window
-                self?.setupMainWindow()
+                // Phase 4: Reveal main window after all glitch windows close
                 self?.showMainWindow(animated: true)
             }
 
@@ -104,7 +108,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             defer: false
         )
 
-        window.level = .floating
+        window.level = .normal
         window.backgroundColor = .clear
         window.hasShadow = true
         window.isMovableByWindowBackground = true
