@@ -113,6 +113,9 @@ struct MenuBarView: View {
         .onDisappear {
             toastWorkItem?.cancel()
             toastWorkItem = nil
+            showToast = false
+            headerScale = 0.98
+            headerOpacity = 0
         }
     }
 
@@ -313,13 +316,13 @@ struct MenuBarView: View {
         VStack(spacing: 10) {
             ZStack {
                 Circle()
-                    .fill(Color.accentColor.opacity(0.1))
+                    .fill(Color.white.opacity(0.1))
                     .frame(width: 52, height: 52)
 
                 Image(systemName: "link.badge.plus")
                     .font(.system(size: 24))
-                    .foregroundStyle(Color.accentColor)
-                    .symbolRenderingMode(.hierarchical)
+                    .foregroundStyle(.white.opacity(0.7))
+                    .symbolRenderingMode(.monochrome)
             }
             .bounce(intensity: 1.03)
 
@@ -416,6 +419,7 @@ struct TabRow: View {
 
     @State private var isHovered = false
     @State private var isPressed = false
+    @FocusState private var isFocused: Bool
     @ObservedObject private var prefs = PreferencesManager.shared
 
     var body: some View {
@@ -471,12 +475,13 @@ struct TabRow: View {
             .contentShape(Rectangle())
             .background(
                 Rectangle()
-                    .fill(isHovered ? Color.white.opacity(0.08) : Color.clear)
+                    .fill(backgroundColor)
             )
             .scaleEffect(isPressed ? 0.98 : 1.0)
         }
         .buttonStyle(.plain)
         .focusable(prefs.preferences.enableKeyboardNavigation)
+        .focused($isFocused)
         .help(tab.url)
         .onHover { hovering in
             if Anim.enabled {
@@ -489,6 +494,18 @@ struct TabRow: View {
         }
         .padding(.horizontal, 4)
         .padding(.vertical, 1)
+    }
+
+    private var backgroundColor: Color {
+        if isPressed {
+            return Color.white.opacity(0.12)
+        } else if isHovered {
+            return Color.white.opacity(0.08)
+        } else if isFocused {
+            return Color.white.opacity(0.15)
+        } else {
+            return Color.clear
+        }
     }
 
     private var browserIcon: some View {

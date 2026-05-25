@@ -39,19 +39,19 @@ struct ShortcutsSettingsView: View {
 
                     ZStack {
                         RoundedRectangle(cornerRadius: 8)
-                            .fill(isRecordingPopoverShortcut ? Color.accentColor.opacity(0.12) : Color.secondary.opacity(0.08))
+                            .fill(isRecordingPopoverShortcut ? Color.white.opacity(0.12) : Color(white: 0.12))
                             .frame(width: 120, height: 36)
 
                         if isRecordingPopoverShortcut {
                             RoundedRectangle(cornerRadius: 8)
-                                .stroke(Color.accentColor.opacity(pulseOpacity), lineWidth: 2)
+                                .stroke(Color.white.opacity(pulseOpacity), lineWidth: 1)
                                 .frame(width: 120, height: 36)
                                 .scaleEffect(pulseScale)
                         }
 
                         Text(isRecordingPopoverShortcut ? String(localized: "shortcut.press_keys") : displayShortcut)
                             .font(.system(size: 14, weight: .medium, design: .monospaced))
-                            .foregroundStyle(isRecordingPopoverShortcut ? Color.accentColor : .primary)
+                            .foregroundStyle(isRecordingPopoverShortcut ? .white : .white.opacity(0.8))
                             .lineLimit(1)
                             .minimumScaleFactor(0.7)
                     }
@@ -105,7 +105,12 @@ struct ShortcutsSettingsView: View {
                     pulseOpacity = 0.4
                 }
             } else {
-                withAnimation(.easeOut(duration: 0.15)) {
+                if Anim.enabled {
+                    withAnimation(.easeOut(duration: Anim.duration)) {
+                        pulseScale = 1.0
+                        pulseOpacity = 1.0
+                    }
+                } else {
                     pulseScale = 1.0
                     pulseOpacity = 1.0
                 }

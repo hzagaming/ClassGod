@@ -69,11 +69,11 @@ struct AddTabView: View {
                 .stroke(Color.white.opacity(0.15), lineWidth: 1)
         )
         .alert(String(localized: "shortcut.conflict.title"), isPresented: $showConflictAlert) {
-            Button("覆盖", role: .destructive) {
+            Button(String(localized: "button.overwrite"), role: .destructive) {
                 SoundEffectManager.shared.playButtonClick()
                 performSave()
             }
-            Button("算了", role: .cancel) {
+            Button(String(localized: "button.cancel"), role: .cancel) {
                 SoundEffectManager.shared.playButtonClick()
             }
         } message: {

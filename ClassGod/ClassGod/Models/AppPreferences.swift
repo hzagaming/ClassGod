@@ -113,8 +113,8 @@ enum AnimationSpeed: String, Codable, CaseIterable, Identifiable {
     var duration: Double {
         switch self {
         case .instant: return 0
-        case .fast: return 0.08
-        case .normal: return 0.2
+        case .fast: return 0.03
+        case .normal: return 0.1
         }
     }
 

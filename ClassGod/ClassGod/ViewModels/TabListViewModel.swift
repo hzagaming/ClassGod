@@ -35,6 +35,7 @@ final class TabListViewModel: ObservableObject {
     func saveTabs() {
         StorageManager.shared.saveTabs(tabs)
         refreshShortcuts()
+        NotificationCenter.default.post(name: .classGodTabsDidChange, object: nil)
     }
 
     func addTab(_ tab: BrowserTab) {
@@ -113,7 +114,6 @@ final class TabListViewModel: ObservableObject {
                 self.tabs.append(newTab)
             }
             self.saveTabs()
-            self.onShowToast?(String(localized: "toast.saved_current"))
         }
     }
 
