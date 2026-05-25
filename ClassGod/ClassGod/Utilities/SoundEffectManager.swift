@@ -84,6 +84,32 @@ final class SoundEffectManager {
     func playButtonClick() {
         play(.buttonClick)
     }
+    
+    // MARK: - Glitch SFX (chaos launch animation)
+    
+    private let glitchSoundIDs: [SystemSoundID] = [
+        1005,  // Basso (short error)
+        1006,  // Basso (error)
+        1107,  // Tock
+        1306,  // Error
+        1257,  // Funk
+        1262,  // Glass
+    ]
+    
+    func playGlitchSound() {
+        guard isEnabled else { return }
+        guard let soundID = glitchSoundIDs.randomElement() else { return }
+        AudioServicesPlaySystemSound(soundID)
+    }
+    
+    func playGlitchBurst(count: Int) {
+        guard isEnabled else { return }
+        for i in 0..<count {
+            DispatchQueue.main.asyncAfter(deadline: .now() + Double(i) * 0.08) {
+                self.playGlitchSound()
+            }
+        }
+    }
 }
 
 // MARK: - Haptic Feedback

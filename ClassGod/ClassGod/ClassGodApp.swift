@@ -56,12 +56,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             if let window = self.mainWindow {
                 window.alphaValue = 0
                 window.orderBack(nil)
-            }
-            
-            // Phase 3: Chaos glitch animation (windows float above main window)
-            LaunchAnimationManager.shared.startChaosAnimation { [weak self] in
-                // Phase 4: Reveal main window after all glitch windows close
-                self?.showMainWindow(animated: true)
+                
+                // Phase 3: Chaos glitch animation
+                // Main window blends in around window #3-4 and gradually reveals as glitch windows close
+                LaunchAnimationManager.shared.startChaosAnimation(mainWindow: window) { [weak self] in
+                    // Phase 4: Animation complete, main window is fully revealed
+                    self?.mainWindow?.makeKeyAndOrderFront(nil)
+                }
             }
 
             let trusted = AXIsProcessTrustedWithOptions(
