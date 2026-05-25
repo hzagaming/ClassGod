@@ -17,6 +17,16 @@
     "%lld" : {
 
     },
+    "%lld. %@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld. %2$@"
+          }
+        }
+      }
+    },
     "%lldms" : {
 
     },
@@ -1414,6 +1424,7 @@
       }
     },
     "button.go_settings" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1530,6 +1541,7 @@
       }
     },
     "button.later" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -2459,6 +2471,9 @@
           }
         }
       }
+    },
+    "Crashed Thread: %lld" : {
+
     },
     "debug.caption" : {
       "localizations" : {
@@ -4729,6 +4744,7 @@
       }
     },
     "permission.alert.message" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -4787,6 +4803,7 @@
       }
     },
     "permission.alert.title" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -5193,6 +5210,9 @@
           }
         }
       }
+    },
+    "Process: ClassGod [%lld]" : {
+
     },
     "reset.confirm.message" : {
       "localizations" : {

@@ -51,12 +51,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 object: nil
             )
 
-            // Phase 2: Setup main window first (hidden behind glitch windows)
+            // Phase 2: Setup main window first (hidden at bottom layer)
             self.setupMainWindow()
-            self.mainWindow?.alphaValue = 0
-            self.mainWindow?.orderFront(nil)
+            if let window = self.mainWindow {
+                window.alphaValue = 0
+                window.orderBack(nil)
+            }
             
-            // Phase 3: Chaos glitch animation
+            // Phase 3: Chaos glitch animation (windows float above main window)
             LaunchAnimationManager.shared.startChaosAnimation { [weak self] in
                 // Phase 4: Reveal main window after all glitch windows close
                 self?.showMainWindow(animated: true)
