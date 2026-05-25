@@ -23,7 +23,7 @@ struct ClassGodApp: App {
 
 class AppDelegate: NSObject, NSApplicationDelegate {
     var statusItem: NSStatusItem!
-    var popover: NSPopover!
+    var mainWindow: NSWindow?
     var showPopoverHotKeyRef: EventHotKeyRef?
 
     var splashWindow: NSWindow?
@@ -31,19 +31,19 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         showSplashScreen()
 
+        // Phase 1: Splash (2s) -> Phase 2: Chaos Animation -> Phase 3: Main Window
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
             guard let self = self else { return }
             self.closeSplashScreen()
             self.setupStatusItem()
-            self.setupPopover()
             self.setupShowPopoverShortcut()
 
             PreferencesManager.shared.onPreferencesChanged = { [weak self] _ in
                 self?.setupShowPopoverShortcut()
                 self?.updateStatusItemIcon()
-                self?.updatePopoverSize()
+                self?.updateMainWindowSize()
             }
-            
+
             NotificationCenter.default.addObserver(
                 self,
                 selector: #selector(self.tabsDidChange),
@@ -51,21 +51,23 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 object: nil
             )
 
+            // Phase 2: Chaos glitch animation
+            LaunchAnimationManager.shared.startChaosAnimation { [weak self] in
+                // Phase 3: Reveal main window
+                self?.setupMainWindow()
+                self?.showMainWindow(animated: true)
+            }
+
             let trusted = AXIsProcessTrustedWithOptions(
                 [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: false] as CFDictionary
             )
             if !trusted {
                 // Do not force permission alert on first launch
-                // User can still use the UI and will be reminded in the panel
-            }
-
-            if PreferencesManager.shared.preferences.showPopoverOnLaunch {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
-                    self?.togglePopover()
-                }
             }
         }
     }
+
+    // MARK: - Splash Screen
 
     private func showSplashScreen() {
         let window = NSWindow(
@@ -86,6 +88,110 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         splashWindow = nil
     }
 
+    // MARK: - Main Window
+
+    private func setupMainWindow() {
+        let prefs = PreferencesManager.shared.preferences
+        let size = NSSize(
+            width: prefs.panelWidth,
+            height: min(prefs.panelMaxHeight, CGFloat(prefs.maxTabsInPopover) * CGFloat(prefs.rowHeight) + 120)
+        )
+
+        let window = DraggableWindow(
+            contentRect: NSRect(origin: .zero, size: size),
+            styleMask: [.borderless],
+            backing: .buffered,
+            defer: false
+        )
+
+        window.level = .floating
+        window.backgroundColor = .clear
+        window.hasShadow = true
+        window.isMovableByWindowBackground = true
+        window.isReleasedWhenClosed = false
+        window.isOpaque = false
+        
+        // Apply corner radius to the window itself
+        window.contentView?.wantsLayer = true
+        window.contentView?.layer?.cornerRadius = prefs.panelCornerRadius
+        window.contentView?.layer?.masksToBounds = true
+
+        // Center on screen
+        if let screen = NSScreen.main {
+            let screenFrame = screen.visibleFrame
+            let x = screenFrame.midX - size.width / 2
+            let y = screenFrame.midY - size.height / 2
+            window.setFrameOrigin(NSPoint(x: x, y: y))
+        }
+
+        let rootView = MenuBarWindowView()
+            .frame(width: size.width, height: size.height)
+            .background(Color.clear)
+
+        window.contentView = NSHostingView(rootView: rootView)
+
+        mainWindow = window
+    }
+
+    private func updateMainWindowSize() {
+        guard let window = mainWindow else { return }
+        let prefs = PreferencesManager.shared.preferences
+        let newSize = NSSize(
+            width: prefs.panelWidth,
+            height: min(prefs.panelMaxHeight, CGFloat(prefs.maxTabsInPopover) * CGFloat(prefs.rowHeight) + 120)
+        )
+        window.setContentSize(newSize)
+    }
+
+    func showMainWindow(animated: Bool = false) {
+        guard let window = mainWindow else { return }
+
+        SoundEffectManager.shared.playPopoverOpen()
+
+        if animated {
+            window.alphaValue = 0
+            window.makeKeyAndOrderFront(nil)
+
+            NSAnimationContext.runAnimationGroup { context in
+                context.duration = 0.25
+                context.timingFunction = .init(name: .easeOut)
+                window.animator().alphaValue = 1.0
+            }
+        } else {
+            window.makeKeyAndOrderFront(nil)
+        }
+    }
+
+    func hideMainWindow() {
+        guard let window = mainWindow else { return }
+        SoundEffectManager.shared.playPopoverClose()
+
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = 0.15
+            context.timingFunction = .init(name: .easeIn)
+            window.animator().alphaValue = 0
+        } completionHandler: { [weak self] in
+            self?.mainWindow?.orderOut(nil)
+        }
+    }
+
+    @objc func toggleMainWindow() {
+        guard let window = mainWindow else {
+            // If window doesn't exist yet, create and show it
+            setupMainWindow()
+            showMainWindow(animated: true)
+            return
+        }
+
+        if window.isVisible && window.alphaValue > 0 {
+            hideMainWindow()
+        } else {
+            showMainWindow(animated: true)
+        }
+    }
+
+    // MARK: - Lifecycle
+
     func applicationWillTerminate(_ notification: Notification) {
         if let ref = showPopoverHotKeyRef {
             UnregisterEventHotKey(ref)
@@ -95,10 +201,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
         uninstallGlobalEventHandler()
         ShortcutManager.shared.unregisterAllShortcuts()
+        LaunchAnimationManager.shared.cancelAnimation()
     }
 
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
-        togglePopover()
+        toggleMainWindow()
         return false
     }
 
@@ -106,28 +213,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         return false
     }
 
-    private func showPermissionReminder() {
-        let alert = NSAlert()
-        alert.messageText = String(localized: "permission.alert.title")
-        alert.informativeText = String(localized: "permission.alert.message")
-        alert.alertStyle = .informational
-        alert.addButton(withTitle: String(localized: "button.go_settings"))
-        alert.addButton(withTitle: String(localized: "button.later"))
-
-        let response = alert.runModal()
-        if response == .alertFirstButtonReturn {
-            if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
-                NSWorkspace.shared.open(url)
-            }
-        }
-    }
+    // MARK: - Status Item
 
     private func setupStatusItem() {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         updateStatusItemIcon()
 
         if let button = statusItem.button {
-            button.action = #selector(togglePopover)
+            button.action = #selector(toggleMainWindow)
             button.target = self
         }
     }
@@ -154,34 +247,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         statusItem?.button?.toolTip = "ClassGod"
     }
 
-    private func setupPopover() {
-        popover = NSPopover()
-        updatePopoverSize()
-        popover.behavior = .transient
-        popover.contentViewController = NSHostingController(rootView: MenuBarView())
-        popover.animates = true
-    }
-
-    private func updatePopoverSize() {
-        let prefs = PreferencesManager.shared.preferences
-        popover?.contentSize = NSSize(
-            width: prefs.panelWidth,
-            height: min(prefs.panelMaxHeight, CGFloat(prefs.maxTabsInPopover) * CGFloat(prefs.rowHeight) + 120)
-        )
-    }
-
-    @objc func togglePopover() {
-        guard let button = statusItem.button else { return }
-
-        if popover.isShown {
-            SoundEffectManager.shared.playPopoverClose()
-            popover.performClose(nil)
-        } else {
-            SoundEffectManager.shared.playPopoverOpen()
-            popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
-            popover.contentViewController?.view.window?.makeKey()
-        }
-    }
+    // MARK: - Global Shortcut
 
     private func setupShowPopoverShortcut() {
         installGlobalEventHandlerIfNeeded()
@@ -225,7 +291,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 }
 
-// Global event handler installed once
+// MARK: - Global Event Handler
+
 private var globalEventHandlerInstalled = false
 private var globalEventHandlerRef: EventHandlerRef?
 private let showPopoverHotKeySignature = FourCharCode(bitPattern: 0x53484F57) // 'SHOW'
@@ -248,7 +315,7 @@ func installGlobalEventHandlerIfNeeded() {
         )
         if result == noErr && hkID.signature == showPopoverHotKeySignature && hkID.id == showPopoverHotKeyID {
             DispatchQueue.main.async {
-                (NSApp.delegate as? AppDelegate)?.togglePopover()
+                (NSApp.delegate as? AppDelegate)?.toggleMainWindow()
             }
             return noErr
         }
@@ -271,6 +338,16 @@ func uninstallGlobalEventHandler() {
     }
     globalEventHandlerInstalled = false
 }
+
+// MARK: - MenuBar Window View (wrapper for window dragging)
+
+struct MenuBarWindowView: View {
+    var body: some View {
+        MenuBarView()
+    }
+}
+
+// MARK: - Settings Container
 
 struct SettingsContainerView: View {
     @State private var selectedTab = 0
