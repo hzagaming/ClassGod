@@ -21,26 +21,33 @@ struct MenuBarView: View {
     @State private var toastWorkItem: DispatchWorkItem?
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            header
-                .scaleEffect(headerScale)
-                .opacity(headerOpacity)
+        ZStack {
+            // Base content
+            VStack(alignment: .leading, spacing: 0) {
+                header
+                    .scaleEffect(headerScale)
+                    .opacity(headerOpacity)
 
-            if !viewModel.isAccessibilityTrusted {
-                permissionBanner
+                if !viewModel.isAccessibilityTrusted {
+                    permissionBanner
+                        .opacity(headerOpacity)
+                }
+
+                headerDivider
+                    .opacity(headerOpacity)
+
+                tabList
+
+                Divider()
+                    .opacity(headerOpacity)
+
+                footer
                     .opacity(headerOpacity)
             }
-
-            Divider()
-                .opacity(headerOpacity)
-
-            tabList
-
-            Divider()
-                .opacity(headerOpacity)
-
-            footer
-                .opacity(headerOpacity)
+            
+            // Scanline overlay
+            scanlineOverlay
+                .allowsHitTesting(false)
         }
         .frame(width: prefs.preferences.panelWidth)
         .background(
@@ -196,6 +203,34 @@ struct MenuBarView: View {
         )
     }
 
+    // MARK: - Scanline Overlay
+    
+    private var scanlineOverlay: some View {
+        GeometryReader { geo in
+            VStack(spacing: 2) {
+                ForEach(0..<Int(geo.size.height / 4), id: \.self) { _ in
+                    Rectangle()
+                        .fill(Color.white.opacity(0.015))
+                        .frame(height: 1)
+                    Spacer()
+                        .frame(height: 3)
+                }
+            }
+        }
+    }
+    
+    private var headerDivider: some View {
+        Rectangle()
+            .fill(
+                LinearGradient(
+                    colors: [Color.clear, Color.white.opacity(0.15), Color.clear],
+                    startPoint: .leading,
+                    endPoint: .trailing
+                )
+            )
+            .frame(height: 1)
+    }
+
     // MARK: - Header
 
     private var header: some View {
@@ -205,9 +240,15 @@ struct MenuBarView: View {
                 .foregroundStyle(.white)
                 .symbolRenderingMode(.monochrome)
 
-            Text("ClassGod")
-                .font(.system(prefs.preferences.useCompactMode ? .subheadline : .headline, design: .monospaced))
-                .foregroundStyle(.white)
+            VStack(alignment: .leading, spacing: 0) {
+                Text("ClassGod")
+                    .font(.system(prefs.preferences.useCompactMode ? .subheadline : .headline, design: .monospaced))
+                    .foregroundStyle(.white)
+                
+                Text("v\(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.4.3")")
+                    .font(.system(size: 8, design: .monospaced))
+                    .foregroundStyle(.white.opacity(0.35))
+            }
 
             if prefs.preferences.showTabCountBadge {
                 Text("\(viewModel.tabs.count)")
@@ -353,48 +394,79 @@ struct MenuBarView: View {
                 HStack(spacing: 8) {
                     Image(systemName: "plus.circle.fill")
                         .font(.system(size: 14))
+                        .symbolRenderingMode(.monochrome)
                     Text(String(localized: "button.save_current_tab"))
-                        .font(.system(size: 13, weight: .semibold))
+                        .font(.system(size: 13, weight: .semibold, design: .monospaced))
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
             .buttonStyle(.plain)
+            .foregroundStyle(.white)
             .padding(.horizontal)
             .padding(.vertical, 10)
-            .background(Color(white: 0.08))
+            .background(
+                LinearGradient(
+                    colors: [Color(white: 0.06), Color(white: 0.1)],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+            )
             .overlay(
                 Rectangle()
-                    .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                    .stroke(Color.white.opacity(0.12), lineWidth: 1)
             )
+            .contentShape(Rectangle())
+            .onHover { hovering in
+                if Anim.enabled {
+                    withAnimation(.easeOut(duration: Anim.duration)) {
+                        // Handled by overlay
+                    }
+                }
+            }
 
             Divider()
 
-            HStack(spacing: 12) {
-                Button(String(localized: "button.settings")) {
+            HStack(spacing: 14) {
+                footerButton(title: String(localized: "button.settings"), icon: "gear") {
                     SoundEffectManager.shared.playButtonClick()
                     NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
                 }
-                .buttonStyle(.plain)
-                .foregroundStyle(.white.opacity(0.7))
-
-                Button(String(localized: "button.automation")) {
+                
+                footerButton(title: String(localized: "button.automation"), icon: "lock.shield") {
                     SoundEffectManager.shared.playButtonClick()
                     openAutomationSettings()
                 }
-                .buttonStyle(.plain)
-                .foregroundStyle(.white.opacity(0.7))
 
                 Spacer()
 
-                Button(String(localized: "button.quit")) {
+                footerButton(title: String(localized: "button.quit"), icon: "power") {
                     SoundEffectManager.shared.playButtonClick()
                     NSApplication.shared.terminate(nil)
                 }
-                .buttonStyle(.plain)
-                .foregroundStyle(.white.opacity(0.7))
             }
             .padding(.horizontal)
             .padding(.vertical, 8)
+        }
+    }
+    
+    private func footerButton(title: String, icon: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: 4) {
+                Image(systemName: icon)
+                    .font(.system(size: 10))
+                    .symbolRenderingMode(.monochrome)
+                Text(title)
+                    .font(.system(size: 11, design: .monospaced))
+            }
+        }
+        .buttonStyle(.plain)
+        .foregroundStyle(.white.opacity(0.6))
+        .onHover { hovering in
+            if Anim.enabled {
+                withAnimation(.easeOut(duration: Anim.duration)) {
+                    // Visual feedback handled by SwiftUI hover
+                }
+            }
         }
     }
 
@@ -477,6 +549,10 @@ struct TabRow: View {
                 Rectangle()
                     .fill(backgroundColor)
             )
+            .overlay(
+                Rectangle()
+                    .stroke(borderColor, lineWidth: 1)
+            )
             .scaleEffect(isPressed ? 0.98 : 1.0)
         }
         .buttonStyle(.plain)
@@ -498,11 +574,19 @@ struct TabRow: View {
 
     private var backgroundColor: Color {
         if isPressed {
-            return Color.white.opacity(0.12)
-        } else if isHovered {
-            return Color.white.opacity(0.08)
-        } else if isFocused {
             return Color.white.opacity(0.15)
+        } else if isHovered {
+            return Color.white.opacity(0.1)
+        } else if isFocused {
+            return Color.white.opacity(0.18)
+        } else {
+            return Color.clear
+        }
+    }
+    
+    private var borderColor: Color {
+        if isHovered || isFocused {
+            return Color.white.opacity(0.25)
         } else {
             return Color.clear
         }

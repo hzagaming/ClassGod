@@ -17,12 +17,10 @@ final class LaunchAnimationManager {
     private var closedCount = 0
     private var totalWindows = 0
     private weak var mainWindow: NSWindow?
+    private var flashWindow: NSWindow?
     
     private init() {}
     
-    /// Start the chaos glitch animation sequence.
-    /// - mainWindow: the main UI window, already created at alpha=0, bottom layer
-    /// - completion: called when all glitch windows close and main window is fully revealed
     func startChaosAnimation(mainWindow: NSWindow, completion: @escaping () -> Void) {
         guard !isAnimating else {
             completion()
@@ -39,16 +37,19 @@ final class LaunchAnimationManager {
             return
         }
         
-        let screenFrame = screen.visibleFrame
+        let screenFrame = screen.frame
         let windows = createDenseGlitchWindows(screenFrame: screenFrame, count: totalWindows)
         glitchWindows = windows
         
-        // Play initial glitch burst SFX
-        SoundEffectManager.shared.playGlitchBurst(count: 5)
+        // Initial SFX burst
+        SoundEffectManager.shared.playGlitchBurst(count: 6)
         
-        // Show windows with rapid stagger + reveal main window around #3-4
+        // Screen flash effect (white flash)
+        performScreenFlash(screenFrame: screenFrame)
+        
+        // Show windows with rapid stagger
         for (i, window) in windows.enumerated() {
-            let showDelay = Double(i) * Double.random(in: 0.02...0.06)
+            let showDelay = Double(i) * Double.random(in: 0.02...0.055)
             
             DispatchQueue.main.asyncAfter(deadline: .now() + showDelay) { [weak self] in
                 guard let self = self, self.isAnimating else { return }
@@ -56,38 +57,41 @@ final class LaunchAnimationManager {
                 window.alphaValue = 0
                 window.makeKeyAndOrderFront(nil)
                 
-                // Fade in glitch window
                 NSAnimationContext.runAnimationGroup { ctx in
                     ctx.duration = 0.04
                     window.animator().alphaValue = 1.0
                 }
                 
-                // Jitter effect
                 self.jitterWindow(window)
                 
-                // Reveal main window starting at window #3, blend in with the chaos
+                // Reveal main window starting at window #3
                 if i == 3 {
                     NSAnimationContext.runAnimationGroup { ctx in
-                        ctx.duration = 0.8
-                        mainWindow.animator().alphaValue = 0.45
+                        ctx.duration = 0.6
+                        mainWindow.animator().alphaValue = 0.4
                     }
                 } else if i == 8 {
                     NSAnimationContext.runAnimationGroup { ctx in
-                        ctx.duration = 1.2
-                        mainWindow.animator().alphaValue = 0.65
+                        ctx.duration = 1.0
+                        mainWindow.animator().alphaValue = 0.6
                     }
                 }
                 
-                // Play random glitch SFX on some windows
-                if i % 4 == 0 {
+                // SFX every few windows
+                if i % 3 == 0 && i > 0 {
                     SoundEffectManager.shared.playGlitchSound()
+                }
+                
+                // Occasional screen flash
+                if i == 15 || i == 30 {
+                    self.performScreenFlash(screenFrame: screenFrame, color: .red)
                 }
             }
         }
         
-        // Close windows with stagger, reveal main window fully at the end
+        // Close windows with stagger
         for (i, window) in windows.enumerated() {
-            let closeDelay = 2.0 + Double(i) * Double.random(in: 0.08...0.25)
+            let closeDelay = 2.2 + Double(i) * Double.random(in: 0.07...0.22)
             
             DispatchQueue.main.asyncAfter(deadline: .now() + closeDelay) { [weak self] in
                 guard let self = self else { return }
@@ -99,15 +103,13 @@ final class LaunchAnimationManager {
                     window.orderOut(nil)
                     self.closedCount += 1
                     
-                    // Gradually reveal main window as glitch windows close
                     let progress = Double(self.closedCount) / Double(self.totalWindows)
-                    let targetAlpha = 0.65 + (progress * 0.35)
+                    let targetAlpha = 0.6 + (progress * 0.4)
                     mainWindow.alphaValue = targetAlpha
                     
                     if self.closedCount >= self.totalWindows {
-                        // Final reveal
                         NSAnimationContext.runAnimationGroup { ctx in
-                            ctx.duration = 0.3
+                            ctx.duration = 0.25
                             mainWindow.animator().alphaValue = 1.0
                         } completionHandler: {
                             self.finish()
@@ -122,6 +124,8 @@ final class LaunchAnimationManager {
         isAnimating = false
         glitchWindows.forEach { $0.orderOut(nil) }
         glitchWindows.removeAll()
+        flashWindow?.orderOut(nil)
+        flashWindow = nil
         mainWindow?.alphaValue = 1.0
         pendingCompletion?()
         pendingCompletion = nil
@@ -130,8 +134,42 @@ final class LaunchAnimationManager {
     private func finish() {
         isAnimating = false
         glitchWindows.removeAll()
+        flashWindow?.orderOut(nil)
+        flashWindow = nil
         pendingCompletion?()
         pendingCompletion = nil
+    }
+    
+    // MARK: - Screen Flash
+    
+    private func performScreenFlash(screenFrame: NSRect, color: NSColor = .white) {
+        let window = NSWindow(
+            contentRect: screenFrame,
+            styleMask: [.borderless],
+            backing: .buffered,
+            defer: false
+        )
+        window.level = .statusBar
+        window.backgroundColor = color
+        window.isOpaque = true
+        window.alphaValue = 0
+        window.makeKeyAndOrderFront(nil)
+        flashWindow = window
+        
+        NSAnimationContext.runAnimationGroup { ctx in
+            ctx.duration = 0.03
+            window.animator().alphaValue = 0.25
+        } completionHandler: {
+            NSAnimationContext.runAnimationGroup { ctx in
+                ctx.duration = 0.08
+                window.animator().alphaValue = 0
+            } completionHandler: {
+                window.orderOut(nil)
+                if self.flashWindow === window {
+                    self.flashWindow = nil
+                }
+            }
+        }
     }
     
     // MARK: - Dense Window Creation
@@ -146,7 +184,6 @@ final class LaunchAnimationManager {
         
         var index = 0
         
-        // Grid-based placement for uniform coverage (48 slots)
         for row in 0..<rows {
             for col in 0..<cols {
                 guard index < count else { break }
@@ -154,8 +191,8 @@ final class LaunchAnimationManager {
                 let h = CGFloat.random(in: cellH * 0.8...cellH * 1.35)
                 let baseX = screenFrame.minX + CGFloat(col) * cellW
                 let baseY = screenFrame.minY + CGFloat(row) * cellH
-                let x = baseX + CGFloat.random(in: -40...(cellW * 0.4))
-                let y = baseY + CGFloat.random(in: -40...(cellH * 0.4))
+                let x = baseX + CGFloat.random(in: -50...(cellW * 0.4))
+                let y = baseY + CGFloat.random(in: -50...(cellH * 0.4))
                 
                 let window = makeGlitchWindow(frame: NSRect(x: x, y: y, width: w, height: h), index: index)
                 result.append(window)
@@ -164,12 +201,11 @@ final class LaunchAnimationManager {
             guard index < count else { break }
         }
         
-        // Extra random windows to fill remaining count
         while index < count {
             let w = CGFloat.random(in: 220...420)
             let h = CGFloat.random(in: 140...280)
-            let x = screenFrame.minX + CGFloat.random(in: -60...(screenFrame.width - w + 60))
-            let y = screenFrame.minY + CGFloat.random(in: -60...(screenFrame.height - h + 60))
+            let x = screenFrame.minX + CGFloat.random(in: -80...(screenFrame.width - w + 80))
+            let y = screenFrame.minY + CGFloat.random(in: -80...(screenFrame.height - h + 80))
             
             let window = makeGlitchWindow(frame: NSRect(x: x, y: y, width: w, height: h), index: index)
             result.append(window)

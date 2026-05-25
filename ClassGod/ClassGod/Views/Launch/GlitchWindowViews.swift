@@ -7,17 +7,17 @@
 
 import SwiftUI
 
-// MARK: - Static Terminal View (no timers, no animation)
+// MARK: - Static Terminal View
 
 struct TerminalGlitchView: View {
     let seed: Int
     
     private var lines: [String] {
-        let prefixes = ["0x", "ADDR", "MEM", "ERR", "SYS", "BLCK", "NULL", "OVFL", "CORE", "DUMP"]
-        let suffixes = ["", " !", " ?", " ...", " >>", " <<", " [FAULT]", " [WARN]", " [CRIT]", " [OK]"]
-        return (0..<14).map { i in
+        let prefixes = ["0x", "ADDR", "MEM", "ERR", "SYS", "BLCK", "NULL", "OVFL", "CORE", "DUMP", "WARN", "CRIT"]
+        let suffixes = ["", " !", " ?", " ...", " >>", " <<", " [FAULT]", " [WARN]", " [CRIT]", " [OK]", " [FAIL]", " [DONE]"]
+        return (0..<16).map { i in
             let prefix = prefixes[(seed + i) % prefixes.count]
-            let hex = (0..<6).map { _ in String(format: "%02X", Int.random(in: 0...255)) }.joined()
+            let hex = (0..<8).map { _ in String(format: "%02X", Int.random(in: 0...255)) }.joined()
             let suffix = suffixes[(seed + i + 3) % suffixes.count]
             return "\(prefix) \(hex)\(suffix)"
         }
@@ -28,7 +28,7 @@ struct TerminalGlitchView: View {
             ForEach(lines, id: \.self) { line in
                 Text(line)
                     .font(.system(size: 9, design: .monospaced))
-                    .foregroundStyle(Color.green.opacity(0.8))
+                    .foregroundStyle(Color.green.opacity(0.85))
                     .lineLimit(1)
             }
         }
@@ -87,6 +87,71 @@ struct ErrorGlitchView: View {
     }
 }
 
+// MARK: - Yellow Warning View
+
+struct WarningGlitchView: View {
+    let seed: Int
+    
+    private var lines: [String] {
+        [
+            "⚠ WARNING: Unauthorized system modification detected",
+            "⚠ WARNING: Kernel integrity check failed at 0x\(String(format: "%08x", seed * 0x1000))",
+            "⚠ WARNING: Memory leak detected in process ClassGod [\(seed)]",
+            "⚠ WARNING: Stack canary corrupted, possible buffer overflow",
+            "⚠ WARNING: ASLR disabled, system vulnerable to ROP attacks",
+            "⚠ WARNING: DEP bypass attempt detected in thread \(seed % 8)",
+            "⚠ WARNING: Syscall interception active, tracer detected",
+            "⚠ WARNING: Code signature invalid for module \(seed % 16)",
+        ]
+    }
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            ForEach(0..<min(lines.count, 6), id: \.self) { i in
+                Text(lines[(seed + i) % lines.count])
+                    .font(.system(size: 8, design: .monospaced))
+                    .foregroundStyle(Color.yellow.opacity(0.85))
+                    .lineLimit(1)
+            }
+        }
+        .padding(8)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .background(Color.black)
+        .overlay(Rectangle().stroke(Color.yellow.opacity(0.3), lineWidth: 1))
+    }
+}
+
+// MARK: - Purple System Log View
+
+struct SyslogGlitchView: View {
+    let seed: Int
+    
+    private var lines: [String] {
+        let levels = ["[INFO]", "[DEBUG]", "[WARN]", "[ERROR]", "[FATAL]", "[TRACE]"]
+        let modules = ["kernel", "launchd", "WindowServer", "syslogd", "securityd", "ClassGod"]
+        return (0..<12).map { i in
+            let level = levels[(seed + i) % levels.count]
+            let module = modules[(seed + i) % modules.count]
+            let msg = "Process \(module) pid=\(Int.random(in: 100...99999)) exited with code \(Int.random(in: -9...139))"
+            return "\(level) \(msg)"
+        }
+    }
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 1) {
+            ForEach(lines, id: \.self) { line in
+                Text(line)
+                    .font(.system(size: 8, design: .monospaced))
+                    .foregroundStyle(Color.purple.opacity(0.85))
+                    .lineLimit(1)
+            }
+        }
+        .padding(6)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .background(Color.black)
+    }
+}
+
 // MARK: - Static Crash Report View
 
 struct CrashGlitchView: View {
@@ -125,17 +190,17 @@ struct CrashGlitchView: View {
     }
 }
 
-// MARK: - Static Matrix Block View (no animation, no Combine)
+// MARK: - Static Matrix Block View
 
 struct MatrixBlockView: View {
     let seed: Int
     
     private var grid: [[String]] {
         let chars = "ABCDEF0123456789!@#$%&*"
-        let rows = 10
-        let cols = 12
-        return (0..<rows).map { r in
-            (0..<cols).map { c in
+        let rows = 12
+        let cols = 14
+        return (0..<rows).map { _ in
+            (0..<cols).map { _ in
                 String(chars.randomElement()!)
             }
         }
@@ -200,7 +265,7 @@ struct HexDumpView: View {
     let seed: Int
     
     private var lines: [String] {
-        return (0..<12).map { i in
+        return (0..<14).map { i in
             let addr = String(format: "%08x", (seed * 0x1000) + (i * 16))
             let bytes = (0..<8).map { _ in String(format: "%02x", Int.random(in: 0...255)) }.joined(separator: " ")
             return "\(addr)  \(bytes)"
@@ -222,10 +287,80 @@ struct HexDumpView: View {
     }
 }
 
+// MARK: - JSON Error View
+
+struct JSONErrorView: View {
+    let seed: Int
+    
+    private var json: String {
+        """
+        {
+          "error": true,
+          "code": \(Int.random(in: 400...599)),
+          "message": "\(["Internal Server Error", "Bad Gateway", "Service Unavailable", "Gateway Timeout"][seed % 4])",
+          "trace_id": "\(UUID().uuidString.prefix(8))",
+          "timestamp": "\(Int.random(in: 1600000000...1700000000))",
+          "module": "\(["api", "auth", "db", "cache"][seed % 4])",
+          "fatal": true
+        }
+        """
+    }
+    
+    var body: some View {
+        Text(json)
+            .font(.system(size: 8, design: .monospaced))
+            .foregroundStyle(Color.orange.opacity(0.85))
+            .padding(8)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .background(Color.black)
+            .overlay(Rectangle().stroke(Color.orange.opacity(0.3), lineWidth: 1))
+    }
+}
+
+// MARK: - Compile Error View
+
+struct CompileErrorView: View {
+    let seed: Int
+    
+    private var lines: [String] {
+        let files = ["main.swift", "MenuBarView.swift", "BrowserSwitcher.swift", "TabListViewModel.swift"]
+        let errors = [
+            "error: cannot find 'foo' in scope",
+            "error: value of optional type must be unwrapped",
+            "error: ambiguous use of 'init'",
+            "error: type 'NSWindow' has no member 'alpha'",
+            "error: unable to infer closure type",
+            "error: escaping closure captures mutating self parameter",
+            "warning: result of call is unused",
+            "error: protocol 'View' requires 'body' to be available",
+        ]
+        return (0..<8).map { i in
+            let file = files[(seed + i) % files.count]
+            let line = Int.random(in: 1...500)
+            let err = errors[(seed + i) % errors.count]
+            return "\(file):\(line): \(err)"
+        }
+    }
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 1) {
+            ForEach(lines, id: \.self) { line in
+                Text(line)
+                    .font(.system(size: 8, design: .monospaced))
+                    .foregroundStyle(line.contains("error:") ? Color.red.opacity(0.8) : Color.yellow.opacity(0.7))
+                    .lineLimit(1)
+            }
+        }
+        .padding(6)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .background(Color.black)
+    }
+}
+
 // MARK: - Glitch Window Type
 
 enum GlitchType: CaseIterable {
-    case terminal, error, crashReport, matrixBlock, blueScreen, hexDump
+    case terminal, error, warning, syslog, crashReport, matrixBlock, blueScreen, hexDump, jsonError, compileError
     
     @ViewBuilder
     func view(seed: Int) -> some View {
@@ -234,6 +369,10 @@ enum GlitchType: CaseIterable {
             TerminalGlitchView(seed: seed)
         case .error:
             ErrorGlitchView(seed: seed)
+        case .warning:
+            WarningGlitchView(seed: seed)
+        case .syslog:
+            SyslogGlitchView(seed: seed)
         case .crashReport:
             CrashGlitchView(seed: seed)
         case .matrixBlock:
@@ -242,6 +381,10 @@ enum GlitchType: CaseIterable {
             BlueScreenView(seed: seed)
         case .hexDump:
             HexDumpView(seed: seed)
+        case .jsonError:
+            JSONErrorView(seed: seed)
+        case .compileError:
+            CompileErrorView(seed: seed)
         }
     }
 }
