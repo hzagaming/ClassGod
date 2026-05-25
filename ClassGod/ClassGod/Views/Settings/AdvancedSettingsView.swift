@@ -67,7 +67,7 @@ struct AdvancedSettingsView: View {
                 HStack {
                     Text(String(localized: "about.version"))
                     Spacer()
-                    Text("\(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.3.1") (Build \(Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "4"))")
+                    Text("\(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.3.2") (Build \(Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "5"))")
                         .foregroundStyle(.secondary)
                 }
 

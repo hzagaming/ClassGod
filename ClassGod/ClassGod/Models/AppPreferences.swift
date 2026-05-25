@@ -172,7 +172,7 @@ struct AppPreferences: Codable, Equatable {
     // MARK: - Defaults
     static let `default` = AppPreferences(
         launchAtLogin: false,
-        showPopoverOnLaunch: false,
+        showPopoverOnLaunch: true,
         showToastNotifications: true,
         toastDuration: 1.5,
         switchBehavior: .activateExisting,
@@ -195,7 +195,7 @@ struct AppPreferences: Codable, Equatable {
         showShortcutBadge: true,
         useCompactMode: false,
         showTabCountBadge: false,
-        version: 1,
+        version: 2,
         animationSpeed: .fast,
         enableDebugLogging: false,
         enableSoundEffects: true,
@@ -251,6 +251,7 @@ extension AppPreferences {
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         var preferences = AppPreferences.default
+        let storedVersion = try container.decodeIfPresent(Int.self, forKey: .version) ?? 0
 
         preferences.launchAtLogin = try container.decodeIfPresent(Bool.self, forKey: .launchAtLogin) ?? preferences.launchAtLogin
         preferences.showPopoverOnLaunch = try container.decodeIfPresent(Bool.self, forKey: .showPopoverOnLaunch) ?? preferences.showPopoverOnLaunch
@@ -278,7 +279,7 @@ extension AppPreferences {
         preferences.showShortcutBadge = try container.decodeIfPresent(Bool.self, forKey: .showShortcutBadge) ?? preferences.showShortcutBadge
         preferences.useCompactMode = try container.decodeIfPresent(Bool.self, forKey: .useCompactMode) ?? preferences.useCompactMode
         preferences.showTabCountBadge = try container.decodeIfPresent(Bool.self, forKey: .showTabCountBadge) ?? preferences.showTabCountBadge
-        preferences.version = try container.decodeIfPresent(Int.self, forKey: .version) ?? preferences.version
+        preferences.version = storedVersion
         preferences.animationSpeed = try container.decodeIfPresent(AnimationSpeed.self, forKey: .animationSpeed) ?? preferences.animationSpeed
         preferences.enableDebugLogging = try container.decodeIfPresent(Bool.self, forKey: .enableDebugLogging) ?? preferences.enableDebugLogging
         preferences.enableSoundEffects = try container.decodeIfPresent(Bool.self, forKey: .enableSoundEffects) ?? preferences.enableSoundEffects
@@ -287,6 +288,11 @@ extension AppPreferences {
         preferences.confirmBeforeClear = try container.decodeIfPresent(Bool.self, forKey: .confirmBeforeClear) ?? preferences.confirmBeforeClear
         preferences.maxTabsInPopover = try container.decodeIfPresent(Int.self, forKey: .maxTabsInPopover) ?? preferences.maxTabsInPopover
         preferences.useInstantAnimations = try container.decodeIfPresent(Bool.self, forKey: .useInstantAnimations) ?? preferences.useInstantAnimations
+
+        if storedVersion < 2 {
+            preferences.showPopoverOnLaunch = true
+        }
+        preferences.version = AppPreferences.default.version
 
         self = preferences
     }

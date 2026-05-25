@@ -140,50 +140,18 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let style = PreferencesManager.shared.preferences.menuBarIconStyle
         let showBadge = PreferencesManager.shared.preferences.showTabCountBadge
         let count = StorageManager.shared.loadTabs().count
-        
+
         let baseImage = NSImage(
             systemSymbolName: style.systemImageName,
             accessibilityDescription: "ClassGod"
         ) ?? NSImage(size: NSSize(width: 18, height: 18))
-        
-        if showBadge && count > 0 {
-            let badgeText = count > 99 ? "99+" : "\(count)"
-            let imageSize = NSSize(width: 24, height: 24)
-            let composited = NSImage(size: imageSize)
-            
-            composited.lockFocus()
-            
-            // Draw base icon
-            baseImage.draw(in: NSRect(x: 0, y: 0, width: 18, height: 18))
-            
-            // Draw red badge
-            let badgeSize: CGFloat = badgeText.count > 2 ? 14 : 12
-            let badgeRect = NSRect(x: 18 - badgeSize / 2, y: 18 - badgeSize / 2, width: badgeSize, height: badgeSize)
-            let path = NSBezierPath(ovalIn: badgeRect)
-            NSColor.systemRed.setFill()
-            path.fill()
-            
-            // Draw badge text
-            let font = NSFont.systemFont(ofSize: badgeText.count > 2 ? 7 : 8, weight: .bold)
-            let attrs: [NSAttributedString.Key: Any] = [
-                .font: font,
-                .foregroundColor: NSColor.white
-            ]
-            let textSize = badgeText.size(withAttributes: attrs)
-            let textRect = NSRect(
-                x: badgeRect.midX - textSize.width / 2,
-                y: badgeRect.midY - textSize.height / 2,
-                width: textSize.width,
-                height: textSize.height
-            )
-            badgeText.draw(in: textRect, withAttributes: attrs)
-            
-            composited.unlockFocus()
-            composited.isTemplate = false
-            statusItem?.button?.image = composited
-        } else {
-            statusItem?.button?.image = baseImage
-        }
+        baseImage.isTemplate = true
+
+        let badgeText = count > 99 ? "99+" : "\(count)"
+        statusItem?.button?.image = baseImage
+        statusItem?.button?.imagePosition = .imageLeading
+        statusItem?.button?.title = showBadge && count > 0 ? " \(badgeText)" : ""
+        statusItem?.button?.toolTip = "ClassGod"
     }
 
     private func setupPopover() {
