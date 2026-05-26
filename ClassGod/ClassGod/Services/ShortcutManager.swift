@@ -18,6 +18,7 @@ final class ShortcutManager {
     private var eventHandlerRef: EventHandlerRef?
     
     var onHotKeyPressed: ((UUID) -> Void)?
+    private var hotKeyHandlers: [(UUID) -> Void] = []
     
     private init() {}
     
@@ -67,6 +68,45 @@ final class ShortcutManager {
         return true
     }
     
+    func registerShortcut(for target: SwitchTarget) -> Bool {
+        unregisterShortcut(for: target.id)
+        
+        guard target.isValidShortcut else { return false }
+        
+        let keyCode = keyCodeForCharacter(target.shortcutKey)
+        guard keyCode != UInt32.max else {
+            print("[ShortcutManager] Unsupported key: \(target.shortcutKey)")
+            return false
+        }
+        
+        let carbonModifiers = cocoaToCarbonModifiers(target.shortcutModifiers)
+        
+        var hotKeyRef: EventHotKeyRef?
+        let hotKeyID = EventHotKeyID(signature: Self.hotKeySignature, id: nextHotKeyID)
+        nextHotKeyID += 1
+        
+        let status = RegisterEventHotKey(
+            keyCode,
+            carbonModifiers,
+            hotKeyID,
+            GetEventDispatcherTarget(),
+            0,
+            &hotKeyRef
+        )
+        
+        guard status == noErr, let ref = hotKeyRef else {
+            print("[ShortcutManager] Failed to register hotkey for \(target.name)")
+            return false
+        }
+        
+        registeredHotKeys[target.id] = ref
+        callbackMap[hotKeyID.id] = target.id
+        
+        installHotKeyHandlerIfNeeded()
+        
+        return true
+    }
+    
     func unregisterShortcut(for tabID: UUID) {
         guard let ref = registeredHotKeys[tabID] else { return }
         let status = UnregisterEventHotKey(ref)
@@ -87,6 +127,15 @@ final class ShortcutManager {
         registeredHotKeys.removeAll()
         callbackMap.removeAll()
         nextHotKeyID = 1
+        hotKeyHandlers.removeAll()
+    }
+    
+    func addHotKeyHandler(_ handler: @escaping (UUID) -> Void) {
+        hotKeyHandlers.append(handler)
+    }
+    
+    func removeHotKeyHandler(_ handler: @escaping (UUID) -> Void) {
+        hotKeyHandlers.removeAll { $0 as AnyObject === handler as AnyObject }
     }
     
     func refreshShortcuts(from tabs: [BrowserTab]) {
@@ -120,6 +169,9 @@ final class ShortcutManager {
             if hotKeyID.signature == ShortcutManager.hotKeySignature,
                let tabID = ShortcutManager.shared.callbackMap[hotKeyID.id] {
                 ShortcutManager.shared.onHotKeyPressed?(tabID)
+                for handler in ShortcutManager.shared.hotKeyHandlers {
+                    handler(tabID)
+                }
                 return noErr
             }
             

@@ -90,10 +90,23 @@ final class SoundEffectManager {
     private let glitchSoundIDs: [SystemSoundID] = [
         1005,  // Basso (short error)
         1006,  // Basso (error)
+        1050,  // Error
+        1051,  // Error
+        1052,  // Error
+        1053,  // Error
         1107,  // Tock
-        1306,  // Error
+        1256,  // Basso
         1257,  // Funk
         1262,  // Glass
+        1306,  // Error
+        1328,  // Sosumi
+        1330,  // System
+        1331,  // System
+        1332,  // System
+        1333,  // System
+        1334,  // System
+        1335,  // System
+        1336,  // System
     ]
     
     func playGlitchSound() {
@@ -105,10 +118,29 @@ final class SoundEffectManager {
     func playGlitchBurst(count: Int) {
         guard isEnabled else { return }
         for i in 0..<count {
-            DispatchQueue.main.asyncAfter(deadline: .now() + Double(i) * 0.08) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + Double(i) * 0.05) {
                 self.playGlitchSound()
             }
         }
+    }
+    
+    func playCloseBurst(count: Int) {
+        guard isEnabled else { return }
+        for i in 0..<count {
+            DispatchQueue.main.asyncAfter(deadline: .now() + Double(i) * 0.04) {
+                self.playGlitchSound()
+            }
+        }
+    }
+    
+    func playHackerRevealSound() {
+        guard isEnabled else { return }
+        AudioServicesPlaySystemSound(1262)  // Glass — decrypt complete
+    }
+    
+    func playScreenFlashSound() {
+        guard isEnabled else { return }
+        AudioServicesPlaySystemSound(1306)  // Error — flash impact
     }
 }
 

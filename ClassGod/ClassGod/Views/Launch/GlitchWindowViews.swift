@@ -357,6 +357,173 @@ struct CompileErrorView: View {
     }
 }
 
+// MARK: - Hacker Reveal View (special window)
+// Shows "Hanazar Products" glitching into "Hacker" inside one small window
+
+struct HackerRevealView: View {
+    @State private var phase: Phase = .showInitial
+    @State private var scrambleTimer: Timer?
+    @State private var topChars: [Character] = Array("Hanazar")
+    @State private var bottomChars: [Character] = Array("Products")
+    @State private var topSettled: [Bool] = Array(repeating: false, count: 7)
+    @State private var bottomOpacity: Double = 1.0
+    @State private var extraRAlpha: Double = 1.0
+    @State private var extraROffset: CGFloat = 0
+    @State private var overallGlow: Double = 0
+    
+    private let sourceTop = Array("Hanazar")
+    private let targetTop = Array("Hacker")
+    private let sourceBottom = Array("Products")
+    private let scramble = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%&*"
+    
+    enum Phase {
+        case showInitial
+        case scrambling
+        case settling
+        case showHacker
+    }
+    
+    var body: some View {
+        ZStack {
+            Color.black
+            
+            VStack(spacing: 6) {
+                Spacer()
+                
+                // Top line: Hanazar -> Hacker
+                HStack(spacing: 1) {
+                    ForEach(0..<7, id: \.self) { i in
+                        Text(String(topChar(at: i)))
+                            .font(.system(size: 22, weight: .bold, design: .monospaced))
+                            .foregroundStyle(letterColor(at: i))
+                            .shadow(
+                                color: letterColor(at: i).opacity(overallGlow * 0.5),
+                                radius: overallGlow * 4
+                            )
+                            .frame(width: 18, alignment: .center)
+                            .opacity(i == 6 ? extraRAlpha : 1.0)
+                            .offset(x: i == 6 ? extraROffset : 0)
+                    }
+                }
+                
+                // Bottom line: Products (fades out)
+                HStack(spacing: 1) {
+                    ForEach(0..<8, id: \.self) { i in
+                        Text(String(bottomChars[i]))
+                            .font(.system(size: 11, weight: .medium, design: .monospaced))
+                            .foregroundStyle(.white.opacity(0.5))
+                            .frame(width: 10, alignment: .center)
+                    }
+                }
+                .opacity(bottomOpacity)
+                
+                Spacer()
+            }
+            .padding(.horizontal, 8)
+        }
+        .onAppear {
+            startSequence()
+        }
+        .onDisappear {
+            scrambleTimer?.invalidate()
+        }
+    }
+    
+    private func topChar(at index: Int) -> Character {
+        if phase == .showInitial {
+            return sourceTop[index]
+        }
+        if topSettled[index] {
+            if index < targetTop.count {
+                return targetTop[index]
+            }
+            return " "
+        }
+        return topChars[index]
+    }
+    
+    private func letterColor(at index: Int) -> Color {
+        if phase == .showInitial {
+            return .white
+        }
+        if topSettled[index] && index < targetTop.count {
+            return .green
+        }
+        return .white.opacity(0.8)
+    }
+    
+    private func startSequence() {
+        // Phase 1: Show "Hanazar Products" stable for 0.6s
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+            guard phase == .showInitial else { return }
+            phase = .scrambling
+            startScramble()
+        }
+    }
+    
+    private func startScramble() {
+        topChars = sourceTop
+        topSettled = Array(repeating: false, count: 7)
+        
+        // Rapid scramble
+        scrambleTimer = Timer.scheduledTimer(withTimeInterval: 0.04, repeats: true) { _ in
+            for i in 0..<7 where !topSettled[i] {
+                topChars[i] = scramble.randomElement()!
+            }
+            // Also scramble bottom line
+            for i in 0..<8 {
+                bottomChars[i] = scramble.randomElement()!
+            }
+        }
+        
+        // Settle letters one by one: H a n a z a r -> H a c k e r
+        let settleDelays: [(index: Int, delay: Double)] = [
+            (0, 0.2),   // H -> H
+            (1, 0.35),  // a -> a
+            (2, 0.55),  // n -> c
+            (3, 0.75),  // a -> k
+            (4, 0.95),  // z -> e
+            (5, 1.15),  // a -> r
+            (6, 1.35),  // r -> fade out
+        ]
+        
+        for (index, delay) in settleDelays {
+            DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+                guard phase == .scrambling || phase == .settling else { return }
+                
+                if index == 6 {
+                    // Extra 'r' slides away and fades
+                    withAnimation(.easeOut(duration: 0.25)) {
+                        extraROffset = 20
+                        extraRAlpha = 0
+                    }
+                } else {
+                    topSettled[index] = true
+                }
+                
+                // After last letter settles
+                if index == 5 {
+                    phase = .settling
+                    // Fade bottom line
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                        withAnimation(.easeOut(duration: 0.3)) {
+                            bottomOpacity = 0
+                        }
+                        // Glow effect
+                        withAnimation(.easeInOut(duration: 0.4)) {
+                            overallGlow = 1.0
+                        }
+                        // Brief pause on "Hacker" alone
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                            phase = .showHacker
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 // MARK: - Glitch Window Type
 
 enum GlitchType: CaseIterable {

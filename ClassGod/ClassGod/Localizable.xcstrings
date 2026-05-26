@@ -4,6 +4,9 @@
     "" : {
 
     },
+    ":(" : {
+
+    },
     "%@ (Build %@)" : {
       "localizations" : {
         "zh-Hans" : {
@@ -17,17 +20,10 @@
     "%lld" : {
 
     },
-    "%lld. %@" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$lld. %2$@"
-          }
-        }
-      }
-    },
     "%lldms" : {
+
+    },
+    "0% complete" : {
 
     },
     "about.developer" : {
@@ -668,6 +664,15 @@
         }
       }
     },
+    "Add" : {
+
+    },
+    "Add apps to switch between them instantly" : {
+
+    },
+    "Add Switch Target" : {
+
+    },
     "add_tab.title" : {
       "localizations" : {
         "de" : {
@@ -783,6 +788,9 @@
           }
         }
       }
+    },
+    "App Name" : {
+
     },
     "app.title" : {
       "extractionState" : "stale",
@@ -1016,6 +1024,9 @@
           }
         }
       }
+    },
+    "Bundle Identifier" : {
+
     },
     "button.add_tab" : {
       "localizations" : {
@@ -2237,6 +2248,9 @@
         }
       }
     },
+    "Cancel" : {
+
+    },
     "ClassGod" : {
 
     },
@@ -2355,6 +2369,12 @@
           }
         }
       }
+    },
+    "Click a target to switch. Set shortcuts for instant access." : {
+
+    },
+    "com.company.app" : {
+
     },
     "context.edit" : {
       "localizations" : {
@@ -2475,6 +2495,9 @@
     "Crashed Thread: %lld" : {
 
     },
+    "Custom..." : {
+
+    },
     "debug.caption" : {
       "localizations" : {
         "de" : {
@@ -2532,6 +2555,12 @@
           }
         }
       }
+    },
+    "Delete" : {
+
+    },
+    "Delete target?" : {
+
     },
     "delete.confirm.message" : {
       "localizations" : {
@@ -2648,6 +2677,12 @@
           }
         }
       }
+    },
+    "Edit" : {
+
+    },
+    "Edit Switch Target" : {
+
     },
     "edit_tab.title" : {
       "localizations" : {
@@ -2822,6 +2857,9 @@
           }
         }
       }
+    },
+    "Error" : {
+
     },
     "error.applescript_failed" : {
       "localizations" : {
@@ -3873,6 +3911,9 @@
     "Hanazar Software" : {
 
     },
+    "Icon" : {
+
+    },
     "icon.bolt" : {
       "localizations" : {
         "de" : {
@@ -4569,6 +4610,12 @@
         }
       }
     },
+    "Name" : {
+
+    },
+    "No targets configured" : {
+
+    },
     "not_running.do_nothing" : {
       "localizations" : {
         "de" : {
@@ -4742,6 +4789,9 @@
           }
         }
       }
+    },
+    "OK" : {
+
     },
     "permission.alert.message" : {
       "extractionState" : "stale",
@@ -5214,6 +5264,15 @@
     "Process: ClassGod [%lld]" : {
 
     },
+    "Products" : {
+
+    },
+    "Quick app switcher" : {
+
+    },
+    "Remove %@ from SuperSwitch?" : {
+
+    },
     "reset.confirm.message" : {
       "localizations" : {
         "de" : {
@@ -5329,6 +5388,12 @@
           }
         }
       }
+    },
+    "Running Application" : {
+
+    },
+    "Save" : {
+
     },
     "section.about" : {
       "localizations" : {
@@ -8230,6 +8295,9 @@
         }
       }
     },
+    "Shortcut (optional)" : {
+
+    },
     "shortcut.conflict.message" : {
       "localizations" : {
         "de" : {
@@ -9041,6 +9109,15 @@
           }
         }
       }
+    },
+    "STOP CODE: %@" : {
+
+    },
+    "SuperSwitch" : {
+
+    },
+    "Switch to %@" : {
+
     },
     "switch.activate_existing" : {
       "localizations" : {
@@ -10207,6 +10284,9 @@
       }
     },
     "v%@" : {
+
+    },
+    "Your PC ran into a problem and needs to restart." : {
 
     }
   },

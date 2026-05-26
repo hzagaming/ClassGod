@@ -11,6 +11,8 @@ final class StorageManager {
     static let shared = StorageManager()
     
     private let tabsKey = "com.hanazar.classgod.savedTabs"
+    private let switchTargetsKey = "com.hanazar.classgod.switchTargets"
+    private let bypassRulesKey = "com.hanazar.classgod.bypassRules"
     private let encoder = JSONEncoder()
     private let decoder = JSONDecoder()
     
@@ -64,6 +66,52 @@ final class StorageManager {
         var tabs = loadTabs()
         tabs.removeAll { $0.id == id }
         saveTabs(tabs)
+    }
+    
+    // MARK: - Switch Targets
+    
+    func saveSwitchTargets(_ targets: [SwitchTarget]) {
+        do {
+            let data = try encoder.encode(targets)
+            UserDefaults.standard.set(data, forKey: switchTargetsKey)
+        } catch {
+            print("[StorageManager] Failed to save switch targets: \(error)")
+        }
+    }
+    
+    func loadSwitchTargets() -> [SwitchTarget] {
+        guard let data = UserDefaults.standard.data(forKey: switchTargetsKey) else {
+            return []
+        }
+        do {
+            return try decoder.decode([SwitchTarget].self, from: data)
+        } catch {
+            print("[StorageManager] Failed to load switch targets: \(error)")
+            return []
+        }
+    }
+    
+    // MARK: - Bypass Rules
+    
+    func saveBypassRules(_ rules: [BypassRule]) {
+        do {
+            let data = try encoder.encode(rules)
+            UserDefaults.standard.set(data, forKey: bypassRulesKey)
+        } catch {
+            print("[StorageManager] Failed to save bypass rules: \(error)")
+        }
+    }
+    
+    func loadBypassRules() -> [BypassRule] {
+        guard let data = UserDefaults.standard.data(forKey: bypassRulesKey) else {
+            return []
+        }
+        do {
+            return try decoder.decode([BypassRule].self, from: data)
+        } catch {
+            print("[StorageManager] Failed to load bypass rules: \(error)")
+            return []
+        }
     }
 }
 

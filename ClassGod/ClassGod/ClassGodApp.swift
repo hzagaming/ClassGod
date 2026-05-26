@@ -24,6 +24,9 @@ struct ClassGodApp: App {
 class AppDelegate: NSObject, NSApplicationDelegate {
     var statusItem: NSStatusItem!
     var mainWindow: NSWindow?
+    var destinTabWindow: NSWindow?
+    var superSwitchWindow: NSWindow?
+    var browserBypasserWindow: NSWindow?
     var showPopoverHotKeyRef: EventHotKeyRef?
 
     var splashWindow: NSWindow?
@@ -51,16 +54,18 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 object: nil
             )
 
-            // Phase 2: Setup main window first (hidden at bottom layer)
+            // Phase 2: Setup main menu window first (hidden at bottom layer)
             self.setupMainWindow()
+            self.setupDestinTabWindow()
+            self.setupSuperSwitchWindow()
+            self.setupBrowserBypasserWindow()
             if let window = self.mainWindow {
                 window.alphaValue = 0
                 window.orderBack(nil)
                 
                 // Phase 3: Chaos glitch animation
-                // Main window blends in around window #3-4 and gradually reveals as glitch windows close
                 LaunchAnimationManager.shared.startChaosAnimation(mainWindow: window) { [weak self] in
-                    // Phase 4: Animation complete, main window is fully revealed
+                    // Phase 4: Animation complete, main menu window is fully revealed
                     self?.mainWindow?.makeKeyAndOrderFront(nil)
                 }
             }
@@ -77,8 +82,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     // MARK: - Splash Screen
 
     private func showSplashScreen() {
+        let prefs = PreferencesManager.shared.preferences
+        let size = NSSize(width: prefs.panelWidth, height: prefs.panelMaxHeight)
+        
         let window = NSWindow(
-            contentRect: NSScreen.main?.frame ?? NSRect(x: 0, y: 0, width: 800, height: 600),
+            contentRect: NSRect(origin: .zero, size: size),
             styleMask: [.borderless],
             backing: .buffered,
             defer: false
@@ -86,13 +94,28 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         window.level = .popUpMenu
         window.backgroundColor = .black
         window.contentView = NSHostingView(rootView: SplashScreenView())
+        
+        // Center on screen, same position as main window
+        if let screen = NSScreen.main {
+            let screenFrame = screen.visibleFrame
+            let x = screenFrame.midX - size.width / 2
+            let y = screenFrame.midY - size.height / 2
+            window.setFrameOrigin(NSPoint(x: x, y: y))
+        }
+        
         window.makeKeyAndOrderFront(nil)
         splashWindow = window
     }
 
     private func closeSplashScreen() {
-        splashWindow?.orderOut(nil)
-        splashWindow = nil
+        guard let window = splashWindow else { return }
+        NSAnimationContext.runAnimationGroup { ctx in
+            ctx.duration = 0.25
+            window.animator().alphaValue = 0
+        } completionHandler: {
+            window.orderOut(nil)
+            self.splashWindow = nil
+        }
     }
 
     // MARK: - Main Window
@@ -101,7 +124,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let prefs = PreferencesManager.shared.preferences
         let size = NSSize(
             width: prefs.panelWidth,
-            height: min(prefs.panelMaxHeight, CGFloat(prefs.maxTabsInPopover) * CGFloat(prefs.rowHeight) + 120)
+            height: prefs.panelMaxHeight
         )
 
         let window = DraggableWindow(
@@ -131,13 +154,311 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             window.setFrameOrigin(NSPoint(x: x, y: y))
         }
 
-        let rootView = MenuBarWindowView()
+        let rootView = MenuBarWindowView(onOpenDestinTab: { [weak self] in
+            self?.showDestinTabWindow()
+        }, onOpenSuperSwitch: { [weak self] in
+            self?.showSuperSwitchWindow()
+        }, onOpenBrowserBypasser: { [weak self] in
+            self?.showBrowserBypasserWindow()
+        })
             .frame(width: size.width, height: size.height)
             .background(Color.clear)
 
         window.contentView = NSHostingView(rootView: rootView)
 
         mainWindow = window
+    }
+    
+    // MARK: - DestinTab Window
+    
+    private func setupDestinTabWindow() {
+        let prefs = PreferencesManager.shared.preferences
+        let size = NSSize(
+            width: prefs.panelWidth,
+            height: min(prefs.panelMaxHeight, CGFloat(prefs.maxTabsInPopover) * CGFloat(prefs.rowHeight) + 120)
+        )
+
+        let window = DraggableWindow(
+            contentRect: NSRect(origin: .zero, size: size),
+            styleMask: [.borderless],
+            backing: .buffered,
+            defer: false
+        )
+
+        window.level = .normal
+        window.backgroundColor = .clear
+        window.hasShadow = true
+        window.isMovableByWindowBackground = true
+        window.isReleasedWhenClosed = false
+        window.isOpaque = false
+        
+        window.contentView?.wantsLayer = true
+        window.contentView?.layer?.cornerRadius = prefs.panelCornerRadius
+        window.contentView?.layer?.masksToBounds = true
+
+        // Position slightly offset from main window
+        if let main = mainWindow {
+            let mainFrame = main.frame
+            let offset: CGFloat = 20
+            window.setFrameOrigin(NSPoint(x: mainFrame.minX + offset, y: mainFrame.minY - offset))
+        } else if let screen = NSScreen.main {
+            let screenFrame = screen.visibleFrame
+            let x = screenFrame.midX - size.width / 2 + 20
+            let y = screenFrame.midY - size.height / 2 - 20
+            window.setFrameOrigin(NSPoint(x: x, y: y))
+        }
+
+        let rootView = DestinTabWindowView()
+            .frame(width: size.width, height: size.height)
+            .background(Color.clear)
+
+        window.contentView = NSHostingView(rootView: rootView)
+
+        destinTabWindow = window
+    }
+    
+    func showDestinTabWindow(animated: Bool = true) {
+        guard let window = destinTabWindow else {
+            setupDestinTabWindow()
+            showDestinTabWindow(animated: animated)
+            return
+        }
+        
+        SoundEffectManager.shared.playPopoverOpen()
+        
+        if animated {
+            window.alphaValue = 0
+            window.makeKeyAndOrderFront(nil)
+            
+            NSAnimationContext.runAnimationGroup { context in
+                context.duration = 0.25
+                context.timingFunction = .init(name: .easeOut)
+                window.animator().alphaValue = 1.0
+            }
+        } else {
+            window.makeKeyAndOrderFront(nil)
+        }
+    }
+    
+    func hideDestinTabWindow() {
+        guard let window = destinTabWindow else { return }
+        SoundEffectManager.shared.playPopoverClose()
+        
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = 0.15
+            context.timingFunction = .init(name: .easeIn)
+            window.animator().alphaValue = 0
+        } completionHandler: { [weak self] in
+            self?.destinTabWindow?.orderOut(nil)
+        }
+    }
+    
+    @objc func toggleDestinTabWindow() {
+        guard let window = destinTabWindow else {
+            setupDestinTabWindow()
+            showDestinTabWindow(animated: true)
+            return
+        }
+        
+        if window.isVisible && window.alphaValue > 0 {
+            hideDestinTabWindow()
+        } else {
+            showDestinTabWindow(animated: true)
+        }
+    }
+    
+    // MARK: - SuperSwitch Window
+    
+    private func setupSuperSwitchWindow() {
+        let prefs = PreferencesManager.shared.preferences
+        let size = NSSize(
+            width: prefs.panelWidth,
+            height: prefs.panelMaxHeight
+        )
+
+        let window = DraggableWindow(
+            contentRect: NSRect(origin: .zero, size: size),
+            styleMask: [.borderless],
+            backing: .buffered,
+            defer: false
+        )
+
+        window.level = .normal
+        window.backgroundColor = .clear
+        window.hasShadow = true
+        window.isMovableByWindowBackground = true
+        window.isReleasedWhenClosed = false
+        window.isOpaque = false
+        
+        window.contentView?.wantsLayer = true
+        window.contentView?.layer?.cornerRadius = prefs.panelCornerRadius
+        window.contentView?.layer?.masksToBounds = true
+
+        if let main = mainWindow {
+            let mainFrame = main.frame
+            let offset: CGFloat = 20
+            window.setFrameOrigin(NSPoint(x: mainFrame.minX - offset, y: mainFrame.minY + offset))
+        } else if let screen = NSScreen.main {
+            let screenFrame = screen.visibleFrame
+            let x = screenFrame.midX - size.width / 2 - 20
+            let y = screenFrame.midY - size.height / 2 + 20
+            window.setFrameOrigin(NSPoint(x: x, y: y))
+        }
+
+        let rootView = SuperSwitchWindowView()
+            .frame(width: size.width, height: size.height)
+            .background(Color.clear)
+
+        window.contentView = NSHostingView(rootView: rootView)
+
+        superSwitchWindow = window
+    }
+    
+    func showSuperSwitchWindow(animated: Bool = true) {
+        guard let window = superSwitchWindow else {
+            setupSuperSwitchWindow()
+            showSuperSwitchWindow(animated: animated)
+            return
+        }
+        
+        SoundEffectManager.shared.playPopoverOpen()
+        
+        if animated {
+            window.alphaValue = 0
+            window.makeKeyAndOrderFront(nil)
+            
+            NSAnimationContext.runAnimationGroup { context in
+                context.duration = 0.25
+                context.timingFunction = .init(name: .easeOut)
+                window.animator().alphaValue = 1.0
+            }
+        } else {
+            window.makeKeyAndOrderFront(nil)
+        }
+    }
+    
+    func hideSuperSwitchWindow() {
+        guard let window = superSwitchWindow else { return }
+        SoundEffectManager.shared.playPopoverClose()
+        
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = 0.15
+            context.timingFunction = .init(name: .easeIn)
+            window.animator().alphaValue = 0
+        } completionHandler: { [weak self] in
+            self?.superSwitchWindow?.orderOut(nil)
+        }
+    }
+    
+    @objc func toggleSuperSwitchWindow() {
+        guard let window = superSwitchWindow else {
+            setupSuperSwitchWindow()
+            showSuperSwitchWindow(animated: true)
+            return
+        }
+        
+        if window.isVisible && window.alphaValue > 0 {
+            hideSuperSwitchWindow()
+        } else {
+            showSuperSwitchWindow(animated: true)
+        }
+    }
+    
+    // MARK: - BrowserBypasser Window
+    
+    private func setupBrowserBypasserWindow() {
+        let prefs = PreferencesManager.shared.preferences
+        let size = NSSize(
+            width: prefs.panelWidth,
+            height: prefs.panelMaxHeight
+        )
+
+        let window = DraggableWindow(
+            contentRect: NSRect(origin: .zero, size: size),
+            styleMask: [.borderless],
+            backing: .buffered,
+            defer: false
+        )
+
+        window.level = .normal
+        window.backgroundColor = .clear
+        window.hasShadow = true
+        window.isMovableByWindowBackground = true
+        window.isReleasedWhenClosed = false
+        window.isOpaque = false
+        
+        window.contentView?.wantsLayer = true
+        window.contentView?.layer?.cornerRadius = prefs.panelCornerRadius
+        window.contentView?.layer?.masksToBounds = true
+
+        if let main = mainWindow {
+            let mainFrame = main.frame
+            let offset: CGFloat = 20
+            window.setFrameOrigin(NSPoint(x: mainFrame.minX + offset * 2, y: mainFrame.minY - offset * 2))
+        } else if let screen = NSScreen.main {
+            let screenFrame = screen.visibleFrame
+            let x = screenFrame.midX - size.width / 2 + 40
+            let y = screenFrame.midY - size.height / 2 - 40
+            window.setFrameOrigin(NSPoint(x: x, y: y))
+        }
+
+        let rootView = BrowserBypasserWindowView()
+            .frame(width: size.width, height: size.height)
+            .background(Color.clear)
+
+        window.contentView = NSHostingView(rootView: rootView)
+
+        browserBypasserWindow = window
+    }
+    
+    func showBrowserBypasserWindow(animated: Bool = true) {
+        guard let window = browserBypasserWindow else {
+            setupBrowserBypasserWindow()
+            showBrowserBypasserWindow(animated: animated)
+            return
+        }
+        
+        SoundEffectManager.shared.playPopoverOpen()
+        
+        if animated {
+            window.alphaValue = 0
+            window.makeKeyAndOrderFront(nil)
+            
+            NSAnimationContext.runAnimationGroup { context in
+                context.duration = 0.25
+                context.timingFunction = .init(name: .easeOut)
+                window.animator().alphaValue = 1.0
+            }
+        } else {
+            window.makeKeyAndOrderFront(nil)
+        }
+    }
+    
+    func hideBrowserBypasserWindow() {
+        guard let window = browserBypasserWindow else { return }
+        SoundEffectManager.shared.playPopoverClose()
+        
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = 0.15
+            context.timingFunction = .init(name: .easeIn)
+            window.animator().alphaValue = 0
+        } completionHandler: { [weak self] in
+            self?.browserBypasserWindow?.orderOut(nil)
+        }
+    }
+    
+    @objc func toggleBrowserBypasserWindow() {
+        guard let window = browserBypasserWindow else {
+            setupBrowserBypasserWindow()
+            showBrowserBypasserWindow(animated: true)
+            return
+        }
+        
+        if window.isVisible && window.alphaValue > 0 {
+            hideBrowserBypasserWindow()
+        } else {
+            showBrowserBypasserWindow(animated: true)
+        }
     }
 
     private func updateMainWindowSize() {
@@ -209,6 +530,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         uninstallGlobalEventHandler()
         ShortcutManager.shared.unregisterAllShortcuts()
         LaunchAnimationManager.shared.cancelAnimation()
+        if let window = destinTabWindow {
+            window.orderOut(nil)
+        }
+        if let window = superSwitchWindow {
+            window.orderOut(nil)
+        }
+        if let window = browserBypasserWindow {
+            window.orderOut(nil)
+        }
     }
 
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
@@ -349,8 +679,36 @@ func uninstallGlobalEventHandler() {
 // MARK: - MenuBar Window View (wrapper for window dragging)
 
 struct MenuBarWindowView: View {
+    var onOpenDestinTab: () -> Void
+    var onOpenSuperSwitch: () -> Void
+    var onOpenBrowserBypasser: () -> Void
+    
     var body: some View {
-        MenuBarView()
+        MenuBarView(onOpenDestinTab: onOpenDestinTab, onOpenSuperSwitch: onOpenSuperSwitch, onOpenBrowserBypasser: onOpenBrowserBypasser)
+    }
+}
+
+// MARK: - DestinTab Window View (wrapper for window dragging)
+
+struct DestinTabWindowView: View {
+    var body: some View {
+        DestinTabView()
+    }
+}
+
+// MARK: - SuperSwitch Window View (wrapper for window dragging)
+
+struct SuperSwitchWindowView: View {
+    var body: some View {
+        SuperSwitchView()
+    }
+}
+
+// MARK: - BrowserBypasser Window View (wrapper for window dragging)
+
+struct BrowserBypasserWindowView: View {
+    var body: some View {
+        BrowserBypasserView()
     }
 }
 
