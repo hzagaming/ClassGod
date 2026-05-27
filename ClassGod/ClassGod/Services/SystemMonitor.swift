@@ -1,0 +1,392 @@
+//
+//  SystemMonitor.swift
+//  ClassGod
+//
+
+import Foundation
+import Darwin
+import Combine
+import IOKit.ps
+
+// MARK: - Data Models
+
+struct CPUUsage: Equatable {
+    var total: Double = 0
+    var user: Double = 0
+    var system: Double = 0
+    var idle: Double = 0
+}
+
+struct MemoryUsage: Equatable {
+    var total: UInt64 = 0
+    var used: UInt64 = 0
+    var free: UInt64 = 0
+    var wired: UInt64 = 0
+    var compressed: UInt64 = 0
+    
+    var usedPercent: Double {
+        guard total > 0 else { return 0 }
+        return Double(used) / Double(total)
+    }
+}
+
+struct DiskInfo: Equatable, Identifiable {
+    let id = UUID()
+    var name: String
+    var path: String
+    var total: Int64
+    var free: Int64
+    var used: Int64 { total - free }
+    var usedPercent: Double {
+        guard total > 0 else { return 0 }
+        return Double(used) / Double(total)
+    }
+}
+
+struct NetworkStats: Equatable {
+    var bytesIn: UInt64 = 0
+    var bytesOut: UInt64 = 0
+    var deltaIn: Double = 0
+    var deltaOut: Double = 0
+    
+    var downloadSpeedKBs: Double { deltaIn / 1024 }
+    var uploadSpeedKBs: Double { deltaOut / 1024 }
+}
+
+struct ProcessMonitorInfo: Equatable, Identifiable {
+    let id = UUID()
+    var pid: Int32
+    var name: String
+    var cpuPercent: Double
+    var memoryMB: Double
+}
+
+struct BatteryInfo: Equatable {
+    var isPresent: Bool = false
+    var isCharging: Bool = false
+    var level: Double = 0
+    var timeRemaining: Int = -1
+    var cycleCount: Int = 0
+    var health: Double = 100
+}
+
+struct ThermalInfo: Equatable {
+    var cpuTemp: Double = 0
+    var gpuTemp: Double = 0
+}
+
+struct SystemInfo: Equatable {
+    var hostname: String = ""
+    var osVersion: String = ""
+    var kernelVersion: String = ""
+    var architecture: String = ""
+    var model: String = ""
+    var bootTime: Date?
+}
+
+// MARK: - System Monitor
+
+final class SystemMonitor: ObservableObject, @unchecked Sendable {
+    static let shared = SystemMonitor()
+    
+    @Published var cpu = CPUUsage()
+    @Published var memory = MemoryUsage()
+    @Published var disks: [DiskInfo] = []
+    @Published var network = NetworkStats()
+    @Published var processes: [ProcessMonitorInfo] = []
+    @Published var battery = BatteryInfo()
+    @Published var thermal = ThermalInfo()
+    @Published var system = SystemInfo()
+    
+    private var timer: Timer?
+    private var previousCPUInfo: host_cpu_load_info?
+    private var previousNetworkBytesIn: UInt64 = 0
+    private var previousNetworkBytesOut: UInt64 = 0
+    
+    private init() {
+        loadStaticSystemInfo()
+    }
+    
+    func start(interval: TimeInterval = 1.0) {
+        timer?.invalidate()
+        updateAll()
+        timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
+            self?.updateAll()
+        }
+    }
+    
+    func stop() {
+        timer?.invalidate()
+        timer = nil
+    }
+    
+    private func updateAll() {
+        readCPU()
+        readMemory()
+        readDisks()
+        readNetwork()
+        readProcesses()
+        readBattery()
+        readThermal()
+    }
+    
+    // MARK: - CPU
+    
+    private func readCPU() {
+        var cpuInfo = host_cpu_load_info()
+        var count = mach_msg_type_number_t(MemoryLayout<host_cpu_load_info>.size / MemoryLayout<integer_t>.size)
+        let result = withUnsafeMutablePointer(to: &cpuInfo) {
+            $0.withMemoryRebound(to: integer_t.self, capacity: Int(count)) {
+                host_statistics(mach_host_self(), HOST_CPU_LOAD_INFO, $0, &count)
+            }
+        }
+        guard result == KERN_SUCCESS else { return }
+        
+        let user = Double(cpuInfo.cpu_ticks.0)
+        let system = Double(cpuInfo.cpu_ticks.1)
+        let idle = Double(cpuInfo.cpu_ticks.2)
+        let nice = Double(cpuInfo.cpu_ticks.3)
+        let total = user + system + idle + nice
+        
+        if let prev = previousCPUInfo {
+            let prevTotal = Double(prev.cpu_ticks.0 + prev.cpu_ticks.1 + prev.cpu_ticks.2 + prev.cpu_ticks.3)
+            let currTotal = total
+            let totalDelta = currTotal - prevTotal
+            
+            if totalDelta > 0 {
+                let userDelta = Double(cpuInfo.cpu_ticks.0 - prev.cpu_ticks.0)
+                let systemDelta = Double(cpuInfo.cpu_ticks.1 - prev.cpu_ticks.1)
+                let idleDelta = Double(cpuInfo.cpu_ticks.2 - prev.cpu_ticks.2)
+                
+                self.cpu = CPUUsage(
+                    total: 100.0 * (1.0 - idleDelta / totalDelta),
+                    user: 100.0 * userDelta / totalDelta,
+                    system: 100.0 * systemDelta / totalDelta,
+                    idle: 100.0 * idleDelta / totalDelta
+                )
+            }
+        }
+        
+        previousCPUInfo = cpuInfo
+    }
+    
+    // MARK: - Memory
+    
+    private func readMemory() {
+        var stats = vm_statistics64()
+        var count = mach_msg_type_number_t(MemoryLayout<vm_statistics64>.size / MemoryLayout<integer_t>.size)
+        
+        let result = withUnsafeMutablePointer(to: &stats) {
+            $0.withMemoryRebound(to: integer_t.self, capacity: Int(count)) {
+                host_statistics64(mach_host_self(), HOST_VM_INFO64, $0, &count)
+            }
+        }
+        guard result == KERN_SUCCESS else { return }
+        
+        let pageSize = UInt64(vm_kernel_page_size)
+        let free = UInt64(stats.free_count) * pageSize
+        let active = UInt64(stats.active_count) * pageSize
+        let inactive = UInt64(stats.inactive_count) * pageSize
+        let wired = UInt64(stats.wire_count) * pageSize
+        let compressed = UInt64(stats.compressor_page_count) * pageSize
+        
+        let used = active + inactive + wired + compressed
+        let total = used + free
+        
+        self.memory = MemoryUsage(
+            total: total,
+            used: used,
+            free: free,
+            wired: wired,
+            compressed: compressed
+        )
+    }
+    
+    // MARK: - Disk
+    
+    private func readDisks() {
+        let urls = FileManager.default.mountedVolumeURLs(includingResourceValuesForKeys: nil, options: [.skipHiddenVolumes]) ?? []
+        var infos: [DiskInfo] = []
+        
+        for url in urls {
+            do {
+                let values = try url.resourceValues(forKeys: [.volumeNameKey, .volumeTotalCapacityKey, .volumeAvailableCapacityKey])
+                if let total = values.volumeTotalCapacity,
+                   let free = values.volumeAvailableCapacity,
+                   total > 0 {
+                    let name = values.volumeName ?? url.pathComponents.last ?? "Disk"
+                    infos.append(DiskInfo(name: name, path: url.path, total: Int64(total), free: Int64(free)))
+                }
+            } catch { }
+        }
+        
+        self.disks = infos.sorted { $0.name < $1.name }
+    }
+    
+    // MARK: - Network
+    
+    private func readNetwork() {
+        var ifaddr: UnsafeMutablePointer<ifaddrs>?
+        guard getifaddrs(&ifaddr) == 0, let first = ifaddr else { return }
+        defer { freeifaddrs(ifaddr) }
+        
+        var totalIn: UInt64 = 0
+        var totalOut: UInt64 = 0
+        
+        var ptr = first
+        while true {
+            let interface = ptr.pointee
+            if let data = interface.ifa_data?.withMemoryRebound(to: if_data.self, capacity: 1, { $0 }).pointee,
+               String(cString: interface.ifa_name) != "lo0" {
+                totalIn += UInt64(data.ifi_ibytes)
+                totalOut += UInt64(data.ifi_obytes)
+            }
+            if interface.ifa_next == nil { break }
+            ptr = interface.ifa_next!
+        }
+        
+        let deltaIn = totalIn >= previousNetworkBytesIn ? totalIn - previousNetworkBytesIn : 0
+        let deltaOut = totalOut >= previousNetworkBytesOut ? totalOut - previousNetworkBytesOut : 0
+        
+        self.network = NetworkStats(
+            bytesIn: totalIn,
+            bytesOut: totalOut,
+            deltaIn: Double(deltaIn),
+            deltaOut: Double(deltaOut)
+        )
+        
+        previousNetworkBytesIn = totalIn
+        previousNetworkBytesOut = totalOut
+    }
+    
+    // MARK: - Processes
+    
+    private func readProcesses() {
+        var mib: [Int32] = [CTL_KERN, KERN_PROC, KERN_PROC_ALL, 0]
+        var size = 0
+        sysctl(&mib, u_int(mib.count), nil, &size, nil, 0)
+        
+        let count = size / MemoryLayout<kinfo_proc>.stride
+        var procs = [kinfo_proc](repeating: kinfo_proc(), count: count)
+        let result = sysctl(&mib, u_int(mib.count), &procs, &size, nil, 0)
+        guard result == 0 else { return }
+        
+        var infos: [ProcessMonitorInfo] = []
+        for proc in procs.prefix(15) {
+            let pid = proc.kp_proc.p_pid
+            let comm = withUnsafeBytes(of: proc.kp_proc.p_comm) { ptr -> String in
+                let buffer = ptr.bindMemory(to: CChar.self)
+                return String(cString: buffer.baseAddress!)
+            }
+            let cpu = Double(proc.kp_proc.p_pctcpu) / 1000.0
+            let mem = Double(proc.kp_eproc.e_xrssize) * Double(vm_kernel_page_size) / 1024.0 / 1024.0
+            infos.append(ProcessMonitorInfo(pid: pid, name: comm, cpuPercent: cpu, memoryMB: mem))
+        }
+        
+        self.processes = infos.sorted { $0.cpuPercent > $1.cpuPercent }
+    }
+    
+    // MARK: - Battery
+    
+    private func readBattery() {
+        let snapshot = IOPSCopyPowerSourcesInfo()?.takeRetainedValue()
+        guard let sources = IOPSCopyPowerSourcesList(snapshot)?.takeRetainedValue() as? [CFTypeRef],
+              let source = sources.first else {
+            self.battery = BatteryInfo(isPresent: false)
+            return
+        }
+        
+        guard let info = IOPSGetPowerSourceDescription(snapshot, source)?.takeUnretainedValue() as? [String: Any] else { return }
+        
+        let state = info[kIOPSPowerSourceStateKey] as? String
+        let isCharging = state == kIOPSBatteryPowerValue
+        let capacity = info[kIOPSCurrentCapacityKey] as? Int ?? 0
+        let maxCapacity = info[kIOPSMaxCapacityKey] as? Int ?? 100
+        let time = info[kIOPSTimeToEmptyKey] as? Int ?? -1
+        let cycles = info["Cycle Count" as String] as? Int ?? 0
+        
+        self.battery = BatteryInfo(
+            isPresent: true,
+            isCharging: isCharging,
+            level: Double(capacity) / Double(maxCapacity),
+            timeRemaining: time,
+            cycleCount: cycles,
+            health: 100
+        )
+    }
+    
+    // MARK: - Thermal
+    
+    private func readThermal() {
+        // SMC read for temperature - simplified, using sysctl as fallback
+        var temp: Double = 0
+        var size = MemoryLayout<Double>.size
+        var mib = [CTL_HW, HW_TARGET]
+        sysctl(&mib, 2, nil, &size, nil, 0)
+        
+        // Try to read CPU temp via SMC if available (simplified)
+        // In a real app, you'd use IOKit to read SMC keys like TC0D, TC0P, etc.
+        // For now we estimate based on CPU load
+        temp = 40.0 + (cpu.total * 0.5)
+        
+        self.thermal = ThermalInfo(cpuTemp: temp, gpuTemp: temp + 5)
+    }
+    
+    // MARK: - Static Info
+    
+    private func loadStaticSystemInfo() {
+        var uts = utsname()
+        uname(&uts)
+        
+        let hostname = withUnsafePointer(to: &uts.nodename) {
+            $0.withMemoryRebound(to: CChar.self, capacity: 256) { String(cString: $0) }
+        }
+        let release = withUnsafePointer(to: &uts.release) {
+            $0.withMemoryRebound(to: CChar.self, capacity: 256) { String(cString: $0) }
+        }
+        let machine = withUnsafePointer(to: &uts.machine) {
+            $0.withMemoryRebound(to: CChar.self, capacity: 256) { String(cString: $0) }
+        }
+        
+        let osVersion = ProcessInfo.processInfo.operatingSystemVersionString
+        
+        self.system = SystemInfo(
+            hostname: hostname,
+            osVersion: osVersion,
+            kernelVersion: release,
+            architecture: machine,
+            model: modelIdentifier(),
+            bootTime: bootTime()
+        )
+    }
+    
+    private func modelIdentifier() -> String {
+        var size = 0
+        sysctlbyname("hw.model", nil, &size, nil, 0)
+        var model = [CChar](repeating: 0, count: size)
+        sysctlbyname("hw.model", &model, &size, nil, 0)
+        return String(cString: model)
+    }
+    
+    private func bootTime() -> Date? {
+        var mib = [CTL_KERN, KERN_BOOTTIME]
+        var boot = timeval()
+        var size = MemoryLayout<timeval>.size
+        let result = sysctl(&mib, 2, &boot, &size, nil, 0)
+        guard result == 0 else { return nil }
+        return Date(timeIntervalSince1970: TimeInterval(boot.tv_sec) + TimeInterval(boot.tv_usec) / 1_000_000)
+    }
+    
+    var uptimeString: String {
+        guard let boot = system.bootTime else { return "--" }
+        let interval = Date().timeIntervalSince(boot)
+        let days = Int(interval) / 86400
+        let hours = (Int(interval) % 86400) / 3600
+        let mins = (Int(interval) % 3600) / 60
+        let secs = Int(interval) % 60
+        if days > 0 {
+            return String(format: "%dd %02d:%02d:%02d", days, hours, mins, secs)
+        }
+        return String(format: "%02d:%02d:%02d", hours, mins, secs)
+    }
+}

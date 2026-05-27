@@ -20,19 +20,45 @@ enum SoundEffect: String, CaseIterable {
     case shortcutConflict = "ShortcutConflict"
     case buttonClick = "ButtonClick"
     case settingsChanged = "SettingsChanged"
+    case wallpaperAdded = "WallpaperAdded"
+    case wallpaperDeleted = "WallpaperDeleted"
+    case wallpaperSwitched = "WallpaperSwitched"
+    case wallpaperPlayPause = "WallpaperPlayPause"
+    case widgetAdded = "WidgetAdded"
+    case widgetDeleted = "WidgetDeleted"
+    case widgetLocked = "WidgetLocked"
+    case widgetPickerOpen = "WidgetPickerOpen"
+    case layoutReset = "LayoutReset"
+    case layoutCleared = "LayoutCleared"
+    case gridToggle = "GridToggle"
+    case dragStart = "DragStart"
+    case resizeStart = "ResizeStart"
     
     var systemSoundID: SystemSoundID? {
         switch self {
-        case .popoverOpen:      return 1106  // Tock
-        case .popoverClose:     return 1105  // Tock
-        case .tabSaved:         return 1102  // Glass
-        case .tabDeleted:       return 1107  // Tock
-        case .switchSuccess:    return 1103  // Basso
-        case .switchFailure:    return 1006  // Basso (lower)
-        case .shortcutRecorded: return 1104  // Ping
-        case .shortcutConflict: return 1005  // Basso
-        case .buttonClick:      return 1105  // Tock
-        case .settingsChanged:  return 1106  // Tock
+        case .popoverOpen:       return 1106  // Tock
+        case .popoverClose:      return 1105  // Tock
+        case .tabSaved:          return 1102  // Glass
+        case .tabDeleted:        return 1107  // Tock
+        case .switchSuccess:     return 1103  // Basso
+        case .switchFailure:     return 1006  // Basso (lower)
+        case .shortcutRecorded:  return 1104  // Ping
+        case .shortcutConflict:  return 1005  // Basso
+        case .buttonClick:       return 1105  // Tock
+        case .settingsChanged:   return 1106  // Tock
+        case .wallpaperAdded:    return 1262  // Glass — cinematic add
+        case .wallpaperDeleted:  return 1053  // Error — removal
+        case .wallpaperSwitched: return 1104  // Ping — quick switch
+        case .wallpaperPlayPause: return 1106 // Tock — toggle
+        case .widgetAdded:       return 1104  // Ping — tech add
+        case .widgetDeleted:     return 1053  // Error — removal
+        case .widgetLocked:      return 1106  // Tock — toggle lock
+        case .widgetPickerOpen:  return 1103  // Basso — modal open
+        case .layoutReset:       return 1104  // Ping — reset confirmation
+        case .layoutCleared:     return 1053  // Error — mass removal
+        case .gridToggle:        return 1106  // Tock — toggle grid
+        case .dragStart:         return 1107  // Tock — light grab
+        case .resizeStart:       return 1107  // Tock — light grab
         }
     }
 }
@@ -156,6 +182,8 @@ final class SoundEffectManager {
             AudioServicesPlaySystemSound(1328)  // Sosumi — tech open
         case "assessprephack":
             AudioServicesPlaySystemSound(1257)  // Funk — edgy open
+        case "hackerdesktop":
+            AudioServicesPlaySystemSound(1328)  // Sosumi — tech dashboard open
         default:
             playPopoverOpen()
         }
@@ -164,7 +192,7 @@ final class SoundEffectManager {
     func playWindowClose(feature: String = "") {
         guard isEnabled else { return }
         switch feature {
-        case "destintab", "superswitch", "browserbypasser", "assessprephack":
+        case "destintab", "superswitch", "browserbypasser", "assessprephack", "hackerdesktop":
             AudioServicesPlaySystemSound(1107)  // Tock — tight close
         default:
             playPopoverClose()
@@ -174,6 +202,62 @@ final class SoundEffectManager {
     func playFeatureSwitch() {
         guard isEnabled else { return }
         AudioServicesPlaySystemSound(1106)  // Tock — quick switch
+    }
+    
+    // MARK: - Wallpaper SFX
+    
+    func playWallpaperAdded() {
+        play(.wallpaperAdded)
+    }
+    
+    func playWallpaperDeleted() {
+        play(.wallpaperDeleted)
+    }
+    
+    func playWallpaperSwitched() {
+        play(.wallpaperSwitched)
+    }
+    
+    func playWallpaperPlayPause() {
+        play(.wallpaperPlayPause)
+    }
+    
+    // MARK: - Widget SFX
+    
+    func playWidgetAdded() {
+        play(.widgetAdded)
+    }
+    
+    func playWidgetDeleted() {
+        play(.widgetDeleted)
+    }
+    
+    func playWidgetLocked() {
+        play(.widgetLocked)
+    }
+    
+    func playWidgetPickerOpen() {
+        play(.widgetPickerOpen)
+    }
+    
+    func playLayoutReset() {
+        play(.layoutReset)
+    }
+    
+    func playLayoutCleared() {
+        play(.layoutCleared)
+    }
+    
+    func playGridToggle() {
+        play(.gridToggle)
+    }
+    
+    func playDragStart() {
+        play(.dragStart)
+    }
+    
+    func playResizeStart() {
+        play(.resizeStart)
     }
 }
 

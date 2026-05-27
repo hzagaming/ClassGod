@@ -2,12 +2,12 @@
 //  AppPreferences.swift
 //  ClassGod
 //
-//  Created by Charlie Zhong on 22/5/26.
-//
 
 import Foundation
 import AppKit
 import Carbon
+
+// MARK: - Enums
 
 enum SwitchBehavior: String, Codable, CaseIterable, Identifiable {
     case activateExisting = "activateExisting"
@@ -123,6 +123,73 @@ enum AnimationSpeed: String, Codable, CaseIterable, Identifiable {
     }
 }
 
+enum WindowMaximizeBehavior: String, Codable, CaseIterable, Identifiable {
+    case none = "none"
+    case fillScreen = "fillScreen"
+    case fullScreenBorderless = "fullScreenBorderless"
+
+    var id: String { rawValue }
+    var displayName: String {
+        switch self {
+        case .none: return String(localized: "maximize.none")
+        case .fillScreen: return String(localized: "maximize.fill_screen")
+        case .fullScreenBorderless: return String(localized: "maximize.fullscreen_borderless")
+        }
+    }
+}
+
+enum ListDividerStyle: String, Codable, CaseIterable, Identifiable {
+    case none = "none"
+    case thin = "thin"
+    case dashed = "dashed"
+
+    var id: String { rawValue }
+    var displayName: String {
+        switch self {
+        case .none: return String(localized: "divider.none")
+        case .thin: return String(localized: "divider.thin")
+        case .dashed: return String(localized: "divider.dashed")
+        }
+    }
+}
+
+enum LanguageOverride: String, Codable, CaseIterable, Identifiable {
+    case system = "system"
+    case zhHans = "zh-Hans"
+    case en = "en"
+    case ja = "ja"
+    case ko = "ko"
+    case de = "de"
+    case fr = "fr"
+    case es = "es"
+    case pt = "pt"
+    case ru = "ru"
+    case zhHant = "zh-Hant"
+
+    var id: String { rawValue }
+    var displayName: String {
+        switch self {
+        case .system: return String(localized: "lang.system")
+        case .zhHans: return "简体中文"
+        case .en: return "English"
+        case .ja: return "日本語"
+        case .ko: return "한국어"
+        case .de: return "Deutsch"
+        case .fr: return "Français"
+        case .es: return "Español"
+        case .pt: return "Português"
+        case .ru: return "Русский"
+        case .zhHant: return "繁體中文"
+        }
+    }
+
+    var localeIdentifier: String? {
+        self == .system ? nil : rawValue
+    }
+}
+
+// MARK: - Preferences Struct
+
 struct AppPreferences: Codable, Equatable {
     // MARK: - General
     var launchAtLogin: Bool
@@ -134,14 +201,29 @@ struct AppPreferences: Codable, Equatable {
     var autoDetectOnShow: Bool
     var enableKeyboardNavigation: Bool
     var switchDelayMs: Double
+    var enableClipboardMonitoring: Bool
+    var autoSaveIntervalMinutes: Int
+    var preferredLanguage: LanguageOverride
+
+    // MARK: - Window Behavior
+    var closeOnClickOutside: Bool
+    var keepWindowOnTop: Bool
+    var rememberWindowPosition: Bool
+    var windowOpacity: Double
+    var windowMaximizeBehavior: WindowMaximizeBehavior
+    var minimizeAnimationDuration: Double
 
     // MARK: - Shortcuts
     var showPopoverKeyCode: UInt32
     var showPopoverModifiers: UInt32
+    var suppressSystemShortcutConflict: Bool
 
     // MARK: - Browser
     var defaultBrowser: BrowserType?
     var browserNotRunningBehavior: BrowserNotRunningBehavior
+    var askBeforeOpening: Bool
+    var forceIncognitoMode: Bool
+    var customUserAgent: String
 
     // MARK: - Appearance
     var menuBarIconStyle: MenuBarIconStyle
@@ -155,6 +237,11 @@ struct AppPreferences: Codable, Equatable {
     var showShortcutBadge: Bool
     var useCompactMode: Bool
     var showTabCountBadge: Bool
+    var appIconStyle: AppIconStyle
+    var borderWidth: Double
+    var fontSizeScale: Double
+    var enableBlurBackground: Bool
+    var listDividerStyle: ListDividerStyle
 
     // MARK: - Version
     var version: Int
@@ -168,6 +255,11 @@ struct AppPreferences: Codable, Equatable {
     var confirmBeforeClear: Bool
     var maxTabsInPopover: Int
     var useInstantAnimations: Bool
+    var chaosParticleCount: Int
+    var logRetentionDays: Int
+    var enableDeveloperMode: Bool
+    var enableAutoBackup: Bool
+    var autoBackupIntervalHours: Int
 
     // MARK: - Defaults
     static let `default` = AppPreferences(
@@ -180,10 +272,23 @@ struct AppPreferences: Codable, Equatable {
         autoDetectOnShow: true,
         enableKeyboardNavigation: true,
         switchDelayMs: 0,
+        enableClipboardMonitoring: false,
+        autoSaveIntervalMinutes: 5,
+        preferredLanguage: .system,
+        closeOnClickOutside: true,
+        keepWindowOnTop: false,
+        rememberWindowPosition: true,
+        windowOpacity: 1.0,
+        windowMaximizeBehavior: .none,
+        minimizeAnimationDuration: 0.18,
         showPopoverKeyCode: 0x08,
         showPopoverModifiers: AppPreferences.defaultShowPopoverModifiers,
+        suppressSystemShortcutConflict: false,
         defaultBrowser: nil,
         browserNotRunningBehavior: .launchAndOpen,
+        askBeforeOpening: false,
+        forceIncognitoMode: false,
+        customUserAgent: "",
         menuBarIconStyle: .fill,
         panelWidth: 380,
         panelMaxHeight: 500,
@@ -195,7 +300,12 @@ struct AppPreferences: Codable, Equatable {
         showShortcutBadge: true,
         useCompactMode: false,
         showTabCountBadge: false,
-        version: 2,
+        appIconStyle: .default,
+        borderWidth: 1.0,
+        fontSizeScale: 1.0,
+        enableBlurBackground: true,
+        listDividerStyle: .thin,
+        version: 3,
         animationSpeed: .fast,
         enableDebugLogging: false,
         enableSoundEffects: true,
@@ -203,13 +313,20 @@ struct AppPreferences: Codable, Equatable {
         confirmBeforeDelete: true,
         confirmBeforeClear: true,
         maxTabsInPopover: 50,
-        useInstantAnimations: false
+        useInstantAnimations: false,
+        chaosParticleCount: 200,
+        logRetentionDays: 7,
+        enableDeveloperMode: false,
+        enableAutoBackup: false,
+        autoBackupIntervalHours: 24
     )
 
     private static var defaultShowPopoverModifiers: UInt32 {
         UInt32(NSEvent.ModifierFlags.command.rawValue | NSEvent.ModifierFlags.shift.rawValue)
     }
 }
+
+// MARK: - Coding
 
 extension AppPreferences {
     private enum CodingKeys: String, CodingKey {
@@ -222,10 +339,23 @@ extension AppPreferences {
         case autoDetectOnShow
         case enableKeyboardNavigation
         case switchDelayMs
+        case enableClipboardMonitoring
+        case autoSaveIntervalMinutes
+        case preferredLanguage
+        case closeOnClickOutside
+        case keepWindowOnTop
+        case rememberWindowPosition
+        case windowOpacity
+        case windowMaximizeBehavior
+        case minimizeAnimationDuration
         case showPopoverKeyCode
         case showPopoverModifiers
+        case suppressSystemShortcutConflict
         case defaultBrowser
         case browserNotRunningBehavior
+        case askBeforeOpening
+        case forceIncognitoMode
+        case customUserAgent
         case menuBarIconStyle
         case panelWidth
         case panelMaxHeight
@@ -237,6 +367,11 @@ extension AppPreferences {
         case showShortcutBadge
         case useCompactMode
         case showTabCountBadge
+        case appIconStyle
+        case borderWidth
+        case fontSizeScale
+        case enableBlurBackground
+        case listDividerStyle
         case version
         case animationSpeed
         case enableDebugLogging
@@ -246,6 +381,11 @@ extension AppPreferences {
         case confirmBeforeClear
         case maxTabsInPopover
         case useInstantAnimations
+        case chaosParticleCount
+        case logRetentionDays
+        case enableDeveloperMode
+        case enableAutoBackup
+        case autoBackupIntervalHours
     }
 
     init(from decoder: Decoder) throws {
@@ -253,6 +393,7 @@ extension AppPreferences {
         var preferences = AppPreferences.default
         let storedVersion = try container.decodeIfPresent(Int.self, forKey: .version) ?? 0
 
+        // General
         preferences.launchAtLogin = try container.decodeIfPresent(Bool.self, forKey: .launchAtLogin) ?? preferences.launchAtLogin
         preferences.showPopoverOnLaunch = try container.decodeIfPresent(Bool.self, forKey: .showPopoverOnLaunch) ?? preferences.showPopoverOnLaunch
         preferences.showToastNotifications = try container.decodeIfPresent(Bool.self, forKey: .showToastNotifications) ?? preferences.showToastNotifications
@@ -262,12 +403,33 @@ extension AppPreferences {
         preferences.autoDetectOnShow = try container.decodeIfPresent(Bool.self, forKey: .autoDetectOnShow) ?? preferences.autoDetectOnShow
         preferences.enableKeyboardNavigation = try container.decodeIfPresent(Bool.self, forKey: .enableKeyboardNavigation) ?? preferences.enableKeyboardNavigation
         preferences.switchDelayMs = try container.decodeIfPresent(Double.self, forKey: .switchDelayMs) ?? preferences.switchDelayMs
+        preferences.enableClipboardMonitoring = try container.decodeIfPresent(Bool.self, forKey: .enableClipboardMonitoring) ?? preferences.enableClipboardMonitoring
+        preferences.autoSaveIntervalMinutes = try container.decodeIfPresent(Int.self, forKey: .autoSaveIntervalMinutes) ?? preferences.autoSaveIntervalMinutes
+        preferences.preferredLanguage = try container.decodeIfPresent(LanguageOverride.self, forKey: .preferredLanguage) ?? preferences.preferredLanguage
+
+        // Window Behavior
+        preferences.closeOnClickOutside = try container.decodeIfPresent(Bool.self, forKey: .closeOnClickOutside) ?? preferences.closeOnClickOutside
+        preferences.keepWindowOnTop = try container.decodeIfPresent(Bool.self, forKey: .keepWindowOnTop) ?? preferences.keepWindowOnTop
+        preferences.rememberWindowPosition = try container.decodeIfPresent(Bool.self, forKey: .rememberWindowPosition) ?? preferences.rememberWindowPosition
+        preferences.windowOpacity = try container.decodeIfPresent(Double.self, forKey: .windowOpacity) ?? preferences.windowOpacity
+        preferences.windowMaximizeBehavior = try container.decodeIfPresent(WindowMaximizeBehavior.self, forKey: .windowMaximizeBehavior) ?? preferences.windowMaximizeBehavior
+        preferences.minimizeAnimationDuration = try container.decodeIfPresent(Double.self, forKey: .minimizeAnimationDuration) ?? preferences.minimizeAnimationDuration
+
+        // Shortcuts
         preferences.showPopoverKeyCode = try container.decodeIfPresent(UInt32.self, forKey: .showPopoverKeyCode) ?? preferences.showPopoverKeyCode
         preferences.showPopoverModifiers = AppPreferences.normalizedCocoaModifiers(
             try container.decodeIfPresent(UInt32.self, forKey: .showPopoverModifiers) ?? preferences.showPopoverModifiers
         )
+        preferences.suppressSystemShortcutConflict = try container.decodeIfPresent(Bool.self, forKey: .suppressSystemShortcutConflict) ?? preferences.suppressSystemShortcutConflict
+
+        // Browser
         preferences.defaultBrowser = try container.decodeIfPresent(BrowserType.self, forKey: .defaultBrowser) ?? preferences.defaultBrowser
         preferences.browserNotRunningBehavior = try container.decodeIfPresent(BrowserNotRunningBehavior.self, forKey: .browserNotRunningBehavior) ?? preferences.browserNotRunningBehavior
+        preferences.askBeforeOpening = try container.decodeIfPresent(Bool.self, forKey: .askBeforeOpening) ?? preferences.askBeforeOpening
+        preferences.forceIncognitoMode = try container.decodeIfPresent(Bool.self, forKey: .forceIncognitoMode) ?? preferences.forceIncognitoMode
+        preferences.customUserAgent = try container.decodeIfPresent(String.self, forKey: .customUserAgent) ?? preferences.customUserAgent
+
+        // Appearance
         preferences.menuBarIconStyle = try container.decodeIfPresent(MenuBarIconStyle.self, forKey: .menuBarIconStyle) ?? preferences.menuBarIconStyle
         preferences.panelWidth = try container.decodeIfPresent(Double.self, forKey: .panelWidth) ?? preferences.panelWidth
         preferences.panelMaxHeight = try container.decodeIfPresent(Double.self, forKey: .panelMaxHeight) ?? preferences.panelMaxHeight
@@ -279,6 +441,13 @@ extension AppPreferences {
         preferences.showShortcutBadge = try container.decodeIfPresent(Bool.self, forKey: .showShortcutBadge) ?? preferences.showShortcutBadge
         preferences.useCompactMode = try container.decodeIfPresent(Bool.self, forKey: .useCompactMode) ?? preferences.useCompactMode
         preferences.showTabCountBadge = try container.decodeIfPresent(Bool.self, forKey: .showTabCountBadge) ?? preferences.showTabCountBadge
+        preferences.appIconStyle = try container.decodeIfPresent(AppIconStyle.self, forKey: .appIconStyle) ?? preferences.appIconStyle
+        preferences.borderWidth = try container.decodeIfPresent(Double.self, forKey: .borderWidth) ?? preferences.borderWidth
+        preferences.fontSizeScale = try container.decodeIfPresent(Double.self, forKey: .fontSizeScale) ?? preferences.fontSizeScale
+        preferences.enableBlurBackground = try container.decodeIfPresent(Bool.self, forKey: .enableBlurBackground) ?? preferences.enableBlurBackground
+        preferences.listDividerStyle = try container.decodeIfPresent(ListDividerStyle.self, forKey: .listDividerStyle) ?? preferences.listDividerStyle
+
+        // Advanced
         preferences.version = storedVersion
         preferences.animationSpeed = try container.decodeIfPresent(AnimationSpeed.self, forKey: .animationSpeed) ?? preferences.animationSpeed
         preferences.enableDebugLogging = try container.decodeIfPresent(Bool.self, forKey: .enableDebugLogging) ?? preferences.enableDebugLogging
@@ -288,6 +457,11 @@ extension AppPreferences {
         preferences.confirmBeforeClear = try container.decodeIfPresent(Bool.self, forKey: .confirmBeforeClear) ?? preferences.confirmBeforeClear
         preferences.maxTabsInPopover = try container.decodeIfPresent(Int.self, forKey: .maxTabsInPopover) ?? preferences.maxTabsInPopover
         preferences.useInstantAnimations = try container.decodeIfPresent(Bool.self, forKey: .useInstantAnimations) ?? preferences.useInstantAnimations
+        preferences.chaosParticleCount = try container.decodeIfPresent(Int.self, forKey: .chaosParticleCount) ?? preferences.chaosParticleCount
+        preferences.logRetentionDays = try container.decodeIfPresent(Int.self, forKey: .logRetentionDays) ?? preferences.logRetentionDays
+        preferences.enableDeveloperMode = try container.decodeIfPresent(Bool.self, forKey: .enableDeveloperMode) ?? preferences.enableDeveloperMode
+        preferences.enableAutoBackup = try container.decodeIfPresent(Bool.self, forKey: .enableAutoBackup) ?? preferences.enableAutoBackup
+        preferences.autoBackupIntervalHours = try container.decodeIfPresent(Int.self, forKey: .autoBackupIntervalHours) ?? preferences.autoBackupIntervalHours
 
         if storedVersion < 2 {
             preferences.showPopoverOnLaunch = true

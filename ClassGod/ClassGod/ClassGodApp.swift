@@ -14,9 +14,13 @@ struct ClassGodApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
     var body: some Scene {
-        Settings {
-            SettingsContainerView()
-                .frame(minWidth: 520, minHeight: 400)
+        WindowGroup {
+            EmptyView()
+        }
+        .windowStyle(.hiddenTitleBar)
+        .defaultSize(width: 0.001, height: 0.001)
+        .commands {
+            CommandGroup(replacing: .appSettings) {}
         }
     }
 }
@@ -28,9 +32,21 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var superSwitchWindow: NSWindow?
     var browserBypasserWindow: NSWindow?
     var assessPrepHackWindow: NSWindow?
+    var settingsWindow: NSWindow?
+    var wallpaperBrowserWindow: NSWindow?
+    var hackerDesktopWindow: NSWindow?
     var showPopoverHotKeyRef: EventHotKeyRef?
 
     var splashWindow: NSWindow?
+    private var clickOutsideMonitor: Any?
+
+    private var targetWindowAlpha: CGFloat {
+        CGFloat(PreferencesManager.shared.preferences.windowOpacity)
+    }
+
+    private var windowLevel: NSWindow.Level {
+        PreferencesManager.shared.preferences.keepWindowOnTop ? .floating : .normal
+    }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         showSplashScreen()
@@ -46,7 +62,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 self?.setupShowPopoverShortcut()
                 self?.updateStatusItemIcon()
                 self?.updateMainWindowSize()
+                self?.updateAllWindowLevels()
+                self?.updateClickOutsideMonitor()
             }
+            
+            // Apply saved icon style immediately
+            AppIconManager.shared.refreshIcon()
+            self.updateClickOutsideMonitor()
 
             NotificationCenter.default.addObserver(
                 self,
@@ -61,6 +83,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             self.setupSuperSwitchWindow()
             self.setupBrowserBypasserWindow()
             self.setupAssessPrepHackWindow()
+            self.setupSettingsWindow()
             if let window = self.mainWindow {
                 window.alphaValue = 0
                 window.orderBack(nil)
@@ -131,7 +154,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             defer: false
         )
 
-        window.level = .normal
+        window.level = windowLevel
         window.backgroundColor = .clear
         window.hasShadow = true
         window.isMovableByWindowBackground = false
@@ -142,6 +165,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         window.contentView?.wantsLayer = true
         window.contentView?.layer?.cornerRadius = prefs.panelCornerRadius
         window.contentView?.layer?.masksToBounds = true
+        window.alphaValue = targetWindowAlpha
 
         // Center on screen
         if let screen = NSScreen.main {
@@ -161,6 +185,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             self?.showBrowserBypasserWindow()
         }, onOpenAssessPrepHack: { [weak self] in
             self?.showAssessPrepHackWindow()
+        }, onOpenSettings: { [weak self] in
+            self?.showSettingsWindow()
+        }, onOpenWallpaper: { [weak self] in
+            self?.showWallpaperBrowserWindow()
+        }, onOpenHackerDesktop: { [weak self] in
+            self?.showHackerDesktopWindow()
         })
             .frame(width: size.width, height: size.height)
             .background(Color.clear)
@@ -236,7 +266,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             NSAnimationContext.runAnimationGroup { context in
                 context.duration = 0.18
                 context.timingFunction = .init(name: .easeOut)
-                window.animator().alphaValue = 1.0
+                window.animator().alphaValue = targetWindowAlpha
             }
         } else {
             window.makeKeyAndOrderFront(nil)
@@ -335,7 +365,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             NSAnimationContext.runAnimationGroup { context in
                 context.duration = 0.18
                 context.timingFunction = .init(name: .easeOut)
-                window.animator().alphaValue = 1.0
+                window.animator().alphaValue = targetWindowAlpha
             }
         } else {
             window.makeKeyAndOrderFront(nil)
@@ -434,7 +464,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             NSAnimationContext.runAnimationGroup { context in
                 context.duration = 0.18
                 context.timingFunction = .init(name: .easeOut)
-                window.animator().alphaValue = 1.0
+                window.animator().alphaValue = targetWindowAlpha
             }
         } else {
             window.makeKeyAndOrderFront(nil)
@@ -533,7 +563,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             NSAnimationContext.runAnimationGroup { context in
                 context.duration = 0.18
                 context.timingFunction = .init(name: .easeOut)
-                window.animator().alphaValue = 1.0
+                window.animator().alphaValue = targetWindowAlpha
             }
         } else {
             window.makeKeyAndOrderFront(nil)
@@ -566,6 +596,284 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             showAssessPrepHackWindow(animated: true)
         }
     }
+    
+    // MARK: - Settings Window
+    
+    private func setupSettingsWindow() {
+        let size = NSSize(width: 520, height: 480)
+
+        let window = DraggableWindow(
+            contentRect: NSRect(origin: .zero, size: size),
+            styleMask: [.borderless],
+            backing: .buffered,
+            defer: false
+        )
+
+        window.level = .normal
+        window.backgroundColor = .clear
+        window.hasShadow = true
+        window.isMovableByWindowBackground = false
+        window.isReleasedWhenClosed = false
+        window.isOpaque = false
+        
+        window.contentView?.wantsLayer = true
+        window.contentView?.layer?.cornerRadius = 12
+        window.contentView?.layer?.masksToBounds = true
+
+        if let main = mainWindow {
+            let mainFrame = main.frame
+            window.setFrameOrigin(NSPoint(x: mainFrame.midX - size.width / 2, y: mainFrame.midY - size.height / 2))
+        } else if let screen = NSScreen.main {
+            let screenFrame = screen.visibleFrame
+            let x = screenFrame.midX - size.width / 2
+            let y = screenFrame.midY - size.height / 2
+            window.setFrameOrigin(NSPoint(x: x, y: y))
+        }
+
+        let rootView = SettingsWindowView(onClose: { [weak self] in
+            self?.hideSettingsWindow()
+        })
+            .frame(width: size.width, height: size.height)
+            .background(Color.clear)
+
+        window.contentView = NSHostingView(rootView: rootView)
+
+        settingsWindow = window
+    }
+    
+    func showSettingsWindow(animated: Bool = true) {
+        guard let window = settingsWindow else {
+            setupSettingsWindow()
+            showSettingsWindow(animated: animated)
+            return
+        }
+        
+        SoundEffectManager.shared.playWindowOpen()
+        
+        if animated {
+            window.alphaValue = 0
+            window.makeKeyAndOrderFront(nil)
+            
+            NSAnimationContext.runAnimationGroup { context in
+                context.duration = 0.18
+                context.timingFunction = .init(name: .easeOut)
+                window.animator().alphaValue = targetWindowAlpha
+            }
+        } else {
+            window.makeKeyAndOrderFront(nil)
+        }
+    }
+    
+    func hideSettingsWindow() {
+        guard let window = settingsWindow else { return }
+        SoundEffectManager.shared.playWindowClose()
+        
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = 0.12
+            context.timingFunction = .init(name: .easeIn)
+            window.animator().alphaValue = 0
+        } completionHandler: { [weak self] in
+            self?.settingsWindow?.orderOut(nil)
+        }
+    }
+    
+    @objc func toggleSettingsWindow() {
+        guard let window = settingsWindow else {
+            setupSettingsWindow()
+            showSettingsWindow(animated: true)
+            return
+        }
+        
+        if window.isVisible && window.alphaValue > 0 {
+            hideSettingsWindow()
+        } else {
+            showSettingsWindow(animated: true)
+        }
+    }
+
+    // MARK: - Wallpaper Browser Window
+
+    private func setupWallpaperBrowserWindow() {
+        let size = NSSize(width: 520, height: 480)
+
+        let window = DraggableWindow(
+            contentRect: NSRect(origin: .zero, size: size),
+            styleMask: [.borderless],
+            backing: .buffered,
+            defer: false
+        )
+
+        window.level = windowLevel
+        window.backgroundColor = .clear
+        window.hasShadow = true
+        window.isMovableByWindowBackground = false
+        window.isReleasedWhenClosed = false
+        window.isOpaque = false
+
+        window.contentView?.wantsLayer = true
+        window.contentView?.layer?.cornerRadius = 12
+        window.contentView?.layer?.masksToBounds = true
+
+        if let main = mainWindow {
+            let mainFrame = main.frame
+            window.setFrameOrigin(NSPoint(x: mainFrame.midX - size.width / 2, y: mainFrame.midY - size.height / 2))
+        } else if let screen = NSScreen.main {
+            let screenFrame = screen.visibleFrame
+            let x = screenFrame.midX - size.width / 2
+            let y = screenFrame.midY - size.height / 2
+            window.setFrameOrigin(NSPoint(x: x, y: y))
+        }
+
+        let rootView = WallpaperBrowserView(onClose: { [weak self] in
+            self?.hideWallpaperBrowserWindow()
+        })
+            .frame(width: size.width, height: size.height)
+            .background(Color.clear)
+
+        window.contentView = NSHostingView(rootView: rootView)
+
+        wallpaperBrowserWindow = window
+    }
+
+    func showWallpaperBrowserWindow(animated: Bool = true) {
+        guard let window = wallpaperBrowserWindow else {
+            setupWallpaperBrowserWindow()
+            showWallpaperBrowserWindow(animated: animated)
+            return
+        }
+
+        SoundEffectManager.shared.playWindowOpen()
+
+        if animated {
+            window.alphaValue = 0
+            window.makeKeyAndOrderFront(nil)
+
+            NSAnimationContext.runAnimationGroup { context in
+                context.duration = 0.18
+                context.timingFunction = .init(name: .easeOut)
+                window.animator().alphaValue = targetWindowAlpha
+            }
+        } else {
+            window.makeKeyAndOrderFront(nil)
+        }
+    }
+
+    func hideWallpaperBrowserWindow() {
+        guard let window = wallpaperBrowserWindow else { return }
+        SoundEffectManager.shared.playWindowClose()
+
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = 0.12
+            context.timingFunction = .init(name: .easeIn)
+            window.animator().alphaValue = 0
+        } completionHandler: { [weak self] in
+            self?.wallpaperBrowserWindow?.orderOut(nil)
+        }
+    }
+
+    @objc func toggleWallpaperBrowserWindow() {
+        guard let window = wallpaperBrowserWindow else {
+            setupWallpaperBrowserWindow()
+            showWallpaperBrowserWindow(animated: true)
+            return
+        }
+
+        if window.isVisible && window.alphaValue > 0 {
+            hideWallpaperBrowserWindow()
+        } else {
+            showWallpaperBrowserWindow(animated: true)
+        }
+    }
+
+    // MARK: - Hacker Desktop Window
+
+    private func setupHackerDesktopWindow() {
+        guard let screen = NSScreen.main else { return }
+        let screenFrame = screen.visibleFrame
+        let size = NSSize(width: min(900, screenFrame.width - 100), height: min(600, screenFrame.height - 100))
+
+        let window = DraggableWindow(
+            contentRect: NSRect(origin: .zero, size: size),
+            styleMask: [.borderless],
+            backing: .buffered,
+            defer: false
+        )
+
+        window.level = windowLevel
+        window.backgroundColor = .clear
+        window.hasShadow = true
+        window.isMovableByWindowBackground = false
+        window.isReleasedWhenClosed = false
+        window.isOpaque = false
+
+        window.contentView?.wantsLayer = true
+        window.contentView?.layer?.cornerRadius = 12
+        window.contentView?.layer?.masksToBounds = true
+
+        let x = screenFrame.midX - size.width / 2
+        let y = screenFrame.midY - size.height / 2
+        window.setFrameOrigin(NSPoint(x: x, y: y))
+
+        let rootView = HackerDesktopView(onClose: { [weak self] in
+            self?.hideHackerDesktopWindow()
+        })
+            .frame(width: size.width, height: size.height)
+            .background(Color.clear)
+
+        window.contentView = NSHostingView(rootView: rootView)
+
+        hackerDesktopWindow = window
+    }
+
+    func showHackerDesktopWindow(animated: Bool = true) {
+        guard let window = hackerDesktopWindow else {
+            setupHackerDesktopWindow()
+            showHackerDesktopWindow(animated: animated)
+            return
+        }
+
+        SoundEffectManager.shared.playWindowOpen(feature: "hackerdesktop")
+
+        if animated {
+            window.alphaValue = 0
+            window.makeKeyAndOrderFront(nil)
+
+            NSAnimationContext.runAnimationGroup { context in
+                context.duration = 0.18
+                context.timingFunction = .init(name: .easeOut)
+                window.animator().alphaValue = targetWindowAlpha
+            }
+        } else {
+            window.makeKeyAndOrderFront(nil)
+        }
+    }
+
+    func hideHackerDesktopWindow() {
+        guard let window = hackerDesktopWindow else { return }
+        SoundEffectManager.shared.playWindowClose(feature: "hackerdesktop")
+
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = 0.12
+            context.timingFunction = .init(name: .easeIn)
+            window.animator().alphaValue = 0
+        } completionHandler: { [weak self] in
+            self?.hackerDesktopWindow?.orderOut(nil)
+        }
+    }
+
+    @objc func toggleHackerDesktopWindow() {
+        guard let window = hackerDesktopWindow else {
+            setupHackerDesktopWindow()
+            showHackerDesktopWindow(animated: true)
+            return
+        }
+
+        if window.isVisible && window.alphaValue > 0 {
+            hideHackerDesktopWindow()
+        } else {
+            showHackerDesktopWindow(animated: true)
+        }
+    }
 
     private func updateMainWindowSize() {
         guard let window = mainWindow else { return }
@@ -589,7 +897,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             NSAnimationContext.runAnimationGroup { context in
                 context.duration = 0.18
                 context.timingFunction = .init(name: .easeOut)
-                window.animator().alphaValue = 1.0
+                window.animator().alphaValue = targetWindowAlpha
             }
         } else {
             window.makeKeyAndOrderFront(nil)
@@ -624,6 +932,89 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
+    // MARK: - Window Behavior Helpers
+
+    private func updateAllWindowLevels() {
+        let level = windowLevel
+        mainWindow?.level = level
+        destinTabWindow?.level = level
+        superSwitchWindow?.level = level
+        browserBypasserWindow?.level = level
+        assessPrepHackWindow?.level = level
+        settingsWindow?.level = level
+    }
+
+    private func updateClickOutsideMonitor() {
+        // Remove existing monitor
+        if let monitor = clickOutsideMonitor {
+            NSEvent.removeMonitor(monitor)
+            clickOutsideMonitor = nil
+        }
+
+        guard PreferencesManager.shared.preferences.closeOnClickOutside else { return }
+
+        clickOutsideMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] _ in
+            self?.handleClickOutside()
+        }
+    }
+
+    private func handleClickOutside() {
+        guard PreferencesManager.shared.preferences.closeOnClickOutside else { return }
+
+        let mouseLoc = NSEvent.mouseLocation
+        let windows: [(NSWindow?, () -> Void)] = [
+            (mainWindow, { [weak self] in self?.hideMainWindow() }),
+            (destinTabWindow, { [weak self] in self?.hideDestinTabWindow() }),
+            (superSwitchWindow, { [weak self] in self?.hideSuperSwitchWindow() }),
+            (browserBypasserWindow, { [weak self] in self?.hideBrowserBypasserWindow() }),
+            (assessPrepHackWindow, { [weak self] in self?.hideAssessPrepHackWindow() }),
+            (settingsWindow, { [weak self] in self?.hideSettingsWindow() }),
+        ]
+
+        for (window, hideAction) in windows {
+            guard let w = window, w.isVisible, w.alphaValue > 0 else { continue }
+            if !NSPointInRect(mouseLoc, w.frame) {
+                hideAction()
+            }
+        }
+    }
+
+    // MARK: - Maximize
+
+    private var maximizedWindows: Set<ObjectIdentifier> = []
+    private var windowFramesBeforeMaximize: [ObjectIdentifier: NSRect] = [:]
+
+    func toggleMaximize(for window: NSWindow?) {
+        guard let window = window else { return }
+        let behavior = PreferencesManager.shared.preferences.windowMaximizeBehavior
+        guard behavior != .none else { return }
+
+        let id = ObjectIdentifier(window)
+        let isMaximized = maximizedWindows.contains(id)
+
+        if isMaximized {
+            // Restore
+            if let originalFrame = windowFramesBeforeMaximize[id] {
+                window.setFrame(originalFrame, display: true, animate: true)
+            }
+            maximizedWindows.remove(id)
+            windowFramesBeforeMaximize.removeValue(forKey: id)
+        } else {
+            // Maximize
+            windowFramesBeforeMaximize[id] = window.frame
+            let screenFrame: NSRect
+            if behavior == .fullScreenBorderless, let screen = window.screen {
+                screenFrame = screen.frame
+            } else if let screen = window.screen {
+                screenFrame = screen.visibleFrame
+            } else {
+                screenFrame = NSScreen.main?.visibleFrame ?? window.frame
+            }
+            window.setFrame(screenFrame, display: true, animate: true)
+            maximizedWindows.insert(id)
+        }
+    }
+
     // MARK: - Lifecycle
 
     func applicationWillTerminate(_ notification: Notification) {
@@ -646,6 +1037,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             window.orderOut(nil)
         }
         if let window = assessPrepHackWindow {
+            window.orderOut(nil)
+        }
+        if let window = settingsWindow {
+            window.orderOut(nil)
+        }
+        if let window = wallpaperBrowserWindow {
+            window.orderOut(nil)
+        }
+        if let window = hackerDesktopWindow {
             window.orderOut(nil)
         }
     }
@@ -793,9 +1193,12 @@ struct MenuBarWindowView: View {
     var onOpenSuperSwitch: () -> Void
     var onOpenBrowserBypasser: () -> Void
     var onOpenAssessPrepHack: () -> Void
+    var onOpenSettings: () -> Void
+    var onOpenWallpaper: () -> Void
+    var onOpenHackerDesktop: () -> Void
     
     var body: some View {
-        MenuBarView(onClose: onClose, onOpenDestinTab: onOpenDestinTab, onOpenSuperSwitch: onOpenSuperSwitch, onOpenBrowserBypasser: onOpenBrowserBypasser, onOpenAssessPrepHack: onOpenAssessPrepHack)
+        MenuBarView(onClose: onClose, onOpenDestinTab: onOpenDestinTab, onOpenSuperSwitch: onOpenSuperSwitch, onOpenBrowserBypasser: onOpenBrowserBypasser, onOpenAssessPrepHack: onOpenAssessPrepHack, onOpenSettings: onOpenSettings, onOpenWallpaper: onOpenWallpaper, onOpenHackerDesktop: onOpenHackerDesktop)
     }
 }
 
@@ -839,46 +1242,95 @@ struct AssessPrepHackWindowView: View {
     }
 }
 
+// MARK: - Settings Window View
+
+struct SettingsWindowView: View {
+    var onClose: () -> Void
+    
+    var body: some View {
+        SettingsContainerView(onClose: onClose)
+    }
+}
+
 // MARK: - Settings Container
 
 struct SettingsContainerView: View {
     @State private var selectedTab = 0
     @ObservedObject private var prefs = PreferencesManager.shared
+    var onClose: () -> Void
 
     var body: some View {
-        TabView(selection: $selectedTab) {
-            GeneralSettingsView()
-                .tabItem {
-                    Label(String(localized: "tab.general"), systemImage: "gear")
+        VStack(spacing: 0) {
+            // Hacker title bar
+            HStack(spacing: 0) {
+                Button(action: {
+                    SoundEffectManager.shared.playButtonClick()
+                    onClose()
+                }) {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundStyle(.white.opacity(0.6))
+                        .frame(width: 24, height: 24)
+                        .background(Color(white: 0.08))
+                        .clipShape(Circle())
                 }
-                .tag(0)
+                .buttonStyle(.plain)
+                .padding(.leading, 12)
+                
+                Spacer()
+                
+                Text("Settings")
+                    .font(.system(size: 13, weight: .bold, design: .monospaced))
+                    .foregroundStyle(.white)
+                
+                Spacer()
+                
+                Color.clear.frame(width: 36, height: 24)
+            }
+            .padding(.vertical, 8)
+            .background(Color(white: 0.03))
+            
+            Divider().background(Color.white.opacity(0.1))
+            
+            TabView(selection: $selectedTab) {
+                GeneralSettingsView()
+                    .tabItem {
+                        Label(String(localized: "tab.general"), systemImage: "gear")
+                    }
+                    .tag(0)
 
-            ShortcutsSettingsView()
-                .tabItem {
-                    Label(String(localized: "tab.shortcuts"), systemImage: "keyboard")
-                }
-                .tag(1)
+                ShortcutsSettingsView()
+                    .tabItem {
+                        Label(String(localized: "tab.shortcuts"), systemImage: "keyboard")
+                    }
+                    .tag(1)
 
-            AppearanceSettingsView()
-                .tabItem {
-                    Label(String(localized: "tab.appearance"), systemImage: "paintbrush")
-                }
-                .tag(2)
+                AppearanceSettingsView()
+                    .tabItem {
+                        Label(String(localized: "tab.appearance"), systemImage: "paintbrush")
+                    }
+                    .tag(2)
 
-            BrowserSettingsView()
-                .tabItem {
-                    Label(String(localized: "tab.browser"), systemImage: "globe")
-                }
-                .tag(3)
+                BrowserSettingsView()
+                    .tabItem {
+                        Label(String(localized: "tab.browser"), systemImage: "globe")
+                    }
+                    .tag(3)
 
-            AdvancedSettingsView()
-                .tabItem {
-                    Label(String(localized: "tab.advanced"), systemImage: "wrench.and.screwdriver")
-                }
-                .tag(4)
+                AdvancedSettingsView()
+                    .tabItem {
+                        Label(String(localized: "tab.advanced"), systemImage: "wrench.and.screwdriver")
+                    }
+                    .tag(4)
+            }
+            .padding(.horizontal, 4)
+            .preferredColorScheme(prefs.preferences.theme.colorScheme)
         }
-        .padding()
-        .preferredColorScheme(prefs.preferences.theme.colorScheme)
+        .background(Color.black)
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Color.white.opacity(0.12), lineWidth: 1)
+        )
     }
 }
 

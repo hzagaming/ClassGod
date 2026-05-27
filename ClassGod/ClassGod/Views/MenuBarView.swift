@@ -6,18 +6,35 @@
 //
 
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct MenuBarView: View {
     @ObservedObject private var prefs = PreferencesManager.shared
+    @ObservedObject private var wallpaperEngine = WallpaperEngine.shared
     var onClose: () -> Void
     var onOpenDestinTab: () -> Void
     var onOpenSuperSwitch: () -> Void
     var onOpenBrowserBypasser: () -> Void
     var onOpenAssessPrepHack: () -> Void
+    var onOpenSettings: () -> Void
+    var onOpenWallpaper: () -> Void
+    var onOpenHackerDesktop: () -> Void
     
     var body: some View {
         ZStack {
-            Color.black.ignoresSafeArea()
+            // Wallpaper layer (bottom)
+            if wallpaperEngine.isEnabled,
+               let wallpaper = wallpaperEngine.currentWallpaper,
+               wallpaper.fileExists {
+                WallpaperPlayerView(wallpaper: wallpaper)
+                    .id(wallpaper.id)
+                    .ignoresSafeArea()
+                
+                WallpaperOverlayView()
+                    .ignoresSafeArea()
+            } else {
+                Color.black.ignoresSafeArea()
+            }
             
             VStack(spacing: 0) {
                 titleBar
@@ -51,6 +68,20 @@ struct MenuBarView: View {
                             description: "Break free from proctoring",
                             action: onOpenAssessPrepHack
                         )
+                        
+                        FeatureButton(
+                            icon: "photo.on.rectangle.angled",
+                            title: "Wallpaper Engine",
+                            description: "Custom wallpapers & live video",
+                            action: onOpenWallpaper
+                        )
+                        
+                        FeatureButton(
+                            icon: "square.grid.2x2",
+                            title: "HackerDesktop",
+                            description: "System monitor widgets dashboard",
+                            action: onOpenHackerDesktop
+                        )
                     }
                     .padding()
                 }
@@ -63,7 +94,7 @@ struct MenuBarView: View {
                     HStack(spacing: 12) {
                         Button(action: {
                             SoundEffectManager.shared.playButtonClick()
-                            NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+                            onOpenSettings()
                         }) {
                             Image(systemName: "gearshape.fill")
                                 .font(.system(size: 11))
@@ -74,6 +105,12 @@ struct MenuBarView: View {
                         .foregroundStyle(.white.opacity(0.5))
                         
                         Spacer()
+                        
+                        // Quick wallpaper access bar (appears on hover)
+                        if wallpaperEngine.isEnabled {
+                            WallpaperQuickAccessBar()
+                                .padding(.trailing, 4)
+                        }
                         
                         Button(action: {
                             SoundEffectManager.shared.playButtonClick()
@@ -89,6 +126,10 @@ struct MenuBarView: View {
                     .padding(.vertical, 10)
                 }
             }
+        }
+        .onDrop(of: [.fileURL], isTargeted: nil) { providers in
+            handleWallpaperDrop(providers: providers)
+            return true
         }
         .frame(width: prefs.preferences.panelWidth, height: prefs.preferences.panelMaxHeight)
         .overlay(
@@ -106,8 +147,8 @@ struct MenuBarView: View {
                 SoundEffectManager.shared.playButtonClick()
                 onClose()
             }) {
-                Image(systemName: "xmark")
-                    .font(.system(size: 10, weight: .bold))
+                Image(systemName: "minus")
+                    .font(.system(size: 12, weight: .bold))
                     .foregroundStyle(.white.opacity(0.6))
                     .frame(width: 24, height: 24)
                     .background(Color(white: 0.08))
@@ -134,6 +175,19 @@ struct MenuBarView: View {
         }
         .padding(.vertical, 8)
         .background(Color(white: 0.03))
+    }
+    
+    private func handleWallpaperDrop(providers: [NSItemProvider]) {
+        for provider in providers {
+            _ = provider.loadObject(ofClass: URL.self) { url, _ in
+                if let url = url {
+                    DispatchQueue.main.async {
+                        WallpaperEngine.shared.addWallpaper(from: url)
+                        SoundEffectManager.shared.playWallpaperAdded()
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -212,5 +266,5 @@ struct FeatureButton: View {
 }
 
 #Preview {
-    MenuBarView(onClose: {}, onOpenDestinTab: {}, onOpenSuperSwitch: {}, onOpenBrowserBypasser: {}, onOpenAssessPrepHack: {})
+    MenuBarView(onClose: {}, onOpenDestinTab: {}, onOpenSuperSwitch: {}, onOpenBrowserBypasser: {}, onOpenAssessPrepHack: {}, onOpenSettings: {}, onOpenWallpaper: {}, onOpenHackerDesktop: {})
 }

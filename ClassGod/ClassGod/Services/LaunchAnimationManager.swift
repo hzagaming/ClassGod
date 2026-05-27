@@ -30,7 +30,7 @@ final class LaunchAnimationManager {
         self.mainWindow = mainWindow
         pendingCompletion = completion
         closedCount = 0
-        totalWindows = 200
+        totalWindows = PreferencesManager.shared.preferences.chaosParticleCount
         
         guard let screen = NSScreen.main else {
             finish()

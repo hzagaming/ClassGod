@@ -2,8 +2,6 @@
 //  ShortcutsSettingsView.swift
 //  ClassGod
 //
-//  Created by Charlie Zhong on 22/5/26.
-//
 
 import SwiftUI
 import AppKit
@@ -31,73 +29,98 @@ struct ShortcutsSettingsView: View {
     }
 
     var body: some View {
-        Form {
-            Section(String(localized: "section.global_shortcut")) {
-                HStack {
-                    Text(String(localized: "setting.show_panel"))
-                    Spacer()
+        ScrollView {
+            VStack(spacing: 10) {
+                StatefulCollapsibleSection(
+                    title: String(localized: "section.global_shortcut"),
+                    icon: "keyboard",
+                    defaultExpanded: true,
+                    accentColor: .cyan
+                ) {
+                    HStack {
+                        Text(String(localized: "setting.show_panel"))
+                        Spacer()
 
-                    ZStack {
-                        RoundedRectangle(cornerRadius: 8)
-                            .fill(isRecordingPopoverShortcut ? Color.white.opacity(0.12) : Color(white: 0.12))
-                            .frame(width: 120, height: 36)
-
-                        if isRecordingPopoverShortcut {
+                        ZStack {
                             RoundedRectangle(cornerRadius: 8)
-                                .stroke(Color.white.opacity(pulseOpacity), lineWidth: 1)
+                                .fill(isRecordingPopoverShortcut ? Color.white.opacity(0.12) : Color(white: 0.12))
                                 .frame(width: 120, height: 36)
-                                .scaleEffect(pulseScale)
-                        }
 
-                        Text(isRecordingPopoverShortcut ? String(localized: "shortcut.press_keys") : displayShortcut)
-                            .font(.system(size: 14, weight: .medium, design: .monospaced))
-                            .foregroundStyle(isRecordingPopoverShortcut ? .white : .white.opacity(0.8))
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.7)
-                    }
-                    .frame(width: 120, height: 36)
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        SoundEffectManager.shared.playButtonClick()
-                        if isRecordingPopoverShortcut {
-                            stopRecording()
-                        } else {
-                            startRecording()
-                        }
-                    }
-                    .accessibilityLabel(String(localized: "accessibility.record_global"))
-                    .accessibilityHint(isRecordingPopoverShortcut ? String(localized: "accessibility.press_combination") : String(localized: "accessibility.tap_to_start"))
-                    .accessibilityAddTraits(.isButton)
+                            if isRecordingPopoverShortcut {
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(Color.white.opacity(pulseOpacity), lineWidth: 1)
+                                    .frame(width: 120, height: 36)
+                                    .scaleEffect(pulseScale)
+                            }
 
-                    Button(String(localized: "button.reset")) {
-                        SoundEffectManager.shared.playButtonClick()
-                        prefs.preferences.showPopoverKeyCode = AppPreferences.default.showPopoverKeyCode
-                        prefs.preferences.showPopoverModifiers = AppPreferences.default.showPopoverModifiers
+                            Text(isRecordingPopoverShortcut ? String(localized: "shortcut.press_keys") : displayShortcut)
+                                .font(.system(size: 14, weight: .medium, design: .monospaced))
+                                .foregroundStyle(isRecordingPopoverShortcut ? .white : .white.opacity(0.8))
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.7)
+                        }
+                        .frame(width: 120, height: 36)
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            SoundEffectManager.shared.playButtonClick()
+                            if isRecordingPopoverShortcut {
+                                stopRecording()
+                            } else {
+                                startRecording()
+                            }
+                        }
+                        .accessibilityLabel(String(localized: "accessibility.record_global"))
+                        .accessibilityHint(isRecordingPopoverShortcut ? String(localized: "accessibility.press_combination") : String(localized: "accessibility.tap_to_start"))
+                        .accessibilityAddTraits(.isButton)
+
+                        Button(String(localized: "button.reset")) {
+                            SoundEffectManager.shared.playButtonClick()
+                            prefs.preferences.showPopoverKeyCode = AppPreferences.default.showPopoverKeyCode
+                            prefs.preferences.showPopoverModifiers = AppPreferences.default.showPopoverModifiers
+                        }
+                        .disabled(
+                            prefs.preferences.showPopoverKeyCode == AppPreferences.default.showPopoverKeyCode &&
+                            prefs.preferences.showPopoverModifiers == AppPreferences.default.showPopoverModifiers
+                        )
+                        .pressScale(0.9)
                     }
-                    .disabled(
-                        prefs.preferences.showPopoverKeyCode == AppPreferences.default.showPopoverKeyCode &&
-                        prefs.preferences.showPopoverModifiers == AppPreferences.default.showPopoverModifiers
-                    )
-                    .pressScale(0.9)
+
+                    Text(String(localized: "shortcut.tip.caption"))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                 }
 
-                Text(String(localized: "shortcut.tip.caption"))
-                    .font(.caption)
+                StatefulCollapsibleSection(
+                    title: "Shortcut Conflict",
+                    icon: "exclamationmark.triangle",
+                    defaultExpanded: false,
+                    accentColor: .orange
+                ) {
+                    Toggle("Suppress System Shortcut Conflicts", isOn: $prefs.preferences.suppressSystemShortcutConflict)
+
+                    Text("When enabled, ClassGod will try to override system shortcuts that conflict with your chosen global shortcut. May require Accessibility permissions.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+
+                StatefulCollapsibleSection(
+                    title: String(localized: "section.tips"),
+                    icon: "lightbulb",
+                    defaultExpanded: false,
+                    accentColor: .yellow
+                ) {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Label(String(localized: "tip.avoid_conflict"), systemImage: "exclamationmark.triangle")
+                        Label(String(localized: "tip.per_tab_shortcuts"), systemImage: "keyboard")
+                        Label(String(localized: "tip.restart"), systemImage: "arrow.clockwise")
+                    }
+                    .font(.callout)
                     .foregroundStyle(.secondary)
-            }
-
-            Section(String(localized: "section.tips")) {
-                VStack(alignment: .leading, spacing: 6) {
-                    Label(String(localized: "tip.avoid_conflict"), systemImage: "exclamationmark.triangle")
-                    Label(String(localized: "tip.per_tab_shortcuts"), systemImage: "keyboard")
-                    Label(String(localized: "tip.restart"), systemImage: "arrow.clockwise")
                 }
-                .font(.callout)
-                .foregroundStyle(.secondary)
             }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 8)
         }
-        .formStyle(.grouped)
-        .padding()
         .onChange(of: isRecordingPopoverShortcut) { _, recording in
             if recording && Anim.enabled {
                 withAnimation(.easeInOut(duration: 0.6).repeatForever(autoreverses: true)) {
@@ -189,4 +212,6 @@ struct ShortcutsSettingsView: View {
 
 #Preview {
     ShortcutsSettingsView()
+        .frame(width: 480, height: 600)
+        .background(Color.black)
 }
