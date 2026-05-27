@@ -13,6 +13,7 @@ final class StorageManager {
     private let tabsKey = "com.hanazar.classgod.savedTabs"
     private let switchTargetsKey = "com.hanazar.classgod.switchTargets"
     private let bypassRulesKey = "com.hanazar.classgod.bypassRules"
+    private let panicAppsKey = "com.hanazar.classgod.panicApps"
     private let encoder = JSONEncoder()
     private let decoder = JSONDecoder()
     
@@ -110,6 +111,29 @@ final class StorageManager {
             return try decoder.decode([BypassRule].self, from: data)
         } catch {
             print("[StorageManager] Failed to load bypass rules: \(error)")
+            return []
+        }
+    }
+    
+    // MARK: - Panic Apps
+    
+    func savePanicApps(_ apps: [PanicApp]) {
+        do {
+            let data = try encoder.encode(apps)
+            UserDefaults.standard.set(data, forKey: panicAppsKey)
+        } catch {
+            print("[StorageManager] Failed to save panic apps: \(error)")
+        }
+    }
+    
+    func loadPanicApps() -> [PanicApp] {
+        guard let data = UserDefaults.standard.data(forKey: panicAppsKey) else {
+            return []
+        }
+        do {
+            return try decoder.decode([PanicApp].self, from: data)
+        } catch {
+            print("[StorageManager] Failed to load panic apps: \(error)")
             return []
         }
     }

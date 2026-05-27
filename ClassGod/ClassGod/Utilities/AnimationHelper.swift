@@ -154,4 +154,24 @@ extension View {
     func slideIn(from edge: Edge, delay: Double = 0) -> some View {
         modifier(SlideInModifier(edge: edge, delay: delay))
     }
+    
+    func pressEvents(onPress: @escaping () -> Void, onRelease: @escaping () -> Void) -> some View {
+        modifier(PressEventsModifier(onPress: onPress, onRelease: onRelease))
+    }
+}
+
+// MARK: - Press Events Modifier
+
+struct PressEventsModifier: ViewModifier {
+    let onPress: () -> Void
+    let onRelease: () -> Void
+    
+    func body(content: Content) -> some View {
+        content
+            .simultaneousGesture(
+                DragGesture(minimumDistance: 0)
+                    .onChanged { _ in onPress() }
+                    .onEnded { _ in onRelease() }
+            )
+    }
 }

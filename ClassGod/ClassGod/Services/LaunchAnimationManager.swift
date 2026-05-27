@@ -75,13 +75,13 @@ final class LaunchAnimationManager {
                 
                 self.jitterWindow(window)
                 
-                // Reveal main window starting at wave position 15
-                if showOrder == 15 {
+                // Reveal main window gradually as wave expands
+                if showOrder == 30 {
                     NSAnimationContext.runAnimationGroup { ctx in
                         ctx.duration = 0.8
                         mainWindow.animator().alphaValue = 0.4
                     }
-                } else if showOrder == 40 {
+                } else if showOrder == 80 {
                     NSAnimationContext.runAnimationGroup { ctx in
                         ctx.duration = 1.2
                         mainWindow.animator().alphaValue = 0.6
@@ -94,7 +94,7 @@ final class LaunchAnimationManager {
                 }
                 // Occasional burst
                 if showOrder == 25 || showOrder == 60 || showOrder == 110 || showOrder == 160 {
-                    SoundEffectManager.shared.playGlitchBurst(count: 3)
+                    SoundEffectManager.shared.playGlitchBurst(count: 4)
                 }
                 
                 // Occasional screen flash with sound
@@ -102,13 +102,16 @@ final class LaunchAnimationManager {
                     self.performScreenFlash(screenFrame: screenFrame, color: .red)
                     SoundEffectManager.shared.playScreenFlashSound()
                 }
+                
+                // Random chaos: flash window alpha
+                self.flashGlitchWindow(window)
             }
         }
         
         // MARK: - Close Phase: outer inward (faster)
         let windowsByDistanceReversed = Array(windowsByDistance.reversed())
         for (closeOrder, (_, window)) in windowsByDistanceReversed.enumerated() {
-            let closeDelay = 2.5 + Double(closeOrder) * Double.random(in: 0.012...0.022)
+            let closeDelay = 3.5 + Double(closeOrder) * Double.random(in: 0.012...0.022)
             
             DispatchQueue.main.asyncAfter(deadline: .now() + closeDelay) { [weak self] in
                 guard let self = self else { return }
@@ -143,7 +146,7 @@ final class LaunchAnimationManager {
         }
         
         // Safety timeout: force cleanup after 10s regardless of state
-        DispatchQueue.main.asyncAfter(deadline: .now() + 10.0) { [weak self] in
+        DispatchQueue.main.asyncAfter(deadline: .now() + 15.0) { [weak self] in
             guard let self = self, self.isAnimating else { return }
             self.finish()
         }
@@ -215,84 +218,87 @@ final class LaunchAnimationManager {
     private func createDenseGlitchWindows(screenFrame: NSRect, count: Int) -> [NSWindow] {
         var result: [NSWindow] = []
         
-        let cols = 14
-        let rows = 14
+        // Sparse grid: 8x8 = 64, windows can overflow grid boundaries
+        let cols = 8
+        let rows = 8
         let cellW = screenFrame.width / CGFloat(cols)
         let cellH = screenFrame.height / CGFloat(rows)
         
         var index = 0
-        let hackerIndex = 104  // Center of 14x14 grid: row 7, col 7 = 7*14+7 = 105, use 104 for slightly off-center
+        let hackerIndex = 28  // Slightly off-center of 8x8 grid
         
         for row in 0..<rows {
             for col in 0..<cols {
                 guard index < count else { break }
                 
-                let window: NSWindow
                 let baseX = screenFrame.minX + CGFloat(col) * cellW
                 let baseY = screenFrame.minY + CGFloat(row) * cellH
                 
                 if index == hackerIndex {
-                    let w: CGFloat = 280
-                    let h: CGFloat = 130
+                    let w: CGFloat = 320
+                    let h: CGFloat = 150
                     let x = baseX + (cellW - w) / 2
                     let y = baseY + (cellH - h) / 2
-                    window = makeHackerWindow(frame: NSRect(x: x, y: y, width: w, height: h))
+                    let window = makeHackerWindow(frame: NSRect(x: x, y: y, width: w, height: h))
+                    result.append(window)
                 } else {
-                    // Size diversity: more medium + large
+                    // Extreme size diversity: tiny to massive, overflowing grid
                     let sizeRoll = Int.random(in: 0...19)
                     let (w, h): (CGFloat, CGFloat)
                     switch sizeRoll {
-                    case 0: // tiny 5%
-                        w = CGFloat.random(in: cellW * 0.18...cellW * 0.35)
-                        h = CGFloat.random(in: cellH * 0.18...cellH * 0.35)
-                    case 1...2: // small 10%
-                        w = CGFloat.random(in: cellW * 0.35...cellW * 0.6)
-                        h = CGFloat.random(in: cellH * 0.35...cellH * 0.6)
-                    case 3...9: // medium 35%
-                        w = CGFloat.random(in: cellW * 0.6...cellW * 1.1)
-                        h = CGFloat.random(in: cellH * 0.6...cellH * 1.1)
-                    case 10...15: // large 30%
-                        w = CGFloat.random(in: cellW * 1.1...cellW * 1.8)
-                        h = CGFloat.random(in: cellH * 1.1...cellH * 1.8)
-                    default: // huge 20%
-                        w = CGFloat.random(in: cellW * 1.8...cellW * 3.2)
-                        h = CGFloat.random(in: cellH * 1.8...cellH * 3.2)
+                    case 0: // tiny
+                        w = CGFloat.random(in: cellW * 0.15...cellW * 0.3)
+                        h = CGFloat.random(in: cellH * 0.15...cellH * 0.3)
+                    case 1...3: // small
+                        w = CGFloat.random(in: cellW * 0.3...cellW * 0.7)
+                        h = CGFloat.random(in: cellH * 0.3...cellH * 0.7)
+                    case 4...8: // medium
+                        w = CGFloat.random(in: cellW * 0.7...cellW * 1.5)
+                        h = CGFloat.random(in: cellH * 0.7...cellH * 1.5)
+                    case 9...14: // large (overflow grid)
+                        w = CGFloat.random(in: cellW * 1.2...cellW * 3.0)
+                        h = CGFloat.random(in: cellH * 1.2...cellH * 3.0)
+                    default: // massive (cover multiple cells)
+                        w = CGFloat.random(in: cellW * 2.5...cellW * 5.0)
+                        h = CGFloat.random(in: cellH * 2.5...cellH * 5.0)
                     }
                     
-                    let x = baseX + CGFloat.random(in: -60...(cellW * 0.35))
-                    let y = baseY + CGFloat.random(in: -60...(cellH * 0.35))
-                    window = makeGlitchWindow(frame: NSRect(x: x, y: y, width: w, height: h), index: index)
+                    // Allow overflow beyond grid and screen edges
+                    let x = baseX + CGFloat.random(in: -cellW * 1.5...(cellW * 0.5))
+                    let y = baseY + CGFloat.random(in: -cellH * 1.5...(cellH * 0.5))
+                    let window = makeGlitchWindow(frame: NSRect(x: x, y: y, width: w, height: h), index: index)
+                    result.append(window)
                 }
-                result.append(window)
                 index += 1
             }
             guard index < count else { break }
         }
         
-        // Fill remaining with random scatter (diverse sizes, more medium/large)
+        // Scatter: aggressive full-screen coverage including way off-screen
         while index < count {
             let sizeRoll = Int.random(in: 0...19)
             let (w, h): (CGFloat, CGFloat)
             switch sizeRoll {
-            case 0: // tiny
-                w = CGFloat.random(in: 50...100)
-                h = CGFloat.random(in: 40...80)
-            case 1...2: // small
-                w = CGFloat.random(in: 100...180)
-                h = CGFloat.random(in: 80...140)
-            case 3...9: // medium
-                w = CGFloat.random(in: 180...300)
-                h = CGFloat.random(in: 140...220)
-            case 10...15: // large
-                w = CGFloat.random(in: 300...480)
-                h = CGFloat.random(in: 220...360)
-            default: // huge
-                w = CGFloat.random(in: 480...800)
-                h = CGFloat.random(in: 360...600)
+            case 0: // tiny speck
+                w = CGFloat.random(in: 20...60)
+                h = CGFloat.random(in: 15...45)
+            case 1...3: // small
+                w = CGFloat.random(in: 60...140)
+                h = CGFloat.random(in: 45...110)
+            case 4...8: // medium
+                w = CGFloat.random(in: 140...350)
+                h = CGFloat.random(in: 110...280)
+            case 9...14: // large
+                w = CGFloat.random(in: 350...700)
+                h = CGFloat.random(in: 280...550)
+            default: // massive (can cover quarter screen)
+                w = CGFloat.random(in: 700...1500)
+                h = CGFloat.random(in: 550...1200)
             }
             
-            let x = screenFrame.minX + CGFloat.random(in: -100...(screenFrame.width - w + 100))
-            let y = screenFrame.minY + CGFloat.random(in: -100...(screenFrame.height - h + 100))
+            // Cover full screen + significant overflow beyond edges
+            let x = screenFrame.minX + CGFloat.random(in: -400...(screenFrame.width - w + 400))
+            let y = screenFrame.minY + CGFloat.random(in: -400...(screenFrame.height - h + 400))
             
             let window = makeGlitchWindow(frame: NSRect(x: x, y: y, width: w, height: h), index: index)
             result.append(window)
@@ -308,7 +314,7 @@ final class LaunchAnimationManager {
         
         let window = NSWindow(
             contentRect: frame,
-            styleMask: [.titled],
+            styleMask: [.borderless],
             backing: .buffered,
             defer: false
         )
@@ -319,14 +325,6 @@ final class LaunchAnimationManager {
         window.isReleasedWhenClosed = false
         window.isMovableByWindowBackground = false
         window.isOpaque = true
-        
-        let titles = [
-            "System", "Security", "Finder", "Kernel", "Terminal",
-            "Console", "Alert", "Warning", "Error", "Process",
-            "Daemon", "Network", "Memory", "Disk", "CPU",
-            "Thread", "Module", "Service", "Handler", "Manager"
-        ]
-        window.title = titles[index % titles.count]
         
         let contentView = type.view(seed: index)
         window.contentView = NSHostingView(rootView: contentView)
@@ -337,7 +335,7 @@ final class LaunchAnimationManager {
     private func makeHackerWindow(frame: NSRect) -> NSWindow {
         let window = NSWindow(
             contentRect: frame,
-            styleMask: [.titled],
+            styleMask: [.borderless],
             backing: .buffered,
             defer: false
         )
@@ -348,7 +346,6 @@ final class LaunchAnimationManager {
         window.isReleasedWhenClosed = false
         window.isMovableByWindowBackground = false
         window.isOpaque = true
-        window.title = "ClassGod"
         
         window.contentView = NSHostingView(rootView:
             HackerRevealView()
@@ -363,20 +360,45 @@ final class LaunchAnimationManager {
     
     private func jitterWindow(_ window: NSWindow) {
         let originalOrigin = window.frame.origin
-        let count = Int.random(in: 3...6)
+        let originalSize = window.frame.size
+        let count = Int.random(in: 5...12)
         
+        // Chaotic jitter: position, size, and alpha all fluctuating
         for i in 0..<count {
-            DispatchQueue.main.asyncAfter(deadline: .now() + Double(i) * 0.04) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + Double(i) * 0.03) {
                 guard window.isVisible else { return }
-                let dx = CGFloat.random(in: -8...8)
-                let dy = CGFloat.random(in: -8...8)
+                let dx = CGFloat.random(in: -25...25)
+                let dy = CGFloat.random(in: -25...25)
+                let dw = CGFloat.random(in: -20...20)
+                let dh = CGFloat.random(in: -15...15)
+                let dAlpha = CGFloat.random(in: -0.3...0.3)
+                
                 window.setFrameOrigin(NSPoint(x: originalOrigin.x + dx, y: originalOrigin.y + dy))
+                window.setContentSize(NSSize(width: max(20, originalSize.width + dw), height: max(15, originalSize.height + dh)))
+                window.alphaValue = max(0.3, min(1.0, window.alphaValue + dAlpha))
             }
         }
         
-        DispatchQueue.main.asyncAfter(deadline: .now() + Double(count) * 0.04 + 0.02) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + Double(count) * 0.03 + 0.02) {
             guard window.isVisible else { return }
             window.setFrameOrigin(originalOrigin)
+            window.setContentSize(originalSize)
+            window.alphaValue = 1.0
+        }
+    }
+    
+    private func flashGlitchWindow(_ window: NSWindow) {
+        // Random alpha flicker after window appears
+        let flashCount = Int.random(in: 2...5)
+        for i in 0..<flashCount {
+            DispatchQueue.main.asyncAfter(deadline: .now() + Double(i) * 0.08 + Double.random(in: 0.1...0.5)) {
+                guard window.isVisible else { return }
+                let targetAlpha = CGFloat.random(in: 0.2...0.9)
+                NSAnimationContext.runAnimationGroup { ctx in
+                    ctx.duration = 0.02
+                    window.animator().alphaValue = targetAlpha
+                }
+            }
         }
     }
 }

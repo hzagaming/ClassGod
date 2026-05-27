@@ -142,6 +142,39 @@ final class SoundEffectManager {
         guard isEnabled else { return }
         AudioServicesPlaySystemSound(1306)  // Error — flash impact
     }
+    
+    // MARK: - Window Switch SFX
+    
+    func playWindowOpen(feature: String = "") {
+        guard isEnabled else { return }
+        switch feature {
+        case "destintab":
+            AudioServicesPlaySystemSound(1103)  // Basso — deep open
+        case "superswitch":
+            AudioServicesPlaySystemSound(1104)  // Ping — snappy open
+        case "browserbypasser":
+            AudioServicesPlaySystemSound(1328)  // Sosumi — tech open
+        case "assessprephack":
+            AudioServicesPlaySystemSound(1257)  // Funk — edgy open
+        default:
+            playPopoverOpen()
+        }
+    }
+    
+    func playWindowClose(feature: String = "") {
+        guard isEnabled else { return }
+        switch feature {
+        case "destintab", "superswitch", "browserbypasser", "assessprephack":
+            AudioServicesPlaySystemSound(1107)  // Tock — tight close
+        default:
+            playPopoverClose()
+        }
+    }
+    
+    func playFeatureSwitch() {
+        guard isEnabled else { return }
+        AudioServicesPlaySystemSound(1106)  // Tock — quick switch
+    }
 }
 
 // MARK: - Haptic Feedback

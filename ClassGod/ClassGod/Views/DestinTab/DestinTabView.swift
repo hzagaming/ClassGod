@@ -19,6 +19,8 @@ struct DestinTabView: View {
     @State private var headerScale: CGFloat = 0.98
     @State private var headerOpacity: Double = 0
     @State private var toastWorkItem: DispatchWorkItem?
+    
+    var onClose: () -> Void
 
     var body: some View {
         ZStack {
@@ -27,11 +29,6 @@ struct DestinTabView: View {
                 header
                     .scaleEffect(headerScale)
                     .opacity(headerOpacity)
-
-                if !viewModel.isAccessibilityTrusted {
-                    permissionBanner
-                        .opacity(headerOpacity)
-                }
 
                 headerDivider
                     .opacity(headerOpacity)
@@ -107,7 +104,6 @@ struct DestinTabView: View {
                 showToast(message: msg)
             }
 
-            viewModel.checkPermissionOnShow()
             if prefs.preferences.autoDetectOnShow {
                 viewModel.detectCurrentTabOnShowIfNeeded()
             }
@@ -116,6 +112,8 @@ struct DestinTabView: View {
                 headerScale = 1.0
                 headerOpacity = 1.0
             }
+            
+            // Permission check is now user-initiated only — no blocking on open
         }
         .onDisappear {
             toastWorkItem?.cancel()
@@ -235,17 +233,26 @@ struct DestinTabView: View {
 
     private var header: some View {
         HStack(spacing: 10) {
-            Image(systemName: prefs.preferences.menuBarIconStyle.systemImageName)
-                .font(.title2)
-                .foregroundStyle(.white)
-                .symbolRenderingMode(.monochrome)
+            // Close button
+            Button(action: {
+                SoundEffectManager.shared.playButtonClick()
+                onClose()
+            }) {
+                Image(systemName: "xmark")
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundStyle(.white.opacity(0.6))
+                    .frame(width: 24, height: 24)
+                    .background(Color(white: 0.08))
+                    .clipShape(Circle())
+            }
+            .buttonStyle(.plain)
 
             VStack(alignment: .leading, spacing: 0) {
-                Text("ClassGod")
+                Text("DestinTab")
                     .font(.system(prefs.preferences.useCompactMode ? .subheadline : .headline, design: .monospaced))
                     .foregroundStyle(.white)
                 
-                Text("v\(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.4.3")")
+                Text("Manage & switch browser tabs")
                     .font(.system(size: 8, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.35))
             }
@@ -439,10 +446,7 @@ struct DestinTabView: View {
 
                 Spacer()
 
-                footerButton(title: String(localized: "button.quit"), icon: "power") {
-                    SoundEffectManager.shared.playButtonClick()
-                    NSApplication.shared.terminate(nil)
-                }
+
             }
             .padding(.horizontal)
             .padding(.vertical, 8)
@@ -613,5 +617,5 @@ struct TabRow: View {
 }
 
 #Preview {
-    DestinTabView()
+    DestinTabView(onClose: {})
 }

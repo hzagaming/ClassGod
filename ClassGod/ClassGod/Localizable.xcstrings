@@ -667,7 +667,22 @@
     "Add" : {
 
     },
+    "Add App" : {
+
+    },
+    "Add apps to bypass AssessPrep lockdown" : {
+
+    },
     "Add apps to switch between them instantly" : {
+
+    },
+    "Add Bypass Rule" : {
+
+    },
+    "Add Panic App" : {
+
+    },
+    "Add rules to bypass browser lockdowns" : {
 
     },
     "Add Switch Target" : {
@@ -851,6 +866,18 @@
         }
       }
     },
+    "AssessPrep Detected" : {
+
+    },
+    "AssessPrepHack" : {
+
+    },
+    "Break free from lockdown pages" : {
+
+    },
+    "Break free from proctoring" : {
+
+    },
     "browser.auto_detect" : {
       "localizations" : {
         "de" : {
@@ -1024,6 +1051,9 @@
           }
         }
       }
+    },
+    "BrowserBypasser" : {
+
     },
     "Bundle Identifier" : {
 
@@ -1901,6 +1931,7 @@
       }
     },
     "button.quit" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -2248,6 +2279,15 @@
         }
       }
     },
+    "Bypass Active" : {
+
+    },
+    "Bypass Active: %@" : {
+
+    },
+    "Bypass Method" : {
+
+    },
     "Cancel" : {
 
     },
@@ -2559,6 +2599,12 @@
     "Delete" : {
 
     },
+    "Delete app?" : {
+
+    },
+    "Delete rule?" : {
+
+    },
     "Delete target?" : {
 
     },
@@ -2678,7 +2724,25 @@
         }
       }
     },
+    "DestinTab" : {
+
+    },
+    "Detected: %@" : {
+
+    },
+    "e.g. Canvas Quiz Bypass" : {
+
+    },
+    "e.g. canvas.*quiz" : {
+
+    },
     "Edit" : {
+
+    },
+    "Edit Bypass Rule" : {
+
+    },
+    "Edit Panic App" : {
 
     },
     "Edit Switch Target" : {
@@ -2857,6 +2921,12 @@
           }
         }
       }
+    },
+    "Enable immediately" : {
+
+    },
+    "Enabled" : {
+
     },
     "Error" : {
 
@@ -3676,6 +3746,12 @@
         }
       }
     },
+    "Execute %@" : {
+
+    },
+    "Execute Bypass" : {
+
+    },
     "export.filename" : {
       "localizations" : {
         "de" : {
@@ -4436,6 +4512,9 @@
         }
       }
     },
+    "Manage & switch browser tabs" : {
+
+    },
     "match.exact" : {
       "localizations" : {
         "de" : {
@@ -4611,6 +4690,12 @@
       }
     },
     "Name" : {
+
+    },
+    "No bypass rules" : {
+
+    },
+    "No panic apps configured" : {
 
     },
     "No targets configured" : {
@@ -4791,6 +4876,9 @@
       }
     },
     "OK" : {
+
+    },
+    "PeaceOut" : {
 
     },
     "permission.alert.message" : {
@@ -5273,6 +5361,12 @@
     "Remove %@ from SuperSwitch?" : {
 
     },
+    "Remove bypass rule \"%@\"?" : {
+
+    },
+    "Remove panic app \"%@\"?" : {
+
+    },
     "reset.confirm.message" : {
       "localizations" : {
         "de" : {
@@ -5389,10 +5483,16 @@
         }
       }
     },
+    "Run %@" : {
+
+    },
     "Running Application" : {
 
     },
     "Save" : {
+
+    },
+    "Scan" : {
 
     },
     "section.about" : {
@@ -6496,6 +6596,9 @@
           }
         }
       }
+    },
+    "Select a rule to activate bypass" : {
+
     },
     "setting.animation_speed" : {
       "localizations" : {
@@ -8295,6 +8398,9 @@
         }
       }
     },
+    "Settings" : {
+
+    },
     "Shortcut (optional)" : {
 
     },
@@ -9109,6 +9215,12 @@
           }
         }
       }
+    },
+    "Stop" : {
+
+    },
+    "Stop All" : {
+
     },
     "STOP CODE: %@" : {
 
@@ -10282,6 +10394,9 @@
           }
         }
       }
+    },
+    "URL Pattern" : {
+
     },
     "v%@" : {
 

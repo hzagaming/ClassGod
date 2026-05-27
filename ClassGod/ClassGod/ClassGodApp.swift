@@ -27,6 +27,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var destinTabWindow: NSWindow?
     var superSwitchWindow: NSWindow?
     var browserBypasserWindow: NSWindow?
+    var assessPrepHackWindow: NSWindow?
     var showPopoverHotKeyRef: EventHotKeyRef?
 
     var splashWindow: NSWindow?
@@ -59,6 +60,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             self.setupDestinTabWindow()
             self.setupSuperSwitchWindow()
             self.setupBrowserBypasserWindow()
+            self.setupAssessPrepHackWindow()
             if let window = self.mainWindow {
                 window.alphaValue = 0
                 window.orderBack(nil)
@@ -70,12 +72,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 }
             }
 
-            let trusted = AXIsProcessTrustedWithOptions(
-                [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: false] as CFDictionary
-            )
-            if !trusted {
-                // Do not force permission alert on first launch
-            }
+            // Permission checks are deferred to feature views — no blocking on launch
         }
     }
 
@@ -137,7 +134,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         window.level = .normal
         window.backgroundColor = .clear
         window.hasShadow = true
-        window.isMovableByWindowBackground = true
+        window.isMovableByWindowBackground = false
         window.isReleasedWhenClosed = false
         window.isOpaque = false
         
@@ -154,12 +151,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             window.setFrameOrigin(NSPoint(x: x, y: y))
         }
 
-        let rootView = MenuBarWindowView(onOpenDestinTab: { [weak self] in
+        let rootView = MenuBarWindowView(onClose: { [weak self] in
+            self?.hideMainWindow()
+        }, onOpenDestinTab: { [weak self] in
             self?.showDestinTabWindow()
         }, onOpenSuperSwitch: { [weak self] in
             self?.showSuperSwitchWindow()
         }, onOpenBrowserBypasser: { [weak self] in
             self?.showBrowserBypasserWindow()
+        }, onOpenAssessPrepHack: { [weak self] in
+            self?.showAssessPrepHackWindow()
         })
             .frame(width: size.width, height: size.height)
             .background(Color.clear)
@@ -188,7 +189,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         window.level = .normal
         window.backgroundColor = .clear
         window.hasShadow = true
-        window.isMovableByWindowBackground = true
+        window.isMovableByWindowBackground = false
         window.isReleasedWhenClosed = false
         window.isOpaque = false
         
@@ -208,7 +209,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             window.setFrameOrigin(NSPoint(x: x, y: y))
         }
 
-        let rootView = DestinTabWindowView()
+        let rootView = DestinTabWindowView(onClose: { [weak self] in
+            self?.hideDestinTabWindow()
+        })
             .frame(width: size.width, height: size.height)
             .background(Color.clear)
 
@@ -224,14 +227,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
         
-        SoundEffectManager.shared.playPopoverOpen()
+        SoundEffectManager.shared.playWindowOpen(feature: "destintab")
         
         if animated {
             window.alphaValue = 0
             window.makeKeyAndOrderFront(nil)
             
             NSAnimationContext.runAnimationGroup { context in
-                context.duration = 0.25
+                context.duration = 0.18
                 context.timingFunction = .init(name: .easeOut)
                 window.animator().alphaValue = 1.0
             }
@@ -242,10 +245,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     
     func hideDestinTabWindow() {
         guard let window = destinTabWindow else { return }
-        SoundEffectManager.shared.playPopoverClose()
+        SoundEffectManager.shared.playWindowClose(feature: "destintab")
         
         NSAnimationContext.runAnimationGroup { context in
-            context.duration = 0.15
+            context.duration = 0.12
             context.timingFunction = .init(name: .easeIn)
             window.animator().alphaValue = 0
         } completionHandler: { [weak self] in
@@ -286,7 +289,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         window.level = .normal
         window.backgroundColor = .clear
         window.hasShadow = true
-        window.isMovableByWindowBackground = true
+        window.isMovableByWindowBackground = false
         window.isReleasedWhenClosed = false
         window.isOpaque = false
         
@@ -305,7 +308,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             window.setFrameOrigin(NSPoint(x: x, y: y))
         }
 
-        let rootView = SuperSwitchWindowView()
+        let rootView = SuperSwitchWindowView(onClose: { [weak self] in
+            self?.hideSuperSwitchWindow()
+        })
             .frame(width: size.width, height: size.height)
             .background(Color.clear)
 
@@ -321,14 +326,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
         
-        SoundEffectManager.shared.playPopoverOpen()
+        SoundEffectManager.shared.playWindowOpen(feature: "superswitch")
         
         if animated {
             window.alphaValue = 0
             window.makeKeyAndOrderFront(nil)
             
             NSAnimationContext.runAnimationGroup { context in
-                context.duration = 0.25
+                context.duration = 0.18
                 context.timingFunction = .init(name: .easeOut)
                 window.animator().alphaValue = 1.0
             }
@@ -339,10 +344,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     
     func hideSuperSwitchWindow() {
         guard let window = superSwitchWindow else { return }
-        SoundEffectManager.shared.playPopoverClose()
+        SoundEffectManager.shared.playWindowClose(feature: "superswitch")
         
         NSAnimationContext.runAnimationGroup { context in
-            context.duration = 0.15
+            context.duration = 0.12
             context.timingFunction = .init(name: .easeIn)
             window.animator().alphaValue = 0
         } completionHandler: { [weak self] in
@@ -383,7 +388,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         window.level = .normal
         window.backgroundColor = .clear
         window.hasShadow = true
-        window.isMovableByWindowBackground = true
+        window.isMovableByWindowBackground = false
         window.isReleasedWhenClosed = false
         window.isOpaque = false
         
@@ -402,7 +407,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             window.setFrameOrigin(NSPoint(x: x, y: y))
         }
 
-        let rootView = BrowserBypasserWindowView()
+        let rootView = BrowserBypasserWindowView(onClose: { [weak self] in
+            self?.hideBrowserBypasserWindow()
+        })
             .frame(width: size.width, height: size.height)
             .background(Color.clear)
 
@@ -418,14 +425,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
         
-        SoundEffectManager.shared.playPopoverOpen()
+        SoundEffectManager.shared.playWindowOpen(feature: "browserbypasser")
         
         if animated {
             window.alphaValue = 0
             window.makeKeyAndOrderFront(nil)
             
             NSAnimationContext.runAnimationGroup { context in
-                context.duration = 0.25
+                context.duration = 0.18
                 context.timingFunction = .init(name: .easeOut)
                 window.animator().alphaValue = 1.0
             }
@@ -436,10 +443,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     
     func hideBrowserBypasserWindow() {
         guard let window = browserBypasserWindow else { return }
-        SoundEffectManager.shared.playPopoverClose()
+        SoundEffectManager.shared.playWindowClose(feature: "browserbypasser")
         
         NSAnimationContext.runAnimationGroup { context in
-            context.duration = 0.15
+            context.duration = 0.12
             context.timingFunction = .init(name: .easeIn)
             window.animator().alphaValue = 0
         } completionHandler: { [weak self] in
@@ -460,6 +467,105 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             showBrowserBypasserWindow(animated: true)
         }
     }
+    
+    // MARK: - AssessPrepHack Window
+    
+    private func setupAssessPrepHackWindow() {
+        let prefs = PreferencesManager.shared.preferences
+        let size = NSSize(
+            width: prefs.panelWidth,
+            height: prefs.panelMaxHeight
+        )
+
+        let window = DraggableWindow(
+            contentRect: NSRect(origin: .zero, size: size),
+            styleMask: [.borderless],
+            backing: .buffered,
+            defer: false
+        )
+
+        window.level = .normal
+        window.backgroundColor = .clear
+        window.hasShadow = true
+        window.isMovableByWindowBackground = false
+        window.isReleasedWhenClosed = false
+        window.isOpaque = false
+        
+        window.contentView?.wantsLayer = true
+        window.contentView?.layer?.cornerRadius = prefs.panelCornerRadius
+        window.contentView?.layer?.masksToBounds = true
+
+        if let main = mainWindow {
+            let mainFrame = main.frame
+            let offset: CGFloat = 20
+            window.setFrameOrigin(NSPoint(x: mainFrame.minX - offset * 2, y: mainFrame.minY - offset * 2))
+        } else if let screen = NSScreen.main {
+            let screenFrame = screen.visibleFrame
+            let x = screenFrame.midX - size.width / 2 - 40
+            let y = screenFrame.midY - size.height / 2 - 40
+            window.setFrameOrigin(NSPoint(x: x, y: y))
+        }
+
+        let rootView = AssessPrepHackWindowView(onClose: { [weak self] in
+            self?.hideAssessPrepHackWindow()
+        })
+            .frame(width: size.width, height: size.height)
+            .background(Color.clear)
+
+        window.contentView = NSHostingView(rootView: rootView)
+
+        assessPrepHackWindow = window
+    }
+    
+    func showAssessPrepHackWindow(animated: Bool = true) {
+        guard let window = assessPrepHackWindow else {
+            setupAssessPrepHackWindow()
+            showAssessPrepHackWindow(animated: animated)
+            return
+        }
+        
+        SoundEffectManager.shared.playWindowOpen(feature: "assessprephack")
+        
+        if animated {
+            window.alphaValue = 0
+            window.makeKeyAndOrderFront(nil)
+            
+            NSAnimationContext.runAnimationGroup { context in
+                context.duration = 0.18
+                context.timingFunction = .init(name: .easeOut)
+                window.animator().alphaValue = 1.0
+            }
+        } else {
+            window.makeKeyAndOrderFront(nil)
+        }
+    }
+    
+    func hideAssessPrepHackWindow() {
+        guard let window = assessPrepHackWindow else { return }
+        SoundEffectManager.shared.playWindowClose(feature: "assessprephack")
+        
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = 0.12
+            context.timingFunction = .init(name: .easeIn)
+            window.animator().alphaValue = 0
+        } completionHandler: { [weak self] in
+            self?.assessPrepHackWindow?.orderOut(nil)
+        }
+    }
+    
+    @objc func toggleAssessPrepHackWindow() {
+        guard let window = assessPrepHackWindow else {
+            setupAssessPrepHackWindow()
+            showAssessPrepHackWindow(animated: true)
+            return
+        }
+        
+        if window.isVisible && window.alphaValue > 0 {
+            hideAssessPrepHackWindow()
+        } else {
+            showAssessPrepHackWindow(animated: true)
+        }
+    }
 
     private func updateMainWindowSize() {
         guard let window = mainWindow else { return }
@@ -474,14 +580,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func showMainWindow(animated: Bool = false) {
         guard let window = mainWindow else { return }
 
-        SoundEffectManager.shared.playPopoverOpen()
+        SoundEffectManager.shared.playWindowOpen()
 
         if animated {
             window.alphaValue = 0
             window.makeKeyAndOrderFront(nil)
 
             NSAnimationContext.runAnimationGroup { context in
-                context.duration = 0.25
+                context.duration = 0.18
                 context.timingFunction = .init(name: .easeOut)
                 window.animator().alphaValue = 1.0
             }
@@ -492,10 +598,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func hideMainWindow() {
         guard let window = mainWindow else { return }
-        SoundEffectManager.shared.playPopoverClose()
+        SoundEffectManager.shared.playWindowClose()
 
         NSAnimationContext.runAnimationGroup { context in
-            context.duration = 0.15
+            context.duration = 0.12
             context.timingFunction = .init(name: .easeIn)
             window.animator().alphaValue = 0
         } completionHandler: { [weak self] in
@@ -537,6 +643,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             window.orderOut(nil)
         }
         if let window = browserBypasserWindow {
+            window.orderOut(nil)
+        }
+        if let window = assessPrepHackWindow {
             window.orderOut(nil)
         }
     }
@@ -679,36 +788,54 @@ func uninstallGlobalEventHandler() {
 // MARK: - MenuBar Window View (wrapper for window dragging)
 
 struct MenuBarWindowView: View {
+    var onClose: () -> Void
     var onOpenDestinTab: () -> Void
     var onOpenSuperSwitch: () -> Void
     var onOpenBrowserBypasser: () -> Void
+    var onOpenAssessPrepHack: () -> Void
     
     var body: some View {
-        MenuBarView(onOpenDestinTab: onOpenDestinTab, onOpenSuperSwitch: onOpenSuperSwitch, onOpenBrowserBypasser: onOpenBrowserBypasser)
+        MenuBarView(onClose: onClose, onOpenDestinTab: onOpenDestinTab, onOpenSuperSwitch: onOpenSuperSwitch, onOpenBrowserBypasser: onOpenBrowserBypasser, onOpenAssessPrepHack: onOpenAssessPrepHack)
     }
 }
 
 // MARK: - DestinTab Window View (wrapper for window dragging)
 
 struct DestinTabWindowView: View {
+    var onClose: () -> Void
+    
     var body: some View {
-        DestinTabView()
+        DestinTabView(onClose: onClose)
     }
 }
 
 // MARK: - SuperSwitch Window View (wrapper for window dragging)
 
 struct SuperSwitchWindowView: View {
+    var onClose: () -> Void
+    
     var body: some View {
-        SuperSwitchView()
+        SuperSwitchView(onClose: onClose)
     }
 }
 
 // MARK: - BrowserBypasser Window View (wrapper for window dragging)
 
 struct BrowserBypasserWindowView: View {
+    var onClose: () -> Void
+    
     var body: some View {
-        BrowserBypasserView()
+        BrowserBypasserView(onClose: onClose)
+    }
+}
+
+// MARK: - AssessPrepHack Window View (wrapper for window dragging)
+
+struct AssessPrepHackWindowView: View {
+    var onClose: () -> Void
+    
+    var body: some View {
+        AssessPrepHackView(onClose: onClose)
     }
 }
 

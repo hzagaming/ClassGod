@@ -14,6 +14,8 @@ struct SuperSwitchView: View {
     @State private var targetToDelete: SwitchTarget?
     @ObservedObject private var prefs = PreferencesManager.shared
     
+    var onClose: () -> Void
+    
     var body: some View {
         ZStack {
             VStack(spacing: 0) {
@@ -75,10 +77,18 @@ struct SuperSwitchView: View {
     
     private var header: some View {
         HStack(spacing: 10) {
-            Image(systemName: "arrow.left.arrow.right.circle.fill")
-                .font(.title2)
-                .foregroundStyle(.white)
-                .symbolRenderingMode(.monochrome)
+            Button(action: {
+                SoundEffectManager.shared.playButtonClick()
+                onClose()
+            }) {
+                Image(systemName: "xmark")
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundStyle(.white.opacity(0.6))
+                    .frame(width: 24, height: 24)
+                    .background(Color(white: 0.08))
+                    .clipShape(Circle())
+            }
+            .buttonStyle(.plain)
             
             VStack(alignment: .leading, spacing: 0) {
                 Text("SuperSwitch")
@@ -487,5 +497,5 @@ struct AddSwitchTargetView: View {
 }
 
 #Preview {
-    SuperSwitchView()
+    SuperSwitchView(onClose: {})
 }

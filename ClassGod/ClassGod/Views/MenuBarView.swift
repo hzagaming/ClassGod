@@ -9,17 +9,21 @@ import SwiftUI
 
 struct MenuBarView: View {
     @ObservedObject private var prefs = PreferencesManager.shared
+    var onClose: () -> Void
     var onOpenDestinTab: () -> Void
     var onOpenSuperSwitch: () -> Void
     var onOpenBrowserBypasser: () -> Void
+    var onOpenAssessPrepHack: () -> Void
     
     var body: some View {
         ZStack {
+            Color.black.ignoresSafeArea()
+            
             VStack(spacing: 0) {
-                header
+                titleBar
                 
-                ScrollView {
-                    VStack(spacing: 12) {
+                ScrollView(showsIndicators: false) {
+                    VStack(spacing: 10) {
                         FeatureButton(
                             icon: "link",
                             title: "DestinTab",
@@ -41,95 +45,95 @@ struct MenuBarView: View {
                             action: onOpenBrowserBypasser
                         )
                         
-                        // Placeholder for future features
                         FeatureButton(
-                            icon: "rectangle.grid.2x2",
-                            title: "Coming Soon",
-                            description: "More features on the way",
-                            action: {},
-                            isEnabled: false
+                            icon: "bolt.shield.fill",
+                            title: "AssessPrepHack",
+                            description: "Break free from proctoring",
+                            action: onOpenAssessPrepHack
                         )
                     }
                     .padding()
                 }
                 
-                Spacer()
+                Spacer(minLength: 0)
                 
-                Divider()
-                    .background(Color.white.opacity(0.1))
-                
-                footer
+                VStack(spacing: 0) {
+                    Divider().background(Color.white.opacity(0.1))
+                    
+                    HStack(spacing: 12) {
+                        Button(action: {
+                            SoundEffectManager.shared.playButtonClick()
+                            NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+                        }) {
+                            Image(systemName: "gearshape.fill")
+                                .font(.system(size: 11))
+                            Text("Settings")
+                                .font(.system(size: 11, design: .monospaced))
+                        }
+                        .buttonStyle(.plain)
+                        .foregroundStyle(.white.opacity(0.5))
+                        
+                        Spacer()
+                        
+                        Button(action: {
+                            SoundEffectManager.shared.playButtonClick()
+                            NSApplication.shared.terminate(nil)
+                        }) {
+                            Text("PeaceOut")
+                                .font(.system(size: 11, weight: .bold, design: .monospaced))
+                                .foregroundStyle(.red.opacity(0.8))
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    .padding(.horizontal)
+                    .padding(.vertical, 10)
+                }
             }
         }
-        .frame(width: prefs.preferences.panelWidth)
-        .background(
-            RoundedRectangle(cornerRadius: prefs.preferences.panelCornerRadius)
-                .fill(Color.black)
-        )
+        .frame(width: prefs.preferences.panelWidth, height: prefs.preferences.panelMaxHeight)
         .overlay(
             RoundedRectangle(cornerRadius: prefs.preferences.panelCornerRadius)
-                .stroke(Color.white.opacity(0.15), lineWidth: 1)
+                .stroke(Color.white.opacity(0.12), lineWidth: 1)
         )
-        .preferredColorScheme(prefs.preferences.theme.colorScheme)
     }
     
-    // MARK: - Header
+    // MARK: - Title Bar with Close Button
     
-    private var header: some View {
-        HStack(spacing: 10) {
-            Image(systemName: prefs.preferences.menuBarIconStyle.systemImageName)
-                .font(.title2)
-                .foregroundStyle(.white)
-                .symbolRenderingMode(.monochrome)
+    private var titleBar: some View {
+        HStack(spacing: 0) {
+            // Close button
+            Button(action: {
+                SoundEffectManager.shared.playButtonClick()
+                onClose()
+            }) {
+                Image(systemName: "xmark")
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundStyle(.white.opacity(0.6))
+                    .frame(width: 24, height: 24)
+                    .background(Color(white: 0.08))
+                    .clipShape(Circle())
+            }
+            .buttonStyle(.plain)
+            .padding(.leading, 12)
             
-            VStack(alignment: .leading, spacing: 0) {
+            Spacer()
+            
+            VStack(spacing: 0) {
                 Text("ClassGod")
-                    .font(.system(.headline, design: .monospaced))
+                    .font(.system(size: 13, weight: .bold, design: .monospaced))
                     .foregroundStyle(.white)
-                
-                Text("v\(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.5.0")")
+                Text("v\(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.6.0")")
                     .font(.system(size: 8, design: .monospaced))
-                    .foregroundStyle(.white.opacity(0.35))
-            }
-            
-            Spacer()
-        }
-        .padding(.horizontal)
-        .padding(.vertical, 10)
-    }
-    
-    // MARK: - Footer
-    
-    private var footer: some View {
-        HStack(spacing: 14) {
-            footerButton(title: String(localized: "button.settings"), icon: "gear") {
-                SoundEffectManager.shared.playButtonClick()
-                NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+                    .foregroundStyle(.white.opacity(0.3))
             }
             
             Spacer()
             
-            footerButton(title: String(localized: "button.quit"), icon: "power") {
-                SoundEffectManager.shared.playButtonClick()
-                NSApplication.shared.terminate(nil)
-            }
+            // Spacer to balance close button width
+            Color.clear.frame(width: 36, height: 24)
         }
-        .padding(.horizontal)
         .padding(.vertical, 8)
-    }
-    
-    private func footerButton(title: String, icon: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            HStack(spacing: 4) {
-                Image(systemName: icon)
-                    .font(.system(size: 10))
-                    .symbolRenderingMode(.monochrome)
-                Text(title)
-                    .font(.system(size: 11, design: .monospaced))
-            }
-        }
-        .buttonStyle(.plain)
-        .foregroundStyle(.white.opacity(0.6))
+        .background(Color(white: 0.03))
     }
 }
 
@@ -143,6 +147,7 @@ struct FeatureButton: View {
     var isEnabled: Bool = true
     
     @State private var isHovered = false
+    @State private var isPressed = false
     
     var body: some View {
         Button(action: {
@@ -151,58 +156,61 @@ struct FeatureButton: View {
                 action()
             }
         }) {
-            HStack(spacing: 14) {
+            HStack(spacing: 12) {
                 ZStack {
-                    RoundedRectangle(cornerRadius: 10)
-                        .fill(Color(white: 0.1))
-                        .frame(width: 48, height: 48)
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(isHovered && isEnabled ? Color(white: 0.12) : Color(white: 0.08))
+                        .frame(width: 44, height: 44)
                     
                     Image(systemName: icon)
-                        .font(.system(size: 22, weight: .medium))
+                        .font(.system(size: 20, weight: .medium))
                         .foregroundStyle(isEnabled ? .white : .white.opacity(0.3))
-                        .symbolRenderingMode(.monochrome)
                 }
                 
-                VStack(alignment: .leading, spacing: 3) {
+                VStack(alignment: .leading, spacing: 2) {
                     Text(title)
-                        .font(.system(size: 14, weight: .bold, design: .monospaced))
+                        .font(.system(size: 13, weight: .bold, design: .monospaced))
                         .foregroundStyle(isEnabled ? .white : .white.opacity(0.3))
                     
                     Text(description)
-                        .font(.system(size: 10, design: .monospaced))
-                        .foregroundStyle(.white.opacity(0.4))
+                        .font(.system(size: 9, design: .monospaced))
+                        .foregroundStyle(.white.opacity(0.35))
                         .lineLimit(1)
                 }
                 
                 Spacer()
                 
                 Image(systemName: "chevron.right")
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(isEnabled ? .white.opacity(0.5) : .white.opacity(0.15))
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(isEnabled ? .white.opacity(0.4) : .white.opacity(0.1))
             }
             .padding()
             .background(
-                RoundedRectangle(cornerRadius: 10)
-                    .fill(Color(white: 0.04))
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(isHovered && isEnabled ? Color(white: 0.06) : Color(white: 0.03))
             )
             .overlay(
-                RoundedRectangle(cornerRadius: 10)
-                    .stroke(isHovered && isEnabled ? Color.white.opacity(0.3) : Color.white.opacity(0.08), lineWidth: 1)
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(isHovered && isEnabled ? Color.white.opacity(0.25) : Color.white.opacity(0.06), lineWidth: 1)
             )
+            .scaleEffect(isPressed ? 0.97 : 1.0)
         }
         .buttonStyle(.plain)
         .onHover { hovering in
-            if Anim.enabled {
-                withAnimation(.easeOut(duration: Anim.duration)) {
-                    isHovered = hovering
-                }
-            } else {
-                isHovered = hovering
+            isHovered = hovering
+        }
+        .pressEvents {
+            withAnimation(.easeOut(duration: 0.08)) {
+                isPressed = true
+            }
+        } onRelease: {
+            withAnimation(.easeOut(duration: 0.12)) {
+                isPressed = false
             }
         }
     }
 }
 
 #Preview {
-    MenuBarView(onOpenDestinTab: {}, onOpenSuperSwitch: {}, onOpenBrowserBypasser: {})
+    MenuBarView(onClose: {}, onOpenDestinTab: {}, onOpenSuperSwitch: {}, onOpenBrowserBypasser: {}, onOpenAssessPrepHack: {})
 }
