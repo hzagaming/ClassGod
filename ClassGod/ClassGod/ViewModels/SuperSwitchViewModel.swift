@@ -19,9 +19,10 @@ final class SuperSwitchViewModel: ObservableObject {
     @Published var toastMessage: String?
     @Published var showToast = false
     
+    private var registeredTargetIDs: Set<UUID> = []
+    
     init() {
         loadTargets()
-        setupShortcutCallbacks()
     }
     
     func loadTargets() {
@@ -50,6 +51,8 @@ final class SuperSwitchViewModel: ObservableObject {
     
     func deleteTarget(_ target: SwitchTarget) {
         targets.removeAll { $0.id == target.id }
+        ShortcutManager.shared.unregisterShortcut(for: target.id)
+        registeredTargetIDs.remove(target.id)
         saveTargets()
         SoundEffectManager.shared.playTabDeleted()
     }
@@ -102,16 +105,16 @@ final class SuperSwitchViewModel: ObservableObject {
     }
     
     private func refreshShortcuts() {
-        ShortcutManager.shared.unregisterAllShortcuts()
+        let currentIDs = Set(targets.map { $0.id })
+        let toRemove = registeredTargetIDs.subtracting(currentIDs)
+        for id in toRemove {
+            ShortcutManager.shared.unregisterShortcut(for: id)
+        }
         for target in targets where target.isValidShortcut {
+            ShortcutManager.shared.unregisterShortcut(for: target.id)
             _ = ShortcutManager.shared.registerShortcut(for: target)
         }
-    }
-    
-    private func setupShortcutCallbacks() {
-        ShortcutManager.shared.addHotKeyHandler { [weak self] id in
-            self?.switchToTarget(byID: id)
-        }
+        registeredTargetIDs = currentIDs
     }
     
     private func showToast(message: String) {

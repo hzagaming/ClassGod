@@ -230,7 +230,6 @@ struct AdvancedSettingsView: View {
 
     private func clearAllTabs() {
         StorageManager.shared.saveTabs([])
-        ShortcutManager.shared.unregisterAllShortcuts()
         NotificationCenter.default.post(name: .classGodTabsDidChange, object: nil)
     }
 }

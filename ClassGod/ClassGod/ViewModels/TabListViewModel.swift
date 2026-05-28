@@ -20,10 +20,10 @@ final class TabListViewModel: ObservableObject {
 
     var onShowToast: ((String) -> Void)?
     private var cancellables = Set<AnyCancellable>()
+    private var registeredTabIDs: Set<UUID> = []
 
     init() {
         loadTabs()
-        setupShortcutCallbacks()
         setupStorageChangeObserver()
     }
 
@@ -55,6 +55,7 @@ final class TabListViewModel: ObservableObject {
     func deleteTab(_ tab: BrowserTab) {
         tabs.removeAll { $0.id == tab.id }
         ShortcutManager.shared.unregisterShortcut(for: tab.id)
+        registeredTabIDs.remove(tab.id)
         saveTabs()
     }
 
@@ -62,6 +63,7 @@ final class TabListViewModel: ObservableObject {
         for index in offsets {
             let tab = tabs[index]
             ShortcutManager.shared.unregisterShortcut(for: tab.id)
+            registeredTabIDs.remove(tab.id)
         }
         tabs.remove(atOffsets: offsets)
         saveTabs()
@@ -164,21 +166,21 @@ final class TabListViewModel: ObservableObject {
     }
 
     private func refreshShortcuts() {
-        ShortcutManager.shared.refreshShortcuts(from: tabs)
+        let currentIDs = Set(tabs.map { $0.id })
+        let toRemove = registeredTabIDs.subtracting(currentIDs)
+        for id in toRemove {
+            ShortcutManager.shared.unregisterShortcut(for: id)
+        }
+        for tab in tabs where tab.isValidShortcut {
+            ShortcutManager.shared.unregisterShortcut(for: tab.id)
+            _ = ShortcutManager.shared.registerShortcut(for: tab)
+        }
+        registeredTabIDs = currentIDs
     }
 
     private func containsTab(browser: BrowserType, url: String) -> Bool {
         tabs.contains {
             $0.browser == browser && $0.url.normalizedForComparison == url.normalizedForComparison
-        }
-    }
-
-    private func setupShortcutCallbacks() {
-        ShortcutManager.shared.onHotKeyPressed = { [weak self] tabID in
-            guard let self = self else { return }
-            if let tab = self.tabs.first(where: { $0.id == tabID }) {
-                self.switchToTab(tab)
-            }
         }
     }
 

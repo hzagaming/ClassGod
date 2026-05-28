@@ -57,6 +57,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             self.closeSplashScreen()
             self.setupStatusItem()
             self.setupShowPopoverShortcut()
+            self.setupGlobalHotKeyHandler()
 
             PreferencesManager.shared.onPreferencesChanged = { [weak self] _ in
                 self?.setupShowPopoverShortcut()
@@ -1134,6 +1135,32 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         if flags.contains(.control) { carbon |= UInt32(controlKey) }
         if flags.contains(.shift)   { carbon |= UInt32(shiftKey) }
         return carbon
+    }
+    
+    // MARK: - Unified HotKey Handler
+    
+    private func setupGlobalHotKeyHandler() {
+        ShortcutManager.shared.addHotKeyHandler { id in
+            // Try BrowserTab first
+            let tabs = StorageManager.shared.loadTabs()
+            if let tab = tabs.first(where: { $0.id == id }) {
+                BrowserSwitcher.shared.switchToTab(tab) { _, _ in }
+                return
+            }
+            
+            // Try SwitchTarget
+            let targets = StorageManager.shared.loadSwitchTargets()
+            if let target = targets.first(where: { $0.id == id }) {
+                let runningApps = NSWorkspace.shared.runningApplications
+                if let app = runningApps.first(where: { $0.bundleIdentifier == target.bundleIdentifier }) {
+                    app.activate(options: [.activateAllWindows])
+                } else if let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: target.bundleIdentifier) {
+                    let config = NSWorkspace.OpenConfiguration()
+                    config.activates = true
+                    NSWorkspace.shared.openApplication(at: url, configuration: config)
+                }
+            }
+        }
     }
 }
 
