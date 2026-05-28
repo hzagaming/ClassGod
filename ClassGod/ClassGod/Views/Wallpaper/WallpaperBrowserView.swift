@@ -462,8 +462,9 @@ struct WallpaperBrowserView: View {
         
         for provider in providers {
             group.enter()
-            _ = provider.loadObject(ofClass: URL.self) { url, _ in
-                if let url = url {
+            provider.loadItem(forTypeIdentifier: UTType.fileURL.identifier, options: nil) { item, _ in
+                if let data = item as? Data,
+                   let url = URL(dataRepresentation: data, relativeTo: nil) {
                     lock.lock()
                     importedURLs.append(url)
                     lock.unlock()
