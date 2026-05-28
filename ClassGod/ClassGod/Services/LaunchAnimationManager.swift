@@ -66,7 +66,7 @@ final class LaunchAnimationManager {
                 guard let self = self, self.isAnimating else { return }
                 
                 window.alphaValue = 0
-                window.makeKeyAndOrderFront(nil)
+                window.orderFront(nil)
                 
                 NSAnimationContext.runAnimationGroup { ctx in
                     ctx.duration = 0.08
@@ -194,7 +194,7 @@ final class LaunchAnimationManager {
         window.backgroundColor = color
         window.isOpaque = true
         window.alphaValue = 0
-        window.makeKeyAndOrderFront(nil)
+        window.orderFront(nil)
         flashWindow = window
         
         NSAnimationContext.runAnimationGroup { ctx in

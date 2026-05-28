@@ -123,7 +123,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             window.setFrameOrigin(NSPoint(x: x, y: y))
         }
         
-        window.makeKeyAndOrderFront(nil)
+        window.orderFront(nil)
         splashWindow = window
     }
 

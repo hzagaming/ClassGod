@@ -7,6 +7,9 @@
     ":(" : {
 
     },
+    "%" : {
+
+    },
     "%@ (Build %@)" : {
       "localizations" : {
         "zh-Hans" : {
@@ -17,10 +20,68 @@
         }
       }
     },
+    "%@ / %@ GB" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ / %2$@ GB"
+          }
+        }
+      }
+    },
+    "%d" : {
+
+    },
     "%lld" : {
 
     },
-    "%lldms" : {
+    "%lld item%@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld item%2$@"
+          }
+        }
+      }
+    },
+    "%lld MIN" : {
+
+    },
+    "%lld widget%@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld widget%2$@"
+          }
+        }
+      }
+    },
+    "%lld%@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld%2$@"
+          }
+        }
+      }
+    },
+    "%lld%%" : {
+
+    },
+    "%lld°" : {
+
+    },
+    "%lldd" : {
+
+    },
+    "%lldh" : {
+
+    },
+    "%lldm" : {
 
     },
     "0% complete" : {
@@ -679,6 +740,9 @@
     "Add Bypass Rule" : {
 
     },
+    "Add First Widget" : {
+
+    },
     "Add Panic App" : {
 
     },
@@ -686,6 +750,12 @@
 
     },
     "Add Switch Target" : {
+
+    },
+    "Add Widget" : {
+
+    },
+    "Add widgets to build your system dashboard" : {
 
     },
     "add_tab.title" : {
@@ -804,6 +874,9 @@
         }
       }
     },
+    "App Icon" : {
+
+    },
     "App Name" : {
 
     },
@@ -866,16 +939,34 @@
         }
       }
     },
+    "Ask Before Opening URL" : {
+
+    },
     "AssessPrep Detected" : {
 
     },
     "AssessPrepHack" : {
 
     },
+    "Auto-Backup" : {
+
+    },
+    "Auto-Save Interval" : {
+
+    },
+    "Backup Interval" : {
+
+    },
+    "Blur Background" : {
+
+    },
     "Break free from lockdown pages" : {
 
     },
     "Break free from proctoring" : {
+
+    },
+    "Bring to Front" : {
 
     },
     "browser.auto_detect" : {
@@ -2291,6 +2382,9 @@
     "Cancel" : {
 
     },
+    "CHARGING" : {
+
+    },
     "ClassGod" : {
 
     },
@@ -2413,6 +2507,9 @@
     "Click a target to switch. Set shortcuts for instant access." : {
 
     },
+    "Close on Click Outside" : {
+
+    },
     "com.company.app" : {
 
     },
@@ -2532,10 +2629,19 @@
         }
       }
     },
+    "CPU" : {
+
+    },
     "Crashed Thread: %lld" : {
 
     },
+    "Custom User Agent" : {
+
+    },
     "Custom..." : {
+
+    },
+    "CYCLES: %lld" : {
 
     },
     "debug.caption" : {
@@ -2606,6 +2712,9 @@
 
     },
     "Delete target?" : {
+
+    },
+    "Delete Wallpaper?" : {
 
     },
     "delete.confirm.message" : {
@@ -2728,6 +2837,24 @@
 
     },
     "Detected: %@" : {
+
+    },
+    "Developer Mode" : {
+
+    },
+    "Disguise ClassGod as another app in the Dock. The icon change takes effect immediately." : {
+
+    },
+    "divider.dashed" : {
+
+    },
+    "divider.none" : {
+
+    },
+    "divider.thin" : {
+
+    },
+    "Drop images or videos" : {
 
     },
     "e.g. Canvas Quiz Bypass" : {
@@ -3984,6 +4111,12 @@
         }
       }
     },
+    "Force Incognito / Private Mode" : {
+
+    },
+    "HACKER DESKTOP" : {
+
+    },
     "Hanazar Software" : {
 
     },
@@ -4280,6 +4413,9 @@
         }
       }
     },
+    "Import" : {
+
+    },
     "import.failure" : {
       "localizations" : {
         "de" : {
@@ -4454,6 +4590,12 @@
         }
       }
     },
+    "Keep Window on Top" : {
+
+    },
+    "lang.system" : {
+
+    },
     "launch.coming_soon" : {
       "localizations" : {
         "de" : {
@@ -4511,6 +4653,24 @@
           }
         }
       }
+    },
+    "Leave empty to use browser default" : {
+
+    },
+    "LIBRARY" : {
+
+    },
+    "List Divider" : {
+
+    },
+    "LIVE" : {
+
+    },
+    "Lock" : {
+
+    },
+    "Log Retention" : {
+
     },
     "Manage & switch browser tabs" : {
 
@@ -4689,7 +4849,28 @@
         }
       }
     },
+    "Maximize Behavior" : {
+
+    },
+    "maximize.fill_screen" : {
+
+    },
+    "maximize.fullscreen_borderless" : {
+
+    },
+    "maximize.none" : {
+
+    },
+    "MEM" : {
+
+    },
+    "Monitor Clipboard for URLs" : {
+
+    },
     "Name" : {
+
+    },
+    "NAME" : {
 
     },
     "No bypass rules" : {
@@ -4699,6 +4880,9 @@
 
     },
     "No targets configured" : {
+
+    },
+    "No wallpaper selected" : {
 
     },
     "not_running.do_nothing" : {
@@ -4875,7 +5059,19 @@
         }
       }
     },
+    "Number of glitch windows spawned during the boot chaos animation. Higher values are more dramatic but use more memory." : {
+
+    },
     "OK" : {
+
+    },
+    "ON BATTERY" : {
+
+    },
+    "Particle Count" : {
+
+    },
+    "PAUSED" : {
 
     },
     "PeaceOut" : {
@@ -5231,6 +5427,9 @@
         }
       }
     },
+    "PID" : {
+
+    },
     "plist.accessibility" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -5358,6 +5557,12 @@
     "Quick app switcher" : {
 
     },
+    "Remember Window Position" : {
+
+    },
+    "Remove '%@' from your wallpaper library?" : {
+
+    },
     "Remove %@ from SuperSwitch?" : {
 
     },
@@ -5365,6 +5570,9 @@
 
     },
     "Remove panic app \"%@\"?" : {
+
+    },
+    "Reset Size" : {
 
     },
     "reset.confirm.message" : {
@@ -5786,6 +5994,7 @@
       }
     },
     "section.debug" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -6596,6 +6805,12 @@
           }
         }
       }
+    },
+    "section.toast" : {
+
+    },
+    "section.window_behavior" : {
+
     },
     "Select a rule to activate bypass" : {
 
@@ -9228,6 +9443,9 @@
     "SuperSwitch" : {
 
     },
+    "Suppress System Shortcut Conflicts" : {
+
+    },
     "Switch to %@" : {
 
     },
@@ -9349,6 +9567,9 @@
       }
     },
     "switch.always_new_tab" : {
+
+    },
+    "SYSTEM UPTIME" : {
 
     },
     "tab.advanced" : {
@@ -10395,10 +10616,28 @@
         }
       }
     },
+    "TOTAL IN:" : {
+
+    },
+    "TOTAL OUT:" : {
+
+    },
+    "Unlock" : {
+
+    },
     "URL Pattern" : {
 
     },
     "v%@" : {
+
+    },
+    "VIDEO" : {
+
+    },
+    "Wallpaper Engine" : {
+
+    },
+    "When enabled, ClassGod will try to override system shortcuts that conflict with your chosen global shortcut. May require Accessibility permissions." : {
 
     },
     "Your PC ran into a problem and needs to restart." : {
