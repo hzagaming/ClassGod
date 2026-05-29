@@ -17,17 +17,23 @@ struct BrowserSettingsView: View {
                     defaultExpanded: true,
                     accentColor: .blue
                 ) {
-                    Picker(String(localized: "setting.when_adding"), selection: $prefs.preferences.defaultBrowser) {
-                        Text(String(localized: "browser.auto_detect")).tag(Optional<BrowserType>.none)
-                        ForEach(BrowserType.allCases) { browser in
-                            Text(browser.displayName).tag(Optional(browser))
-                        }
-                    }
-                    .pickerStyle(.radioGroup)
+                    SettingsPickerRow(
+                        label: String(localized: "setting.when_adding"),
+                        selection: $prefs.preferences.defaultBrowser,
+                        options: [Optional<BrowserType>.none] + BrowserType.allCases.map { Optional($0) },
+                        displayName: {
+                            if let browser = $0 {
+                                return browser.displayName
+                            }
+                            return String(localized: "browser.auto_detect")
+                        },
+                        style: .radio
+                    )
 
                     Text(String(localized: "browser.default_caption"))
                         .font(.caption)
                         .foregroundStyle(.secondary)
+                        .padding(.horizontal, 10)
                 }
 
                 StatefulCollapsibleSection(
@@ -36,34 +42,18 @@ struct BrowserSettingsView: View {
                     defaultExpanded: true,
                     accentColor: .orange
                 ) {
-                    Picker(String(localized: "setting.behavior"), selection: $prefs.preferences.browserNotRunningBehavior) {
-                        ForEach(BrowserNotRunningBehavior.allCases) { behavior in
-                            Text(behavior.displayName).tag(behavior)
-                        }
-                    }
-                    .pickerStyle(.radioGroup)
+                    SettingsPickerRow(
+                        label: String(localized: "setting.behavior"),
+                        selection: $prefs.preferences.browserNotRunningBehavior,
+                        options: BrowserNotRunningBehavior.allCases,
+                        displayName: \.displayName,
+                        style: .radio
+                    )
 
                     Text(String(localized: "browser.not_running_caption"))
                         .font(.caption)
                         .foregroundStyle(.secondary)
-                }
-
-                StatefulCollapsibleSection(
-                    title: "Privacy & Security",
-                    icon: "lock.shield",
-                    defaultExpanded: false,
-                    accentColor: .green
-                ) {
-                    Toggle("Ask Before Opening URL", isOn: $prefs.preferences.askBeforeOpening)
-                    Toggle("Force Incognito / Private Mode", isOn: $prefs.preferences.forceIncognitoMode)
-
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Custom User Agent")
-                            .font(.system(size: 12, weight: .medium))
-                        TextField("Leave empty to use browser default", text: $prefs.preferences.customUserAgent)
-                            .textFieldStyle(.roundedBorder)
-                            .font(.system(size: 12, design: .monospaced))
-                    }
+                        .padding(.horizontal, 10)
                 }
 
                 StatefulCollapsibleSection(
@@ -72,11 +62,12 @@ struct BrowserSettingsView: View {
                     defaultExpanded: false,
                     accentColor: .cyan
                 ) {
-                    VStack(alignment: .leading, spacing: 8) {
+                    VStack(alignment: .leading, spacing: 4) {
                         browserRow(name: "Safari", icon: "safari", bundleID: BrowserType.safari.bundleIdentifier)
                         browserRow(name: "Google Chrome", icon: "globe", bundleID: BrowserType.chrome.bundleIdentifier)
                         browserRow(name: "Microsoft Edge", icon: "wave.3.forward", bundleID: BrowserType.edge.bundleIdentifier)
                     }
+                    .padding(.horizontal, 10)
                 }
 
                 StatefulCollapsibleSection(
@@ -85,11 +76,16 @@ struct BrowserSettingsView: View {
                     defaultExpanded: false,
                     accentColor: .red
                 ) {
-                    Button(String(localized: "button.open_automation")) {
-                        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Automation") {
-                            NSWorkspace.shared.open(url)
+                    SettingsActionRow(
+                        icon: "lock.shield",
+                        title: String(localized: "button.open_automation"),
+                        subtitle: "Open System Settings > Privacy & Security > Automation",
+                        action: {
+                            if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Automation") {
+                                NSWorkspace.shared.open(url)
+                            }
                         }
-                    }
+                    )
                 }
             }
             .padding(.horizontal, 8)
@@ -98,16 +94,20 @@ struct BrowserSettingsView: View {
     }
 
     private func browserRow(name: String, icon: String, bundleID: String) -> some View {
-        HStack {
+        HStack(spacing: 10) {
             Image(systemName: icon)
-                .frame(width: 20)
+                .font(.system(size: 12))
+                .foregroundStyle(.white.opacity(0.4))
+                .frame(width: 18)
             Text(name)
+                .font(.system(size: 12, weight: .medium))
+                .foregroundStyle(.white)
             Spacer()
             Text(bundleID)
-                .font(.caption)
-                .foregroundStyle(.secondary)
+                .font(.system(size: 10, design: .monospaced))
+                .foregroundStyle(.white.opacity(0.35))
         }
-        .padding(.vertical, 2)
+        .padding(.vertical, 5)
     }
 }
 

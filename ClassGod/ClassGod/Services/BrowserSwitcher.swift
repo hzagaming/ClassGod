@@ -46,6 +46,11 @@ final class BrowserSwitcher {
     }
 
     private func performSwitchToTab(_ tab: BrowserTab, prefs: AppPreferences, completion: ((Bool, String) -> Void)? = nil) {
+        guard tab.browser.isInstalled else {
+            completion?(false, String(format: String(localized: "error.browser_not_found"), tab.browser.displayName))
+            return
+        }
+        
         let safeURL = appleScriptEscape(tab.url)
         let isRunning = isBrowserRunning(tab.browser)
 
@@ -114,6 +119,11 @@ final class BrowserSwitcher {
     }
 
     private func openURLDirectly(tab: BrowserTab, url: String, completion: ((Bool, String) -> Void)? = nil) {
+        guard tab.browser.isInstalled else {
+            completion?(false, String(format: String(localized: "error.browser_not_found"), tab.browser.displayName))
+            return
+        }
+        
         let scriptSource: String
         switch tab.browser {
         case .safari:

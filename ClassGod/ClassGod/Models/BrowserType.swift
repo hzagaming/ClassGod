@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import AppKit
 
 enum BrowserType: String, Codable, CaseIterable, Identifiable {
     case safari = "safari"
@@ -45,5 +46,9 @@ enum BrowserType: String, Codable, CaseIterable, Identifiable {
         case .edge:
             return "wave.3.forward"
         }
+    }
+    
+    var isInstalled: Bool {
+        NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleIdentifier) != nil
     }
 }

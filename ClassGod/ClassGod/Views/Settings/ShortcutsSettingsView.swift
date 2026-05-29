@@ -37,8 +37,11 @@ struct ShortcutsSettingsView: View {
                     defaultExpanded: true,
                     accentColor: .cyan
                 ) {
-                    HStack {
+                    HStack(spacing: 12) {
                         Text(String(localized: "setting.show_panel"))
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundStyle(.white)
+
                         Spacer()
 
                         ZStack {
@@ -84,23 +87,13 @@ struct ShortcutsSettingsView: View {
                         )
                         .pressScale(0.9)
                     }
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 8)
 
                     Text(String(localized: "shortcut.tip.caption"))
                         .font(.caption)
                         .foregroundStyle(.secondary)
-                }
-
-                StatefulCollapsibleSection(
-                    title: "Shortcut Conflict",
-                    icon: "exclamationmark.triangle",
-                    defaultExpanded: false,
-                    accentColor: .orange
-                ) {
-                    Toggle("Suppress System Shortcut Conflicts", isOn: $prefs.preferences.suppressSystemShortcutConflict)
-
-                    Text("When enabled, ClassGod will try to override system shortcuts that conflict with your chosen global shortcut. May require Accessibility permissions.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .padding(.horizontal, 10)
                 }
 
                 StatefulCollapsibleSection(
@@ -109,13 +102,13 @@ struct ShortcutsSettingsView: View {
                     defaultExpanded: false,
                     accentColor: .yellow
                 ) {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Label(String(localized: "tip.avoid_conflict"), systemImage: "exclamationmark.triangle")
-                        Label(String(localized: "tip.per_tab_shortcuts"), systemImage: "keyboard")
-                        Label(String(localized: "tip.restart"), systemImage: "arrow.clockwise")
+                    VStack(alignment: .leading, spacing: 8) {
+                        tipRow(icon: "exclamationmark.triangle", text: String(localized: "tip.avoid_conflict"))
+                        tipRow(icon: "keyboard", text: String(localized: "tip.per_tab_shortcuts"))
+                        tipRow(icon: "arrow.clockwise", text: String(localized: "tip.restart"))
                     }
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 4)
                 }
             }
             .padding(.horizontal, 8)
@@ -144,11 +137,28 @@ struct ShortcutsSettingsView: View {
         }
     }
 
+    private func tipRow(icon: String, text: String) -> some View {
+        HStack(spacing: 8) {
+            Image(systemName: icon)
+                .font(.system(size: 11))
+                .foregroundStyle(.white.opacity(0.4))
+                .frame(width: 18)
+            Text(text)
+                .font(.callout)
+                .foregroundStyle(.secondary)
+            Spacer()
+        }
+    }
+
     private func startRecording() {
         guard !isRecordingPopoverShortcut else { return }
         isRecordingPopoverShortcut = true
         HapticManager.shared.generic()
 
+        if let monitor = localMonitor {
+            NSEvent.removeMonitor(monitor)
+            localMonitor = nil
+        }
         localMonitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown, .flagsChanged]) { [self] event in
             handleRecordingEvent(event)
         }

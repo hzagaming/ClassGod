@@ -65,6 +65,11 @@ final class BrowserDetector {
             return
         }
         
+        guard browser.isInstalled else {
+            completion(.failure(.noFrontmostBrowser))
+            return
+        }
+        
         DispatchQueue.global(qos: .userInitiated).async {
             let result = self.runAppleScript(for: browser)
             DispatchQueue.main.async {

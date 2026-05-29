@@ -17,31 +17,43 @@ struct GeneralSettingsView: View {
                     defaultExpanded: true,
                     accentColor: .cyan
                 ) {
-                    Toggle(String(localized: "setting.auto_detect"), isOn: $prefs.preferences.autoDetectOnShow)
-                    Toggle(String(localized: "setting.keyboard_nav"), isOn: $prefs.preferences.enableKeyboardNavigation)
-                    Toggle("Monitor Clipboard for URLs", isOn: $prefs.preferences.enableClipboardMonitoring)
+                    SettingsToggleRow(
+                        icon: "eye",
+                        title: String(localized: "setting.auto_detect"),
+                        subtitle: "Detect current tab when window opens",
+                        isOn: $prefs.preferences.autoDetectOnShow
+                    )
 
-                    sliderRow(
+                    SettingsToggleRow(
+                        icon: "keyboard",
+                        title: String(localized: "setting.keyboard_nav"),
+                        subtitle: "Navigate lists with arrow keys",
+                        isOn: $prefs.preferences.enableKeyboardNavigation
+                    )
+
+                    SettingsSliderRow(
                         label: String(localized: "setting.switch_delay"),
                         value: $prefs.preferences.switchDelayMs,
                         range: 0...500,
                         step: 50,
-                        format: "%.0fms"
+                        suffix: "ms"
                     )
 
-                    Picker(String(localized: "setting.switch_behavior"), selection: $prefs.preferences.switchBehavior) {
-                        ForEach(SwitchBehavior.allCases) { behavior in
-                            Text(behavior.displayName).tag(behavior)
-                        }
-                    }
-                    .pickerStyle(.radioGroup)
+                    SettingsPickerRow(
+                        label: String(localized: "setting.switch_behavior"),
+                        selection: $prefs.preferences.switchBehavior,
+                        options: SwitchBehavior.allCases,
+                        displayName: \.displayName,
+                        style: .radio
+                    )
 
-                    Picker(String(localized: "setting.url_match"), selection: $prefs.preferences.urlMatchPrecision) {
-                        ForEach(URLMatchPrecision.allCases) { precision in
-                            Text(precision.displayName).tag(precision)
-                        }
-                    }
-                    .pickerStyle(.radioGroup)
+                    SettingsPickerRow(
+                        label: String(localized: "setting.url_match"),
+                        selection: $prefs.preferences.urlMatchPrecision,
+                        options: URLMatchPrecision.allCases,
+                        displayName: \.displayName,
+                        style: .segmented
+                    )
                 }
 
                 StatefulCollapsibleSection(
@@ -50,18 +62,36 @@ struct GeneralSettingsView: View {
                     defaultExpanded: true,
                     accentColor: .orange
                 ) {
-                    Toggle("Close on Click Outside", isOn: $prefs.preferences.closeOnClickOutside)
-                    Toggle("Keep Window on Top", isOn: $prefs.preferences.keepWindowOnTop)
-                    Toggle("Remember Window Position", isOn: $prefs.preferences.rememberWindowPosition)
+                    SettingsToggleRow(
+                        icon: "xmark.circle",
+                        title: "Close on Click Outside",
+                        subtitle: "Hide window when clicking outside",
+                        isOn: $prefs.preferences.closeOnClickOutside
+                    )
 
-                    Picker("Maximize Behavior", selection: $prefs.preferences.windowMaximizeBehavior) {
-                        ForEach(WindowMaximizeBehavior.allCases) { behavior in
-                            Text(behavior.displayName).tag(behavior)
-                        }
-                    }
-                    .pickerStyle(.radioGroup)
+                    SettingsToggleRow(
+                        icon: "pin",
+                        title: "Keep Window on Top",
+                        subtitle: "Window stays above other apps",
+                        isOn: $prefs.preferences.keepWindowOnTop
+                    )
 
-                    sliderRow(
+                    SettingsToggleRow(
+                        icon: "location",
+                        title: "Remember Window Position",
+                        subtitle: "Restore last window location",
+                        isOn: $prefs.preferences.rememberWindowPosition
+                    )
+
+                    SettingsPickerRow(
+                        label: "Maximize Behavior",
+                        selection: $prefs.preferences.windowMaximizeBehavior,
+                        options: WindowMaximizeBehavior.allCases,
+                        displayName: \.displayName,
+                        style: .menu
+                    )
+
+                    SettingsSliderRow(
                         label: "Minimize Animation",
                         value: $prefs.preferences.minimizeAnimationDuration,
                         range: 0.05...0.5,
@@ -76,10 +106,15 @@ struct GeneralSettingsView: View {
                     defaultExpanded: false,
                     accentColor: .yellow
                 ) {
-                    Toggle(String(localized: "setting.toast"), isOn: $prefs.preferences.showToastNotifications)
+                    SettingsToggleRow(
+                        icon: "bell.badge",
+                        title: String(localized: "setting.toast"),
+                        subtitle: "Show feedback notifications",
+                        isOn: $prefs.preferences.showToastNotifications
+                    )
 
                     if prefs.preferences.showToastNotifications {
-                        sliderRow(
+                        SettingsSliderRow(
                             label: String(localized: "setting.toast_duration"),
                             value: $prefs.preferences.toastDuration,
                             range: 0.5...5.0,
@@ -96,19 +131,26 @@ struct GeneralSettingsView: View {
                     defaultExpanded: false,
                     accentColor: .purple
                 ) {
-                    Toggle(String(localized: "setting.instant_mode"), isOn: $prefs.preferences.useInstantAnimations)
+                    SettingsToggleRow(
+                        icon: "bolt",
+                        title: String(localized: "setting.instant_mode"),
+                        subtitle: "Disable all animations",
+                        isOn: $prefs.preferences.useInstantAnimations
+                    )
 
-                    Picker(String(localized: "setting.animation_speed"), selection: $prefs.preferences.animationSpeed) {
-                        ForEach(AnimationSpeed.allCases) { speed in
-                            Text(speed.displayName).tag(speed)
-                        }
-                    }
-                    .pickerStyle(.segmented)
+                    SettingsPickerRow(
+                        label: String(localized: "setting.animation_speed"),
+                        selection: $prefs.preferences.animationSpeed,
+                        options: AnimationSpeed.allCases,
+                        displayName: \.displayName,
+                        style: .segmented
+                    )
                     .disabled(prefs.preferences.useInstantAnimations)
 
                     Text(String(localized: "animation.off_caption"))
                         .font(.caption)
                         .foregroundStyle(.secondary)
+                        .padding(.horizontal, 10)
                 }
 
                 StatefulCollapsibleSection(
@@ -117,23 +159,20 @@ struct GeneralSettingsView: View {
                     defaultExpanded: false,
                     accentColor: .green
                 ) {
-                    Toggle(String(localized: "setting.launch_at_login"), isOn: $prefs.preferences.launchAtLogin)
-                        .disabled(true)
-                        .help(String(localized: "launch.coming_soon"))
+                    SettingsToggleRow(
+                        icon: "arrow.up.circle",
+                        title: String(localized: "setting.launch_at_login"),
+                        subtitle: String(localized: "launch.coming_soon"),
+                        isOn: $prefs.preferences.launchAtLogin
+                    )
+                    .disabled(true)
 
-                    Toggle(String(localized: "setting.show_on_launch"), isOn: $prefs.preferences.showPopoverOnLaunch)
-
-                    HStack {
-                        Text("Auto-Save Interval")
-                        Slider(value: .init(
-                            get: { Double(prefs.preferences.autoSaveIntervalMinutes) },
-                            set: { prefs.preferences.autoSaveIntervalMinutes = Int($0) }
-                        ), in: 1...60, step: 1)
-                        Text("\(prefs.preferences.autoSaveIntervalMinutes)m")
-                            .frame(width: 36, alignment: .trailing)
-                            .foregroundStyle(.secondary)
-                            .monospacedDigit()
-                    }
+                    SettingsToggleRow(
+                        icon: "rectangle.portrait.arrowtriangle.2.outward",
+                        title: String(localized: "setting.show_on_launch"),
+                        subtitle: "Open panel when app starts",
+                        isOn: $prefs.preferences.showPopoverOnLaunch
+                    )
                 }
 
                 StatefulCollapsibleSection(
@@ -142,8 +181,19 @@ struct GeneralSettingsView: View {
                     defaultExpanded: false,
                     accentColor: .red
                 ) {
-                    Toggle(String(localized: "setting.confirm_delete"), isOn: $prefs.preferences.confirmBeforeDelete)
-                    Toggle(String(localized: "setting.confirm_clear"), isOn: $prefs.preferences.confirmBeforeClear)
+                    SettingsToggleRow(
+                        icon: "exclamationmark.triangle",
+                        title: String(localized: "setting.confirm_delete"),
+                        subtitle: "Ask before deleting items",
+                        isOn: $prefs.preferences.confirmBeforeDelete
+                    )
+
+                    SettingsToggleRow(
+                        icon: "trash",
+                        title: String(localized: "setting.confirm_clear"),
+                        subtitle: "Ask before clearing all data",
+                        isOn: $prefs.preferences.confirmBeforeClear
+                    )
                 }
 
                 StatefulCollapsibleSection(
@@ -152,29 +202,23 @@ struct GeneralSettingsView: View {
                     defaultExpanded: false,
                     accentColor: .pink
                 ) {
-                    Toggle(String(localized: "setting.sound_effects"), isOn: $prefs.preferences.enableSoundEffects)
-                    Toggle(String(localized: "setting.haptic"), isOn: $prefs.preferences.enableHapticFeedback)
+                    SettingsToggleRow(
+                        icon: "speaker.wave.2.fill",
+                        title: String(localized: "setting.sound_effects"),
+                        subtitle: "Play sounds on interactions",
+                        isOn: $prefs.preferences.enableSoundEffects
+                    )
+
+                    SettingsToggleRow(
+                        icon: "hand.tap",
+                        title: String(localized: "setting.haptic"),
+                        subtitle: "Haptic feedback on actions",
+                        isOn: $prefs.preferences.enableHapticFeedback
+                    )
                 }
             }
             .padding(.horizontal, 8)
             .padding(.vertical, 8)
-        }
-    }
-
-    private func sliderRow(
-        label: String,
-        value: Binding<Double>,
-        range: ClosedRange<Double>,
-        step: Double,
-        format: String
-    ) -> some View {
-        HStack {
-            Text(label)
-            Slider(value: value, in: range, step: step)
-            Text(String(format: format, value.wrappedValue))
-                .frame(width: 50, alignment: .trailing)
-                .foregroundStyle(.secondary)
-                .monospacedDigit()
         }
     }
 }

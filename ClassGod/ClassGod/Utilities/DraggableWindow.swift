@@ -43,5 +43,11 @@ class DraggableWindow: NSWindow {
         initialMouseLocation = nil
         initialWindowOrigin = nil
         super.mouseUp(with: event)
+        
+        NotificationCenter.default.post(
+            name: .draggableWindowDidMove,
+            object: self,
+            userInfo: ["origin": self.frame.origin]
+        )
     }
 }

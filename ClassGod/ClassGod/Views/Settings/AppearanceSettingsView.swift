@@ -17,25 +17,48 @@ struct AppearanceSettingsView: View {
                     defaultExpanded: true,
                     accentColor: .blue
                 ) {
-                    sliderRow(label: String(localized: "setting.width"), value: $prefs.preferences.panelWidth, range: 240...600, step: 10, suffix: "px")
-                    sliderRow(label: String(localized: "setting.max_height"), value: $prefs.preferences.panelMaxHeight, range: 200...900, step: 20, suffix: "px")
-                    sliderRow(label: String(localized: "setting.row_height"), value: $prefs.preferences.rowHeight, range: 32...72, step: 4, suffix: "px")
+                    SettingsSliderRow(
+                        label: String(localized: "setting.width"),
+                        value: $prefs.preferences.panelWidth,
+                        range: 240...600,
+                        step: 10,
+                        suffix: "px"
+                    )
 
-                    HStack {
-                        Text(String(localized: "setting.max_tabs"))
-                        Slider(value: .init(
+                    SettingsSliderRow(
+                        label: String(localized: "setting.max_height"),
+                        value: $prefs.preferences.panelMaxHeight,
+                        range: 200...900,
+                        step: 20,
+                        suffix: "px"
+                    )
+
+                    SettingsSliderRow(
+                        label: String(localized: "setting.row_height"),
+                        value: $prefs.preferences.rowHeight,
+                        range: 32...72,
+                        step: 4,
+                        suffix: "px"
+                    )
+
+                    SettingsSliderRow(
+                        label: String(localized: "setting.max_tabs"),
+                        value: .init(
                             get: { Double(prefs.preferences.maxTabsInPopover) },
                             set: { prefs.preferences.maxTabsInPopover = Int($0) }
-                        ), in: 5...150, step: 5)
-                        Text("\(prefs.preferences.maxTabsInPopover)")
-                            .frame(width: 40, alignment: .trailing)
-                            .foregroundStyle(.secondary)
-                            .monospacedDigit()
-                    }
+                        ),
+                        range: 5...150,
+                        step: 5,
+                        suffix: ""
+                    )
 
-                    sliderRow(label: String(localized: "setting.corner_radius"), value: $prefs.preferences.panelCornerRadius, range: 0...32, step: 1, suffix: "px")
-                    sliderRow(label: "Border Width", value: $prefs.preferences.borderWidth, range: 0...3, step: 0.5, format: "%.1f")
-                    sliderRow(label: "Font Scale", value: $prefs.preferences.fontSizeScale, range: 0.8...1.4, step: 0.05, format: "%.2f×")
+                    SettingsSliderRow(
+                        label: String(localized: "setting.corner_radius"),
+                        value: $prefs.preferences.panelCornerRadius,
+                        range: 0...32,
+                        step: 1,
+                        suffix: "px"
+                    )
                 }
 
                 StatefulCollapsibleSection(
@@ -44,18 +67,23 @@ struct AppearanceSettingsView: View {
                     defaultExpanded: true,
                     accentColor: .purple
                 ) {
-                    Picker(String(localized: "setting.appearance"), selection: $prefs.preferences.theme) {
-                        ForEach(AppTheme.allCases) { theme in
-                            Text(theme.displayName).tag(theme)
-                        }
-                    }
-                    .pickerStyle(.segmented)
+                    SettingsPickerRow(
+                        label: String(localized: "setting.appearance"),
+                        selection: $prefs.preferences.theme,
+                        options: AppTheme.allCases,
+                        displayName: \.displayName,
+                        style: .segmented
+                    )
 
-                    sliderRow(label: "Window Opacity", value: $prefs.preferences.windowOpacity, range: 0.5...1.0, step: 0.05, format: "%.0f%%") {
+                    SettingsSliderRow(
+                        label: "Window Opacity",
+                        value: $prefs.preferences.windowOpacity,
+                        range: 0.5...1.0,
+                        step: 0.05,
+                        format: "%.0f%%"
+                    ) {
                         Int($0 * 100)
                     }
-
-                    Toggle("Blur Background", isOn: $prefs.preferences.enableBlurBackground)
                 }
 
                 StatefulCollapsibleSection(
@@ -64,18 +92,40 @@ struct AppearanceSettingsView: View {
                     defaultExpanded: true,
                     accentColor: .cyan
                 ) {
-                    Toggle(String(localized: "setting.show_browser_icon"), isOn: $prefs.preferences.showBrowserIcon)
-                    Toggle(String(localized: "setting.show_shortcut_badge"), isOn: $prefs.preferences.showShortcutBadge)
-                    Toggle(String(localized: "setting.show_url_preview"), isOn: $prefs.preferences.showURLPreview)
-                    Toggle(String(localized: "setting.compact_mode"), isOn: $prefs.preferences.useCompactMode)
-                    Toggle(String(localized: "setting.show_tab_count"), isOn: $prefs.preferences.showTabCountBadge)
+                    SettingsToggleRow(
+                        icon: "globe",
+                        title: String(localized: "setting.show_browser_icon"),
+                        subtitle: "Show browser icon in tab list",
+                        isOn: $prefs.preferences.showBrowserIcon
+                    )
 
-                    Picker("List Divider", selection: $prefs.preferences.listDividerStyle) {
-                        ForEach(ListDividerStyle.allCases) { style in
-                            Text(style.displayName).tag(style)
-                        }
-                    }
-                    .pickerStyle(.segmented)
+                    SettingsToggleRow(
+                        icon: "command",
+                        title: String(localized: "setting.show_shortcut_badge"),
+                        subtitle: "Display shortcut key on items",
+                        isOn: $prefs.preferences.showShortcutBadge
+                    )
+
+                    SettingsToggleRow(
+                        icon: "link",
+                        title: String(localized: "setting.show_url_preview"),
+                        subtitle: "Show URL tooltip on hover",
+                        isOn: $prefs.preferences.showURLPreview
+                    )
+
+                    SettingsToggleRow(
+                        icon: "rectangle.compress.vertical",
+                        title: String(localized: "setting.compact_mode"),
+                        subtitle: "Reduce padding and spacing",
+                        isOn: $prefs.preferences.useCompactMode
+                    )
+
+                    SettingsToggleRow(
+                        icon: "number",
+                        title: String(localized: "setting.show_tab_count"),
+                        subtitle: "Show tab count on menu bar icon",
+                        isOn: $prefs.preferences.showTabCountBadge
+                    )
                 }
 
                 StatefulCollapsibleSection(
@@ -84,17 +134,13 @@ struct AppearanceSettingsView: View {
                     defaultExpanded: false,
                     accentColor: .green
                 ) {
-                    Picker(String(localized: "setting.icon_style"), selection: $prefs.preferences.menuBarIconStyle) {
-                        ForEach(MenuBarIconStyle.allCases) { style in
-                            HStack(spacing: 8) {
-                                Image(systemName: style.systemImageName)
-                                    .symbolRenderingMode(.hierarchical)
-                                Text(style.displayName)
-                            }
-                            .tag(style)
-                        }
-                    }
-                    .pickerStyle(.radioGroup)
+                    SettingsPickerRow(
+                        label: String(localized: "setting.icon_style"),
+                        selection: $prefs.preferences.menuBarIconStyle,
+                        options: MenuBarIconStyle.allCases,
+                        displayName: \.displayName,
+                        style: .radio
+                    )
                 }
 
                 StatefulCollapsibleSection(
@@ -103,17 +149,13 @@ struct AppearanceSettingsView: View {
                     defaultExpanded: false,
                     accentColor: .red
                 ) {
-                    Picker("App Icon", selection: $prefs.preferences.appIconStyle) {
-                        ForEach(AppIconStyle.allCases) { style in
-                            HStack(spacing: 8) {
-                                Image(systemName: style.iconName)
-                                    .symbolRenderingMode(.hierarchical)
-                                Text(style.displayName)
-                            }
-                            .tag(style)
-                        }
-                    }
-                    .pickerStyle(.radioGroup)
+                    SettingsPickerRow(
+                        label: "App Icon",
+                        selection: $prefs.preferences.appIconStyle,
+                        options: AppIconStyle.allCases,
+                        displayName: \.displayName,
+                        style: .radio
+                    )
                     .onChange(of: prefs.preferences.appIconStyle) { _, newStyle in
                         AppIconManager.shared.applyStyle(newStyle)
                     }
@@ -121,62 +163,11 @@ struct AppearanceSettingsView: View {
                     Text("Disguise ClassGod as another app in the Dock. The icon change takes effect immediately.")
                         .font(.system(size: 11, design: .monospaced))
                         .foregroundStyle(.secondary)
+                        .padding(.horizontal, 10)
                 }
             }
             .padding(.horizontal, 8)
             .padding(.vertical, 8)
-        }
-    }
-
-    private func sliderRow(
-        label: String,
-        value: Binding<Double>,
-        range: ClosedRange<Double>,
-        step: Double,
-        suffix: String
-    ) -> some View {
-        HStack {
-            Text(label)
-            Slider(value: value, in: range, step: step)
-            Text("\(Int(value.wrappedValue))\(suffix)")
-                .frame(width: 50, alignment: .trailing)
-                .foregroundStyle(.secondary)
-                .monospacedDigit()
-        }
-    }
-
-    private func sliderRow(
-        label: String,
-        value: Binding<Double>,
-        range: ClosedRange<Double>,
-        step: Double,
-        format: String,
-        transform: (Double) -> Int
-    ) -> some View {
-        HStack {
-            Text(label)
-            Slider(value: value, in: range, step: step)
-            Text("\(transform(value.wrappedValue))")
-                .frame(width: 50, alignment: .trailing)
-                .foregroundStyle(.secondary)
-                .monospacedDigit()
-        }
-    }
-
-    private func sliderRow(
-        label: String,
-        value: Binding<Double>,
-        range: ClosedRange<Double>,
-        step: Double,
-        format: String
-    ) -> some View {
-        HStack {
-            Text(label)
-            Slider(value: value, in: range, step: step)
-            Text(String(format: format, value.wrappedValue))
-                .frame(width: 50, alignment: .trailing)
-                .foregroundStyle(.secondary)
-                .monospacedDigit()
         }
     }
 }

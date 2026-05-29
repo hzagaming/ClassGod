@@ -77,6 +77,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 name: .classGodTabsDidChange,
                 object: nil
             )
+            
+            NotificationCenter.default.addObserver(
+                self,
+                selector: #selector(self.windowPositionDidChange),
+                name: .draggableWindowDidMove,
+                object: nil
+            )
 
             // Phase 2: Setup main menu window first (hidden at bottom layer)
             self.setupMainWindow()
@@ -91,8 +98,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 
                 // Phase 3: Chaos glitch animation
                 LaunchAnimationManager.shared.startChaosAnimation(mainWindow: window) { [weak self] in
-                    // Phase 4: Animation complete, main menu window is fully revealed
-                    self?.mainWindow?.makeKeyAndOrderFront(nil)
+                    // Phase 4: Animation complete
+                    if PreferencesManager.shared.preferences.showPopoverOnLaunch {
+                        self?.mainWindow?.makeKeyAndOrderFront(nil)
+                    }
                 }
             }
 
@@ -168,8 +177,19 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         window.contentView?.layer?.masksToBounds = true
         window.alphaValue = targetWindowAlpha
 
-        // Center on screen
-        if let screen = NSScreen.main {
+        // Restore saved position or center on screen
+        if prefs.rememberWindowPosition,
+           let originString = UserDefaults.standard.string(forKey: "com.hanazar.classgod.mainWindowOrigin") {
+            let origin = NSPointFromString(originString)
+            // Ensure the window is still on a visible screen
+            let targetFrame = NSRect(origin: origin, size: size)
+            if let screen = NSScreen.screens.first(where: { $0.frame.intersects(targetFrame) }) ?? NSScreen.main {
+                let visibleFrame = screen.visibleFrame
+                let clampedX = max(visibleFrame.minX, min(origin.x, visibleFrame.maxX - size.width))
+                let clampedY = max(visibleFrame.minY, min(origin.y, visibleFrame.maxY - size.height))
+                window.setFrameOrigin(NSPoint(x: clampedX, y: clampedY))
+            }
+        } else if let screen = NSScreen.main {
             let screenFrame = screen.visibleFrame
             let x = screenFrame.midX - size.width / 2
             let y = screenFrame.midY - size.height / 2
@@ -1074,6 +1094,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func tabsDidChange() {
         updateStatusItemIcon()
+    }
+    
+    @objc private func windowPositionDidChange(_ notification: Notification) {
+        guard PreferencesManager.shared.preferences.rememberWindowPosition,
+              let window = notification.object as? NSWindow,
+              window == mainWindow,
+              let origin = notification.userInfo?["origin"] as? NSPoint else {
+            return
+        }
+        UserDefaults.standard.set(NSStringFromPoint(origin), forKey: "com.hanazar.classgod.mainWindowOrigin")
     }
 
     private func updateStatusItemIcon() {

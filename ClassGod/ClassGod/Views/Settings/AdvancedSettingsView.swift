@@ -26,28 +26,39 @@ struct AdvancedSettingsView: View {
                     defaultExpanded: true,
                     accentColor: .blue
                 ) {
-                    HStack(spacing: 12) {
-                        Button(String(localized: "button.export")) {
-                            exportPreferences()
-                        }
+                    HStack(spacing: 10) {
+                        SettingsActionRow(
+                            icon: "square.and.arrow.up",
+                            title: String(localized: "button.export"),
+                            action: { exportPreferences() }
+                        )
 
-                        Button(String(localized: "button.import")) {
-                            importPreferences()
-                        }
+                        SettingsActionRow(
+                            icon: "square.and.arrow.down",
+                            title: String(localized: "button.import"),
+                            action: { importPreferences() }
+                        )
                     }
 
-                    Button(String(localized: "button.reset_all")) {
-                        showResetConfirmation = true
-                    }
-                    .foregroundStyle(.red)
+                    SettingsActionRow(
+                        icon: "arrow.counterclockwise",
+                        title: String(localized: "button.reset_all"),
+                        action: { showResetConfirmation = true },
+                        isDestructive: true
+                    )
 
-                    Button(String(localized: "button.clear_all"), role: .destructive) {
-                        if prefs.preferences.confirmBeforeClear {
-                            showClearConfirmation = true
-                        } else {
-                            clearAllTabs()
-                        }
-                    }
+                    SettingsActionRow(
+                        icon: "trash",
+                        title: String(localized: "button.clear_all"),
+                        action: {
+                            if prefs.preferences.confirmBeforeClear {
+                                showClearConfirmation = true
+                            } else {
+                                clearAllTabs()
+                            }
+                        },
+                        isDestructive: true
+                    )
                 }
 
                 StatefulCollapsibleSection(
@@ -56,80 +67,40 @@ struct AdvancedSettingsView: View {
                     defaultExpanded: false,
                     accentColor: .orange
                 ) {
-                    HStack {
-                        Text("Particle Count")
-                        Slider(value: .init(
+                    SettingsSliderRow(
+                        label: "Particle Count",
+                        value: .init(
                             get: { Double(prefs.preferences.chaosParticleCount) },
                             set: { prefs.preferences.chaosParticleCount = Int($0) }
-                        ), in: 50...500, step: 25)
-                        Text("\(prefs.preferences.chaosParticleCount)")
-                            .frame(width: 42, alignment: .trailing)
-                            .foregroundStyle(.secondary)
-                            .monospacedDigit()
-                    }
+                        ),
+                        range: 50...500,
+                        step: 25,
+                        suffix: ""
+                    )
 
                     Text("Number of glitch windows spawned during the boot chaos animation. Higher values are more dramatic but use more memory.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
+                        .padding(.horizontal, 10)
                 }
 
                 StatefulCollapsibleSection(
-                    title: "Logging & Debug",
+                    title: "Debug",
                     icon: "ant",
                     defaultExpanded: false,
                     accentColor: .purple
                 ) {
-                    Toggle(String(localized: "setting.debug_logging"), isOn: $prefs.preferences.enableDebugLogging)
-
-                    HStack {
-                        Text("Log Retention")
-                        Slider(value: .init(
-                            get: { Double(prefs.preferences.logRetentionDays) },
-                            set: { prefs.preferences.logRetentionDays = Int($0) }
-                        ), in: 1...30, step: 1)
-                        Text("\(prefs.preferences.logRetentionDays)d")
-                            .frame(width: 36, alignment: .trailing)
-                            .foregroundStyle(.secondary)
-                            .monospacedDigit()
-                    }
-
-                    if prefs.preferences.enableDebugLogging {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(String(localized: "debug.caption"))
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-
-                            Button(String(localized: "button.open_console")) {
-                                NSWorkspace.shared.openApplication(at: URL(fileURLWithPath: "/System/Applications/Utilities/Console.app"), configuration: NSWorkspace.OpenConfiguration())
-                            }
-                            .font(.caption)
+                    SettingsActionRow(
+                        icon: "terminal",
+                        title: String(localized: "button.open_console"),
+                        subtitle: "Open Console.app to view logs",
+                        action: {
+                            NSWorkspace.shared.openApplication(
+                                at: URL(fileURLWithPath: "/System/Applications/Utilities/Console.app"),
+                                configuration: NSWorkspace.OpenConfiguration()
+                            )
                         }
-                        .transition(.opacity)
-                    }
-                }
-
-                StatefulCollapsibleSection(
-                    title: "Developer",
-                    icon: "hammer",
-                    defaultExpanded: false,
-                    accentColor: .red
-                ) {
-                    Toggle("Developer Mode", isOn: $prefs.preferences.enableDeveloperMode)
-
-                    Toggle("Auto-Backup", isOn: $prefs.preferences.enableAutoBackup)
-
-                    HStack {
-                        Text("Backup Interval")
-                        Slider(value: .init(
-                            get: { Double(prefs.preferences.autoBackupIntervalHours) },
-                            set: { prefs.preferences.autoBackupIntervalHours = Int($0) }
-                        ), in: 1...24, step: 1)
-                        Text("\(prefs.preferences.autoBackupIntervalHours)h")
-                            .frame(width: 36, alignment: .trailing)
-                            .foregroundStyle(.secondary)
-                            .monospacedDigit()
-                    }
-                    .disabled(!prefs.preferences.enableAutoBackup)
+                    )
                 }
 
                 StatefulCollapsibleSection(
@@ -141,9 +112,11 @@ struct AdvancedSettingsView: View {
                     HStack {
                         Text(String(localized: "about.version"))
                         Spacer()
-                        Text("\(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.3.2") (Build \(Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "5"))")
+                        Text("\(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.8.0") (Build \(Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "12"))")
                             .foregroundStyle(.secondary)
                     }
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 4)
 
                     HStack {
                         Text(String(localized: "about.developer"))
@@ -151,24 +124,26 @@ struct AdvancedSettingsView: View {
                         Text("Hanazar Software")
                             .foregroundStyle(.secondary)
                     }
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 4)
 
-                    Button(action: {
-                        NSWorkspace.shared.open(URL(string: "https://github.com/hzagaming/ClassGod/releases")!)
-                    }) {
-                        Label(String(localized: "about.release_notes"), systemImage: "doc.text")
-                    }
+                    safeLinkButton(
+                        label: String(localized: "about.release_notes"),
+                        icon: "doc.text",
+                        urlString: "https://github.com/hzagaming/ClassGod/releases"
+                    )
 
-                    Button(action: {
-                        NSWorkspace.shared.open(URL(string: "https://github.com/hzagaming/ClassGod")!)
-                    }) {
-                        Label(String(localized: "about.github_repo"), systemImage: "link")
-                    }
+                    safeLinkButton(
+                        label: String(localized: "about.github_repo"),
+                        icon: "link",
+                        urlString: "https://github.com/hzagaming/ClassGod"
+                    )
 
-                    Button(action: {
-                        NSWorkspace.shared.open(URL(string: "https://github.com/hzagaming")!)
-                    }) {
-                        Label(String(localized: "about.github_profile"), systemImage: "person.circle")
-                    }
+                    safeLinkButton(
+                        label: String(localized: "about.github_profile"),
+                        icon: "person.circle",
+                        urlString: "https://github.com/hzagaming"
+                    )
                 }
             }
             .padding(.horizontal, 8)
@@ -231,6 +206,15 @@ struct AdvancedSettingsView: View {
     private func clearAllTabs() {
         StorageManager.shared.saveTabs([])
         NotificationCenter.default.post(name: .classGodTabsDidChange, object: nil)
+    }
+
+    private func safeLinkButton(label: String, icon: String, urlString: String) -> some View {
+        Button(action: {
+            guard let url = URL(string: urlString) else { return }
+            NSWorkspace.shared.open(url)
+        }) {
+            Label(label, systemImage: icon)
+        }
     }
 }
 

@@ -30,7 +30,7 @@ struct CollapsibleSection<Content: View>: View {
                         .frame(width: 20)
 
                     Text(title)
-                        .font(.system(size: 13, weight: .bold, design: .monospaced))
+                        .font(.system(size: 12, weight: .bold, design: .monospaced))
                         .foregroundStyle(.white)
 
                     Spacer()
