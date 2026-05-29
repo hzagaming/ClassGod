@@ -225,7 +225,22 @@ struct WidgetContainerView: View {
                 Label("Delete", systemImage: "trash")
             }
             
-            Divider()
+            if widget.type == .finderFile {
+                Button {
+                    let panel = NSOpenPanel()
+                    panel.allowsMultipleSelection = false
+                    panel.canChooseDirectories = true
+                    panel.canChooseFiles = true
+                    if panel.runModal() == .OK, let url = panel.url {
+                        widget.filePath = url.path
+                        onChange()
+                    }
+                } label: {
+                    Label("Choose File...", systemImage: "doc.badge.plus")
+                }
+                
+                Divider()
+            }
             
             Button {
                 withAnimation(.easeInOut(duration: 0.2)) {
@@ -307,6 +322,10 @@ struct WidgetContainerView: View {
             TempWidget()
         case .systemInfo:
             SystemInfoWidget()
+        case .finderFile:
+            FinderFileWidget(filePath: widget.filePath) { url in
+                widget.filePath = url.path
+            }
         }
     }
 }

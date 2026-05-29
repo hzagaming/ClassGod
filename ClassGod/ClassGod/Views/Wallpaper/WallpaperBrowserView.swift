@@ -241,6 +241,24 @@ struct WallpaperBrowserView: View {
                 }
                 .help(engine.playbackMode.displayName)
                 
+                // Show on Desktop toggle
+                HStack(spacing: 4) {
+                    Image(systemName: "desktopcomputer")
+                        .font(.system(size: 10))
+                        .foregroundStyle(engine.showOnDesktop ? .cyan : .white.opacity(0.3))
+                    Toggle("", isOn: .init(
+                        get: { engine.showOnDesktop },
+                        set: { _ in
+                            SoundEffectManager.shared.playButtonClick()
+                            engine.toggleShowOnDesktop()
+                        }
+                    ))
+                    .toggleStyle(.switch)
+                    .controlSize(.small)
+                }
+                .disabled(!engine.isEnabled)
+                .help("Show wallpaper on macOS Desktop")
+                
                 // Enable toggle
                 Toggle("", isOn: .init(
                     get: { engine.isEnabled },

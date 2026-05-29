@@ -18,6 +18,7 @@ final class WallpaperEngine: ObservableObject {
     
     // MARK: - Published State
     @Published var isEnabled: Bool = false
+    @Published var showOnDesktop: Bool = false
     @Published var currentWallpaper: WallpaperItem?
     @Published var playlist: [WallpaperItem] = []
     @Published var isPlaying: Bool = true
@@ -123,6 +124,11 @@ final class WallpaperEngine: ObservableObject {
         saveSettings()
     }
     
+    func toggleShowOnDesktop() {
+        showOnDesktop.toggle()
+        saveSettings()
+    }
+    
     func togglePlayPause() {
         isPlaying.toggle()
         saveSettings()
@@ -221,6 +227,7 @@ final class WallpaperEngine: ObservableObject {
         do {
             let settings = try decoder.decode(WallpaperSettings.self, from: data)
             isEnabled = settings.isEnabled
+            showOnDesktop = settings.showOnDesktop
             isMuted = settings.isMuted
             playbackMode = settings.playbackMode
             volume = settings.volume
@@ -236,6 +243,7 @@ final class WallpaperEngine: ObservableObject {
     private func saveSettings() {
         let settings = WallpaperSettings(
             isEnabled: isEnabled,
+            showOnDesktop: showOnDesktop,
             isMuted: isMuted,
             playbackMode: playbackMode,
             volume: volume,
@@ -254,6 +262,7 @@ final class WallpaperEngine: ObservableObject {
 
 private struct WallpaperSettings: Codable {
     var isEnabled: Bool
+    var showOnDesktop: Bool
     var isMuted: Bool
     var playbackMode: WallpaperPlaybackMode
     var volume: Double

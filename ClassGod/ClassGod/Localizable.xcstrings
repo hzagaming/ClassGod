@@ -59,29 +59,10 @@
         }
       }
     },
-    "%lld%@" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$lld%2$@"
-          }
-        }
-      }
-    },
     "%lld%%" : {
 
     },
     "%lld°" : {
-
-    },
-    "%lldd" : {
-
-    },
-    "%lldh" : {
-
-    },
-    "%lldm" : {
 
     },
     "0% complete" : {
@@ -874,9 +855,6 @@
         }
       }
     },
-    "App Icon" : {
-
-    },
     "App Name" : {
 
     },
@@ -939,25 +917,10 @@
         }
       }
     },
-    "Ask Before Opening URL" : {
-
-    },
     "AssessPrep Detected" : {
 
     },
     "AssessPrepHack" : {
-
-    },
-    "Auto-Backup" : {
-
-    },
-    "Auto-Save Interval" : {
-
-    },
-    "Backup Interval" : {
-
-    },
-    "Blur Background" : {
 
     },
     "Break free from lockdown pages" : {
@@ -2507,9 +2470,6 @@
     "Click a target to switch. Set shortcuts for instant access." : {
 
     },
-    "Close on Click Outside" : {
-
-    },
     "com.company.app" : {
 
     },
@@ -2635,9 +2595,6 @@
     "Crashed Thread: %lld" : {
 
     },
-    "Custom User Agent" : {
-
-    },
     "Custom..." : {
 
     },
@@ -2645,6 +2602,7 @@
 
     },
     "debug.caption" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -2837,9 +2795,6 @@
 
     },
     "Detected: %@" : {
-
-    },
-    "Developer Mode" : {
 
     },
     "Disguise ClassGod as another app in the Dock. The icon change takes effect immediately." : {
@@ -4111,9 +4066,6 @@
         }
       }
     },
-    "Force Incognito / Private Mode" : {
-
-    },
     "HACKER DESKTOP" : {
 
     },
@@ -4590,9 +4542,6 @@
         }
       }
     },
-    "Keep Window on Top" : {
-
-    },
     "lang.system" : {
 
     },
@@ -4654,22 +4603,13 @@
         }
       }
     },
-    "Leave empty to use browser default" : {
-
-    },
     "LIBRARY" : {
-
-    },
-    "List Divider" : {
 
     },
     "LIVE" : {
 
     },
     "Lock" : {
-
-    },
-    "Log Retention" : {
 
     },
     "Manage & switch browser tabs" : {
@@ -4849,9 +4789,6 @@
         }
       }
     },
-    "Maximize Behavior" : {
-
-    },
     "maximize.fill_screen" : {
 
     },
@@ -4862,9 +4799,6 @@
 
     },
     "MEM" : {
-
-    },
-    "Monitor Clipboard for URLs" : {
 
     },
     "Name" : {
@@ -5066,9 +5000,6 @@
 
     },
     "ON BATTERY" : {
-
-    },
-    "Particle Count" : {
 
     },
     "PAUSED" : {
@@ -5557,9 +5488,6 @@
     "Quick app switcher" : {
 
     },
-    "Remember Window Position" : {
-
-    },
     "Remove '%@' from your wallpaper library?" : {
 
     },
@@ -5570,6 +5498,9 @@
 
     },
     "Remove panic app \"%@\"?" : {
+
+    },
+    "Reset" : {
 
     },
     "Reset Size" : {
@@ -7280,6 +7211,7 @@
       }
     },
     "setting.debug_logging" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -9443,9 +9375,6 @@
     "SuperSwitch" : {
 
     },
-    "Suppress System Shortcut Conflicts" : {
-
-    },
     "Switch to %@" : {
 
     },
@@ -10635,9 +10564,6 @@
 
     },
     "Wallpaper Engine" : {
-
-    },
-    "When enabled, ClassGod will try to override system shortcuts that conflict with your chosen global shortcut. May require Accessibility permissions." : {
 
     },
     "Your PC ran into a problem and needs to restart." : {

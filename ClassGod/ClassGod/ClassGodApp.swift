@@ -49,6 +49,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // Initialize desktop wallpaper controller early so it can react to persisted state
+        _ = DesktopWallpaperController.shared
+        
         showSplashScreen()
 
         // Phase 1: Splash (2s) -> Phase 2: Chaos Animation -> Phase 3: Main Window
@@ -1039,6 +1042,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     // MARK: - Lifecycle
 
     func applicationWillTerminate(_ notification: Notification) {
+        DesktopWallpaperController.shared.hideWallpapers()
+        
         if let ref = showPopoverHotKeyRef {
             UnregisterEventHotKey(ref)
         }

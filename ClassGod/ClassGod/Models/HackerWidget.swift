@@ -16,6 +16,7 @@ enum WidgetType: String, Codable, CaseIterable, Identifiable {
     case battery = "battery"
     case tempSensors = "tempSensors"
     case systemInfo = "systemInfo"
+    case finderFile = "finderFile"
     
     var id: String { rawValue }
     
@@ -31,6 +32,7 @@ enum WidgetType: String, Codable, CaseIterable, Identifiable {
         case .battery:       return "Battery"
         case .tempSensors:   return "Temperature"
         case .systemInfo:    return "System Info"
+        case .finderFile:    return "File"
         }
     }
     
@@ -46,6 +48,7 @@ enum WidgetType: String, Codable, CaseIterable, Identifiable {
         case .battery:       return "battery.100"
         case .tempSensors:   return "thermometer.transmission"
         case .systemInfo:    return "info.circle"
+        case .finderFile:    return "doc"
         }
     }
     
@@ -61,6 +64,7 @@ enum WidgetType: String, Codable, CaseIterable, Identifiable {
         case .battery:       return CGSize(width: 160, height: 100)
         case .tempSensors:   return CGSize(width: 180, height: 120)
         case .systemInfo:    return CGSize(width: 220, height: 160)
+        case .finderFile:    return CGSize(width: 100, height: 120)
         }
     }
     
@@ -76,6 +80,7 @@ enum WidgetType: String, Codable, CaseIterable, Identifiable {
         case .battery:       return CGSize(width: 120, height: 80)
         case .tempSensors:   return CGSize(width: 140, height: 90)
         case .systemInfo:    return CGSize(width: 180, height: 120)
+        case .finderFile:    return CGSize(width: 80, height: 100)
         }
     }
 }
@@ -90,6 +95,7 @@ struct HackerWidgetItem: Codable, Identifiable, Equatable {
     var title: String
     var refreshInterval: Double
     var isLocked: Bool
+    var filePath: String?
     
     init(
         id: UUID = UUID(),
@@ -100,7 +106,8 @@ struct HackerWidgetItem: Codable, Identifiable, Equatable {
         height: Double? = nil,
         title: String? = nil,
         refreshInterval: Double = 1.0,
-        isLocked: Bool = false
+        isLocked: Bool = false,
+        filePath: String? = nil
     ) {
         self.id = id
         self.type = type
@@ -112,5 +119,6 @@ struct HackerWidgetItem: Codable, Identifiable, Equatable {
         self.title = title ?? type.displayName
         self.refreshInterval = refreshInterval
         self.isLocked = isLocked
+        self.filePath = filePath
     }
 }
