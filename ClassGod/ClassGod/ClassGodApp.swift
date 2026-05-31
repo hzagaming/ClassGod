@@ -35,6 +35,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var settingsWindow: NSWindow?
     var wallpaperBrowserWindow: NSWindow?
     var hackerDesktopWindow: NSWindow?
+    var errorHubWindow: NSWindow?
     var showPopoverCustomHotKeyID: UInt32?
 
     var splashWindow: NSWindow?
@@ -96,6 +97,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             self.setupBrowserBypasserWindow()
             self.setupAssessPrepHackWindow()
             self.setupSettingsWindow()
+            self.setupErrorHubWindow()
             if let window = self.mainWindow {
                 window.alphaValue = 0
                 window.orderBack(nil)
@@ -217,6 +219,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             self?.showWallpaperBrowserWindow()
         }, onOpenHackerDesktop: { [weak self] in
             self?.showHackerDesktopWindow()
+        }, onOpenErrorHub: { [weak self] in
+            self?.showErrorHubWindow()
         })
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Color.clear)
@@ -919,6 +923,103 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
+    // MARK: - Error Hub Window
+
+    private func setupErrorHubWindow() {
+        let prefs = PreferencesManager.shared.preferences
+        let zoom = CGFloat(prefs.windowZoomScale)
+        let size = NSSize(width: 520 * zoom, height: 600 * zoom)
+
+        let window = DraggableWindow(
+            contentRect: NSRect(origin: .zero, size: size),
+            styleMask: [.borderless],
+            backing: .buffered,
+            defer: false
+        )
+
+        window.level = windowLevel
+        window.backgroundColor = .clear
+        window.hasShadow = true
+        window.isMovableByWindowBackground = false
+        window.isReleasedWhenClosed = false
+        window.isOpaque = false
+
+        window.contentView?.wantsLayer = true
+        window.contentView?.layer?.cornerRadius = 12
+        window.contentView?.layer?.masksToBounds = true
+
+        if let main = mainWindow {
+            let mainFrame = main.frame
+            window.setFrameOrigin(NSPoint(x: mainFrame.midX - size.width / 2, y: mainFrame.midY - size.height / 2))
+        } else if let screen = NSScreen.main {
+            let screenFrame = screen.visibleFrame
+            let x = screenFrame.midX - size.width / 2
+            let y = screenFrame.midY - size.height / 2
+            window.setFrameOrigin(NSPoint(x: x, y: y))
+        }
+
+        let rootView = ErrorHubWindowView(onClose: { [weak self] in
+            self?.hideErrorHubWindow()
+        })
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Color.clear)
+            .overlay(WindowResizeHandles())
+
+        window.contentView = NSHostingView(rootView: rootView)
+
+        errorHubWindow = window
+    }
+
+    func showErrorHubWindow(animated: Bool = true) {
+        guard let window = errorHubWindow else {
+            setupErrorHubWindow()
+            showErrorHubWindow(animated: animated)
+            return
+        }
+
+        SoundEffectManager.shared.playWindowOpen(feature: "errorhub")
+
+        if animated {
+            window.alphaValue = 0
+            window.makeKeyAndOrderFront(nil)
+
+            NSAnimationContext.runAnimationGroup { context in
+                context.duration = 0.18
+                context.timingFunction = .init(name: .easeOut)
+                window.animator().alphaValue = targetWindowAlpha
+            }
+        } else {
+            window.makeKeyAndOrderFront(nil)
+        }
+    }
+
+    func hideErrorHubWindow() {
+        guard let window = errorHubWindow else { return }
+        SoundEffectManager.shared.playWindowClose(feature: "errorhub")
+
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = 0.12
+            context.timingFunction = .init(name: .easeIn)
+            window.animator().alphaValue = 0
+        } completionHandler: { [weak self] in
+            self?.errorHubWindow?.orderOut(nil)
+        }
+    }
+
+    @objc func toggleErrorHubWindow() {
+        guard let window = errorHubWindow else {
+            setupErrorHubWindow()
+            showErrorHubWindow(animated: true)
+            return
+        }
+
+        if window.isVisible && window.alphaValue > 0 {
+            hideErrorHubWindow()
+        } else {
+            showErrorHubWindow(animated: true)
+        }
+    }
+
     private func updateMainWindowSize() {
         guard let window = mainWindow else { return }
         let prefs = PreferencesManager.shared.preferences
@@ -1166,6 +1267,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         if let window = hackerDesktopWindow {
             window.orderOut(nil)
         }
+        if let window = errorHubWindow {
+            window.orderOut(nil)
+        }
     }
 
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
@@ -1282,9 +1386,10 @@ struct MenuBarWindowView: View {
     var onOpenSettings: () -> Void
     var onOpenWallpaper: () -> Void
     var onOpenHackerDesktop: () -> Void
+    var onOpenErrorHub: () -> Void = {}
     
     var body: some View {
-        MenuBarView(onClose: onClose, onOpenDestinTab: onOpenDestinTab, onOpenSuperSwitch: onOpenSuperSwitch, onOpenBrowserBypasser: onOpenBrowserBypasser, onOpenAssessPrepHack: onOpenAssessPrepHack, onOpenSettings: onOpenSettings, onOpenWallpaper: onOpenWallpaper, onOpenHackerDesktop: onOpenHackerDesktop)
+        MenuBarView(onClose: onClose, onOpenDestinTab: onOpenDestinTab, onOpenSuperSwitch: onOpenSuperSwitch, onOpenBrowserBypasser: onOpenBrowserBypasser, onOpenAssessPrepHack: onOpenAssessPrepHack, onOpenSettings: onOpenSettings, onOpenWallpaper: onOpenWallpaper, onOpenHackerDesktop: onOpenHackerDesktop, onOpenErrorHub: onOpenErrorHub)
     }
 }
 

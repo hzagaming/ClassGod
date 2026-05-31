@@ -17,6 +17,7 @@ struct MenuBarView: View {
     var onOpenSettings: () -> Void
     var onOpenWallpaper: () -> Void
     var onOpenHackerDesktop: () -> Void
+    var onOpenErrorHub: () -> Void
     
     private var zoomScale: CGFloat { CGFloat(prefs.preferences.windowZoomScale) }
     var body: some View {
@@ -68,6 +69,13 @@ struct MenuBarView: View {
                             title: "HackerDesktop",
                             description: "System monitor widgets dashboard",
                             action: onOpenHackerDesktop
+                        )
+                        
+                        FeatureButton(
+                            icon: "exclamationmark.triangle.fill",
+                            title: "Error Encyclopedia",
+                            description: "Search & solve all Swift/macOS errors",
+                            action: onOpenErrorHub
                         )
                     }
                     .padding()
@@ -232,5 +240,5 @@ struct FeatureButton: View {
 }
 
 #Preview {
-    MenuBarView(onClose: {}, onOpenDestinTab: {}, onOpenSuperSwitch: {}, onOpenBrowserBypasser: {}, onOpenAssessPrepHack: {}, onOpenSettings: {}, onOpenWallpaper: {}, onOpenHackerDesktop: {})
+    MenuBarView(onClose: {}, onOpenDestinTab: {}, onOpenSuperSwitch: {}, onOpenBrowserBypasser: {}, onOpenAssessPrepHack: {}, onOpenSettings: {}, onOpenWallpaper: {}, onOpenHackerDesktop: {}, onOpenErrorHub: {})
 }
