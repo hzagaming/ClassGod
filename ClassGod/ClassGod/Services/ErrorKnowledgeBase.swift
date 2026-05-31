@@ -74,29 +74,52 @@ final class ErrorKnowledgeBase {
     
     // MARK: - Load All Entries
     private func loadAllEntries() {
-        allEntries = swiftCompileErrors()
-            + swiftRuntimeErrors()
-            + swiftUIErrors()
-            + appKitErrors()
-            + xcodeBuildErrors()
-            + networkErrors()
-            + fileSystemErrors()
-            + permissionErrors()
-            + memoryErrors()
-            + concurrencyErrors()
-            + coreDataErrors()
-            + codeSigningErrors()
-            + widgetKitErrors()
-            + combineErrors()
-            + metalErrors()
-            + securityErrors()
-            + notificationErrors()
-            + audioVideoErrors()
-            + accessibilityErrors()
-            + localizationErrors()
-            + testingErrors()
-            + packageManagerErrors()
-            + generalErrors()
+        var entries: [ErrorEntry] = []
+        entries.append(contentsOf: swiftCompileErrors())
+        entries.append(contentsOf: swiftRuntimeErrors())
+        entries.append(contentsOf: swiftUIErrors())
+        entries.append(contentsOf: appKitErrors())
+        entries.append(contentsOf: xcodeBuildErrors())
+        entries.append(contentsOf: networkErrors())
+        entries.append(contentsOf: fileSystemErrors())
+        entries.append(contentsOf: permissionErrors())
+        entries.append(contentsOf: memoryErrors())
+        entries.append(contentsOf: concurrencyErrors())
+        entries.append(contentsOf: coreDataErrors())
+        entries.append(contentsOf: codeSigningErrors())
+        entries.append(contentsOf: widgetKitErrors())
+        entries.append(contentsOf: combineErrors())
+        entries.append(contentsOf: metalErrors())
+        entries.append(contentsOf: securityErrors())
+        entries.append(contentsOf: notificationErrors())
+        entries.append(contentsOf: audioVideoErrors())
+        entries.append(contentsOf: accessibilityErrors())
+        entries.append(contentsOf: localizationErrors())
+        entries.append(contentsOf: testingErrors())
+        entries.append(contentsOf: packageManagerErrors())
+        entries.append(contentsOf: generalErrors())
+        entries.append(contentsOf: moreSwiftRuntimeErrors())
+        entries.append(contentsOf: moreSwiftUIErrors())
+        entries.append(contentsOf: moreAppKitErrors())
+        entries.append(contentsOf: moreNetworkErrors())
+        entries.append(contentsOf: moreFileSystemErrors())
+        entries.append(contentsOf: morePermissionErrors())
+        entries.append(contentsOf: moreMemoryErrors())
+        entries.append(contentsOf: moreConcurrencyErrors())
+        entries.append(contentsOf: moreCoreDataErrors())
+        entries.append(contentsOf: moreCodeSigningErrors())
+        entries.append(contentsOf: moreWidgetKitErrors())
+        entries.append(contentsOf: moreCombineErrors())
+        entries.append(contentsOf: moreMetalErrors())
+        entries.append(contentsOf: moreSecurityErrors())
+        entries.append(contentsOf: moreNotificationErrors())
+        entries.append(contentsOf: moreAudioVideoErrors())
+        entries.append(contentsOf: moreAccessibilityErrors())
+        entries.append(contentsOf: moreLocalizationErrors())
+        entries.append(contentsOf: moreTestingErrors())
+        entries.append(contentsOf: moreSPMErrors())
+        entries.append(contentsOf: moreGeneralErrors())
+        allEntries = entries
     }
     
     // =========================================================================
@@ -7461,3 +7484,2418 @@ extension Array {
         return indices.contains(index) ? self[index] : nil
     }
 }
+
+    // =========================================================================
+    // MARK: - ADDITIONAL SWIFT RUNTIME ERRORS (Batch 2)
+    // =========================================================================
+    
+    private func moreSwiftRuntimeErrors() -> [ErrorEntry] {
+        return [
+            ErrorEntry(
+                category: .swiftRuntime,
+                severity: .critical,
+                title: "Fatal error: Array subscript out of range: index is negative",
+                errorCode: "Swift.Array.negativeIndex",
+                description: "Accessing an array with a negative index, which is always invalid.",
+                cause: "1. Int underflow in index calculation. 2. Signed integer arithmetic producing negative. 3. Invalid index from external source.",
+                solutions: [
+                    "Check index >= 0 before access",
+                    "Use UInt for indices if negative not possible",
+                    "Validate all external index inputs",
+                    "Use safe subscript with bounds checking",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Non-Negative Index",
+                        badCode: "let arr = [1, 2, 3]\nlet idx = -1\nprint(arr[idx])  // Crash",
+                        goodCode: "let idx = max(0, calculatedIndex)\nif let item = arr[safe: idx] {\n    print(item)\n}",
+                        explanation: "Array indices must be non-negative and less than count."
+                    ),
+                ],
+                relatedErrors: ["Fatal error: Index out of range"],
+                tags: ["array", "negative", "index", "crash", "runtime"],
+                appleDocURL: "https://docs.swift.org/swift-book/LanguageGuide/CollectionTypes.html",
+                commonInVersions: ["Swift 3.x", "Swift 4.x", "Swift 5.x"]
+            ),
+            ErrorEntry(
+                category: .swiftRuntime,
+                severity: .critical,
+                title: "Fatal error: String index out of bounds",
+                errorCode: "Swift.String.indexOutOfBounds",
+                description: "Accessing a String with an index that is not within the string's valid index range.",
+                cause: "1. Index from different string. 2. Index invalidated by mutation. 3. Offset beyond string length. 4. Empty string access.",
+                solutions: [
+                    "Use index(offsetBy:limitedBy:) for safe offset",
+                    "Check index >= startIndex && index < endIndex",
+                    "Regenerate indices after string mutation",
+                    "Use prefix/suffix instead of manual indexing",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Safe String Index",
+                        badCode: "let s = \"hi\"\nlet idx = s.index(s.startIndex, offsetBy: 10)\nprint(s[idx])  // Crash",
+                        goodCode: "if let idx = s.index(s.startIndex, offsetBy: 10, limitedBy: s.endIndex) {\n    print(s[idx])\n}",
+                        explanation: "Always validate string indices are within bounds."
+                    ),
+                ],
+                relatedErrors: ["Fatal error: String index is out of bounds"],
+                tags: ["string", "index", "bounds", "crash", "runtime"],
+                appleDocURL: "https://docs.swift.org/swift-book/LanguageGuide/StringsAndCharacters.html",
+                commonInVersions: ["Swift 4.x", "Swift 5.x"]
+            ),
+            ErrorEntry(
+                category: .swiftRuntime,
+                severity: .high,
+                title: "Fatal error: Remainder of division by zero",
+                errorCode: "Swift.Int.remainderReportingOverflow",
+                description: "The modulo/remainder operator (%) was used with a divisor of zero.",
+                cause: "1. x % 0 operation. 2. Calculated divisor becomes zero. 3. User input zero as divisor.",
+                solutions: [
+                    "Check divisor != 0 before modulo",
+                    "Use guard or precondition for zero check",
+                    "For random indices, ensure range is non-empty",
+                    "Handle zero gracefully with fallback",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Safe Modulo",
+                        badCode: "let result = 10 % 0  // Crash",
+                        goodCode: "let divisor = 0\nlet result = divisor == 0 ? 0 : 10 % divisor",
+                        explanation: "Always check divisor is non-zero before using modulo operator."
+                    ),
+                ],
+                relatedErrors: ["Fatal error: Division by zero"],
+                tags: ["modulo", "zero", "math", "crash", "runtime"],
+                appleDocURL: "https://docs.swift.org/swift-book/LanguageGuide/BasicOperators.html",
+                commonInVersions: ["Swift 3.x", "Swift 4.x", "Swift 5.x"]
+            ),
+            ErrorEntry(
+                category: .swiftRuntime,
+                severity: .high,
+                title: "Fatal error: shift amount is greater than or equal to type width in bits",
+                errorCode: "Swift.Int.shift",
+                description: "Bit shifting by an amount equal to or greater than the type's bit width is undefined.",
+                cause: "1. x << 64 on Int64. 2. Shift amount from calculation exceeding width. 3. Variable shift amount not bounded.",
+                solutions: [
+                    "Ensure shift amount < bit width (e.g., < 64 for Int64)",
+                    "Mask shift amount: amount & (width - 1)",
+                    "Use UInt8/UInt16 for small shifts",
+                    "Guard against large shift values",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Safe Shift",
+                        badCode: "let x: Int64 = 1\nlet result = x << 64  // Crash",
+                        goodCode: "let shift = min(63, requestedShift)\nlet result = x << shift",
+                        explanation: "Bit shifts must be less than the type's bit width."
+                    ),
+                ],
+                relatedErrors: ["EXC_BAD_INSTRUCTION"],
+                tags: ["bitshift", "overflow", "crash", "runtime"],
+                appleDocURL: "https://docs.swift.org/swift-book/LanguageGuide/AdvancedOperators.html",
+                commonInVersions: ["Swift 3.x", "Swift 4.x", "Swift 5.x"]
+            ),
+            ErrorEntry(
+                category: .swiftRuntime,
+                severity: .high,
+                title: "Fatal error: Dictionary<Key, Value>: duplicate key after mutation",
+                errorCode: "Swift.Dictionary.duplicateKeyAfterMutation",
+                description: "A dictionary's Hashable implementation is inconsistent, causing duplicate keys after mutation.",
+                cause: "1. Mutable property used in hash(into:). 2. hashValue changes after insertion. 3. Custom Hashable with inconsistent == and hash.",
+                solutions: [
+                    "Use only immutable properties in hash(into:)",
+                    "Ensure == and hash(into:) use same properties",
+                    "Don't mutate dictionary keys",
+                    "Use struct auto-synthesized Hashable",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Stable Hash",
+                        badCode: "class Key: Hashable {\n    var id = 0\n    func hash(into hasher: inout Hasher) { hasher.combine(id) }\n    static func == (l: Key, r: Key) -> Bool { l.id == r.id }\n}\nvar dict: [Key: String] = [:]\nlet k = Key()\ndict[k] = \"A\"\nk.id = 1  // Corrupts dictionary",
+                        goodCode: "struct Key: Hashable {\n    let id: Int  // Immutable hash property\n}",
+                        explanation: "Dictionary keys must have stable hash values. Use immutable properties for hashing."
+                    ),
+                ],
+                relatedErrors: ["Fatal error: Dictionary literal contains duplicate keys"],
+                tags: ["dictionary", "hashable", "crash", "runtime"],
+                appleDocURL: "https://docs.swift.org/swift-book/LanguageGuide/CollectionTypes.html",
+                commonInVersions: ["Swift 4.x", "Swift 5.x"]
+            ),
+            ErrorEntry(
+                category: .swiftRuntime,
+                severity: .critical,
+                title: "Fatal error: attempt to retain deallocated object",
+                errorCode: "Swift.retainDeallocated",
+                description: "An attempt was made to retain (increase reference count of) an already deallocated object.",
+                cause: "1. Unowned reference accessed after deallocation. 2. Weak reference force-unwrapped after nil. 3. C callback referencing deallocated Swift object. 4. Race condition in multi-threaded code.",
+                solutions: [
+                    "Use weak instead of unowned if object might deallocate",
+                    "Guard let self after weak capture",
+                    "Invalidate C callbacks on deallocation",
+                    "Use thread-safe reference counting patterns",
+                    "Check for retain cycles that delay deallocation",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Safe References",
+                        badCode: "class Owner {\n    unowned var item: Item  // Crash if item deallocates\n}",
+                        goodCode: "class Owner {\n    weak var item: Item?  // Safe: becomes nil\n}",
+                        explanation: "Use weak references for objects that might deallocate before the reference is accessed."
+                    ),
+                ],
+                relatedErrors: ["EXC_BAD_ACCESS", "Fatal error: Attempted to read an unowned reference"],
+                tags: ["retain", "deallocated", "memory", "crash", "runtime"],
+                appleDocURL: "https://docs.swift.org/swift-book/LanguageGuide/AutomaticReferenceCounting.html",
+                commonInVersions: ["Swift 4.x", "Swift 5.x"]
+            ),
+            ErrorEntry(
+                category: .swiftRuntime,
+                severity: .critical,
+                title: "Fatal error: Swift runtime failure: unsafeDowncast of incorrect type",
+                errorCode: "Swift.unsafeDowncast.type",
+                description: "unsafeDowncast was called with an object that is not actually of the target type.",
+                cause: "1. Wrong type assumption. 2. Type punning through AnyObject. 3. Invalid cast after dynamic type check failure.",
+                solutions: [
+                    "Use conditional cast as? instead of unsafeDowncast",
+                    "Verify type with is before casting",
+                    "Use guard let for safe downcasting",
+                    "Avoid unsafeDowncast in production code",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Safe Downcast",
+                        badCode: "let any: Any = \"hello\"\nlet s = unsafeDowncast(any, to: String.self)  // May crash",
+                        goodCode: "if let s = any as? String {\n    // Safe cast\n}",
+                        explanation: "Use conditional casting instead of unsafeDowncast for type safety."
+                    ),
+                ],
+                relatedErrors: ["Could not cast value of type"],
+                tags: ["unsafe", "downcast", "type", "crash", "runtime"],
+                appleDocURL: "https://docs.swift.org/swift-book/LanguageGuide/TypeCasting.html",
+                commonInVersions: ["Swift 4.x", "Swift 5.x"]
+            ),
+            ErrorEntry(
+                category: .swiftRuntime,
+                severity: .high,
+                title: "Fatal error: Swift runtime failure: enumerated type 'X' has no case named 'Y'",
+                errorCode: "Swift.enumCaseMissing",
+                description: "An enum case was accessed that doesn't exist in the enum definition.",
+                cause: "1. Raw value conversion to non-existent case. 2. Invalid raw value from external source. 3. Enum case removed but raw value still used.",
+                solutions: [
+                    "Validate raw values before conversion",
+                    "Use init?(rawValue:) for safe conversion",
+                    "Handle nil from failed raw value init",
+                    "Keep raw values stable across versions",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Safe Raw Value",
+                        badCode: "enum Status: Int { case active = 1 }\nlet s = Status(rawValue: 5)!  // Force unwrap nil -> crash",
+                        goodCode: "if let s = Status(rawValue: 5) {\n    // Valid case\n} else {\n    // Handle unknown\n}",
+                        explanation: "Always use optional binding for raw value enum initialization."
+                    ),
+                ],
+                relatedErrors: ["Fatal error: Unexpectedly found nil"],
+                tags: ["enum", "rawValue", "crash", "runtime"],
+                appleDocURL: "https://docs.swift.org/swift-book/LanguageGuide/Enumerations.html",
+                commonInVersions: ["Swift 3.x", "Swift 4.x", "Swift 5.x"]
+            ),
+            ErrorEntry(
+                category: .swiftRuntime,
+                severity: .high,
+                title: "Fatal error: Swift runtime failure: protocol witness table mismatch",
+                errorCode: "Swift.protocolWitnessMismatch",
+                description: "A type's protocol conformance doesn't match what the runtime expects, often due to binary incompatibility.",
+                cause: "1. Framework updated without recompiling client. 2. Binary incompatible changes. 3. Method signature changed in protocol.",
+                solutions: [
+                    "Clean build and rebuild all dependencies",
+                    "Ensure all frameworks are built with same Swift version",
+                    "Check for method signature changes in protocols",
+                    "For SPM, update and resolve packages",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Clean Rebuild",
+                        badCode: "// Binary incompatible framework",
+                        goodCode: "// Clean DerivedData, rebuild all targets\n// Ensure consistent Swift toolchain",
+                        explanation: "Protocol witness table mismatches usually require clean rebuilds of all components."
+                    ),
+                ],
+                relatedErrors: ["EXC_BAD_ACCESS"],
+                tags: ["protocol", "witness", "binary", "crash", "runtime"],
+                appleDocURL: "https://docs.swift.org/swift-book/LanguageGuide/Protocols.html",
+                commonInVersions: ["Swift 4.x", "Swift 5.x"]
+            ),
+        ]
+    }
+
+
+    // =========================================================================
+    // MARK: - ADDITIONAL SWIFTUI ERRORS (Batch 2)
+    // =========================================================================
+    
+    private func moreSwiftUIErrors() -> [ErrorEntry] {
+        return [
+            ErrorEntry(
+                category: .swiftUI,
+                severity: .high,
+                title: "SwiftUI: List row content must not generate zero views",
+                errorCode: "SwiftUI.ListZeroViews",
+                description: "A List row closure produced zero views, which is not allowed. Each row must contain at least one view.",
+                cause: "1. Conditional view where condition is false. 2. Empty Group or VStack. 3. Filtered ForEach with no results.",
+                solutions: [
+                    "Ensure each row produces at least one view",
+                    "Use EmptyView() as placeholder for conditional rows",
+                    "For filtered data, ensure non-empty results",
+                    "Use Group with if/else where both branches return views",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Non-Empty Row",
+                        badCode: "List {\n    if false {\n        Text(\"A\")\n    }  // Zero views\n}",
+                        goodCode: "List {\n    if condition {\n        Text(\"A\")\n    } else {\n        EmptyView()\n    }\n}",
+                        explanation: "Each List row must produce at least one view. Use EmptyView as fallback."
+                    ),
+                ],
+                relatedErrors: ["SwiftUI: List row content must not generate more than one view"],
+                tags: ["swiftui", "list", "row", "runtime"],
+                appleDocURL: "https://developer.apple.com/documentation/swiftui/list",
+                commonInVersions: ["Swift 5.x", "Swift 6.x"]
+            ),
+            ErrorEntry(
+                category: .swiftUI,
+                severity: .high,
+                title: "SwiftUI: Modifying state during view update, this will cause undefined behavior",
+                errorCode: "SwiftUI.StateMutationDuringUpdate",
+                description: "State was modified during view body evaluation, which can cause infinite loops.",
+                cause: "1. Mutating @State in body. 2. Mutating @State in computed property getter. 3. Side effects during view rendering.",
+                solutions: [
+                    "Never mutate state during body evaluation",
+                    "Move mutations to event handlers",
+                    "Use .task or .onAppear for initialization",
+                    "Use DispatchQueue.main.async to defer mutations",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Safe State Update",
+                        badCode: "var body: some View {\n    counter += 1  // NEVER do this\n    Text(\"\\(counter)\")\n}",
+                        goodCode: "var body: some View {\n    Text(\"\\(counter)\")\n        .onTapGesture {\n            counter += 1\n        }\n}",
+                        explanation: "Only mutate state in response to events, never during view rendering."
+                    ),
+                ],
+                relatedErrors: ["SwiftUI: cyclic dependency"],
+                tags: ["swiftui", "state", "mutation", "runtime"],
+                appleDocURL: "https://developer.apple.com/documentation/swiftui/state",
+                commonInVersions: ["Swift 5.x", "Swift 6.x"]
+            ),
+            ErrorEntry(
+                category: .swiftUI,
+                severity: .high,
+                title: "SwiftUI: Presenting view controller from detached view controller is discouraged",
+                errorCode: "SwiftUI.DetachedPresentation",
+                description: "Attempting to present a sheet or alert from a view that is not in the view hierarchy.",
+                cause: "1. Presenting from view not yet added. 2. Presenting from dismissed view. 3. Sheet modifier on wrong view level.",
+                solutions: [
+                    "Ensure view is in hierarchy before presenting",
+                    "Use .sheet on a view that is always visible",
+                    "For conditional sheets, bind to a stable parent view",
+                    "Check that the presenting view controller exists",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Stable Presentation",
+                        badCode: "Text(\"A\")\n    .sheet(isPresented: $show) { }  // May be detached",
+                        goodCode: "VStack {\n    Text(\"A\")\n}\n.sheet(isPresented: $show) { }  // Stable parent",
+                        explanation: "Attach sheet modifiers to stable parent views that are always in the hierarchy."
+                    ),
+                ],
+                relatedErrors: ["SwiftUI: sheet presentation failed"],
+                tags: ["swiftui", "sheet", "presentation", "runtime"],
+                appleDocURL: "https://developer.apple.com/documentation/swiftui/view/sheet",
+                commonInVersions: ["Swift 5.x", "Swift 6.x"]
+            ),
+            ErrorEntry(
+                category: .swiftUI,
+                severity: .medium,
+                title: "SwiftUI: The layout constraints still need update after sending updateConstraints to a view",
+                errorCode: "SwiftUI.LayoutConstraints",
+                description: "Auto Layout constraints are inconsistent or conflicting in a SwiftUI view using UIViewRepresentable.",
+                cause: "1. Conflicting constraints in representable. 2. Missing required constraints. 3. View size not properly configured.",
+                solutions: [
+                    "Check all constraints for conflicts",
+                    "Use NSLayoutConstraint.activate with proper priorities",
+                    "Set translatesAutoresizingMaskIntoConstraints = false",
+                    "For SwiftUI, prefer frame modifiers over constraints",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Valid Constraints",
+                        badCode: "nsView.widthAnchor.constraint(equalToConstant: 100).isActive = true\nnsView.widthAnchor.constraint(equalToConstant: 200).isActive = true  // Conflict",
+                        goodCode: "nsView.widthAnchor.constraint(equalToConstant: 100).isActive = true\nnsView.widthAnchor.constraint(greaterThanOrEqualToConstant: 50).isActive = true",
+                        explanation: "Ensure Auto Layout constraints are mutually satisfiable."
+                    ),
+                ],
+                relatedErrors: ["Unable to simultaneously satisfy constraints"],
+                tags: ["swiftui", "layout", "constraints", "runtime"],
+                appleDocURL: "https://developer.apple.com/documentation/swiftui/nsviewrepresentable",
+                commonInVersions: ["Swift 5.x", "Swift 6.x"]
+            ),
+            ErrorEntry(
+                category: .swiftUI,
+                severity: .high,
+                title: "SwiftUI: View.environmentObject(_:) can only be used with an instance of ObservableObject",
+                errorCode: "SwiftUI.EnvironmentObjectType",
+                description: "The type passed to environmentObject doesn't conform to ObservableObject.",
+                cause: "1. Passing non-ObservableObject type. 2. Missing ObservableObject conformance. 3. Protocol type not conforming.",
+                solutions: [
+                    "Make type conform to ObservableObject",
+                    "Use @Published for published properties",
+                    "For structs, use @Environment or @State instead",
+                    "Ensure ObservableObject conformance is declared",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "ObservableObject",
+                        badCode: "class Store { }  // Missing ObservableObject\nContentView()\n    .environmentObject(Store())",
+                        goodCode: "class Store: ObservableObject {\n    @Published var items: [Item] = []\n}\nContentView()\n    .environmentObject(Store())",
+                        explanation: "Types passed to environmentObject must conform to ObservableObject."
+                    ),
+                ],
+                relatedErrors: ["SwiftUI: ObservableObject missing"],
+                tags: ["swiftui", "environmentobject", "observableobject", "runtime"],
+                appleDocURL: "https://developer.apple.com/documentation/swiftui/environmentobject",
+                commonInVersions: ["Swift 5.x", "Swift 6.x"]
+            ),
+        ]
+    }
+
+
+    // =========================================================================
+    // MARK: - ADDITIONAL APPKIT ERRORS (Batch 2)
+    // =========================================================================
+    
+    private func moreAppKitErrors() -> [ErrorEntry] {
+        return [
+            ErrorEntry(
+                category: .appKit,
+                severity: .high,
+                title: "AppKit: NSResponder: -[NSResponder keyDown:] unrecognized selector sent to instance",
+                errorCode: "APPKIT_KEYDOWN_SELECTOR",
+                description: "A key event was sent to a responder that doesn't handle keyDown.",
+                cause: "1. First responder doesn't implement keyDown. 2. Responder chain broken. 3. Custom responder missing key event handling.",
+                solutions: [
+                    "Implement keyDown in custom responders",
+                    "Pass unhandled events to nextResponder",
+                    "Use NSWindow.makeFirstResponder for proper focus",
+                    "For SwiftUI, use onKeyPress or keyboardShortcut",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Handle Key Events",
+                        badCode: "class MyView: NSView {\n    // Missing keyDown override\n}",
+                        goodCode: "class MyView: NSView {\n    override func keyDown(with event: NSEvent) {\n        if event.keyCode == 53 {  // Escape\n            // Handle escape\n        } else {\n            super.keyDown(with: event)\n        }\n    }\n}",
+                        explanation: "Implement keyDown in custom responders or pass to super for default handling."
+                    ),
+                ],
+                relatedErrors: ["NSResponder event handling"],
+                tags: ["appkit", "key", "responder", "runtime"],
+                appleDocURL: "https://developer.apple.com/documentation/appkit/nsresponder",
+                commonInVersions: ["macOS 10.14+", "macOS 11+", "macOS 12+"]
+            ),
+            ErrorEntry(
+                category: .appKit,
+                severity: .high,
+                title: "AppKit: NSWindow: -[NSWindow _setContentViewController:] can only be used with a view controller that has a view",
+                errorCode: "APPKIT_VC_NO_VIEW",
+                description: "A view controller without a loaded view was set as content view controller.",
+                cause: "1. View controller's view not created. 2. loadView not implemented. 3. Nib not found for view controller.",
+                solutions: [
+                    "Override loadView to create view programmatically",
+                    "Ensure nib name matches controller class",
+                    "Set view before assigning as content view controller",
+                    "For SwiftUI, use NSHostingController",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Valid View Controller",
+                        badCode: "class EmptyVC: NSViewController { }\nwindow.contentViewController = EmptyVC()  // No view",
+                        goodCode: "class MyVC: NSViewController {\n    override func loadView() {\n        self.view = NSView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))\n    }\n}\nwindow.contentViewController = MyVC()",
+                        explanation: "View controllers must have a view before being assigned as content view controller."
+                    ),
+                ],
+                relatedErrors: ["NSViewController's view was unloaded"],
+                tags: ["appkit", "viewcontroller", "view", "runtime"],
+                appleDocURL: "https://developer.apple.com/documentation/appkit/nsviewcontroller",
+                commonInVersions: ["macOS 10.14+", "macOS 11+", "macOS 12+"]
+            ),
+            ErrorEntry(
+                category: .appKit,
+                severity: .high,
+                title: "AppKit: -[NSSplitViewController insertSplitViewItem:atIndex:] Split view item's view controller must have a view",
+                errorCode: "APPKIT_SPLIT_VC_NO_VIEW",
+                description: "A split view item was added with a view controller that has no view.",
+                cause: "1. View controller not initialized. 2. View not loaded. 3. Nib missing for view controller.",
+                solutions: [
+                    "Ensure view controller has view before adding",
+                    "Override loadView if no nib",
+                    "Use NSHostingController for SwiftUI views",
+                    "Verify view controller initialization",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Split View Item",
+                        badCode: "let item = NSSplitViewItem(viewController: EmptyVC())\nsplitViewController.insertSplitViewItem(item, at: 0)",
+                        goodCode: "let vc = MyVC()\nvc.loadView()  // Ensure view loaded\nlet item = NSSplitViewItem(viewController: vc)\nsplitViewController.insertSplitViewItem(item, at: 0)",
+                        explanation: "Split view items require view controllers with loaded views."
+                    ),
+                ],
+                relatedErrors: ["NSViewController view not loaded"],
+                tags: ["appkit", "splitview", "viewcontroller", "runtime"],
+                appleDocURL: "https://developer.apple.com/documentation/appkit/nssplitviewcontroller",
+                commonInVersions: ["macOS 10.14+", "macOS 11+", "macOS 12+"]
+            ),
+            ErrorEntry(
+                category: .appKit,
+                severity: .medium,
+                title: "AppKit: NSToolbarItem: item identifier 'X' is already in use",
+                errorCode: "APPKIT_TOOLBAR_DUPLICATE",
+                description: "A toolbar item identifier was used more than once in the same toolbar.",
+                cause: "1. Duplicate item identifiers. 2. Re-adding existing item. 3. Identifier string collision.",
+                solutions: [
+                    "Use unique identifiers for each toolbar item",
+                    "Check if item already exists before adding",
+                    "Use UUID for dynamic item identifiers",
+                    "Remove old item before adding new one with same ID",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Unique Identifiers",
+                        badCode: "toolbar.insertItem(withItemIdentifier: .toggleSidebar, at: 0)\ntoolbar.insertItem(withItemIdentifier: .toggleSidebar, at: 1)  // Duplicate",
+                        goodCode: "toolbar.insertItem(withItemIdentifier: .toggleSidebar, at: 0)\ntoolbar.insertItem(withItemIdentifier: .flexibleSpace, at: 1)",
+                        explanation: "Each toolbar item must have a unique identifier."
+                    ),
+                ],
+                relatedErrors: ["NSToolbar duplicate identifier"],
+                tags: ["appkit", "toolbar", "identifier", "runtime"],
+                appleDocURL: "https://developer.apple.com/documentation/appkit/nstoolbar",
+                commonInVersions: ["macOS 10.14+", "macOS 11+", "macOS 12+"]
+            ),
+            ErrorEntry(
+                category: .appKit,
+                severity: .high,
+                title: "AppKit: NSApplication: -[NSApplication runModalForWindow:] window is already modal",
+                errorCode: "APPKIT_ALREADY_MODAL",
+                description: "Attempting to show a modal window while another modal session is already active.",
+                cause: "1. Multiple modal dialogs shown. 2. Modal not ended before showing another. 3. Nested modal sessions.",
+                solutions: [
+                    "End current modal before starting new one",
+                    "Check if modal session exists",
+                    "Use sheets instead of modal windows",
+                    "Queue modal requests if needed",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "End Before Modal",
+                        badCode: "NSApp.runModal(for: window1)\nNSApp.runModal(for: window2)  // Already modal",
+                        goodCode: "NSApp.stopModal()\nwindow1.orderOut(nil)\nNSApp.runModal(for: window2)",
+                        explanation: "End current modal session before starting a new one."
+                    ),
+                ],
+                relatedErrors: ["Modal session still active"],
+                tags: ["appkit", "modal", "window", "runtime"],
+                appleDocURL: "https://developer.apple.com/documentation/appkit/nsapplication",
+                commonInVersions: ["macOS 10.14+", "macOS 11+", "macOS 12+"]
+            ),
+        ]
+    }
+
+    // =========================================================================
+    // MARK: - ADDITIONAL NETWORK ERRORS (Batch 2)
+    // =========================================================================
+    
+    private func moreNetworkErrors() -> [ErrorEntry] {
+        return [
+            ErrorEntry(
+                category: .network,
+                severity: .high,
+                title: "Error Domain=NSURLErrorDomain Code=-1006 'Could not find the specified host.'",
+                errorCode: "NSURLErrorCannotFindHost (-1006)",
+                description: "The DNS lookup failed to resolve the hostname.",
+                cause: "1. Typo in hostname. 2. DNS server unreachable. 3. Domain doesn't exist. 4. Network disconnected. 5. VPN/DNS configuration issue.",
+                solutions: [
+                    "Verify hostname spelling",
+                    "Check network connectivity",
+                    "Try IP address instead of hostname",
+                    "Check DNS settings",
+                    "For local development, use localhost or 127.0.0.1",
+                    "Check hosts file for incorrect entries",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Valid Host",
+                        badCode: "let url = URL(string: \"https://exmaple.com\")!  // Typo",
+                        goodCode: "let url = URL(string: \"https://example.com\")!",
+                        explanation: "Double-check hostnames for typos and ensure they resolve correctly."
+                    ),
+                ],
+                relatedErrors: ["NSURLErrorCannotConnectToHost (-1004)"],
+                tags: ["network", "dns", "host", "runtime"],
+                appleDocURL: "https://developer.apple.com/documentation/foundation/1508628-url_loading_system_error_codes",
+                commonInVersions: ["iOS 13+", "macOS 10.15+"]
+            ),
+            ErrorEntry(
+                category: .network,
+                severity: .high,
+                title: "Error Domain=NSURLErrorDomain Code=-1011 'There was a bad server response'",
+                errorCode: "NSURLErrorBadServerResponse (-1011)",
+                description: "The server returned a malformed or unexpected response.",
+                cause: "1. Invalid HTTP headers. 2. Corrupted response body. 3. Unexpected content type. 4. Server-side error generating response.",
+                solutions: [
+                    "Check response headers for anomalies",
+                    "Validate content type",
+                    "Log raw response for debugging",
+                    "Contact server team",
+                    "Implement response validation",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Validate Response",
+                        badCode: "let (data, _) = try await URLSession.shared.data(from: url)\nlet json = try JSONSerialization.jsonObject(with: data)  // May fail on bad response",
+                        goodCode: "let (data, response) = try await URLSession.shared.data(from: url)\nif let httpResponse = response as? HTTPURLResponse,\n   httpResponse.statusCode == 200,\n   httpResponse.mimeType == \"application/json\" {\n    let json = try JSONSerialization.jsonObject(with: data)\n}",
+                        explanation: "Validate HTTP response status and content type before parsing."
+                    ),
+                ],
+                relatedErrors: ["HTTP 500 Internal Server Error"],
+                tags: ["network", "server", "response", "runtime"],
+                appleDocURL: "https://developer.apple.com/documentation/foundation/1508628-url_loading_system_error_codes",
+                commonInVersions: ["iOS 13+", "macOS 10.15+"]
+            ),
+            ErrorEntry(
+                category: .network,
+                severity: .high,
+                title: "Error Domain=NSURLErrorDomain Code=-1012 'User cancelled the operation'",
+                errorCode: "NSURLErrorUserCancelledAuthentication (-1012)",
+                description: "The user cancelled an authentication challenge.",
+                cause: "1. User cancelled login dialog. 2. Auth challenge rejected. 3. Certificate trust cancelled.",
+                solutions: [
+                    "Handle cancellation gracefully",
+                    "Show user-friendly message",
+                    "Allow retry of authentication",
+                    "For cert validation, provide alternative access",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Handle Cancellation",
+                        badCode: "if let error = error {\n    showError(error)  // Shows confusing error for cancellation\n}",
+                        goodCode: "if let error = error as? URLError, error.code == .userCancelledAuthentication {\n    // User cancelled, no action needed\n} else if let error = error {\n    showError(error)\n}",
+                        explanation: "Distinguish user cancellation from actual errors."
+                    ),
+                ],
+                relatedErrors: ["NSURLErrorCancelled (-999)"],
+                tags: ["network", "auth", "cancel", "runtime"],
+                appleDocURL: "https://developer.apple.com/documentation/foundation/1508628-url_loading_system_error_codes",
+                commonInVersions: ["iOS 13+", "macOS 10.15+"]
+            ),
+            ErrorEntry(
+                category: .network,
+                severity: .high,
+                title: "Error Domain=NSURLErrorDomain Code=-1013 'User authentication required'",
+                errorCode: "NSURLErrorUserAuthenticationRequired (-1013)",
+                description: "The server requires authentication but none was provided.",
+                cause: "1. Missing auth header. 2. Expired session. 3. First time access to protected resource.",
+                solutions: [
+                    "Provide authentication credentials",
+                    "Implement login flow",
+                    "Use URLCredential for HTTP auth",
+                    "Store and refresh tokens",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Provide Credentials",
+                        badCode: "let task = URLSession.shared.dataTask(with: url)  // No auth",
+                        goodCode: "var request = URLRequest(url: url)\nrequest.setValue(\"Bearer \\(token)\", forHTTPHeaderField: \"Authorization\")\nlet task = URLSession.shared.dataTask(with: request)",
+                        explanation: "Include authentication headers for protected resources."
+                    ),
+                ],
+                relatedErrors: ["HTTP 401 Unauthorized"],
+                tags: ["network", "auth", "required", "runtime"],
+                appleDocURL: "https://developer.apple.com/documentation/foundation/1508628-url_loading_system_error_codes",
+                commonInVersions: ["iOS 13+", "macOS 10.15+"]
+            ),
+            ErrorEntry(
+                category: .network,
+                severity: .high,
+                title: "Error Domain=NSURLErrorDomain Code=-1017 'Cannot parse response'",
+                errorCode: "NSURLErrorCannotParseResponse (-1017)",
+                description: "The HTTP response could not be parsed.",
+                cause: "1. Malformed HTTP headers. 2. Invalid status line. 3. Non-HTTP response. 4. Proxy returning non-HTTP data.",
+                solutions: [
+                    "Check proxy settings",
+                    "Verify server returns valid HTTP",
+                    "Use HTTP proxy debugging tools",
+                    "Check for network interception",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Valid HTTP",
+                        badCode: "// Server returns plain text instead of HTTP",
+                        goodCode: "// Verify with curl -I http://example.com\n// Ensure proper HTTP response format",
+                        explanation: "Verify server returns properly formatted HTTP responses."
+                    ),
+                ],
+                relatedErrors: ["NSURLErrorBadServerResponse"],
+                tags: ["network", "parse", "http", "runtime"],
+                appleDocURL: "https://developer.apple.com/documentation/foundation/1508628-url_loading_system_error_codes",
+                commonInVersions: ["iOS 13+", "macOS 10.15+"]
+            ),
+        ]
+    }
+
+
+    // =========================================================================
+    // MARK: - ADDITIONAL FILE SYSTEM ERRORS (Batch 2)
+    // =========================================================================
+    
+    private func moreFileSystemErrors() -> [ErrorEntry] {
+        return [
+            ErrorEntry(
+                category: .fileSystem,
+                severity: .high,
+                title: "The file 'X' is too large to be opened.",
+                errorCode: "NSCocoaErrorDomain 6",
+                description: "A file exceeds the maximum size that can be opened or processed.",
+                cause: "1. File larger than available memory. 2. Exceeds system file size limit. 3. 32-bit integer overflow on file size.",
+                solutions: [
+                    "Use streaming APIs for large files",
+                    "Process file in chunks",
+                    "Use memory-mapped files",
+                    "Check file size before opening",
+                    "For images, use downsampled thumbnails",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Stream Large File",
+                        badCode: "let data = try Data(contentsOf: hugeFileURL)  // May exhaust memory",
+                        goodCode: "let handle = try FileHandle(forReadingFrom: hugeFileURL)\ndefer { handle.closeFile() }\nwhile let chunk = handle.readData(ofLength: 1024 * 1024), !chunk.isEmpty {\n    process(chunk)\n}",
+                        explanation: "Stream large files in chunks instead of loading entirely into memory."
+                    ),
+                ],
+                relatedErrors: ["Memory pressure warning"],
+                tags: ["filesystem", "large", "file", "runtime"],
+                appleDocURL: "https://developer.apple.com/documentation/foundation/filehandle",
+                commonInVersions: ["All versions"]
+            ),
+            ErrorEntry(
+                category: .fileSystem,
+                severity: .high,
+                title: "The file 'X' is locked.",
+                errorCode: "NSCocoaErrorDomain 8",
+                description: "A file is locked and cannot be modified.",
+                cause: "1. File locked by another application. 2. File system permissions. 3. Read-only media. 4. File flags set to immutable.",
+                solutions: [
+                    "Close other applications using the file",
+                    "Check file flags: chflags nouchange",
+                    "Copy to writable location",
+                    "Check disk permissions",
+                    "For read-only media, copy to disk first",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Handle Locked File",
+                        badCode: "try data.write(to: lockedURL)  // Throws",
+                        goodCode: "do {\n    try data.write(to: lockedURL)\n} catch let error as CocoaError where error.code == .fileWriteNoPermission {\n    let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!\n    let newURL = docs.appendingPathComponent(lockedURL.lastPathComponent)\n    try data.write(to: newURL)\n}",
+                        explanation: "Handle locked files by copying to writable locations or prompting user."
+                    ),
+                ],
+                relatedErrors: ["NSCocoaErrorDomain 513"],
+                tags: ["filesystem", "locked", "permission", "runtime"],
+                appleDocURL: "https://developer.apple.com/documentation/foundation/filemanager",
+                commonInVersions: ["All versions"]
+            ),
+            ErrorEntry(
+                category: .fileSystem,
+                severity: .high,
+                title: "The file 'X' couldn't be saved because the volume is read only.",
+                errorCode: "NSCocoaErrorDomain 12",
+                description: "Attempting to write to a read-only volume or disk.",
+                cause: "1. Read-only disk image. 2. DMG mounted read-only. 3. CD/DVD media. 4. Network share with read-only permissions.",
+                solutions: [
+                    "Copy to writable location first",
+                    "Remount with write permissions",
+                    "Check volume info with FileManager",
+                    "Save to Documents or Desktop instead",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Writable Location",
+                        badCode: "try data.write(to: readOnlyURL)",
+                        goodCode: "let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!\nlet writableURL = docs.appendingPathComponent(fileName)\ntry data.write(to: writableURL)",
+                        explanation: "Write to user-writable directories instead of read-only volumes."
+                    ),
+                ],
+                relatedErrors: ["NSCocoaErrorDomain 513"],
+                tags: ["filesystem", "readonly", "volume", "runtime"],
+                appleDocURL: "https://developer.apple.com/documentation/foundation/filemanager",
+                commonInVersions: ["All versions"]
+            ),
+            ErrorEntry(
+                category: .fileSystem,
+                severity: .medium,
+                title: "The file 'X' couldn't be opened because it isn't in the correct format.",
+                errorCode: "NSCocoaErrorDomain 259",
+                description: "A file's content doesn't match its expected format.",
+                cause: "1. Corrupted file. 2. Wrong file extension. 3. Unsupported format version. 4. File truncated.",
+                solutions: [
+                    "Validate file before parsing",
+                    "Try alternative parsers",
+                    "Check file signature/magic number",
+                    "Handle parse errors gracefully",
+                    "Allow user to select different file",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Validate Format",
+                        badCode: "let dict = try PropertyListSerialization.propertyList(from: data, format: nil) as! [String: Any]",
+                        goodCode: "guard let dict = try? PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any] else {\n    throw MyError.invalidFormat\n}",
+                        explanation: "Validate file format and handle parse failures gracefully."
+                    ),
+                ],
+                relatedErrors: ["NSCocoaErrorDomain 260"],
+                tags: ["filesystem", "format", "corrupt", "runtime"],
+                appleDocURL: "https://developer.apple.com/documentation/foundation/filemanager",
+                commonInVersions: ["All versions"]
+            ),
+        ]
+    }
+
+
+    // =========================================================================
+    // MARK: - ADDITIONAL PERMISSION ERRORS (Batch 2)
+    // =========================================================================
+    
+    private func morePermissionErrors() -> [ErrorEntry] {
+        return [
+            ErrorEntry(
+                category: .permissions,
+                severity: .high,
+                title: "This app has crashed because it attempted to access privacy-sensitive data without a usage description: NSCameraUsageDescription",
+                errorCode: "TCC_CAMERA_CRASH",
+                description: "The app tried to access the camera without providing the required NSCameraUsageDescription in Info.plist.",
+                cause: "1. Missing NSCameraUsageDescription. 2. Accessing AVCaptureDevice without description. 3. Info.plist not included in target.",
+                solutions: [
+                    "Add NSCameraUsageDescription to Info.plist",
+                    "Provide clear reason for camera access",
+                    "Request authorization before camera use",
+                    "Handle denied permission gracefully",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "xml",
+                        title: "Camera Description",
+                        badCode: "<!-- Missing NSCameraUsageDescription -->",
+                        goodCode: "<key>NSCameraUsageDescription</key>\n<string>This app uses the camera to scan QR codes.</string>",
+                        explanation: "All privacy-sensitive access requires a usage description in Info.plist."
+                    ),
+                ],
+                relatedErrors: ["TCC_CRASH"],
+                tags: ["permissions", "camera", "tcc", "crash", "runtime"],
+                appleDocURL: "https://developer.apple.com/documentation/bundleresources/information_property_list/protected_resources",
+                commonInVersions: ["iOS 10+", "macOS 10.14+"]
+            ),
+            ErrorEntry(
+                category: .permissions,
+                severity: .high,
+                title: "This app has crashed because it attempted to access privacy-sensitive data without a usage description: NSMicrophoneUsageDescription",
+                errorCode: "TCC_MIC_CRASH",
+                description: "The app tried to access the microphone without the required usage description.",
+                cause: "1. Missing NSMicrophoneUsageDescription. 2. Recording audio without permission. 3. Speech recognition without description.",
+                solutions: [
+                    "Add NSMicrophoneUsageDescription to Info.plist",
+                    "Explain why microphone access is needed",
+                    "Request AVAudioSession permission",
+                    "Handle denied state",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "xml",
+                        title: "Microphone Description",
+                        badCode: "<!-- Missing NSMicrophoneUsageDescription -->",
+                        goodCode: "<key>NSMicrophoneUsageDescription</key>\n<string>This app uses the microphone for voice recording.</string>",
+                        explanation: "Microphone access requires a usage description."
+                    ),
+                ],
+                relatedErrors: ["TCC_CAMERA_CRASH"],
+                tags: ["permissions", "microphone", "tcc", "crash", "runtime"],
+                appleDocURL: "https://developer.apple.com/documentation/bundleresources/information_property_list/protected_resources",
+                commonInVersions: ["iOS 10+", "macOS 10.14+"]
+            ),
+            ErrorEntry(
+                category: .permissions,
+                severity: .high,
+                title: "This app has crashed because it attempted to access privacy-sensitive data without a usage description: NSLocationWhenInUseUsageDescription",
+                errorCode: "TCC_LOCATION_CRASH",
+                description: "The app tried to access location without the required usage description.",
+                cause: "1. Missing NSLocationWhenInUseUsageDescription. 2. Missing NSLocationAlwaysUsageDescription for background. 3. CLLocationManager used without description.",
+                solutions: [
+                    "Add NSLocationWhenInUseUsageDescription",
+                    "Add NSLocationAlwaysAndWhenInUseUsageDescription for background",
+                    "Request location authorization",
+                    "Handle all authorization states",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "xml",
+                        title: "Location Description",
+                        badCode: "<!-- Missing location descriptions -->",
+                        goodCode: "<key>NSLocationWhenInUseUsageDescription</key>\n<string>This app uses your location to find nearby places.</string>\n<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>\n<string>This app uses your location for background tracking.</string>",
+                        explanation: "Location access requires both foreground and background descriptions."
+                    ),
+                ],
+                relatedErrors: ["TCC_CAMERA_CRASH"],
+                tags: ["permissions", "location", "tcc", "crash", "runtime"],
+                appleDocURL: "https://developer.apple.com/documentation/bundleresources/information_property_list/protected_resources",
+                commonInVersions: ["iOS 11+", "macOS 10.15+"]
+            ),
+            ErrorEntry(
+                category: .permissions,
+                severity: .high,
+                title: "kTCCServiceMediaLibrary: TCC deny prompt",
+                errorCode: "TCC_MUSIC_DENIED",
+                description: "User denied access to Apple Music/media library.",
+                cause: "1. User tapped Don't Allow. 2. Permission revoked in Settings. 3. Parental controls restricting access.",
+                solutions: [
+                    "Check MPMediaLibrary.authorizationStatus()",
+                    "Show instructions to enable in Settings",
+                    "Provide alternative without media library",
+                    "Handle restricted state (MDM/parental controls)",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Handle Denied",
+                        badCode: "MPMediaLibrary.requestAuthorization { _ in\n    // Load music regardless\n}",
+                        goodCode: "MPMediaLibrary.requestAuthorization { status in\n    switch status {\n    case .authorized:\n        loadMusic()\n    case .denied:\n        showSettingsAlert()\n    case .restricted:\n        showRestrictedAlert()\n    default:\n        break\n    }\n}",
+                        explanation: "Handle all authorization states including denied and restricted."
+                    ),
+                ],
+                relatedErrors: ["TCC_DENIED"],
+                tags: ["permissions", "music", "media", "runtime"],
+                appleDocURL: "https://developer.apple.com/documentation/mediaplayer",
+                commonInVersions: ["iOS 10+", "macOS 10.14+"]
+            ),
+        ]
+    }
+
+
+    // =========================================================================
+    // MARK: - ADDITIONAL MEMORY ERRORS (Batch 2)
+    // =========================================================================
+    
+    private func moreMemoryErrors() -> [ErrorEntry] {
+        return [
+            ErrorEntry(
+                category: .memory,
+                severity: .critical,
+                title: "Memory pressure: System is critically low on memory",
+                errorCode: "MEMORY_PRESSURE_CRITICAL",
+                description: "The system is critically low on RAM and aggressively terminating apps.",
+                cause: "1. Severe memory leak. 2. Loading extremely large assets. 3. Multiple apps consuming memory. 4. Background processes using RAM.",
+                solutions: [
+                    "Immediately release all caches",
+                    "Unload invisible view controllers",
+                    "Release large images and media",
+                    "Flush URLCache and NSCache",
+                    "Save state and prepare for termination",
+                    "Profile with Instruments to find root cause",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Critical Response",
+                        badCode: "// No memory pressure handling",
+                        goodCode: "NotificationCenter.default.addObserver(forName: NSApplication.didReceiveMemoryPressureNotification, object: nil, queue: .main) { _ in\n    imageCache.removeAllObjects()\n    URLCache.shared.removeAllCachedResponses()\n    // Unload non-visible content\n}",
+                        explanation: "Respond aggressively to critical memory pressure by releasing all non-essential resources."
+                    ),
+                ],
+                relatedErrors: ["Jetsam", "Terminated due to memory issue"],
+                tags: ["memory", "pressure", "critical", "crash", "runtime"],
+                appleDocURL: "https://developer.apple.com/documentation/uikit/app_and_environment/managing_your_app_s_life_cycle",
+                commonInVersions: ["All versions"]
+            ),
+            ErrorEntry(
+                category: .memory,
+                severity: .high,
+                title: "CGImage creation failed: Image is too large to process",
+                errorCode: "CG_IMAGE_TOO_LARGE",
+                description: "Attempting to create a CGImage that exceeds available memory or maximum dimensions.",
+                cause: "1. Extremely large image dimensions. 2. Insufficient memory for bitmap. 3. 32-bit dimension overflow. 4. Deep color space increasing size.",
+                solutions: [
+                    "Downsample before creating CGImage",
+                    "Use ImageIO for progressive loading",
+                    "Check dimensions before processing",
+                    "Use tiled rendering for large images",
+                    "Reduce color depth if possible",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Downsample First",
+                        badCode: "let image = UIImage(contentsOfFile: hugeImagePath)  // 10000x10000",
+                        goodCode: "func downsample(imageAt url: URL, to size: CGSize) -> UIImage {\n    let imageSourceOptions = [kCGImageSourceShouldCache: false] as CFDictionary\n    let imageSource = CGImageSourceCreateWithURL(url as CFURL, imageSourceOptions)!\n    let maxDimension = max(size.width, size.height)\n    let downsampleOptions = [\n        kCGImageSourceCreateThumbnailFromImageAlways: true,\n        kCGImageSourceThumbnailMaxPixelSize: maxDimension\n    ] as CFDictionary\n    let cgImage = CGImageSourceCreateThumbnailAtIndex(imageSource, 0, downsampleOptions)!\n    return UIImage(cgImage: cgImage)\n}",
+                        explanation: "Downsample large images before creating full bitmaps."
+                    ),
+                ],
+                relatedErrors: ["Jetsam", "Memory pressure warning"],
+                tags: ["memory", "cgimage", "large", "crash", "runtime"],
+                appleDocURL: "https://developer.apple.com/documentation/imageio",
+                commonInVersions: ["All versions"]
+            ),
+            ErrorEntry(
+                category: .memory,
+                severity: .high,
+                title: "Malloc: can't allocate region",
+                errorCode: "MALLOC_FAIL",
+                description: "The system could not allocate the requested memory region.",
+                cause: "1. Requesting too much memory at once. 2. Fragmented heap. 3. Address space exhaustion. 4. Resource limits.",
+                solutions: [
+                    "Allocate smaller chunks",
+                    "Use mmap for large allocations",
+                    "Free unused memory before allocating",
+                    "Use streaming instead of buffering",
+                    "Check ulimit on macOS",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Chunked Allocation",
+                        badCode: "let hugeArray = Array(repeating: 0, count: 1_000_000_000)  // May fail",
+                        goodCode: "processInChunks(totalSize: 1_000_000_000, chunkSize: 1_000_000) { chunk in\n    // Process each chunk\n}",
+                        explanation: "Process data in chunks instead of allocating huge contiguous blocks."
+                    ),
+                ],
+                relatedErrors: ["Jetsam", "EXC_RESOURCE"],
+                tags: ["memory", "malloc", "allocation", "crash", "runtime"],
+                appleDocURL: "https://developer.apple.com/documentation/xcode/diagnosing-memory-thread-and-crash-issues-early",
+                commonInVersions: ["All versions"]
+            ),
+            ErrorEntry(
+                category: .memory,
+                severity: .high,
+                title: "Retain cycle: Closure captures self strongly",
+                errorCode: "RETAIN_CYCLE_CLOSURE",
+                description: "A closure captures self strongly, preventing deallocation and causing a memory leak.",
+                cause: "1. Missing [weak self] in closure. 2. self.property accessed without weak. 3. Nested closures each capturing self. 4. Delegate pattern with strong reference.",
+                solutions: [
+                    "Use [weak self] in all escaping closures",
+                    "Use [unowned self] only when self always exists",
+                    "Break cycles in deinit",
+                    "Use Instruments > Leaks to detect",
+                    "For delegates, always use weak",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Weak Capture",
+                        badCode: "network.request { result in\n    self.update(result)  // Strong retain cycle\n}",
+                        goodCode: "network.request { [weak self] result in\n    self?.update(result)\n}",
+                        explanation: "Always use weak self in closures that outlive the current scope."
+                    ),
+                ],
+                relatedErrors: ["Memory leak", "Object not deallocated"],
+                tags: ["memory", "retain cycle", "closure", "leak", "runtime"],
+                appleDocURL: "https://docs.swift.org/swift-book/LanguageGuide/AutomaticReferenceCounting.html",
+                commonInVersions: ["Swift 3.x", "Swift 4.x", "Swift 5.x"]
+            ),
+        ]
+    }
+
+    // =========================================================================
+    // MARK: - ADDITIONAL CONCURRENCY ERRORS (Batch 2)
+    // =========================================================================
+    
+    private func moreConcurrencyErrors() -> [ErrorEntry] {
+        return [
+            ErrorEntry(
+                category: .concurrency,
+                severity: .critical,
+                title: "ThreadSanitizer: data race on var 'X' at address Y",
+                errorCode: "TSAN_DATA_RACE",
+                description: "Thread Sanitizer detected simultaneous unsynchronized access to a variable from multiple threads.",
+                cause: "1. Multiple threads reading/writing same variable. 2. No locks or atomics. 3. Race in singleton initialization. 4. Concurrent array/dictionary mutation.",
+                solutions: [
+                    "Use actors for shared mutable state",
+                    "Use NSLock or os_unfair_lock",
+                    "Use DispatchQueue for synchronization",
+                    "For simple counters, use atomic operations",
+                    "Use ThreadSafe wrappers",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Actor Protection",
+                        badCode: "var counter = 0\nDispatchQueue.concurrentPerform(iterations: 1000) { _ in\n    counter += 1  // Data race\n}",
+                        goodCode: "actor Counter {\n    private var value = 0\n    func increment() { value += 1 }\n    func get() -> Int { value }\n}",
+                        explanation: "Protect shared mutable state with actors or locks."
+                    ),
+                ],
+                relatedErrors: ["EXC_BAD_ACCESS"],
+                tags: ["concurrency", "data race", "thread sanitizer", "runtime"],
+                appleDocURL: "https://developer.apple.com/documentation/xcode/diagnosing-memory-thread-and-crash-issues-early",
+                commonInVersions: ["Swift 5.5+", "Swift 6.x"]
+            ),
+            ErrorEntry(
+                category: .concurrency,
+                severity: .high,
+                title: "Main Thread Checker: UI API called on background thread: -[NSView setNeedsDisplay:]",
+                errorCode: "MAIN_THREAD_UI_V2",
+                description: "A UIKit/AppKit method was called from a background thread.",
+                cause: "1. Network callback updating UI. 2. Background timer triggering UI update. 3. Async operation completion on background queue.",
+                solutions: [
+                    "Dispatch ALL UI updates to main thread",
+                    "Use @MainActor for UI methods",
+                    "For Combine, use .receive(on: DispatchQueue.main)",
+                    "For async/await, UI updates are implicit in SwiftUI",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Main Thread UI",
+                        badCode: "DispatchQueue.global().async {\n    self.label.stringValue = \"Done\"  // Background thread!\n}",
+                        goodCode: "DispatchQueue.global().async {\n    let result = compute()\n    DispatchQueue.main.async {\n        self.label.stringValue = result\n    }\n}",
+                        explanation: "Always dispatch UI updates to the main thread."
+                    ),
+                ],
+                relatedErrors: ["Main Thread Checker"],
+                tags: ["concurrency", "main thread", "ui", "runtime"],
+                appleDocURL: "https://developer.apple.com/documentation/xcode/diagnosing-memory-thread-and-crash-issues-early",
+                commonInVersions: ["All versions"]
+            ),
+            ErrorEntry(
+                category: .concurrency,
+                severity: .high,
+                title: "Deadlock: DispatchQueue.sync called on current queue",
+                errorCode: "DEADLOCK_SYNC",
+                description: "Calling sync on the same serial queue from within that queue causes a deadlock.",
+                cause: "1. sync called on current serial queue. 2. Nested sync on same queue. 3. Recursive synchronous dispatch.",
+                solutions: [
+                    "Use async instead of sync",
+                    "Use DispatchQueue.main.async",
+                    "Check current queue before sync",
+                    "Use withCheckedContinuation for async bridging",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Avoid Deadlock",
+                        badCode: "let queue = DispatchQueue(label: \"serial\")\nqueue.sync {\n    queue.sync { }  // Deadlock!\n}",
+                        goodCode: "let queue = DispatchQueue(label: \"serial\")\nqueue.async {\n    queue.async { }  // OK\n}",
+                        explanation: "Never call sync on a serial queue from within that same queue."
+                    ),
+                ],
+                relatedErrors: ["Hang", "Unresponsive"],
+                tags: ["concurrency", "deadlock", "sync", "runtime"],
+                appleDocURL: "https://developer.apple.com/documentation/dispatch",
+                commonInVersions: ["All versions"]
+            ),
+            ErrorEntry(
+                category: .concurrency,
+                severity: .high,
+                title: "Swift runtime failure: Reference to captured var in concurrently-executing code",
+                errorCode: "CONCURRENT_VAR_CAPTURE_V2",
+                description: "A variable captured by multiple concurrent tasks was mutated, causing a data race.",
+                cause: "1. Mutating var in concurrentPerform. 2. Modifying captured variable in async task. 3. Shared mutable state in TaskGroup.",
+                solutions: [
+                    "Use let instead of var for captured values",
+                    "Return values from tasks instead of mutating shared state",
+                    "Use actors for shared mutable state",
+                    "Use atomic operations if needed",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Safe Concurrent Capture",
+                        badCode: "var results: [String] = []\nawait withTaskGroup(of: Void.self) { group in\n    for i in 0..<10 {\n        group.addTask {\n            results.append(\"\\(i)\")  // Data race\n        }\n    }\n}",
+                        goodCode: "let results = await withTaskGroup(of: String.self) { group -> [String] in\n    for i in 0..<10 {\n        group.addTask { return \"\\(i)\" }\n    }\n    var collected: [String] = []\n    for await result in group {\n        collected.append(result)\n    }\n    return collected\n}",
+                        explanation: "Return values from tasks and combine them serially instead of mutating shared state."
+                    ),
+                ],
+                relatedErrors: ["TSAN_DATA_RACE"],
+                tags: ["concurrency", "capture", "var", "swift 6", "runtime"],
+                appleDocURL: "https://docs.swift.org/swift-book/LanguageGuide/Concurrency.html",
+                commonInVersions: ["Swift 5.5+", "Swift 6.x"]
+            ),
+        ]
+    }
+
+
+    // =========================================================================
+    // MARK: - ADDITIONAL CORE DATA ERRORS (Batch 2)
+    // =========================================================================
+    
+    private func moreCoreDataErrors() -> [ErrorEntry] {
+        return [
+            ErrorEntry(
+                category: .coreData,
+                severity: .high,
+                title: "Core Data: executeFetchRequest:error: nil context",
+                errorCode: "NSInvalidArgumentException",
+                description: "A fetch request was executed on a nil managed object context.",
+                cause: "1. Context not initialized. 2. Context set to nil after use. 3. Thread-local context not set.",
+                solutions: [
+                    "Ensure context is non-nil before fetching",
+                    "Use persistentContainer.viewContext",
+                    "For background, create new context",
+                    "Check context.concurrencyType matches usage",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Valid Context",
+                        badCode: "var context: NSManagedObjectContext?\nlet request = NSFetchRequest<Entity>(entityName: \"Entity\")\nlet results = try context!.fetch(request)  // Crash if nil",
+                        goodCode: "let context = persistentContainer.viewContext\nlet request = NSFetchRequest<Entity>(entityName: \"Entity\")\nlet results = try context.fetch(request)",
+                        explanation: "Always use a valid non-nil managed object context for Core Data operations."
+                    ),
+                ],
+                relatedErrors: ["Core Data: nil context"],
+                tags: ["coredata", "context", "nil", "runtime"],
+                appleDocURL: "https://developer.apple.com/documentation/coredata/nsmanagedobjectcontext",
+                commonInVersions: ["All versions"]
+            ),
+            ErrorEntry(
+                category: .coreData,
+                severity: .high,
+                title: "Core Data: Cannot delete object that has not been saved to a context",
+                errorCode: "NSInvalidArgumentException",
+                description: "Attempting to delete a managed object that hasn't been inserted into a context.",
+                cause: "1. Deleting transient object. 2. Object from different context. 3. Object already deleted.",
+                solutions: [
+                    "Insert object into context before deleting",
+                    "Check object.managedObjectContext != nil",
+                    "Ensure object is from correct context",
+                    "Handle already-deleted objects gracefully",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Valid Deletion",
+                        badCode: "let obj = Entity(context: context)\ncontext.delete(obj)  // OK\ncontext.delete(obj)  // Error: already deleted",
+                        goodCode: "if !obj.isDeleted, let ctx = obj.managedObjectContext {\n    ctx.delete(obj)\n}",
+                        explanation: "Only delete objects that are inserted in a valid context and not already deleted."
+                    ),
+                ],
+                relatedErrors: ["Core Data: object already deleted"],
+                tags: ["coredata", "delete", "context", "runtime"],
+                appleDocURL: "https://developer.apple.com/documentation/coredata/nsmanagedobjectcontext",
+                commonInVersions: ["All versions"]
+            ),
+            ErrorEntry(
+                category: .coreData,
+                severity: .high,
+                title: "Core Data: The operation couldn't be completed. (Cocoa error 1550.)",
+                errorCode: "NSManagedObjectValidationError (1550)",
+                description: "A managed object failed validation during save.",
+                cause: "1. Required relationship empty. 2. Delete rule violation. 3. Custom validation failed. 4. Minimum/maximum count violation.",
+                solutions: [
+                    "Check validation errors in error.userInfo",
+                    "Ensure all required relationships are set",
+                    "Validate min/max counts on relationships",
+                    "Implement validateForInsert/Update properly",
+                    "Check delete rules don't leave orphans",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Handle Validation",
+                        badCode: "try context.save()  // May throw validation error",
+                        goodCode: "do {\n    try context.save()\n} catch let error as NSError {\n    if let errors = error.userInfo[NSDetailedErrorsKey] as? [NSError] {\n        for err in errors {\n            print(\"Validation: \\(err.userInfo[NSValidationKeyErrorKey] ?? \"unknown\")\")\n        }\n    }\n}",
+                        explanation: "Inspect detailed validation errors to identify which properties or relationships failed."
+                    ),
+                ],
+                relatedErrors: ["NSValidationError (1560)"],
+                tags: ["coredata", "validation", "relationship", "runtime"],
+                appleDocURL: "https://developer.apple.com/documentation/coredata/nsvalidationerror",
+                commonInVersions: ["All versions"]
+            ),
+            ErrorEntry(
+                category: .coreData,
+                severity: .high,
+                title: "Core Data: The model used to open the store is incompatible with the one used to create the store",
+                errorCode: "NSPersistentStoreIncompatibleVersionHashError (134100)",
+                description: "The Core Data model has changed without a proper migration.",
+                cause: "1. Model version changed. 2. No mapping model. 3. Automatic migration disabled. 4. Heavyweight migration needed.",
+                solutions: [
+                    "Enable automatic migration",
+                    "Create mapping model for complex changes",
+                    "Version the data model",
+                    "For development, delete and recreate store",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Auto Migration",
+                        badCode: "let container = NSPersistentContainer(name: \"Model\")\ncontainer.loadPersistentStores { _, _ in }  // No migration config",
+                        goodCode: "let container = NSPersistentContainer(name: \"Model\")\nlet description = container.persistentStoreDescriptions.first\ndescription?.shouldMigrateStoreAutomatically = true\ndescription?.shouldInferMappingModelAutomatically = true\ncontainer.loadPersistentStores { _, _ in }",
+                        explanation: "Enable automatic lightweight migration or create explicit mapping models."
+                    ),
+                ],
+                relatedErrors: ["NSMigrationError"],
+                tags: ["coredata", "migration", "model", "runtime"],
+                appleDocURL: "https://developer.apple.com/documentation/coredata/migration_guide",
+                commonInVersions: ["All versions"]
+            ),
+        ]
+    }
+
+
+    // =========================================================================
+    // MARK: - ADDITIONAL CODE SIGNING ERRORS (Batch 2)
+    // =========================================================================
+    
+    private func moreCodeSigningErrors() -> [ErrorEntry] {
+        return [
+            ErrorEntry(
+                category: .codeSigning,
+                severity: .critical,
+                title: "Code Signing Error: Provisioning profile 'X' expired",
+                errorCode: "PROFILE_EXPIRED",
+                description: "The provisioning profile has expired and can no longer be used to sign apps.",
+                cause: "1. Profile valid for 1 year, expired. 2. Certificate revoked. 3. Device list changed. 4. Automatic signing failed to renew.",
+                solutions: [
+                    "Regenerate profile in Developer Portal",
+                    "Use automatic signing in Xcode",
+                    "Download updated profiles",
+                    "For distribution, create new App Store profile",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Renew Profile",
+                        badCode: "// Using expired profile",
+                        goodCode: "// Xcode > Preferences > Accounts > Download Manual Profiles\n// Or regenerate at developer.apple.com",
+                        explanation: "Provisioning profiles expire annually and must be renewed."
+                    ),
+                ],
+                relatedErrors: ["Identity used to sign no longer valid"],
+                tags: ["codesigning", "profile", "expired", "build"],
+                appleDocURL: "https://developer.apple.com/documentation/xcode/distributing-your-app",
+                commonInVersions: ["Xcode 12+", "Xcode 13+", "Xcode 14+", "Xcode 15+"]
+            ),
+            ErrorEntry(
+                category: .codeSigning,
+                severity: .critical,
+                title: "Code Signing Error: No valid signing identities (i.e. certificate and private key pair) matching the team ID were found",
+                errorCode: "NO_VALID_IDENTITIES",
+                description: "Xcode cannot find a valid signing certificate and private key pair for the selected team.",
+                cause: "1. Certificate not installed. 2. Private key missing. 3. Wrong team selected. 4. Certificate expired.",
+                solutions: [
+                    "Download certificate and private key",
+                    "Create new certificate in Developer Portal",
+                    "Check Keychain Access for valid certs",
+                    "Verify correct team is selected",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "bash",
+                        title: "Check Identities",
+                        badCode: "// No valid signing identity",
+                        goodCode: "security find-identity -v -p codesigning\n// Create new at developer.apple.com/account/resources/certificates/list",
+                        explanation: "Both certificate and private key must be present in Keychain for signing."
+                    ),
+                ],
+                relatedErrors: ["No signing certificate found"],
+                tags: ["codesigning", "identity", "certificate", "build"],
+                appleDocURL: "https://developer.apple.com/documentation/xcode/distributing-your-app",
+                commonInVersions: ["Xcode 12+", "Xcode 13+", "Xcode 14+", "Xcode 15+"]
+            ),
+            ErrorEntry(
+                category: .codeSigning,
+                severity: .high,
+                title: "Code Signing Error: The entitlements specified in your application's Code Signing Entitlements file do not match those specified in your provisioning profile",
+                errorCode: "ENTITLEMENT_MISMATCH_V2",
+                description: "The app's entitlements don't match the provisioning profile.",
+                cause: "1. Added capability without regenerating profile. 2. Different App ID. 3. Manual entitlement editing.",
+                solutions: [
+                    "Regenerate provisioning profile",
+                    "Ensure App ID matches exactly",
+                    "Check .entitlements file matches profile",
+                    "Disable and re-enable automatic signing",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "bash",
+                        title: "Check Entitlements",
+                        badCode: "// Profile doesn't include push notification entitlement",
+                        goodCode: "codesign -d --entitlements :- MyApp.app\nsecurity cms -D -i MyProfile.mobileprovision | plutil -p -",
+                        explanation: "Regenerate profiles after adding or removing capabilities."
+                    ),
+                ],
+                relatedErrors: ["Invalid entitlements"],
+                tags: ["codesigning", "entitlements", "profile", "build"],
+                appleDocURL: "https://developer.apple.com/documentation/xcode/adding-capabilities-to-your-app",
+                commonInVersions: ["Xcode 12+", "Xcode 13+", "Xcode 14+", "Xcode 15+"]
+            ),
+        ]
+    }
+
+    // =========================================================================
+    // MARK: - ADDITIONAL WIDGETKIT ERRORS (Batch 2)
+    // =========================================================================
+    
+    private func moreWidgetKitErrors() -> [ErrorEntry] {
+        return [
+            ErrorEntry(
+                category: .widgetKit,
+                severity: .high,
+                title: "WidgetKit: Timeline entries must be in chronological order",
+                errorCode: "WIDGET_TIMELINE_ORDER",
+                description: "Timeline entries must be sorted by date in ascending order.",
+                cause: "1. Entries not sorted. 2. Same date for multiple entries. 3. Date calculation error.",
+                solutions: [
+                    "Sort entries by date: entries.sort { $0.date < $1.date }",
+                    "Ensure unique dates or handle duplicates",
+                    "Use Calendar for reliable date math",
+                    "Validate entry order before returning",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Sorted Timeline",
+                        badCode: "let entries = [\n    Entry(date: now.addingTimeInterval(3600)),\n    Entry(date: now)  // Out of order\n]",
+                        goodCode: "var entries = [Entry(date: now), Entry(date: now.addingTimeInterval(3600))]\nentries.sort { $0.date < $1.date }",
+                        explanation: "Always sort timeline entries in ascending chronological order."
+                    ),
+                ],
+                relatedErrors: ["WidgetKit: invalid timeline"],
+                tags: ["widgetkit", "timeline", "widget", "runtime"],
+                appleDocURL: "https://developer.apple.com/documentation/widgetkit/timelineprovider",
+                commonInVersions: ["iOS 14+", "macOS 11+"]
+            ),
+            ErrorEntry(
+                category: .widgetKit,
+                severity: .high,
+                title: "WidgetKit: Widget family 'X' not supported by configuration",
+                errorCode: "WIDGET_FAMILY_UNSUPPORTED",
+                description: "The widget configuration doesn't support the requested widget family.",
+                cause: "1. Family not in supportedFamilies. 2. Platform-specific family on wrong platform.",
+                solutions: [
+                    "Add family to .supportedFamilies([...])",
+                    "Use conditional compilation for platform families",
+                    "Check widget size constraints per platform",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Supported Families",
+                        badCode: "StaticConfiguration(...) { }\n// Missing supportedFamilies",
+                        goodCode: "StaticConfiguration(...) { }\n.supportedFamilies([.systemSmall, .systemMedium, .systemLarge])",
+                        explanation: "Explicitly declare supported widget families."
+                    ),
+                ],
+                relatedErrors: ["WidgetKit: unsupported family"],
+                tags: ["widgetkit", "family", "widget", "runtime"],
+                appleDocURL: "https://developer.apple.com/documentation/widgetkit/widgetconfiguration",
+                commonInVersions: ["iOS 14+", "macOS 11+"]
+            ),
+            ErrorEntry(
+                category: .widgetKit,
+                severity: .medium,
+                title: "WidgetKit: Widget preview not available",
+                errorCode: "WIDGET_PREVIEW_UNAVAILABLE",
+                description: "The widget preview cannot be rendered.",
+                cause: "1. Preview missing required data. 2. App Group not accessible. 3. Widget crashing in preview.",
+                solutions: [
+                    "Provide preview data in previewContext",
+                    "Check App Group accessibility",
+                    "Use mock data for previews",
+                    "Ensure widget doesn't crash on empty data",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Widget Preview",
+                        badCode: "struct MyWidget_Previews: PreviewProvider {\n    static var previews: some View {\n        MyWidgetEntryView(entry: Entry(date: Date()))\n    }\n}",
+                        goodCode: "struct MyWidget_Previews: PreviewProvider {\n    static var previews: some View {\n        MyWidgetEntryView(entry: Entry(date: Date()))\n            .previewContext(WidgetPreviewContext(family: .systemSmall))\n    }\n}",
+                        explanation: "Use WidgetPreviewContext for proper preview rendering."
+                    ),
+                ],
+                relatedErrors: ["WidgetKit: preview error"],
+                tags: ["widgetkit", "preview", "widget", "runtime"],
+                appleDocURL: "https://developer.apple.com/documentation/widgetkit/previewing-widgets",
+                commonInVersions: ["iOS 17+", "macOS 14+"]
+            ),
+        ]
+    }
+
+
+    // =========================================================================
+    // MARK: - ADDITIONAL COMBINE ERRORS (Batch 2)
+    // =========================================================================
+    
+    private func moreCombineErrors() -> [ErrorEntry] {
+        return [
+            ErrorEntry(
+                category: .combine,
+                severity: .high,
+                title: "Combine: Cannot assign through subscript: subscription has been cancelled",
+                errorCode: "COMBINE_CANCELLED_ASSIGN",
+                description: "A Combine subscription was cancelled before the assignment could complete.",
+                cause: "1. Cancellable deallocated. 2. View disappeared, cancelling subscription. 3. Explicit cancellation before completion.",
+                solutions: [
+                    "Store cancellables in Set<AnyCancellable>",
+                    "Ensure store property outlives subscription",
+                    "For view-bound subscriptions, use .onReceive",
+                    "Check cancellable.isCancelled before operations",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Retain Subscription",
+                        badCode: "publisher.sink { value in\n    self.label = value\n}  // Not stored -> deallocated",
+                        goodCode: "private var cancellables = Set<AnyCancellable>()\npublisher\n    .sink { [weak self] value in\n        self?.label = value\n    }\n    .store(in: &cancellables)",
+                        explanation: "Always store subscriptions in a Set<AnyCancellable>."
+                    ),
+                ],
+                relatedErrors: ["Object has been deallocated"],
+                tags: ["combine", "cancellable", "subscription", "runtime"],
+                appleDocURL: "https://developer.apple.com/documentation/combine/anycancellable",
+                commonInVersions: ["iOS 13+", "macOS 10.15+"]
+            ),
+            ErrorEntry(
+                category: .combine,
+                severity: .high,
+                title: "Combine: Fatal error: Unexpectedly found nil while unwrapping in sink",
+                errorCode: "COMBINE_FORCE_UNWRAP",
+                description: "Force unwrapping a nil value in a Combine sink or map closure.",
+                cause: "1. Force unwrap in map. 2. Optional value not handled. 3. Data decoding failure force unwrapped.",
+                solutions: [
+                    "Use compactMap instead of map + force unwrap",
+                    "Use tryMap with error throwing",
+                    "Handle nil with replaceNil",
+                    "Use decode with catch for error recovery",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Safe Combine",
+                        badCode: "publisher\n    .map { $0.data }\n    .sink { data in\n        let json = try! JSONSerialization.jsonObject(with: data)  // Force try\n    }",
+                        goodCode: "publisher\n    .map { $0.data }\n    .decode(type: MyModel.self, decoder: JSONDecoder())\n    .catch { error in\n        Just(MyModel.fallback)\n    }\n    .sink { model in\n        // Use model safely\n    }",
+                        explanation: "Use Combine's error handling operators instead of force unwrap."
+                    ),
+                ],
+                relatedErrors: ["Fatal error: Unexpectedly found nil"],
+                tags: ["combine", "publisher", "sink", "runtime"],
+                appleDocURL: "https://developer.apple.com/documentation/combine",
+                commonInVersions: ["iOS 13+", "macOS 10.15+"]
+            ),
+            ErrorEntry(
+                category: .combine,
+                severity: .medium,
+                title: "Combine: Publisher cannot sync upstream values on the requested queue",
+                errorCode: "COMBINE_RECEIVE_QUEUE",
+                description: "A publisher tried to deliver values on a specific queue but the upstream doesn't support queue customization.",
+                cause: "1. Using .receive(on:) with @Published. 2. Expecting all publishers to respect receive(on:).",
+                solutions: [
+                    "Use .receive(on: DispatchQueue.main) for UI updates",
+                    "For @Published, values emit on the modifying thread",
+                    "Use CurrentValueSubject for explicit scheduling",
+                    "Avoid mixing publishers with different scheduling",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Proper Scheduling",
+                        badCode: "@Published var value: String = \"\"\n// Modifying from background -> emits on background",
+                        goodCode: "DispatchQueue.main.async {\n    self.value = result  // Emit on main thread\n}",
+                        explanation: "@Published emits on the thread that modifies the property. Dispatch to main for UI."
+                    ),
+                ],
+                relatedErrors: ["Modifying state during view update"],
+                tags: ["combine", "publisher", "queue", "runtime"],
+                appleDocURL: "https://developer.apple.com/documentation/combine",
+                commonInVersions: ["iOS 13+", "macOS 10.15+"]
+            ),
+        ]
+    }
+
+
+    // =========================================================================
+    // MARK: - ADDITIONAL METAL ERRORS (Batch 2)
+    // =========================================================================
+    
+    private func moreMetalErrors() -> [ErrorEntry] {
+        return [
+            ErrorEntry(
+                category: .metal,
+                severity: .critical,
+                title: "Metal: Failed to create MTLDevice",
+                errorCode: "MTL_DEVICE_FAIL",
+                description: "Metal could not initialize the GPU device.",
+                cause: "1. Simulator without Metal support. 2. VM without GPU passthrough. 3. macOS safe mode. 4. GPU driver issue.",
+                solutions: [
+                    "Check MTLCreateSystemDefaultDevice() != nil",
+                    "Fall back to CPU rendering",
+                    "Update macOS for latest GPU drivers",
+                    "For simulators, use supported features only",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Metal Availability",
+                        badCode: "let device = MTLCreateSystemDefaultDevice()!  // May crash",
+                        goodCode: "guard let device = MTLCreateSystemDefaultDevice() else {\n    // Fall back to CPU rendering\n    return\n}",
+                        explanation: "Always check Metal device availability and provide fallback."
+                    ),
+                ],
+                relatedErrors: ["MTLDevice not found"],
+                tags: ["metal", "gpu", "device", "runtime"],
+                appleDocURL: "https://developer.apple.com/documentation/metal",
+                commonInVersions: ["iOS 13+", "macOS 10.15+"]
+            ),
+            ErrorEntry(
+                category: .metal,
+                severity: .high,
+                title: "Metal: Shader compilation failed",
+                errorCode: "MTL_SHADER_COMPILE_FAIL",
+                description: "A Metal shader failed to compile.",
+                cause: "1. Syntax error in .metal file. 2. Metal 3 feature on Metal 2 hardware. 3. Missing #include.",
+                solutions: [
+                    "Check shader compilation logs",
+                    "Enable Metal Shader Validation",
+                    "Verify target OS supports shader features",
+                    "Compile shaders offline with metal command-line tools",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "metal",
+                        title: "Valid Shader",
+                        badCode: "kernel void badShader(texture2d<float> tex [[texture(0)]]) {\n    float4 c = tex.read(0);  // Missing coord type\n}",
+                        goodCode: "kernel void goodShader(texture2d<float> tex [[texture(0)]],\n                         uint2 gid [[thread_position_in_grid]]) {\n    float4 c = tex.read(gid);\n}",
+                        explanation: "Metal shaders must use correct types for all parameters."
+                    ),
+                ],
+                relatedErrors: ["Metal: pipeline creation failed"],
+                tags: ["metal", "shader", "compile", "runtime"],
+                appleDocURL: "https://developer.apple.com/documentation/metal/shader_authoring",
+                commonInVersions: ["iOS 13+", "macOS 10.15+"]
+            ),
+            ErrorEntry(
+                category: .metal,
+                severity: .high,
+                title: "Metal: Command buffer execution failed",
+                errorCode: "MTL_COMMAND_BUFFER_ERROR",
+                description: "A Metal command buffer failed to execute on the GPU.",
+                cause: "1. Out of GPU memory. 2. Invalid texture format. 3. Shader compilation error. 4. Buffer overflow.",
+                solutions: [
+                    "Check commandBuffer.status and error",
+                    "Enable Metal API Validation",
+                    "Reduce texture size or buffer count",
+                    "Split heavy GPU work into multiple command buffers",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Handle GPU Error",
+                        badCode: "commandBuffer.commit()\ncommandBuffer.waitUntilCompleted()  // No error check",
+                        goodCode: "commandBuffer.commit()\ncommandBuffer.waitUntilCompleted()\nif let error = commandBuffer.error {\n    print(\"GPU Error: \\(error)\")\n}",
+                        explanation: "Always check command buffer status and error after GPU execution."
+                    ),
+                ],
+                relatedErrors: ["Metal: validation error"],
+                tags: ["metal", "gpu", "command buffer", "runtime"],
+                appleDocURL: "https://developer.apple.com/documentation/metal/mtlcommandbuffer",
+                commonInVersions: ["iOS 13+", "macOS 10.15+"]
+            ),
+        ]
+    }
+
+
+    // =========================================================================
+    // MARK: - ADDITIONAL SECURITY ERRORS (Batch 2)
+    // =========================================================================
+    
+    private func moreSecurityErrors() -> [ErrorEntry] {
+        return [
+            ErrorEntry(
+                category: .security,
+                severity: .high,
+                title: "Keychain: errSecNotAvailable (-25291)",
+                errorCode: "errSecNotAvailable (-25291)",
+                description: "The keychain is not available, usually because the device is locked.",
+                cause: "1. Device locked. 2. Keychain locked. 3. No keychain access in current state.",
+                solutions: [
+                    "Use kSecAttrAccessibleAfterFirstUnlock for background access",
+                    "Defer keychain access until device is unlocked",
+                    "Handle unavailable state gracefully",
+                    "For critical data, prompt for unlock",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Accessible Keychain",
+                        badCode: "kSecAttrAccessible: kSecAttrAccessibleWhenUnlocked  // Not available when locked",
+                        goodCode: "kSecAttrAccessible: kSecAttrAccessibleAfterFirstUnlock  // Available in background",
+                        explanation: "Choose keychain accessibility based on when data needs to be accessible."
+                    ),
+                ],
+                relatedErrors: ["errSecInteractionNotAllowed"],
+                tags: ["security", "keychain", "unavailable", "runtime"],
+                appleDocURL: "https://developer.apple.com/documentation/security/keychain_services",
+                commonInVersions: ["All versions"]
+            ),
+            ErrorEntry(
+                category: .security,
+                severity: .high,
+                title: "Keychain: errSecAuthFailed (-25293)",
+                errorCode: "errSecAuthFailed (-25293)",
+                description: "Authentication failed, usually due to wrong passphrase or biometrics failure.",
+                cause: "1. Wrong password. 2. Biometrics failed. 3. User cancelled authentication. 4. Too many failed attempts.",
+                solutions: [
+                    "Prompt user to retry",
+                    "Fall back to password if biometrics fail",
+                    "Handle LAError cases",
+                    "Implement retry limits",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Handle Auth Failure",
+                        badCode: "let status = SecItemCopyMatching(query as CFDictionary, &result)\nif status != errSecSuccess {\n    // Generic error handling\n}",
+                        goodCode: "let status = SecItemCopyMatching(query as CFDictionary, &result)\nif status == errSecAuthFailed {\n    showBiometricRetryPrompt()\n}",
+                        explanation: "Handle authentication failures with appropriate user prompts."
+                    ),
+                ],
+                relatedErrors: ["errSecInteractionNotAllowed"],
+                tags: ["security", "keychain", "auth", "runtime"],
+                appleDocURL: "https://developer.apple.com/documentation/security/keychain_services",
+                commonInVersions: ["All versions"]
+            ),
+            ErrorEntry(
+                category: .security,
+                severity: .high,
+                title: "Keychain: errSecParam (-50)",
+                errorCode: "errSecParam (-50)",
+                description: "One or more parameters passed to a Keychain function are invalid.",
+                cause: "1. Nil required parameter. 2. Wrong data type in query. 3. Missing required attribute. 4. Invalid key size.",
+                solutions: [
+                    "Check all query parameters are non-nil",
+                    "Verify attribute types match expectations",
+                    "Ensure required attributes are present",
+                    "Use SecItemAdd/Copy matching documentation",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Valid Parameters",
+                        badCode: "let query: [String: Any] = [\n    kSecClass as String: kSecClassGenericPassword\n    // Missing kSecAttrAccount and kSecValueData\n]",
+                        goodCode: "let query: [String: Any] = [\n    kSecClass as String: kSecClassGenericPassword,\n    kSecAttrAccount as String: \"username\",\n    kSecValueData as String: \"password\".data(using: .utf8)!\n]",
+                        explanation: "Ensure all required Keychain query parameters are provided with correct types."
+                    ),
+                ],
+                relatedErrors: ["errSecItemNotFound"],
+                tags: ["security", "keychain", "param", "runtime"],
+                appleDocURL: "https://developer.apple.com/documentation/security/keychain_services",
+                commonInVersions: ["All versions"]
+            ),
+        ]
+    }
+
+    // =========================================================================
+    // MARK: - ADDITIONAL NOTIFICATION ERRORS (Batch 2)
+    // =========================================================================
+    
+    private func moreNotificationErrors() -> [ErrorEntry] {
+        return [
+            ErrorEntry(
+                category: .notification,
+                severity: .high,
+                title: "UserNotifications: Notification content extension failed to load",
+                errorCode: "UN_EXTENSION_FAIL",
+                description: "A notification content extension failed to load.",
+                cause: "1. Extension bundle ID mismatch. 2. Missing Info.plist configuration. 3. Extension memory limit exceeded.",
+                solutions: [
+                    "Verify extension bundle ID matches provisioning profile",
+                    "Check UNNotificationExtension category identifier",
+                    "Ensure extension Info.plist has NSExtension configuration",
+                    "Test extension memory usage - limit is typically 24MB",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Extension Config",
+                        badCode: "// Missing NSExtension in Info.plist",
+                        goodCode: "<key>NSExtension</key>\n<dict>\n    <key>NSExtensionPointIdentifier</key>\n    <string>com.apple.usernotifications.content-extension</string>\n    <key>NSExtensionAttributes</key>\n    <dict>\n        <key>UNNotificationExtensionCategory</key>\n        <string>myCategory</string>\n    </dict>\n</dict>",
+                        explanation: "Notification extensions require proper Info.plist configuration."
+                    ),
+                ],
+                relatedErrors: ["Extension not loaded"],
+                tags: ["notifications", "extension", "runtime"],
+                appleDocURL: "https://developer.apple.com/documentation/usernotificationsui",
+                commonInVersions: ["macOS 10.14+", "macOS 11+", "macOS 12+"]
+            ),
+            ErrorEntry(
+                category: .notification,
+                severity: .medium,
+                title: "UserNotifications: Notification request with identifier 'X' already exists",
+                errorCode: "UN_DUPLICATE_REQUEST",
+                description: "A notification request with the same identifier was already added.",
+                cause: "1. Same identifier used twice. 2. Re-adding pending notification. 3. Identifier collision.",
+                solutions: [
+                    "Use unique identifiers for each request",
+                    "Remove existing request before adding",
+                    "Use UUID for dynamic identifiers",
+                    "Check pending notifications before adding",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Unique Identifiers",
+                        badCode: "let request = UNNotificationRequest(identifier: \"reminder\", content: content, trigger: trigger)\nUNUserNotificationCenter.current().add(request)  // May duplicate",
+                        goodCode: "let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: trigger)\nUNUserNotificationCenter.current().add(request)",
+                        explanation: "Use unique identifiers to avoid duplicate notification requests."
+                    ),
+                ],
+                relatedErrors: ["UNErrorNotificationsNotAllowed"],
+                tags: ["notifications", "duplicate", "runtime"],
+                appleDocURL: "https://developer.apple.com/documentation/usernotifications",
+                commonInVersions: ["macOS 10.14+", "macOS 11+", "macOS 12+"]
+            ),
+        ]
+    }
+
+
+    // =========================================================================
+    // MARK: - ADDITIONAL AUDIO/VIDEO ERRORS (Batch 2)
+    // =========================================================================
+    
+    private func moreAudioVideoErrors() -> [ErrorEntry] {
+        return [
+            ErrorEntry(
+                category: .audioVideo,
+                severity: .high,
+                title: "AVFoundation: Cannot start capture session",
+                errorCode: "AVCAPTURE_SESSION_FAIL",
+                description: "AVCaptureSession failed to start running.",
+                cause: "1. Camera/mic permission denied. 2. No valid input device. 3. Session already running. 4. Invalid preset.",
+                solutions: [
+                    "Check and request camera/microphone permissions",
+                    "Verify input device is available",
+                    "Start session on background thread",
+                    "Check session.canSetSessionPreset",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Start Capture",
+                        badCode: "session.startRunning()  // On main thread - may hang",
+                        goodCode: "DispatchQueue.global(qos: .userInitiated).async {\n    self.session.startRunning()\n}",
+                        explanation: "Start capture session on a background thread."
+                    ),
+                ],
+                relatedErrors: ["AVCaptureSessionRuntimeErrorNotification"],
+                tags: ["video", "avfoundation", "capture", "runtime"],
+                appleDocURL: "https://developer.apple.com/documentation/avfoundation/avcapturesession",
+                commonInVersions: ["iOS 13+", "macOS 10.15+"]
+            ),
+            ErrorEntry(
+                category: .audioVideo,
+                severity: .high,
+                title: "AVFoundation: Failed to create asset reader",
+                errorCode: "AVASSET_READER_FAIL",
+                description: "AVAssetReader failed to initialize for reading media.",
+                cause: "1. Asset not playable. 2. Track not found. 3. Invalid time range. 4. DRM protected content.",
+                solutions: [
+                    "Check asset.isPlayable before creating reader",
+                    "Verify track exists with asset.tracks",
+                    "Validate time range is within asset duration",
+                    "Handle DRM-protected content separately",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Valid Reader",
+                        badCode: "let reader = try AVAssetReader(asset: asset)  // May fail",
+                        goodCode: "guard asset.isPlayable else { return }\nguard let reader = try? AVAssetReader(asset: asset) else {\n    handleError()\n    return\n}",
+                        explanation: "Validate asset playability before creating reader."
+                    ),
+                ],
+                relatedErrors: ["AVAssetExportSessionStatusFailed"],
+                tags: ["video", "avfoundation", "reader", "runtime"],
+                appleDocURL: "https://developer.apple.com/documentation/avfoundation/avassetreader",
+                commonInVersions: ["iOS 13+", "macOS 10.15+"]
+            ),
+            ErrorEntry(
+                category: .audioVideo,
+                severity: .high,
+                title: "AVFoundation: AVAudioSession setActive failed",
+                errorCode: "AVAUDIOSESSION_SETACTIVE_FAIL",
+                description: "AVAudioSession setActive failed, usually due to audio session conflicts.",
+                cause: "1. Another app has audio focus. 2. Category mismatch. 3. Options conflict with active session. 4. Interrupted by phone call.",
+                solutions: [
+                    "Handle AVAudioSessionInterruptionNotification",
+                    "Set correct category before activation",
+                    "Deactivate before changing categories",
+                    "Use .notifyOthersOnDeactivation option",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Handle Interruption",
+                        badCode: "try AVAudioSession.sharedInstance().setActive(true)  // May fail silently",
+                        goodCode: "do {\n    try AVAudioSession.sharedInstance().setActive(true)\n} catch {\n    print(\"Audio session activation failed: \\(error)\")\n}",
+                        explanation: "Handle audio session activation failures and interruptions."
+                    ),
+                ],
+                relatedErrors: ["AVAudioSessionErrorCodeCannotStartPlaying"],
+                tags: ["audio", "avfoundation", "session", "runtime"],
+                appleDocURL: "https://developer.apple.com/documentation/avfoundation/avaudiosession",
+                commonInVersions: ["iOS 13+", "macOS 10.15+"]
+            ),
+        ]
+    }
+
+
+    // =========================================================================
+    // MARK: - ADDITIONAL ACCESSIBILITY ERRORS (Batch 2)
+    // =========================================================================
+    
+    private func moreAccessibilityErrors() -> [ErrorEntry] {
+        return [
+            ErrorEntry(
+                category: .accessibility,
+                severity: .medium,
+                title: "Accessibility: VoiceOver focus trapping in custom view",
+                errorCode: "ACCESSIBILITY_FOCUS_TRAP",
+                description: "VoiceOver focus gets trapped in a custom view and cannot escape.",
+                cause: "1. Missing accessibilityElementDidBecomeFocused. 2. Incorrect accessibilityViewIsModal. 3. Custom focus management interfering with VoiceOver.",
+                solutions: [
+                    "Implement proper accessibility container",
+                    "Use UIAccessibilityContainer protocol",
+                    "Set accessibilityViewIsModal appropriately",
+                    "Test with VoiceOver enabled",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Accessible Container",
+                        badCode: "class TrapView: NSView { }  // No accessibility support",
+                        goodCode: "class AccessibleView: NSView {\n    override var isAccessibilityElement: Bool {\n        get { true }\n        set { }\n    }\n    override var accessibilityRole: NSAccessibility.Role {\n        .group\n    }\n}",
+                        explanation: "Implement proper accessibility support for custom views to avoid focus traps."
+                    ),
+                ],
+                relatedErrors: ["VoiceOver stuck"],
+                tags: ["accessibility", "voiceover", "focus", "runtime"],
+                appleDocURL: "https://developer.apple.com/documentation/appkit/accessibility",
+                commonInVersions: ["macOS 10.14+", "macOS 11+", "macOS 12+"]
+            ),
+            ErrorEntry(
+                category: .accessibility,
+                severity: .medium,
+                title: "Accessibility: AXIsProcessTrustedWithOptions returned false",
+                errorCode: "AX_NOT_TRUSTED",
+                description: "Accessibility permissions not granted for the app.",
+                cause: "1. App not in System Preferences > Security > Accessibility. 2. Permission revoked. 3. New binary signature.",
+                solutions: [
+                    "Prompt user to enable in System Preferences",
+                    "Use AXIsProcessTrustedWithOptions to check",
+                    "Provide fallback without accessibility features",
+                    "For sandboxed apps, use appropriate entitlements",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Check Trust",
+                        badCode: "// Assume accessibility is always available",
+                        goodCode: "let options = [kAXTrustedCheckOptionPrompt: true] as CFDictionary\nlet trusted = AXIsProcessTrustedWithOptions(options)\nif !trusted {\n    showAccessibilityInstructions()\n}",
+                        explanation: "Always check and request accessibility permissions before using accessibility APIs."
+                    ),
+                ],
+                relatedErrors: ["kAXErrorAPIDisabled"],
+                tags: ["accessibility", "trusted", "permission", "runtime"],
+                appleDocURL: "https://developer.apple.com/documentation/applicationservices/axuielement_h",
+                commonInVersions: ["macOS 10.14+", "macOS 11+", "macOS 12+"]
+            ),
+        ]
+    }
+
+
+    // =========================================================================
+    // MARK: - ADDITIONAL LOCALIZATION ERRORS (Batch 2)
+    // =========================================================================
+    
+    private func moreLocalizationErrors() -> [ErrorEntry] {
+        return [
+            ErrorEntry(
+                category: .localization,
+                severity: .medium,
+                title: "Localization: String key 'X' not found in table 'Y'",
+                errorCode: "LOCALIZATION_KEY_MISSING",
+                description: "A localized string key was not found in the specified strings table.",
+                cause: "1. Key missing in .strings file. 2. Wrong table name. 3. Bundle not found. 4. Table not included in target.",
+                solutions: [
+                    "Add missing key to all .strings files",
+                    "Check table name matches file name",
+                    "Ensure .strings files are in target",
+                    "Use NSLocalizedString with comment for discoverability",
+                    "Use genstrings to extract keys",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Localized String",
+                        badCode: "let title = NSLocalizedString(\"missing_key\", comment: \"\")  // Returns \"missing_key\"",
+                        goodCode: "let title = NSLocalizedString(\"welcome_title\", comment: \"Welcome screen title\")\n// Add to Localizable.strings:\n// \"welcome_title\" = \"Welcome\";",
+                        explanation: "Always define keys in all localized .strings files. Use comments for context."
+                    ),
+                ],
+                relatedErrors: ["Localization not found"],
+                tags: ["localization", "strings", "key", "runtime"],
+                appleDocURL: "https://developer.apple.com/documentation/foundation/nslocalizedstring",
+                commonInVersions: ["All versions"]
+            ),
+            ErrorEntry(
+                category: .localization,
+                severity: .medium,
+                title: "Localization: Format string argument mismatch",
+                errorCode: "LOCALIZATION_FORMAT_MISMATCH",
+                description: "The number or type of arguments doesn't match the format string.",
+                cause: "1. Wrong number of format specifiers. 2. Type mismatch (String vs Int). 3. Missing argument. 4. Extra argument.",
+                solutions: [
+                    "Match argument count to format specifiers",
+                    "Use correct format specifier for each type",
+                    "For Swift, prefer String.localizedStringWithFormat",
+                    "Validate format strings with all localizations",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Format Match",
+                        badCode: "// English: \"You have %d messages\"\nString(format: NSLocalizedString(\"message_count\", comment: \"\"), \"five\")  // Type mismatch",
+                        goodCode: "// English: \"You have %d messages\"\nString(format: NSLocalizedString(\"message_count\", comment: \"\"), count)",
+                        explanation: "Format arguments must match the format specifiers in type and count."
+                    ),
+                ],
+                relatedErrors: ["CocoaFormatStringError"],
+                tags: ["localization", "format", "strings", "runtime"],
+                appleDocURL: "https://developer.apple.com/documentation/foundation/nslocalizedstring",
+                commonInVersions: ["All versions"]
+            ),
+        ]
+    }
+
+
+    // =========================================================================
+    // MARK: - ADDITIONAL TESTING ERRORS (Batch 2)
+    // =========================================================================
+    
+    private func moreTestingErrors() -> [ErrorEntry] {
+        return [
+            ErrorEntry(
+                category: .testing,
+                severity: .high,
+                title: "XCTest: Asynchronous wait failed: Exceeded timeout of X seconds",
+                errorCode: "XCTEST_TIMEOUT",
+                description: "An async expectation timed out before being fulfilled.",
+                cause: "1. Expectation never fulfilled. 2. Operation taking longer than timeout. 3. Completion handler not called. 4. Wrong expectation count.",
+                solutions: [
+                    "Increase timeout for slow operations",
+                    "Ensure expectation is fulfilled on all paths",
+                    "Check for early returns that skip fulfillment",
+                    "Use XCTestExpectation with correct expectedFulfillmentCount",
+                    "For async/await, use await fulfillment(of:)",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Fulfill Expectation",
+                        badCode: "let exp = expectation(description: \"fetch\")\nfetch { result in\n    if case .success = result {\n        exp.fulfill()\n    }\n    // Missing fulfill on failure\n}\nwait(for: [exp], timeout: 5)",
+                        goodCode: "let exp = expectation(description: \"fetch\")\nfetch { result in\n    exp.fulfill()  // Always fulfill\n}\nwait(for: [exp], timeout: 5)",
+                        explanation: "Always fulfill expectations on all completion paths, including error paths."
+                    ),
+                ],
+                relatedErrors: ["XCTAssertEqual failed"],
+                tags: ["testing", "xctest", "timeout", "runtime"],
+                appleDocURL: "https://developer.apple.com/documentation/xctest/asynchronous_tests_and_expectations",
+                commonInVersions: ["All versions"]
+            ),
+            ErrorEntry(
+                category: .testing,
+                severity: .high,
+                title: "XCTest: XCTAssertNil failed - 'X' is not nil",
+                errorCode: "XCTEST_ASSERT_NIL_FAIL",
+                description: "An XCTAssertNil assertion failed because the value was not nil.",
+                cause: "1. Object not properly deallocated. 2. Weak reference still holding value. 3. Cleanup not executed. 4. Race condition in test.",
+                solutions: [
+                    "Ensure proper cleanup in tearDown",
+                    "Use weak references and check for nil after deallocation",
+                    "Add autoreleasepool if needed",
+                    "For delegates, nil them out in tearDown",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Verify Nil",
+                        badCode: "func testDeallocation() {\n    var obj: MyClass? = MyClass()\n    weak var weakRef = obj\n    obj = nil\n    // May fail if obj has strong references\n    XCTAssertNil(weakRef)\n}",
+                        goodCode: "func testDeallocation() {\n    var obj: MyClass? = MyClass()\n    weak var weakRef = obj\n    autoreleasepool {\n        obj = nil\n    }\n    XCTAssertNil(weakRef)\n}",
+                        explanation: "Use autoreleasepool and ensure all strong references are released before checking for nil."
+                    ),
+                ],
+                relatedErrors: ["XCTAssertNotNil failed"],
+                tags: ["testing", "xctest", "nil", "runtime"],
+                appleDocURL: "https://developer.apple.com/documentation/xctest",
+                commonInVersions: ["All versions"]
+            ),
+            ErrorEntry(
+                category: .testing,
+                severity: .medium,
+                title: "XCTest: Test case 'X' failed - No assertions",
+                errorCode: "XCTEST_NO_ASSERTIONS",
+                description: "A test method ran without making any assertions, which is usually a mistake.",
+                cause: "1. Empty test method. 2. All assertions in conditional that didn't execute. 3. Early return before assertions.",
+                solutions: [
+                    "Add meaningful assertions",
+                    "Use XCTAssertNoThrow for code that should not error",
+                    "Ensure conditional paths have assertions",
+                    "Remove empty test methods",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Add Assertions",
+                        badCode: "func testSomething() {\n    let result = calculate()\n    // No assertion\n}",
+                        goodCode: "func testSomething() {\n    let result = calculate()\n    XCTAssertEqual(result, expectedValue)\n}",
+                        explanation: "Every test should have at least one assertion that verifies expected behavior."
+                    ),
+                ],
+                relatedErrors: ["XCTest empty test"],
+                tags: ["testing", "xctest", "assertions", "runtime"],
+                appleDocURL: "https://developer.apple.com/documentation/xctest",
+                commonInVersions: ["All versions"]
+            ),
+        ]
+    }
+
+
+    // =========================================================================
+    // MARK: - ADDITIONAL SPM ERRORS (Batch 2)
+    // =========================================================================
+    
+    private func moreSPMErrors() -> [ErrorEntry] {
+        return [
+            ErrorEntry(
+                category: .packageManager,
+                severity: .high,
+                title: "Swift Package Manager: dependency 'X' could not be resolved",
+                errorCode: "SPM_RESOLVE_FAIL",
+                description: "SPM could not resolve a dependency, usually due to version conflicts.",
+                cause: "1. Incompatible version requirements. 2. Dependency graph conflict. 3. Git tag not found. 4. Package URL inaccessible.",
+                solutions: [
+                    "Check Package.resolved for pinned versions",
+                    "Use exact versions for conflicting packages",
+                    "Run swift package resolve --verbose",
+                    "Clear .build folder and re-resolve",
+                    "Check for transitive dependency conflicts",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Resolve Conflict",
+                        badCode: "// Package A requires Alamofire 5.0, Package B requires Alamofire 4.9",
+                        goodCode: "// In Package.swift, specify exact or compatible versions\n.package(url: \"https://github.com/Alamofire/Alamofire.git\", from: \"5.0.0\")\n// Or use branch/commit for direct control",
+                        explanation: "Ensure all dependencies have compatible version requirements."
+                    ),
+                ],
+                relatedErrors: ["SPM incompatible versions"],
+                tags: ["spm", "dependency", "resolve", "build"],
+                appleDocURL: "https://developer.apple.com/documentation/xcode/adding-package-dependencies-to-your-app",
+                commonInVersions: ["Xcode 12+", "Xcode 13+", "Xcode 14+", "Xcode 15+"]
+            ),
+            ErrorEntry(
+                category: .packageManager,
+                severity: .high,
+                title: "Swift Package Manager: target 'X' has overlapping sources with target 'Y'",
+                errorCode: "SPM_OVERLAPPING_SOURCES",
+                description: "Two SPM targets include the same source files.",
+                cause: "1. Same file referenced in multiple targets. 2. Glob patterns overlapping. 3. Shared code not extracted to separate target.",
+                solutions: [
+                    "Extract shared code into a separate target",
+                    "Remove duplicate file references",
+                    "Adjust source paths to be non-overlapping",
+                    "Use exclude to prevent overlap",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Separate Targets",
+                        badCode: "// Target A: path Sources, Target B: path Sources\n// Both include Shared.swift",
+                        goodCode: "// Create Shared target\n.target(name: \"Shared\", path: \"Sources/Shared\"),\n.target(name: \"App\", dependencies: [\"Shared\"], path: \"Sources/App\"),\n.target(name: \"Tests\", dependencies: [\"Shared\"], path: \"Tests\")",
+                        explanation: "Extract shared code into its own target to avoid source overlaps."
+                    ),
+                ],
+                relatedErrors: ["SPM duplicate target"],
+                tags: ["spm", "target", "sources", "build"],
+                appleDocURL: "https://developer.apple.com/documentation/xcode/creating-a-standalone-swift-package-with-xcode",
+                commonInVersions: ["Xcode 12+", "Xcode 13+", "Xcode 14+", "Xcode 15+"]
+            ),
+            ErrorEntry(
+                category: .packageManager,
+                severity: .medium,
+                title: "Swift Package Manager: package 'X' is using Swift tools version Y but Z is required",
+                errorCode: "SPM_TOOLS_VERSION",
+                description: "The Swift tools version in Package.swift doesn't match the required version for a dependency.",
+                cause: "1. Package uses newer SPM features. 2. Xcode version too old. 3. Tools version declaration mismatch.",
+                solutions: [
+                    "Update to newer Xcode",
+                    "Pin dependency to older compatible version",
+                    "Check Package.swift tools-version comment",
+                    "Use swift-tools-version that matches Xcode",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Tools Version",
+                        badCode: "// swift-tools-version:5.9  // Package requires 5.9\n// But Xcode only supports 5.7",
+                        goodCode: "// swift-tools-version:5.7  // Match minimum Xcode version\n// Or update Xcode to support 5.9",
+                        explanation: "Ensure swift-tools-version matches your Xcode capabilities or update Xcode."
+                    ),
+                ],
+                relatedErrors: ["SPM incompatible tools version"],
+                tags: ["spm", "tools version", "build"],
+                appleDocURL: "https://developer.apple.com/documentation/xcode/creating-a-standalone-swift-package-with-xcode",
+                commonInVersions: ["Xcode 12+", "Xcode 13+", "Xcode 14+", "Xcode 15+"]
+            ),
+        ]
+    }
+
+
+    // =========================================================================
+    // MARK: - ADDITIONAL GENERAL ERRORS (Batch 2)
+    // =========================================================================
+    
+    private func moreGeneralErrors() -> [ErrorEntry] {
+        return [
+            ErrorEntry(
+                category: .general,
+                severity: .high,
+                title: "dyld: Library not loaded: @rpath/X.framework/X",
+                errorCode: "DYLD_LIBRARY_NOT_LOADED",
+                description: "A dynamic library or framework failed to load at runtime.",
+                cause: "1. Framework not embedded in app bundle. 2. Runpath Search Paths incorrect. 3. Framework removed but still linked. 4. Architecture mismatch.",
+                solutions: [
+                    "Embed framework in app target (General > Frameworks)",
+                    "Add @executable_path/Frameworks to Runpath Search Paths",
+                    "Clean build folder and rebuild",
+                    "Check framework architectures match app",
+                    "For SPM packages, ensure product is library not executable",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "bash",
+                        title: "Embed Framework",
+                        badCode: "// Framework linked but not embedded",
+                        goodCode: "// Xcode > Target > General > Frameworks, Libraries... > Embed & Sign\n// Build Settings > Runpath Search Paths > @executable_path/Frameworks",
+                        explanation: "Dynamic frameworks must be both linked AND embedded in the app bundle."
+                    ),
+                ],
+                relatedErrors: ["dyld: Symbol not found"],
+                tags: ["dyld", "framework", "library", "runtime"],
+                appleDocURL: "https://developer.apple.com/documentation/xcode/embedding-frameworks-in-an-app",
+                commonInVersions: ["All versions"]
+            ),
+            ErrorEntry(
+                category: .general,
+                severity: .critical,
+                title: "dyld: Symbol not found: _OBJC_CLASS_$__X",
+                errorCode: "DYLD_SYMBOL_NOT_FOUND",
+                description: "A symbol (class, function, variable) referenced at runtime could not be found in any loaded library.",
+                cause: "1. Framework not linked. 2. Symbol removed in newer version. 3. Weak framework not available on device. 4. Name mangling mismatch.",
+                solutions: [
+                    "Link the framework containing the symbol",
+                    "Check symbol availability with @available",
+                    "For weak frameworks, handle missing symbols",
+                    "Clean build and re-link",
+                    "Check for Objective-C/Swift name mismatch",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Link Framework",
+                        badCode: "// Using ClassA from FrameworkB but FrameworkB not linked",
+                        goodCode: "// Xcode > Target > General > Frameworks, Libraries... > Add FrameworkB\n// Or in Package.swift: .product(name: \"FrameworkB\", package: \"PackageB\")",
+                        explanation: "All referenced symbols must come from linked frameworks or libraries."
+                    ),
+                ],
+                relatedErrors: ["dyld: Library not loaded"],
+                tags: ["dyld", "symbol", "linker", "runtime"],
+                appleDocURL: "https://developer.apple.com/documentation/xcode/linking-to-a-library-or-framework",
+                commonInVersions: ["All versions"]
+            ),
+            ErrorEntry(
+                category: .general,
+                severity: .critical,
+                title: "dyld: Image not found",
+                errorCode: "DYLD_IMAGE_NOT_FOUND",
+                description: "A dynamic library image could not be found at the expected path.",
+                cause: "1. Framework not copied to app bundle. 2. Incorrect install path. 3. Framework deleted after build. 4. Sandbox restriction.",
+                solutions: [
+                    "Verify framework exists in app bundle",
+                    "Check Framework Search Paths",
+                    "Ensure Copy Files build phase includes framework",
+                    "For embedded frameworks, use @rpath correctly",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "bash",
+                        title: "Check Bundle",
+                        badCode: "// Framework missing from .app bundle",
+                        goodCode: "ls MyApp.app/Contents/Frameworks/\n# Should contain all required frameworks",
+                        explanation: "Verify all required frameworks are present in the final app bundle."
+                    ),
+                ],
+                relatedErrors: ["dyld: Library not loaded"],
+                tags: ["dyld", "image", "framework", "runtime"],
+                appleDocURL: "https://developer.apple.com/documentation/xcode/embedding-frameworks-in-an-app",
+                commonInVersions: ["All versions"]
+            ),
+            ErrorEntry(
+                category: .general,
+                severity: .critical,
+                title: "EXC_CRASH (SIGKILL) - Termination Reason: Namespace RUNNINGBOARD, Code 0xdead10cc",
+                errorCode: "RUNNINGBOARD_0xdead10cc",
+                description: "The system killed the app for holding a file lock or SQLite lock while in the background.",
+                cause: "1. File lock held during background suspension. 2. SQLite WAL mode with open transaction. 3. Core Data context locked.",
+                solutions: [
+                    "Release file locks before entering background",
+                    "Close Core Data contexts on backgrounding",
+                    "Use beginBackgroundTask to finish operations",
+                    "Commit SQLite transactions before suspension",
+                    "Avoid long-running file operations in background",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Release Locks",
+                        badCode: "// Holding file lock while app goes to background",
+                        goodCode: "func applicationDidEnterBackground(_ application: UIApplication) {\n    backgroundTask = application.beginBackgroundTask {\n        // Clean up and release locks\n        self.saveContext()\n        self.closeFileHandles()\n        application.endBackgroundTask(self.backgroundTask)\n    }\n}",
+                        explanation: "Release all locks and finish I/O before app suspension."
+                    ),
+                ],
+                relatedErrors: ["Jetsam", "EXC_RESOURCE"],
+                tags: ["runningboard", "sigkill", "background", "runtime"],
+                appleDocURL: "https://developer.apple.com/documentation/uikit/app_and_environment/scenes/preparing_your_ui_to_run_in_the_background",
+                commonInVersions: ["iOS 13+", "macOS 11+"]
+            ),
+            ErrorEntry(
+                category: .general,
+                severity: .critical,
+                title: "EXC_CRASH (SIGKILL) - Termination Reason: Namespace SPRINGBOARD, Code 0x8badf00d",
+                errorCode: "SPRINGBOARD_0x8badf00d",
+                description: "The system killed the app for taking too long to launch or terminate (ate bad food).",
+                cause: "1. Main thread blocked during launch. 2. Synchronous network on launch. 3. Infinite loop in app delegate. 4. Heavy Core Data migration on launch.",
+                solutions: [
+                    "Move work off main thread during launch",
+                    "Use async initialization",
+                    "Defer heavy operations until after launch",
+                    "Profile launch with Instruments",
+                    "Implement state restoration efficiently",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Fast Launch",
+                        badCode: "func application(_ app: UIApplication, didFinishLaunchingWithOptions opts: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {\n    syncLoadData()  // Blocks main thread\n    return true\n}",
+                        goodCode: "func application(_ app: UIApplication, didFinishLaunchingWithOptions opts: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {\n    DispatchQueue.global().async {\n        self.loadData()\n    }\n    return true\n}",
+                        explanation: "Never block the main thread during app launch. Move heavy work to background."
+                    ),
+                ],
+                relatedErrors: ["Jetsam"],
+                tags: ["springboard", "sigkill", "launch", "runtime"],
+                appleDocURL: "https://developer.apple.com/documentation/uikit/app_and_environment/responding_to_the_launch_of_your_app",
+                commonInVersions: ["iOS 13+", "macOS 11+"]
+            ),
+            ErrorEntry(
+                category: .general,
+                severity: .high,
+                title: "EXC_RESOURCE RESOURCE_TYPE_MEMORY (limit=XXXX MB, unused=0x0)",
+                errorCode: "EXC_RESOURCE_MEMORY",
+                description: "The app exceeded its memory limit and was terminated.",
+                cause: "1. Memory leak. 2. Loading large assets. 3. Too many cached objects. 4. Unbounded collection growth.",
+                solutions: [
+                    "Profile memory with Instruments",
+                    "Implement cache size limits",
+                    "Release unused view controllers",
+                    "Use weak references to break retain cycles",
+                    "Downsample images before loading",
+                    "Respond to memory warnings",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Memory Management",
+                        badCode: "var cache: [String: UIImage] = [:]  // Grows unbounded",
+                        goodCode: "let cache = NSCache<NSString, UIImage>()\ncache.countLimit = 100\ncache.totalCostLimit = 50 * 1024 * 1024  // 50MB",
+                        explanation: "Use NSCache with limits instead of unbounded dictionaries."
+                    ),
+                ],
+                relatedErrors: ["Jetsam", "Memory pressure"],
+                tags: ["exc_resource", "memory", "jetsam", "runtime"],
+                appleDocURL: "https://developer.apple.com/documentation/xcode/diagnosing-memory-thread-and-crash-issues-early",
+                commonInVersions: ["iOS 13+", "macOS 11+"]
+            ),
+            ErrorEntry(
+                category: .general,
+                severity: .critical,
+                title: "EXC_RESOURCE RESOURCE_TYPE_CPU (limit=XX%, unused=0x0)",
+                errorCode: "EXC_RESOURCE_CPU",
+                description: "The app exceeded its CPU usage limit and was terminated, usually on background tasks.",
+                cause: "1. Background task using too much CPU. 2. Infinite loop. 3. Expensive computation on main thread. 4. Tight polling loop.",
+                solutions: [
+                    "Add sleep/yield in loops",
+                    "Move heavy work to background",
+                    "Use background task assertions for extended work",
+                    "Profile CPU usage with Instruments",
+                    "Implement throttling for repeated operations",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "CPU Throttling",
+                        badCode: "while isRunning {\n    processData()  // Tight loop, no yield\n}",
+                        goodCode: "while isRunning {\n    processData()\n    Thread.sleep(forTimeInterval: 0.01)  // Yield CPU\n}",
+                        explanation: "Add small delays in loops to prevent excessive CPU usage."
+                    ),
+                ],
+                relatedErrors: ["EXC_RESOURCE"],
+                tags: ["exc_resource", "cpu", "jetsam", "runtime"],
+                appleDocURL: "https://developer.apple.com/documentation/xcode/diagnosing-memory-thread-and-crash-issues-early",
+                commonInVersions: ["iOS 13+", "macOS 11+"]
+            ),
+        ]
+    }
