@@ -19,6 +19,8 @@ struct AddTabView: View {
     @State private var browser: BrowserType
     @State private var shortcutKey: String
     @State private var shortcutModifiers: UInt
+    @State private var tag: String
+    @State private var isPinned: Bool
     @State private var isRecording = false
     @State private var showConflictAlert = false
     @State private var shakeTrigger = false
@@ -34,6 +36,8 @@ struct AddTabView: View {
         _browser = State(initialValue: tab?.browser ?? Self.defaultBrowserForNewTab())
         _shortcutKey = State(initialValue: tab?.shortcutKey ?? "")
         _shortcutModifiers = State(initialValue: tab?.shortcutModifiers ?? 0)
+        _tag = State(initialValue: tab?.tag ?? "")
+        _isPinned = State(initialValue: tab?.isPinned ?? false)
     }
 
     var isEditing: Bool { tab != nil }
@@ -62,7 +66,7 @@ struct AddTabView: View {
                 .opacity(formOpacity)
         }
         .padding()
-        .frame(width: 420, height: 340)
+        .frame(width: 420, height: 400)
         .background(Color.black)
         .overlay(
             Rectangle()
@@ -133,6 +137,18 @@ struct AddTabView: View {
                 }
                 .pickerStyle(.segmented)
                 .colorMultiply(.white)
+
+                TextField("Tag (optional, e.g. work, dev)", text: $tag)
+                    .textFieldStyle(.plain)
+                    .padding(6)
+                    .background(Color(white: 0.1))
+                    .overlay(Rectangle().stroke(Color.white.opacity(0.15), lineWidth: 1))
+                    .foregroundStyle(.white)
+                    .font(.system(size: 12, design: .monospaced))
+
+                Toggle("Pin to top", isOn: $isPinned)
+                    .font(.system(size: 12, design: .monospaced))
+                    .toggleStyle(.switch)
             }
 
             Section(String(localized: "section.shortcut")) {
@@ -196,7 +212,7 @@ struct AddTabView: View {
 
     private func performSave() {
         let normalizedURL = normalizeURL(url)
-        let newTab = BrowserTab(
+        var newTab = BrowserTab(
             id: tab?.id ?? UUID(),
             title: title,
             url: normalizedURL,
@@ -205,6 +221,8 @@ struct AddTabView: View {
             shortcutModifiers: shortcutModifiers,
             createdAt: tab?.createdAt ?? Date()
         )
+        newTab.tag = tag
+        newTab.isPinned = isPinned
 
         if isEditing {
             viewModel.updateTab(newTab)

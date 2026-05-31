@@ -18,55 +18,57 @@ struct WallpaperBrowserView: View {
         GridItem(.adaptive(minimum: 96, maximum: 110), spacing: 10)
     ]
     
+    @ObservedObject private var prefs = PreferencesManager.shared
+    private var zoomScale: CGFloat { CGFloat(prefs.preferences.windowZoomScale) }
     var body: some View {
-        VStack(spacing: 0) {
+        VStack(spacing: 0 * zoomScale) {
             // Hacker title bar
-            HStack(spacing: 0) {
+            HStack(spacing: 0 * zoomScale) {
                 Button(action: {
                     SoundEffectManager.shared.playButtonClick()
                     onClose()
                 }) {
                     Image(systemName: "xmark")
-                        .font(.system(size: 10, weight: .bold))
+                        .font(.system(size: 10 * zoomScale, weight: .bold))
                         .foregroundStyle(.white.opacity(0.6))
-                        .frame(width: 24, height: 24)
+                        .frame(width: 24 * zoomScale, height: 24 * zoomScale)
                         .background(Color(white: 0.08))
                         .clipShape(Circle())
                 }
                 .buttonStyle(.plain)
-                .padding(.leading, 12)
+                .padding(.leading, 12 * zoomScale)
                 
                 Spacer()
                 
                 Text("Wallpaper Engine")
-                    .font(.system(size: 13, weight: .bold, design: .monospaced))
+                    .font(.system(size: 13 * zoomScale, weight: .bold, design: .monospaced))
                     .foregroundStyle(.white)
                 
                 Spacer()
                 
-                Color.clear.frame(width: 36, height: 24)
+                Color.clear.frame(width: 36 * zoomScale, height: 24 * zoomScale)
             }
-            .padding(.vertical, 8)
+            .padding(.vertical, 8 * zoomScale)
             .background(Color(white: 0.03))
             
             Divider().background(Color.white.opacity(0.1))
             
             // Main content
             ScrollView {
-                VStack(spacing: 14) {
+                VStack(spacing: 14 * zoomScale) {
                     nowPlayingSection
                     
                     Divider().background(Color.white.opacity(0.06))
                     
                     playlistSection
                 }
-                .padding(14)
+                .padding(14 * zoomScale)
             }
         }
         .background(Color.black)
         .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(Color.white.opacity(0.12), lineWidth: 1)
+            RoundedRectangle(cornerRadius: 12 * zoomScale)
+                .stroke(Color.white.opacity(0.12), lineWidth: 1 * zoomScale)
         )
         .fileImporter(
             isPresented: $showImportPanel,
@@ -95,120 +97,109 @@ struct WallpaperBrowserView: View {
         }
     }
     
-    // MARK: - Now Playing
-    
+    // MARK: - Now Playing Status
+
     private var nowPlayingSection: some View {
-        VStack(spacing: 10) {
-            // Preview with animated glow if active
-            ZStack {
-                // Glow effect when enabled
-                if engine.isEnabled {
-                    RoundedRectangle(cornerRadius: 10)
-                        .stroke(Color.cyan.opacity(0.25), lineWidth: 1.5)
-                        .blur(radius: engine.isPlaying ? 2 : 0)
-                        .frame(height: 130)
-                }
-                
-                ZStack {
-                    RoundedRectangle(cornerRadius: 10)
-                        .fill(Color(white: 0.04))
-                        .frame(height: 130)
-                    
-                    if let current = engine.currentWallpaper, current.fileExists {
-                        if current.type == .image, let nsImage = NSImage(contentsOf: current.fileURL!) {
-                            Image(nsImage: nsImage)
-                                .resizable()
-                                .aspectRatio(contentMode: .fill)
-                                .frame(height: 130)
-                                .clipShape(RoundedRectangle(cornerRadius: 10))
-                        } else {
-                            // Video placeholder with film icon
-                            ZStack {
-                                Image(systemName: "film.fill")
-                                    .font(.system(size: 36))
-                                    .foregroundStyle(.white.opacity(0.15))
-                                
-                                VStack(spacing: 4) {
-                                    Spacer()
-                                    Text(current.name)
-                                        .font(.system(size: 11, weight: .medium, design: .monospaced))
-                                        .foregroundStyle(.white.opacity(0.6))
-                                        .lineLimit(1)
-                                        .padding(.horizontal, 8)
-                                    
-                                    HStack(spacing: 4) {
-                                        Image(systemName: "play.rectangle.fill")
-                                            .font(.system(size: 8))
-                                        Text("VIDEO")
-                                            .font(.system(size: 8, weight: .bold, design: .monospaced))
-                                    }
-                                    .foregroundStyle(.cyan.opacity(0.7))
-                                    .padding(.bottom, 8)
-                                }
-                            }
+        VStack(spacing: 10 * zoomScale) {
+            // Status bar (no wallpaper preview — wallpaper is desktop-only)
+            HStack(spacing: 12 * zoomScale) {
+                // Type icon
+                Image(systemName: engine.currentWallpaper?.type.iconName ?? "photo")
+                    .font(.system(size: 14 * zoomScale))
+                    .foregroundStyle(engine.currentWallpaper != nil ? .cyan : .white.opacity(0.2))
+                    .frame(width: 32 * zoomScale, height: 32 * zoomScale)
+                    .background(Color(white: 0.06))
+                    .clipShape(RoundedRectangle(cornerRadius: 8 * zoomScale))
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(engine.currentWallpaper?.name ?? "No wallpaper selected")
+                        .font(.system(size: 12 * zoomScale, weight: .medium, design: .monospaced))
+                        .foregroundStyle(engine.currentWallpaper != nil ? .white : .white.opacity(0.3))
+                        .lineLimit(1)
+
+                    HStack(spacing: 6 * zoomScale) {
+                        // Status dot
+                        HStack(spacing: 4 * zoomScale) {
+                            Circle()
+                                .fill(statusColor)
+                                .frame(width: 5 * zoomScale, height: 5 * zoomScale)
+                            Text(statusText)
+                                .font(.system(size: 9 * zoomScale, weight: .bold, design: .monospaced))
                         }
-                        
-                        // Status badge
-                        VStack {
-                            HStack {
-                                Spacer()
-                                HStack(spacing: 4) {
-                                    Circle()
-                                        .fill(engine.isEnabled && engine.isPlaying ? Color.green : Color.red)
-                                        .frame(width: 6, height: 6)
-                                    Text(engine.isEnabled && engine.isPlaying ? "LIVE" : "PAUSED")
-                                        .font(.system(size: 8, weight: .bold, design: .monospaced))
-                                }
-                                .foregroundStyle(.white)
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 4)
-                                .background(Color.black.opacity(0.6))
-                                .clipShape(Capsule())
-                                .padding(8)
-                            }
-                            Spacer()
+                        .foregroundStyle(statusColor)
+
+                        if let current = engine.currentWallpaper {
+                            Text("·")
+                                .font(.system(size: 9 * zoomScale))
+                                .foregroundStyle(.white.opacity(0.2))
+                            Text(fileSizeString(current.fileURL))
+                                .font(.system(size: 9 * zoomScale, design: .monospaced))
+                                .foregroundStyle(.white.opacity(0.3))
                         }
-                    } else {
-                        emptyPreview
                     }
                 }
-                .overlay(
-                    RoundedRectangle(cornerRadius: 10)
-                        .stroke(Color.white.opacity(0.06), lineWidth: 1)
-                )
+
+                Spacer()
+
+                // Desktop badge
+                if engine.showOnDesktop && engine.isEnabled {
+                    HStack(spacing: 3 * zoomScale) {
+                        Image(systemName: "desktopcomputer")
+                            .font(.system(size: 8 * zoomScale))
+                        Text("DESKTOP")
+                            .font(.system(size: 8 * zoomScale, weight: .bold, design: .monospaced))
+                    }
+                    .foregroundStyle(.cyan.opacity(0.7))
+                    .padding(.horizontal, 8 * zoomScale)
+                    .padding(.vertical, 4 * zoomScale)
+                    .background(Color.cyan.opacity(0.08))
+                    .clipShape(Capsule())
+                    .overlay(
+                        Capsule()
+                            .stroke(Color.cyan.opacity(0.2), lineWidth: 1 * zoomScale)
+                    )
+                }
             }
-            
+            .padding(.horizontal, 12 * zoomScale)
+            .padding(.vertical, 10 * zoomScale)
+            .background(Color(white: 0.03))
+            .clipShape(RoundedRectangle(cornerRadius: 10 * zoomScale))
+            .overlay(
+                RoundedRectangle(cornerRadius: 10 * zoomScale)
+                    .stroke(engine.isEnabled ? Color.cyan.opacity(0.15) : Color.white.opacity(0.06), lineWidth: 1 * zoomScale)
+            )
+
             // Controls
-            HStack(spacing: 10) {
+            HStack(spacing: 10 * zoomScale) {
                 // Prev
                 ControlButton(icon: "backward.fill", size: 14) {
                     engine.previousWallpaper()
                     SoundEffectManager.shared.playWallpaperSwitched()
                 }
                 .disabled(engine.playlist.isEmpty)
-                
+
                 // Play/Pause
                 Button(action: {
                     SoundEffectManager.shared.playWallpaperPlayPause()
                     engine.togglePlayPause()
                 }) {
                     Image(systemName: engine.isPlaying ? "pause.circle.fill" : "play.circle.fill")
-                        .font(.system(size: 32))
+                        .font(.system(size: 32 * zoomScale))
                         .foregroundStyle(engine.currentWallpaper != nil ? .white : .white.opacity(0.2))
                         .shadow(color: engine.isPlaying ? Color.cyan.opacity(0.3) : Color.clear, radius: 8)
                 }
                 .buttonStyle(.plain)
                 .disabled(engine.currentWallpaper == nil)
-                
+
                 // Next
                 ControlButton(icon: "forward.fill", size: 14) {
                     engine.nextWallpaper()
                     SoundEffectManager.shared.playWallpaperSwitched()
                 }
                 .disabled(engine.playlist.isEmpty)
-                
+
                 Spacer()
-                
+
                 // Mute
                 ControlButton(
                     icon: engine.isMuted ? "speaker.slash.fill" : "speaker.wave.2.fill",
@@ -218,19 +209,21 @@ struct WallpaperBrowserView: View {
                     SoundEffectManager.shared.playButtonClick()
                     engine.toggleMute()
                 }
-                
-                // Volume
-                if engine.currentWallpaper?.type == .video {
-                    Slider(value: .init(
-                        get: { engine.volume },
-                        set: { engine.setVolume($0) }
-                    ), in: 0...1)
-                    .frame(width: 70)
-                    .controlSize(.small)
+
+                // Volume (always reserve space so layout doesn't jump)
+                HStack {
+                    if engine.currentWallpaper?.type == .video {
+                        Slider(value: .init(
+                            get: { engine.volume },
+                            set: { engine.setVolume($0) }
+                        ), in: 0...1)
+                        .controlSize(.small)
+                    }
                 }
-                
+                .frame(width: 70 * zoomScale)
+
                 Spacer()
-                
+
                 // Playback mode
                 ControlButton(icon: engine.playbackMode.iconName, size: 12, color: .white.opacity(0.5)) {
                     SoundEffectManager.shared.playButtonClick()
@@ -240,11 +233,11 @@ struct WallpaperBrowserView: View {
                     }
                 }
                 .help(engine.playbackMode.displayName)
-                
+
                 // Show on Desktop toggle
-                HStack(spacing: 4) {
+                HStack(spacing: 4 * zoomScale) {
                     Image(systemName: "desktopcomputer")
-                        .font(.system(size: 10))
+                        .font(.system(size: 10 * zoomScale))
                         .foregroundStyle(engine.showOnDesktop ? .cyan : .white.opacity(0.3))
                     Toggle("", isOn: .init(
                         get: { engine.showOnDesktop },
@@ -258,7 +251,7 @@ struct WallpaperBrowserView: View {
                 }
                 .disabled(!engine.isEnabled)
                 .help("Show wallpaper on macOS Desktop")
-                
+
                 // Enable toggle
                 Toggle("", isOn: .init(
                     get: { engine.isEnabled },
@@ -272,16 +265,19 @@ struct WallpaperBrowserView: View {
             }
         }
     }
-    
-    private var emptyPreview: some View {
-        VStack(spacing: 8) {
-            Image(systemName: "photo.on.rectangle.angled")
-                .font(.system(size: 32))
-                .foregroundStyle(.white.opacity(0.15))
-            Text("No wallpaper selected")
-                .font(.system(size: 11, design: .monospaced))
-                .foregroundStyle(.white.opacity(0.3))
-        }
+
+    private var statusColor: Color {
+        guard engine.currentWallpaper != nil else { return .white.opacity(0.25) }
+        if engine.isEnabled && engine.isPlaying { return .green }
+        if engine.isEnabled { return .orange }
+        return .white.opacity(0.3)
+    }
+
+    private var statusText: String {
+        guard engine.currentWallpaper != nil else { return "IDLE" }
+        if engine.isEnabled && engine.isPlaying { return "LIVE" }
+        if engine.isEnabled { return "PAUSED" }
+        return "OFF"
     }
     
     // MARK: - Playlist
@@ -290,34 +286,34 @@ struct WallpaperBrowserView: View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
                 Text("LIBRARY")
-                    .font(.system(size: 10, weight: .bold, design: .monospaced))
+                    .font(.system(size: 10 * zoomScale, weight: .bold, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.4))
                     .tracking(2)
                 
                 Spacer()
                 
                 Text("\(engine.playlist.count) item\(engine.playlist.count == 1 ? "" : "s")")
-                    .font(.system(size: 10, design: .monospaced))
+                    .font(.system(size: 10 * zoomScale, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.3))
                 
                 Button(action: {
                     SoundEffectManager.shared.playButtonClick()
                     showImportPanel = true
                 }) {
-                    HStack(spacing: 4) {
+                    HStack(spacing: 4 * zoomScale) {
                         Image(systemName: "plus")
-                            .font(.system(size: 10, weight: .bold))
+                            .font(.system(size: 10 * zoomScale, weight: .bold))
                         Text("Import")
-                            .font(.system(size: 11, weight: .bold, design: .monospaced))
+                            .font(.system(size: 11 * zoomScale, weight: .bold, design: .monospaced))
                     }
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 5)
+                    .padding(.horizontal, 10 * zoomScale)
+                    .padding(.vertical, 5 * zoomScale)
                     .background(Color.cyan.opacity(0.15))
                     .foregroundStyle(.cyan)
                     .clipShape(Capsule())
                     .overlay(
                         Capsule()
-                            .stroke(Color.cyan.opacity(0.3), lineWidth: 1)
+                            .stroke(Color.cyan.opacity(0.3), lineWidth: 1 * zoomScale)
                     )
                 }
                 .buttonStyle(.plain)
@@ -336,19 +332,19 @@ struct WallpaperBrowserView: View {
     }
     
     private var dropZone: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 8 * zoomScale) {
             Image(systemName: "arrow.down.circle")
-                .font(.system(size: 28))
+                .font(.system(size: 28 * zoomScale))
                 .foregroundStyle(.white.opacity(0.12))
             Text("Drop images or videos")
-                .font(.system(size: 11, design: .monospaced))
+                .font(.system(size: 11 * zoomScale, design: .monospaced))
                 .foregroundStyle(.white.opacity(0.25))
         }
-        .frame(maxWidth: .infinity, minHeight: 110)
+        .frame(maxWidth: .infinity, minHeight: 110 * zoomScale)
         .background(Color(white: 0.02))
-        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .clipShape(RoundedRectangle(cornerRadius: 8 * zoomScale))
         .overlay(
-            RoundedRectangle(cornerRadius: 8)
+            RoundedRectangle(cornerRadius: 8 * zoomScale)
                 .stroke(Color.white.opacity(0.06), style: StrokeStyle(lineWidth: 1, dash: [5, 4]))
         )
         .onDrop(of: [.fileURL], isTargeted: nil) { providers in
@@ -361,76 +357,83 @@ struct WallpaperBrowserView: View {
         let isSelected = engine.currentWallpaper?.id == item.id
         let isHovered = hoverItemID == item.id
         let sizeText = fileSizeString(item.fileURL)
-        
+
         return Button(action: {
             SoundEffectManager.shared.playWallpaperSwitched()
             engine.selectWallpaper(item)
         }) {
-            VStack(spacing: 4) {
+            VStack(spacing: 5 * zoomScale) {
+                // Thumbnail container — fixed aspect ratio, clipped
                 ZStack(alignment: .topTrailing) {
-                    // Thumbnail
-                    ZStack {
-                        RoundedRectangle(cornerRadius: 6)
-                            .fill(Color(white: 0.05))
-                            .aspectRatio(1, contentMode: .fit)
-                        
+                    RoundedRectangle(cornerRadius: 6 * zoomScale)
+                        .fill(Color(white: 0.05))
+
+                    // Image / placeholder — constrained to fill the square exactly
+                    Group {
                         if item.type == .image, let nsImage = NSImage(contentsOf: item.fileURL!) {
                             Image(nsImage: nsImage)
                                 .resizable()
                                 .aspectRatio(contentMode: .fill)
-                                .clipShape(RoundedRectangle(cornerRadius: 6))
                         } else {
                             ZStack {
                                 Image(systemName: item.type.iconName)
-                                    .font(.system(size: 22))
+                                    .font(.system(size: 22 * zoomScale))
                                     .foregroundStyle(.white.opacity(0.15))
                                 Image(systemName: "play.fill")
-                                    .font(.system(size: 10))
+                                    .font(.system(size: 10 * zoomScale))
                                     .foregroundStyle(.white.opacity(0.4))
                                     .offset(y: 14)
                             }
                         }
-                        
-                        // Type badge
-                        Image(systemName: item.type.iconName)
-                            .font(.system(size: 7, weight: .bold))
-                            .foregroundStyle(.white)
-                            .padding(3)
-                            .background(Color.black.opacity(0.55))
-                            .clipShape(Circle())
-                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
-                            .padding(4)
                     }
-                    
-                    // Delete button (on hover or always visible)
+                    .clipShape(RoundedRectangle(cornerRadius: 6 * zoomScale))
+
+                    // Type badge (inside bounds)
+                    Image(systemName: item.type.iconName)
+                        .font(.system(size: 7 * zoomScale, weight: .bold))
+                        .foregroundStyle(.white)
+                        .padding(3 * zoomScale)
+                        .background(Color.black.opacity(0.55))
+                        .clipShape(Circle())
+                        .padding(4 * zoomScale)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+
+                    // Delete button (inside bounds, no offset overflow)
                     Button(action: {
                         SoundEffectManager.shared.playButtonClick()
                         itemToDelete = item
                         showDeleteConfirmation = true
                     }) {
                         Image(systemName: "xmark")
-                            .font(.system(size: 7, weight: .bold))
+                            .font(.system(size: 7 * zoomScale, weight: .bold))
                             .foregroundStyle(.white)
-                            .frame(width: 16, height: 16)
+                            .frame(width: 16 * zoomScale, height: 16 * zoomScale)
                             .background(Color.red.opacity(0.85))
                             .clipShape(Circle())
                     }
                     .buttonStyle(.plain)
-                    .offset(x: 4, y: -4)
+                    .padding(4 * zoomScale)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                     .opacity(isHovered || isSelected ? 1 : 0)
                     .animation(.easeInOut(duration: 0.15), value: isHovered)
                 }
-                
-                Text(item.name)
-                    .font(.system(size: 9, design: .monospaced))
-                    .foregroundStyle(isSelected ? .cyan : .white.opacity(0.5))
-                    .lineLimit(1)
-                    .frame(maxWidth: .infinity, alignment: .center)
-                
-                Text(sizeText)
-                    .font(.system(size: 8, design: .monospaced))
-                    .foregroundStyle(.white.opacity(0.25))
-                    .lineLimit(1)
+                .aspectRatio(1, contentMode: .fit)
+                .clipShape(RoundedRectangle(cornerRadius: 6 * zoomScale))
+
+                // Name + size — fixed height to prevent vertical drift
+                VStack(spacing: 2 * zoomScale) {
+                    Text(item.name)
+                        .font(.system(size: 9 * zoomScale, design: .monospaced))
+                        .foregroundStyle(isSelected ? .cyan : .white.opacity(0.5))
+                        .lineLimit(1)
+                        .frame(maxWidth: .infinity, alignment: .center)
+
+                    Text(sizeText)
+                        .font(.system(size: 8 * zoomScale, design: .monospaced))
+                        .foregroundStyle(.white.opacity(0.25))
+                        .lineLimit(1)
+                }
+                .frame(height: 28, alignment: .top)
             }
         }
         .buttonStyle(.plain)
@@ -438,7 +441,7 @@ struct WallpaperBrowserView: View {
             hoverItemID = hovering ? item.id : nil
         }
         .overlay(
-            RoundedRectangle(cornerRadius: 8)
+            RoundedRectangle(cornerRadius: 8 * zoomScale)
                 .stroke(isSelected ? Color.cyan.opacity(0.5) : (isHovered ? Color.white.opacity(0.12) : Color.clear), lineWidth: isSelected ? 1.5 : 1)
                 .shadow(color: isSelected ? Color.cyan.opacity(0.2) : Color.clear, radius: 4)
         )
@@ -477,12 +480,11 @@ struct WallpaperBrowserView: View {
         let group = DispatchGroup()
         var importedURLs: [URL] = []
         let lock = NSLock()
-        
+
         for provider in providers {
             group.enter()
-            provider.loadItem(forTypeIdentifier: UTType.fileURL.identifier, options: nil) { item, _ in
-                if let data = item as? Data,
-                   let url = URL(dataRepresentation: data, relativeTo: nil) {
+            provider.loadObject(ofClass: NSURL.self) { item, _ in
+                if let url = item as? URL, url.isFileURL {
                     lock.lock()
                     importedURLs.append(url)
                     lock.unlock()
@@ -505,6 +507,8 @@ struct WallpaperBrowserView: View {
 // MARK: - Control Button
 
 struct ControlButton: View {
+    @ObservedObject private var prefs = PreferencesManager.shared
+    private var zoomScale: CGFloat { CGFloat(prefs.preferences.windowZoomScale) }
     let icon: String
     let size: CGFloat
     var color: Color = .white.opacity(0.7)
@@ -518,7 +522,7 @@ struct ControlButton: View {
             Image(systemName: icon)
                 .font(.system(size: size, weight: .semibold))
                 .foregroundStyle(color)
-                .frame(width: 28, height: 28)
+                .frame(width: 28 * zoomScale, height: 28 * zoomScale)
                 .background(isHovered ? Color(white: 0.12) : Color.clear)
                 .clipShape(Circle())
                 .scaleEffect(isPressed ? 0.88 : 1.0)

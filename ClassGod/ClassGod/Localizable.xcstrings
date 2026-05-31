@@ -7,7 +7,7 @@
     ":(" : {
 
     },
-    "%" : {
+    "·" : {
 
     },
     "%@ (Build %@)" : {
@@ -20,17 +20,7 @@
         }
       }
     },
-    "%@ / %@ GB" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@ / %2$@ GB"
-          }
-        }
-      }
-    },
-    "%d" : {
+    "%@:" : {
 
     },
     "%lld" : {
@@ -46,23 +36,10 @@
         }
       }
     },
-    "%lld MIN" : {
+    "%lld selected" : {
 
-    },
-    "%lld widget%@" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$lld widget%2$@"
-          }
-        }
-      }
     },
     "%lld%%" : {
-
-    },
-    "%lld°" : {
 
     },
     "0% complete" : {
@@ -359,6 +336,7 @@
       }
     },
     "accessibility.check_permission" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -721,9 +699,6 @@
     "Add Bypass Rule" : {
 
     },
-    "Add First Widget" : {
-
-    },
     "Add Panic App" : {
 
     },
@@ -733,10 +708,7 @@
     "Add Switch Target" : {
 
     },
-    "Add Widget" : {
-
-    },
-    "Add widgets to build your system dashboard" : {
+    "Add Task" : {
 
     },
     "add_tab.title" : {
@@ -796,6 +768,9 @@
           }
         }
       }
+    },
+    "All" : {
+
     },
     "animation.off_caption" : {
       "localizations" : {
@@ -923,13 +898,16 @@
     "AssessPrepHack" : {
 
     },
+    "Author" : {
+
+    },
+    "Available Widgets" : {
+
+    },
     "Break free from lockdown pages" : {
 
     },
     "Break free from proctoring" : {
-
-    },
-    "Bring to Front" : {
 
     },
     "browser.auto_detect" : {
@@ -1107,6 +1085,12 @@
       }
     },
     "BrowserBypasser" : {
+
+    },
+    "BTC" : {
+
+    },
+    "Bulk select" : {
 
     },
     "Bundle Identifier" : {
@@ -2345,10 +2329,13 @@
     "Cancel" : {
 
     },
-    "CHARGING" : {
+    "City" : {
 
     },
     "ClassGod" : {
+
+    },
+    "ClassGod Desk Widgets" : {
 
     },
     "clear.confirm.message" : {
@@ -2470,10 +2457,14 @@
     "Click a target to switch. Set shortcuts for instant access." : {
 
     },
+    "Clock City" : {
+
+    },
     "com.company.app" : {
 
     },
     "context.edit" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -2532,6 +2523,7 @@
       }
     },
     "context.open" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -2589,16 +2581,10 @@
         }
       }
     },
-    "CPU" : {
-
-    },
     "Crashed Thread: %lld" : {
 
     },
     "Custom..." : {
-
-    },
-    "CYCLES: %lld" : {
 
     },
     "debug.caption" : {
@@ -2791,6 +2777,9 @@
         }
       }
     },
+    "DESKTOP" : {
+
+    },
     "DestinTab" : {
 
     },
@@ -2810,6 +2799,12 @@
 
     },
     "Drop images or videos" : {
+
+    },
+    "Duplicate URL" : {
+
+    },
+    "Duplicate URLs detected" : {
 
     },
     "e.g. Canvas Quiz Bypass" : {
@@ -3828,10 +3823,16 @@
         }
       }
     },
+    "ETH" : {
+
+    },
     "Execute %@" : {
 
     },
     "Execute Bypass" : {
+
+    },
+    "Exit bulk mode" : {
 
     },
     "export.filename" : {
@@ -4065,9 +4066,6 @@
           }
         }
       }
-    },
-    "HACKER DESKTOP" : {
-
     },
     "Hanazar Software" : {
 
@@ -4606,10 +4604,10 @@
     "LIBRARY" : {
 
     },
-    "LIVE" : {
+    "Log line" : {
 
     },
-    "Lock" : {
+    "macOS Sonoma-style Desk Widgets powered by WidgetKit" : {
 
     },
     "Manage & switch browser tabs" : {
@@ -4798,13 +4796,7 @@
     "maximize.none" : {
 
     },
-    "MEM" : {
-
-    },
     "Name" : {
-
-    },
-    "NAME" : {
 
     },
     "No bypass rules" : {
@@ -4816,7 +4808,7 @@
     "No targets configured" : {
 
     },
-    "No wallpaper selected" : {
+    "None" : {
 
     },
     "not_running.do_nothing" : {
@@ -4999,10 +4991,7 @@
     "OK" : {
 
     },
-    "ON BATTERY" : {
-
-    },
-    "PAUSED" : {
+    "Open" : {
 
     },
     "PeaceOut" : {
@@ -5127,6 +5116,7 @@
       }
     },
     "permission.banner.button" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -5185,6 +5175,7 @@
       }
     },
     "permission.banner.message" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -5358,7 +5349,13 @@
         }
       }
     },
-    "PID" : {
+    "Pin" : {
+
+    },
+    "Pin to top" : {
+
+    },
+    "PINNED" : {
 
     },
     "plist.accessibility" : {
@@ -5479,6 +5476,9 @@
         }
       }
     },
+    "Price" : {
+
+    },
     "Process: ClassGod [%lld]" : {
 
     },
@@ -5486,6 +5486,9 @@
 
     },
     "Quick app switcher" : {
+
+    },
+    "Quote" : {
 
     },
     "Remove '%@' from your wallpaper library?" : {
@@ -5501,9 +5504,6 @@
 
     },
     "Reset" : {
-
-    },
-    "Reset Size" : {
 
     },
     "reset.confirm.message" : {
@@ -5622,6 +5622,9 @@
         }
       }
     },
+    "Right-click on desktop → Edit Widgets → Add ClassGod widgets" : {
+
+    },
     "Run %@" : {
 
     },
@@ -5632,6 +5635,9 @@
 
     },
     "Scan" : {
+
+    },
+    "Search tabs..." : {
 
     },
     "section.about" : {
@@ -9073,6 +9079,12 @@
         }
       }
     },
+    "Show wallpaper on macOS Desktop" : {
+
+    },
+    "Sort: %@" : {
+
+    },
     "speed.fast" : {
       "localizations" : {
         "de" : {
@@ -9498,7 +9510,7 @@
     "switch.always_new_tab" : {
 
     },
-    "SYSTEM UPTIME" : {
+    "System data is automatically collected every 5 seconds and synced to Desk Widgets via App Group." : {
 
     },
     "tab.advanced" : {
@@ -9790,6 +9802,12 @@
           }
         }
       }
+    },
+    "Tag (optional, e.g. work, dev)" : {
+
+    },
+    "Task" : {
+
     },
     "theme.dark" : {
       "localizations" : {
@@ -10545,13 +10563,7 @@
         }
       }
     },
-    "TOTAL IN:" : {
-
-    },
-    "TOTAL OUT:" : {
-
-    },
-    "Unlock" : {
+    "Unpin" : {
 
     },
     "URL Pattern" : {
@@ -10560,10 +10572,13 @@
     "v%@" : {
 
     },
-    "VIDEO" : {
+    "Wallpaper Engine" : {
 
     },
-    "Wallpaper Engine" : {
+    "Weather City" : {
+
+    },
+    "Widget Config Center" : {
 
     },
     "Your PC ran into a problem and needs to restart." : {

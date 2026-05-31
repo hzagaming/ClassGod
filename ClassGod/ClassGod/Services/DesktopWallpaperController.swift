@@ -66,7 +66,7 @@ final class DesktopWallpaperController {
     
     func showWallpapers() {
         let engine = WallpaperEngine.shared
-        guard engine.isEnabled, engine.currentWallpaper != nil else {
+        guard engine.isEnabled, let wallpaper = engine.currentWallpaper, wallpaper.fileExists else {
             hideWallpapers()
             return
         }

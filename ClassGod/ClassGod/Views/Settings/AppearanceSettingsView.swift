@@ -59,6 +59,19 @@ struct AppearanceSettingsView: View {
                         step: 1,
                         suffix: "px"
                     )
+
+                    SettingsSliderRow(
+                        label: "Window Zoom",
+                        value: $prefs.preferences.windowZoomScale,
+                        range: 0.5...2.0,
+                        step: 0.1,
+                        format: "%.0f%%"
+                    ) {
+                        Int($0 * 100)
+                    }
+                    .onChange(of: prefs.preferences.windowZoomScale) { _, _ in
+                        (NSApp.delegate as? AppDelegate)?.updateAllWindowSizes()
+                    }
                 }
 
                 StatefulCollapsibleSection(

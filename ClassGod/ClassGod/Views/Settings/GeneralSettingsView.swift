@@ -91,6 +91,13 @@ struct GeneralSettingsView: View {
                         style: .menu
                     )
 
+                    SettingsToggleRow(
+                        icon: "window.awning",
+                        title: "Popover Animation",
+                        subtitle: "Animate window open and close",
+                        isOn: $prefs.preferences.showPopoverAnimation
+                    )
+
                     SettingsSliderRow(
                         label: "Minimize Animation",
                         value: $prefs.preferences.minimizeAnimationDuration,

@@ -6,7 +6,60 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		04BB6AC48EE1C23A66F3BA35 /* AsciiArtWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B37C3AD31B92AB52B8279694 /* AsciiArtWidgetView.swift */; };
+		06EF0A6BA1C0CD3D0FFF0A04 /* BatteryWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB848ACB74A65E4ADD1F263C /* BatteryWidgetView.swift */; };
+		0B9D3FBB3C5B763630C21159 /* NotesWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0B4D8267F5968526D4E800C /* NotesWidgetView.swift */; };
+		19A5543FE7B792460C6AFCDB /* WeatherWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15989160BD5957DA6025E56D /* WeatherWidgetView.swift */; };
+		1B86A9F8832665CBB4056461 /* DiskWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F21F80E77255F3E249274245 /* DiskWidgetView.swift */; };
+		26E312ED5A1BE4BD31AC9C79 /* QuoteWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 084FE72C7EFFEB21F96EED91 /* QuoteWidgetView.swift */; };
+		2D3C0B564FF4FEB1D4BEEAF3 /* ClassGodWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F230C477466435602A08DB6 /* ClassGodWidgetBundle.swift */; };
+		411ACA18636B928C3E62B31A /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9952EB925E6414B5F1E73DED /* Foundation.framework */; };
+		43D579534CB1F24A660304C5 /* WorldClockWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B2E5AC86B5A5DADCB80CB61 /* WorldClockWidgetView.swift */; };
+		481380154C837A998EB47B46 /* NetworkWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6CCBEC8868C2C8B176AC0DEE /* NetworkWidgetView.swift */; };
+		5ABF01673A5620820B3B9190 /* AppLauncherWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4413005E8908D10F88EE5FC8 /* AppLauncherWidgetView.swift */; };
+		5AD0356824FA644EFA75CDF4 /* CryptoWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E940B37C487A1D844DCFA523 /* CryptoWidgetView.swift */; };
+		633E4A8BBCBBD1341AC53D4F /* WidgetDataStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA8B143F344F8F5831C0BFA9 /* WidgetDataStore.swift */; };
+		6C9BFA5C1C8842BB7CD1E474 /* TerminalLogWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B3770C1B8DAE22615720722 /* TerminalLogWidgetView.swift */; };
+		769FB4940B9B56DC00D23E23 /* WidgetProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 801D7EDB041A172A4B4375C6 /* WidgetProvider.swift */; };
+		7A2D2540BE019A658A904ACA /* WidgetEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5AE60636E0D4FE2399EA2FCF /* WidgetEntry.swift */; };
+		93AE47A74702DF949735BB1F /* TodoWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CECE49CA245F96FBCA3F07F /* TodoWidgetView.swift */; };
+		93C784CFE846C8888228B3F4 /* SystemInfoWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BE0498D5636BDD3C7BDC4B2 /* SystemInfoWidgetView.swift */; };
+		94BFAD6F3FB5F52E1E0F3E70 /* ClockWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A656A14BDC89DA0021C9939F /* ClockWidgetView.swift */; };
+		9A8B9E580010A43839E204C9 /* FileWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A94A4408A7C631388DC79E77 /* FileWidgetView.swift */; };
+		C5959FD0D7615B4D3C6F7753 /* MemoryWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A8D528774D0307DE6803D5B /* MemoryWidgetView.swift */; };
+		CE008506282A2C8D56F55DC5 /* UptimeWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D125F1E288C49E7892BF74F /* UptimeWidgetView.swift */; };
+		DAD0591EF2DCF18A18F7BA25 /* CPUWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B7C13D3BF251FFC850F0586 /* CPUWidgetView.swift */; };
+		DB9548201E524361DBE7FBF3 /* CalendarWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34D27161E4145112031152F0 /* CalendarWidgetView.swift */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
+		084FE72C7EFFEB21F96EED91 /* QuoteWidgetView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = QuoteWidgetView.swift; path = ClassGodWidget/Views/QuoteWidgetView.swift; sourceTree = "<group>"; };
+		15989160BD5957DA6025E56D /* WeatherWidgetView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = WeatherWidgetView.swift; path = ClassGodWidget/Views/WeatherWidgetView.swift; sourceTree = "<group>"; };
+		34D27161E4145112031152F0 /* CalendarWidgetView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = CalendarWidgetView.swift; path = ClassGodWidget/Views/CalendarWidgetView.swift; sourceTree = "<group>"; };
+		3B7C13D3BF251FFC850F0586 /* CPUWidgetView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = CPUWidgetView.swift; path = ClassGodWidget/Views/CPUWidgetView.swift; sourceTree = "<group>"; };
+		3BE0498D5636BDD3C7BDC4B2 /* SystemInfoWidgetView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = SystemInfoWidgetView.swift; path = ClassGodWidget/Views/SystemInfoWidgetView.swift; sourceTree = "<group>"; };
+		4413005E8908D10F88EE5FC8 /* AppLauncherWidgetView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = AppLauncherWidgetView.swift; path = ClassGodWidget/Views/AppLauncherWidgetView.swift; sourceTree = "<group>"; };
+		5AE60636E0D4FE2399EA2FCF /* WidgetEntry.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = WidgetEntry.swift; path = ClassGodWidget/WidgetEntry.swift; sourceTree = "<group>"; };
+		5F230C477466435602A08DB6 /* ClassGodWidgetBundle.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ClassGodWidgetBundle.swift; path = ClassGodWidget/ClassGodWidgetBundle.swift; sourceTree = "<group>"; };
+		6A8D528774D0307DE6803D5B /* MemoryWidgetView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = MemoryWidgetView.swift; path = ClassGodWidget/Views/MemoryWidgetView.swift; sourceTree = "<group>"; };
+		6CCBEC8868C2C8B176AC0DEE /* NetworkWidgetView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = NetworkWidgetView.swift; path = ClassGodWidget/Views/NetworkWidgetView.swift; sourceTree = "<group>"; };
+		7B2E5AC86B5A5DADCB80CB61 /* WorldClockWidgetView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = WorldClockWidgetView.swift; path = ClassGodWidget/Views/WorldClockWidgetView.swift; sourceTree = "<group>"; };
+		7B9F77485B9CA75A1B081397 /* ClassGodWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = ClassGodWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		7D125F1E288C49E7892BF74F /* UptimeWidgetView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = UptimeWidgetView.swift; path = ClassGodWidget/Views/UptimeWidgetView.swift; sourceTree = "<group>"; };
+		801D7EDB041A172A4B4375C6 /* WidgetProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = WidgetProvider.swift; path = ClassGodWidget/WidgetProvider.swift; sourceTree = "<group>"; };
+		9952EB925E6414B5F1E73DED /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
+		9B3770C1B8DAE22615720722 /* TerminalLogWidgetView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TerminalLogWidgetView.swift; path = ClassGodWidget/Views/TerminalLogWidgetView.swift; sourceTree = "<group>"; };
+		9CECE49CA245F96FBCA3F07F /* TodoWidgetView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TodoWidgetView.swift; path = ClassGodWidget/Views/TodoWidgetView.swift; sourceTree = "<group>"; };
+		A656A14BDC89DA0021C9939F /* ClockWidgetView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ClockWidgetView.swift; path = ClassGodWidget/Views/ClockWidgetView.swift; sourceTree = "<group>"; };
+		A94A4408A7C631388DC79E77 /* FileWidgetView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = FileWidgetView.swift; path = ClassGodWidget/Views/FileWidgetView.swift; sourceTree = "<group>"; };
+		B37C3AD31B92AB52B8279694 /* AsciiArtWidgetView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = AsciiArtWidgetView.swift; path = ClassGodWidget/Views/AsciiArtWidgetView.swift; sourceTree = "<group>"; };
+		C0B4D8267F5968526D4E800C /* NotesWidgetView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = NotesWidgetView.swift; path = ClassGodWidget/Views/NotesWidgetView.swift; sourceTree = "<group>"; };
+		CA8B143F344F8F5831C0BFA9 /* WidgetDataStore.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = WidgetDataStore.swift; path = ClassGod/Shared/WidgetDataStore.swift; sourceTree = "<group>"; };
+		E4A308726928F4CCF88BFE8C /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; name = Info.plist; path = ClassGodWidget/Info.plist; sourceTree = "<group>"; };
+		E940B37C487A1D844DCFA523 /* CryptoWidgetView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = CryptoWidgetView.swift; path = ClassGodWidget/Views/CryptoWidgetView.swift; sourceTree = "<group>"; };
+		EB848ACB74A65E4ADD1F263C /* BatteryWidgetView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = BatteryWidgetView.swift; path = ClassGodWidget/Views/BatteryWidgetView.swift; sourceTree = "<group>"; };
+		F21F80E77255F3E249274245 /* DiskWidgetView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = DiskWidgetView.swift; path = ClassGodWidget/Views/DiskWidgetView.swift; sourceTree = "<group>"; };
 		F2BB6B532FC08AFC0059D551 /* ClassGod.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ClassGod.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -19,6 +72,14 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		77A45A5A4B39F3F51D029571 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				411ACA18636B928C3E62B31A /* Foundation.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		F2BB6B502FC08AFC0059D551 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -29,11 +90,52 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		0E871EEAA0F2054518FFEC1A /* OS X */ = {
+			isa = PBXGroup;
+			children = (
+				9952EB925E6414B5F1E73DED /* Foundation.framework */,
+			);
+			name = "OS X";
+			sourceTree = "<group>";
+		};
+		28A7A53CC3B6632D706EDFD7 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				0E871EEAA0F2054518FFEC1A /* OS X */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		F2BB6B4A2FC08AFC0059D551 = {
 			isa = PBXGroup;
 			children = (
 				F2BB6B552FC08AFC0059D551 /* ClassGod */,
 				F2BB6B542FC08AFC0059D551 /* Products */,
+				28A7A53CC3B6632D706EDFD7 /* Frameworks */,
+				5F230C477466435602A08DB6 /* ClassGodWidgetBundle.swift */,
+				4413005E8908D10F88EE5FC8 /* AppLauncherWidgetView.swift */,
+				B37C3AD31B92AB52B8279694 /* AsciiArtWidgetView.swift */,
+				EB848ACB74A65E4ADD1F263C /* BatteryWidgetView.swift */,
+				3B7C13D3BF251FFC850F0586 /* CPUWidgetView.swift */,
+				34D27161E4145112031152F0 /* CalendarWidgetView.swift */,
+				A656A14BDC89DA0021C9939F /* ClockWidgetView.swift */,
+				E940B37C487A1D844DCFA523 /* CryptoWidgetView.swift */,
+				F21F80E77255F3E249274245 /* DiskWidgetView.swift */,
+				A94A4408A7C631388DC79E77 /* FileWidgetView.swift */,
+				6A8D528774D0307DE6803D5B /* MemoryWidgetView.swift */,
+				6CCBEC8868C2C8B176AC0DEE /* NetworkWidgetView.swift */,
+				C0B4D8267F5968526D4E800C /* NotesWidgetView.swift */,
+				084FE72C7EFFEB21F96EED91 /* QuoteWidgetView.swift */,
+				3BE0498D5636BDD3C7BDC4B2 /* SystemInfoWidgetView.swift */,
+				9B3770C1B8DAE22615720722 /* TerminalLogWidgetView.swift */,
+				9CECE49CA245F96FBCA3F07F /* TodoWidgetView.swift */,
+				7D125F1E288C49E7892BF74F /* UptimeWidgetView.swift */,
+				15989160BD5957DA6025E56D /* WeatherWidgetView.swift */,
+				7B2E5AC86B5A5DADCB80CB61 /* WorldClockWidgetView.swift */,
+				5AE60636E0D4FE2399EA2FCF /* WidgetEntry.swift */,
+				801D7EDB041A172A4B4375C6 /* WidgetProvider.swift */,
+				E4A308726928F4CCF88BFE8C /* Info.plist */,
+				CA8B143F344F8F5831C0BFA9 /* WidgetDataStore.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -41,6 +143,7 @@
 			isa = PBXGroup;
 			children = (
 				F2BB6B532FC08AFC0059D551 /* ClassGod.app */,
+				7B9F77485B9CA75A1B081397 /* ClassGodWidget.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -48,6 +151,23 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		B92F7954AF1161ABBAC770E8 /* ClassGodWidget */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F532BD457686A7CCD6DAA037 /* Build configuration list for PBXNativeTarget "ClassGodWidget" */;
+			buildPhases = (
+				F4F85BCC77AA0A8EC4568026 /* Sources */,
+				77A45A5A4B39F3F51D029571 /* Frameworks */,
+				F0937B56988E26C38658E39D /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = ClassGodWidget;
+			productName = ClassGodWidget;
+			productReference = 7B9F77485B9CA75A1B081397 /* ClassGodWidget.appex */;
+			productType = "com.apple.product-type.extensionkit-extension";
+		};
 		F2BB6B522FC08AFC0059D551 /* ClassGod */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = F2BB6B5E2FC08AFD0059D551 /* Build configuration list for PBXNativeTarget "ClassGod" */;
@@ -64,8 +184,6 @@
 				F2BB6B552FC08AFC0059D551 /* ClassGod */,
 			);
 			name = ClassGod;
-			packageProductDependencies = (
-			);
 			productName = ClassGod;
 			productReference = F2BB6B532FC08AFC0059D551 /* ClassGod.app */;
 			productType = "com.apple.product-type.application";
@@ -111,11 +229,19 @@
 			projectRoot = "";
 			targets = (
 				F2BB6B522FC08AFC0059D551 /* ClassGod */,
+				B92F7954AF1161ABBAC770E8 /* ClassGodWidget */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		F0937B56988E26C38658E39D /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		F2BB6B512FC08AFC0059D551 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -133,9 +259,79 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		F4F85BCC77AA0A8EC4568026 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2D3C0B564FF4FEB1D4BEEAF3 /* ClassGodWidgetBundle.swift in Sources */,
+				5ABF01673A5620820B3B9190 /* AppLauncherWidgetView.swift in Sources */,
+				04BB6AC48EE1C23A66F3BA35 /* AsciiArtWidgetView.swift in Sources */,
+				06EF0A6BA1C0CD3D0FFF0A04 /* BatteryWidgetView.swift in Sources */,
+				DAD0591EF2DCF18A18F7BA25 /* CPUWidgetView.swift in Sources */,
+				DB9548201E524361DBE7FBF3 /* CalendarWidgetView.swift in Sources */,
+				94BFAD6F3FB5F52E1E0F3E70 /* ClockWidgetView.swift in Sources */,
+				5AD0356824FA644EFA75CDF4 /* CryptoWidgetView.swift in Sources */,
+				1B86A9F8832665CBB4056461 /* DiskWidgetView.swift in Sources */,
+				9A8B9E580010A43839E204C9 /* FileWidgetView.swift in Sources */,
+				C5959FD0D7615B4D3C6F7753 /* MemoryWidgetView.swift in Sources */,
+				481380154C837A998EB47B46 /* NetworkWidgetView.swift in Sources */,
+				0B9D3FBB3C5B763630C21159 /* NotesWidgetView.swift in Sources */,
+				26E312ED5A1BE4BD31AC9C79 /* QuoteWidgetView.swift in Sources */,
+				93C784CFE846C8888228B3F4 /* SystemInfoWidgetView.swift in Sources */,
+				6C9BFA5C1C8842BB7CD1E474 /* TerminalLogWidgetView.swift in Sources */,
+				93AE47A74702DF949735BB1F /* TodoWidgetView.swift in Sources */,
+				CE008506282A2C8D56F55DC5 /* UptimeWidgetView.swift in Sources */,
+				19A5543FE7B792460C6AFCDB /* WeatherWidgetView.swift in Sources */,
+				43D579534CB1F24A660304C5 /* WorldClockWidgetView.swift in Sources */,
+				7A2D2540BE019A658A904ACA /* WidgetEntry.swift in Sources */,
+				769FB4940B9B56DC00D23E23 /* WidgetProvider.swift in Sources */,
+				633E4A8BBCBBD1341AC53D4F /* WidgetDataStore.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
+		B39279358C95FAA013EFE6AB /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CODE_SIGN_ENTITLEMENTS = "";
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_APP_SANDBOX = NO;
+				INFOPLIST_FILE = ClassGodWidget/Info.plist;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.hanazar.classgod.ClassGodWidget;
+				PRODUCT_NAME = ClassGodWidget;
+				SDKROOT = macosx;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		EF8F9BD28AB690F3318597AE /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CODE_SIGN_ENTITLEMENTS = "";
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_APP_SANDBOX = NO;
+				INFOPLIST_FILE = ClassGodWidget/Info.plist;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.hanazar.classgod.ClassGodWidget;
+				PRODUCT_NAME = ClassGodWidget;
+				SDKROOT = macosx;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
 		F2BB6B5C2FC08AFD0059D551 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -275,7 +471,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.4.4;
+				MARKETING_VERSION = 1.2.3;
 				PRODUCT_BUNDLE_IDENTIFIER = "Hanazar-Software.ClassGod";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
@@ -309,7 +505,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.4.4;
+				MARKETING_VERSION = 1.2.3;
 				PRODUCT_BUNDLE_IDENTIFIER = "Hanazar-Software.ClassGod";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
@@ -339,6 +535,15 @@
 			buildConfigurations = (
 				F2BB6B5F2FC08AFD0059D551 /* Debug */,
 				F2BB6B602FC08AFD0059D551 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		F532BD457686A7CCD6DAA037 /* Build configuration list for PBXNativeTarget "ClassGodWidget" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B39279358C95FAA013EFE6AB /* Release */,
+				EF8F9BD28AB690F3318597AE /* Debug */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

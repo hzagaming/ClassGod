@@ -210,8 +210,10 @@ struct AppPreferences: Codable, Equatable {
     var keepWindowOnTop: Bool
     var rememberWindowPosition: Bool
     var windowOpacity: Double
+    var windowZoomScale: Double
     var windowMaximizeBehavior: WindowMaximizeBehavior
     var minimizeAnimationDuration: Double
+    var showPopoverAnimation: Bool
 
     // MARK: - Shortcuts
     var showPopoverKeyCode: UInt32
@@ -279,8 +281,10 @@ struct AppPreferences: Codable, Equatable {
         keepWindowOnTop: false,
         rememberWindowPosition: true,
         windowOpacity: 1.0,
+        windowZoomScale: 1.0,
         windowMaximizeBehavior: .none,
         minimizeAnimationDuration: 0.18,
+        showPopoverAnimation: true,
         showPopoverKeyCode: 0x08,
         showPopoverModifiers: AppPreferences.defaultShowPopoverModifiers,
         suppressSystemShortcutConflict: false,
@@ -346,8 +350,10 @@ extension AppPreferences {
         case keepWindowOnTop
         case rememberWindowPosition
         case windowOpacity
+        case windowZoomScale
         case windowMaximizeBehavior
         case minimizeAnimationDuration
+        case showPopoverAnimation
         case showPopoverKeyCode
         case showPopoverModifiers
         case suppressSystemShortcutConflict
@@ -412,8 +418,10 @@ extension AppPreferences {
         preferences.keepWindowOnTop = try container.decodeIfPresent(Bool.self, forKey: .keepWindowOnTop) ?? preferences.keepWindowOnTop
         preferences.rememberWindowPosition = try container.decodeIfPresent(Bool.self, forKey: .rememberWindowPosition) ?? preferences.rememberWindowPosition
         preferences.windowOpacity = try container.decodeIfPresent(Double.self, forKey: .windowOpacity) ?? preferences.windowOpacity
+        preferences.windowZoomScale = try container.decodeIfPresent(Double.self, forKey: .windowZoomScale) ?? preferences.windowZoomScale
         preferences.windowMaximizeBehavior = try container.decodeIfPresent(WindowMaximizeBehavior.self, forKey: .windowMaximizeBehavior) ?? preferences.windowMaximizeBehavior
         preferences.minimizeAnimationDuration = try container.decodeIfPresent(Double.self, forKey: .minimizeAnimationDuration) ?? preferences.minimizeAnimationDuration
+        preferences.showPopoverAnimation = try container.decodeIfPresent(Bool.self, forKey: .showPopoverAnimation) ?? preferences.showPopoverAnimation
 
         // Shortcuts
         preferences.showPopoverKeyCode = try container.decodeIfPresent(UInt32.self, forKey: .showPopoverKeyCode) ?? preferences.showPopoverKeyCode

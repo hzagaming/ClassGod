@@ -35,7 +35,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var settingsWindow: NSWindow?
     var wallpaperBrowserWindow: NSWindow?
     var hackerDesktopWindow: NSWindow?
-    var showPopoverHotKeyRef: EventHotKeyRef?
+    var showPopoverCustomHotKeyID: UInt32?
 
     var splashWindow: NSWindow?
     private var clickOutsideMonitor: Any?
@@ -68,6 +68,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 self?.updateMainWindowSize()
                 self?.updateAllWindowLevels()
                 self?.updateClickOutsideMonitor()
+                self?.updateAllWindowSizes()
             }
             
             // Apply saved icon style immediately
@@ -155,9 +156,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func setupMainWindow() {
         let prefs = PreferencesManager.shared.preferences
+        let zoom = CGFloat(prefs.windowZoomScale)
         let size = NSSize(
-            width: prefs.panelWidth,
-            height: prefs.panelMaxHeight
+            width: prefs.panelWidth * zoom,
+            height: min(prefs.panelMaxHeight, CGFloat(prefs.maxTabsInPopover) * CGFloat(prefs.rowHeight) + 120) * zoom
         )
 
         let window = DraggableWindow(
@@ -216,8 +218,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }, onOpenHackerDesktop: { [weak self] in
             self?.showHackerDesktopWindow()
         })
-            .frame(width: size.width, height: size.height)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Color.clear)
+            .overlay(WindowResizeHandles())
 
         window.contentView = NSHostingView(rootView: rootView)
 
@@ -228,9 +231,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     
     private func setupDestinTabWindow() {
         let prefs = PreferencesManager.shared.preferences
+        let zoom = CGFloat(prefs.windowZoomScale)
         let size = NSSize(
-            width: prefs.panelWidth,
-            height: min(prefs.panelMaxHeight, CGFloat(prefs.maxTabsInPopover) * CGFloat(prefs.rowHeight) + 120)
+            width: prefs.panelWidth * zoom,
+            height: min(prefs.panelMaxHeight, CGFloat(prefs.maxTabsInPopover) * CGFloat(prefs.rowHeight) + 120) * zoom
         )
 
         let window = DraggableWindow(
@@ -266,8 +270,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let rootView = DestinTabWindowView(onClose: { [weak self] in
             self?.hideDestinTabWindow()
         })
-            .frame(width: size.width, height: size.height)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Color.clear)
+            .overlay(WindowResizeHandles())
 
         window.contentView = NSHostingView(rootView: rootView)
 
@@ -328,9 +333,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     
     private func setupSuperSwitchWindow() {
         let prefs = PreferencesManager.shared.preferences
+        let zoom = CGFloat(prefs.windowZoomScale)
         let size = NSSize(
-            width: prefs.panelWidth,
-            height: prefs.panelMaxHeight
+            width: prefs.panelWidth * zoom,
+            height: prefs.panelMaxHeight * zoom
         )
 
         let window = DraggableWindow(
@@ -365,8 +371,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let rootView = SuperSwitchWindowView(onClose: { [weak self] in
             self?.hideSuperSwitchWindow()
         })
-            .frame(width: size.width, height: size.height)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Color.clear)
+            .overlay(WindowResizeHandles())
 
         window.contentView = NSHostingView(rootView: rootView)
 
@@ -427,9 +434,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     
     private func setupBrowserBypasserWindow() {
         let prefs = PreferencesManager.shared.preferences
+        let zoom = CGFloat(prefs.windowZoomScale)
         let size = NSSize(
-            width: prefs.panelWidth,
-            height: prefs.panelMaxHeight
+            width: prefs.panelWidth * zoom,
+            height: prefs.panelMaxHeight * zoom
         )
 
         let window = DraggableWindow(
@@ -464,8 +472,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let rootView = BrowserBypasserWindowView(onClose: { [weak self] in
             self?.hideBrowserBypasserWindow()
         })
-            .frame(width: size.width, height: size.height)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Color.clear)
+            .overlay(WindowResizeHandles())
 
         window.contentView = NSHostingView(rootView: rootView)
 
@@ -526,9 +535,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     
     private func setupAssessPrepHackWindow() {
         let prefs = PreferencesManager.shared.preferences
+        let zoom = CGFloat(prefs.windowZoomScale)
         let size = NSSize(
-            width: prefs.panelWidth,
-            height: prefs.panelMaxHeight
+            width: prefs.panelWidth * zoom,
+            height: prefs.panelMaxHeight * zoom
         )
 
         let window = DraggableWindow(
@@ -563,8 +573,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let rootView = AssessPrepHackWindowView(onClose: { [weak self] in
             self?.hideAssessPrepHackWindow()
         })
-            .frame(width: size.width, height: size.height)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Color.clear)
+            .overlay(WindowResizeHandles())
 
         window.contentView = NSHostingView(rootView: rootView)
 
@@ -624,7 +635,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     // MARK: - Settings Window
     
     private func setupSettingsWindow() {
-        let size = NSSize(width: 520, height: 480)
+        let prefs = PreferencesManager.shared.preferences
+        let zoom = CGFloat(prefs.windowZoomScale)
+        let size = NSSize(width: 520 * zoom, height: 480 * zoom)
 
         let window = DraggableWindow(
             contentRect: NSRect(origin: .zero, size: size),
@@ -657,8 +670,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let rootView = SettingsWindowView(onClose: { [weak self] in
             self?.hideSettingsWindow()
         })
-            .frame(width: size.width, height: size.height)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Color.clear)
+            .overlay(WindowResizeHandles())
 
         window.contentView = NSHostingView(rootView: rootView)
 
@@ -718,7 +732,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     // MARK: - Wallpaper Browser Window
 
     private func setupWallpaperBrowserWindow() {
-        let size = NSSize(width: 520, height: 480)
+        let prefs = PreferencesManager.shared.preferences
+        let zoom = CGFloat(prefs.windowZoomScale)
+        let size = NSSize(width: 520 * zoom, height: 480 * zoom)
 
         let window = DraggableWindow(
             contentRect: NSRect(origin: .zero, size: size),
@@ -751,8 +767,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let rootView = WallpaperBrowserView(onClose: { [weak self] in
             self?.hideWallpaperBrowserWindow()
         })
-            .frame(width: size.width, height: size.height)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Color.clear)
+            .overlay(WindowResizeHandles())
 
         window.contentView = NSHostingView(rootView: rootView)
 
@@ -812,9 +829,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     // MARK: - Hacker Desktop Window
 
     private func setupHackerDesktopWindow() {
+        let prefs = PreferencesManager.shared.preferences
+        let zoom = CGFloat(prefs.windowZoomScale)
         guard let screen = NSScreen.main else { return }
         let screenFrame = screen.visibleFrame
-        let size = NSSize(width: min(900, screenFrame.width - 100), height: min(600, screenFrame.height - 100))
+        let size = NSSize(width: min(900, screenFrame.width - 100) * zoom, height: min(600, screenFrame.height - 100) * zoom)
 
         let window = DraggableWindow(
             contentRect: NSRect(origin: .zero, size: size),
@@ -841,8 +860,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let rootView = HackerDesktopView(onClose: { [weak self] in
             self?.hideHackerDesktopWindow()
         })
-            .frame(width: size.width, height: size.height)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Color.clear)
+            .overlay(WindowResizeHandles())
 
         window.contentView = NSHostingView(rootView: rootView)
 
@@ -902,9 +922,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func updateMainWindowSize() {
         guard let window = mainWindow else { return }
         let prefs = PreferencesManager.shared.preferences
+        let zoom = CGFloat(prefs.windowZoomScale)
         let newSize = NSSize(
-            width: prefs.panelWidth,
-            height: min(prefs.panelMaxHeight, CGFloat(prefs.maxTabsInPopover) * CGFloat(prefs.rowHeight) + 120)
+            width: prefs.panelWidth * zoom,
+            height: min(prefs.panelMaxHeight, CGFloat(prefs.maxTabsInPopover) * CGFloat(prefs.rowHeight) + 120) * zoom
         )
         window.setContentSize(newSize)
     }
@@ -912,9 +933,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func showMainWindow(animated: Bool = false) {
         guard let window = mainWindow else { return }
 
+        // Always center the main window on screen before showing
+        centerWindowOnScreen(window)
+
         SoundEffectManager.shared.playWindowOpen()
 
-        if animated {
+        let useAnimation = animated && PreferencesManager.shared.preferences.showPopoverAnimation
+
+        if useAnimation {
             window.alphaValue = 0
             window.makeKeyAndOrderFront(nil)
 
@@ -924,20 +950,35 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 window.animator().alphaValue = targetWindowAlpha
             }
         } else {
+            window.alphaValue = targetWindowAlpha
             window.makeKeyAndOrderFront(nil)
         }
+    }
+
+    private func centerWindowOnScreen(_ window: NSWindow) {
+        guard let screen = NSScreen.main ?? NSScreen.screens.first else { return }
+        let visibleFrame = screen.visibleFrame
+        let size = window.frame.size
+        let x = visibleFrame.midX - size.width / 2
+        let y = visibleFrame.midY - size.height / 2
+        window.setFrameOrigin(NSPoint(x: x, y: y))
     }
 
     func hideMainWindow() {
         guard let window = mainWindow else { return }
         SoundEffectManager.shared.playWindowClose()
 
-        NSAnimationContext.runAnimationGroup { context in
-            context.duration = 0.12
-            context.timingFunction = .init(name: .easeIn)
-            window.animator().alphaValue = 0
-        } completionHandler: { [weak self] in
-            self?.mainWindow?.orderOut(nil)
+        if PreferencesManager.shared.preferences.showPopoverAnimation {
+            NSAnimationContext.runAnimationGroup { context in
+                context.duration = 0.12
+                context.timingFunction = .init(name: .easeIn)
+                window.animator().alphaValue = 0
+            } completionHandler: { [weak self] in
+                self?.mainWindow?.orderOut(nil)
+            }
+        } else {
+            window.alphaValue = 0
+            window.orderOut(nil)
         }
     }
 
@@ -966,6 +1007,58 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         browserBypasserWindow?.level = level
         assessPrepHackWindow?.level = level
         settingsWindow?.level = level
+    }
+
+    func updateAllWindowSizes() {
+        let prefs = PreferencesManager.shared.preferences
+        let zoom = CGFloat(prefs.windowZoomScale)
+
+        // mainWindow
+        if let w = mainWindow {
+            let baseH = min(prefs.panelMaxHeight, CGFloat(prefs.maxTabsInPopover) * CGFloat(prefs.rowHeight) + 120)
+            w.setContentSize(NSSize(width: prefs.panelWidth * zoom, height: baseH * zoom))
+        }
+
+        // destinTabWindow
+        if let w = destinTabWindow {
+            let baseH = min(prefs.panelMaxHeight, CGFloat(prefs.maxTabsInPopover) * CGFloat(prefs.rowHeight) + 120)
+            w.setContentSize(NSSize(width: prefs.panelWidth * zoom, height: baseH * zoom))
+        }
+
+        // superSwitchWindow
+        if let w = superSwitchWindow {
+            w.setContentSize(NSSize(width: prefs.panelWidth * zoom, height: prefs.panelMaxHeight * zoom))
+        }
+
+        // browserBypasserWindow
+        if let w = browserBypasserWindow {
+            w.setContentSize(NSSize(width: prefs.panelWidth * zoom, height: prefs.panelMaxHeight * zoom))
+        }
+
+        // assessPrepHackWindow
+        if let w = assessPrepHackWindow {
+            w.setContentSize(NSSize(width: prefs.panelWidth * zoom, height: prefs.panelMaxHeight * zoom))
+        }
+
+        // settingsWindow
+        if let w = settingsWindow {
+            let base = NSSize(width: 520, height: 480)
+            w.setContentSize(NSSize(width: base.width * zoom, height: base.height * zoom))
+        }
+
+        // wallpaperBrowserWindow
+        if let w = wallpaperBrowserWindow {
+            let base = NSSize(width: 520, height: 480)
+            w.setContentSize(NSSize(width: base.width * zoom, height: base.height * zoom))
+        }
+
+        // hackerDesktopWindow
+        if let w = hackerDesktopWindow, let screen = NSScreen.main {
+            let frame = screen.visibleFrame
+            let baseW = min(900, frame.width - 100)
+            let baseH = min(600, frame.height - 100)
+            w.setContentSize(NSSize(width: baseW * zoom, height: baseH * zoom))
+        }
     }
 
     private func updateClickOutsideMonitor() {
@@ -1044,13 +1137,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationWillTerminate(_ notification: Notification) {
         DesktopWallpaperController.shared.hideWallpapers()
         
-        if let ref = showPopoverHotKeyRef {
-            UnregisterEventHotKey(ref)
+        if let id = showPopoverCustomHotKeyID {
+            ShortcutManager.shared.unregisterCustomHotKey(id: id)
         }
         if let item = statusItem {
             NSStatusBar.system.removeStatusItem(item)
         }
-        uninstallGlobalEventHandler()
         ShortcutManager.shared.unregisterAllShortcuts()
         LaunchAnimationManager.shared.cancelAnimation()
         if let window = destinTabWindow {
@@ -1132,44 +1224,24 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     // MARK: - Global Shortcut
 
     private func setupShowPopoverShortcut() {
-        installGlobalEventHandlerIfNeeded()
-
-        if let ref = showPopoverHotKeyRef {
-            UnregisterEventHotKey(ref)
-            showPopoverHotKeyRef = nil
+        // Unregister previous custom hotkey if any
+        if let id = showPopoverCustomHotKeyID {
+            ShortcutManager.shared.unregisterCustomHotKey(id: id)
+            showPopoverCustomHotKeyID = nil
         }
 
         let prefs = PreferencesManager.shared.preferences
         let keyCode = prefs.showPopoverKeyCode
-        let modifiers = cocoaToCarbonModifiers(prefs.showPopoverModifiers)
+        let modifiers = prefs.showPopoverModifiers
 
         guard keyCode != 0 || modifiers != 0 else { return }
 
-        let hotKeyID = EventHotKeyID(signature: showPopoverHotKeySignature, id: showPopoverHotKeyID)
-
-        var hotKeyRef: EventHotKeyRef?
-        let status = RegisterEventHotKey(
-            keyCode,
-            modifiers,
-            hotKeyID,
-            GetEventDispatcherTarget(),
-            0,
-            &hotKeyRef
-        )
-
-        if status == noErr {
-            showPopoverHotKeyRef = hotKeyRef
+        showPopoverCustomHotKeyID = ShortcutManager.shared.registerCustomHotKey(
+            keyCode: keyCode,
+            cocoaModifiers: modifiers
+        ) { [weak self] in
+            self?.toggleMainWindow()
         }
-    }
-
-    private func cocoaToCarbonModifiers(_ cocoaFlags: UInt32) -> UInt32 {
-        let flags = NSEvent.ModifierFlags(rawValue: UInt(cocoaFlags))
-        var carbon: UInt32 = 0
-        if flags.contains(.command) { carbon |= UInt32(cmdKey) }
-        if flags.contains(.option)  { carbon |= UInt32(optionKey) }
-        if flags.contains(.control) { carbon |= UInt32(controlKey) }
-        if flags.contains(.shift)   { carbon |= UInt32(shiftKey) }
-        return carbon
     }
     
     // MARK: - Unified HotKey Handler
@@ -1197,54 +1269,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             }
         }
     }
-}
-
-// MARK: - Global Event Handler
-
-private var globalEventHandlerInstalled = false
-private var globalEventHandlerRef: EventHandlerRef?
-private let showPopoverHotKeySignature = FourCharCode(bitPattern: 0x53484F57) // 'SHOW'
-private let showPopoverHotKeyID: UInt32 = 9999
-
-func installGlobalEventHandlerIfNeeded() {
-    guard !globalEventHandlerInstalled else { return }
-
-    let callback: EventHandlerUPP = { _, eventRef, _ -> OSStatus in
-        guard let event = eventRef else { return OSStatus(eventNotHandledErr) }
-        var hkID = EventHotKeyID()
-        let result = GetEventParameter(
-            event,
-            EventParamName(kEventParamDirectObject),
-            EventParamType(typeEventHotKeyID),
-            nil,
-            MemoryLayout<EventHotKeyID>.size,
-            nil,
-            &hkID
-        )
-        if result == noErr && hkID.signature == showPopoverHotKeySignature && hkID.id == showPopoverHotKeyID {
-            DispatchQueue.main.async {
-                (NSApp.delegate as? AppDelegate)?.toggleMainWindow()
-            }
-            return noErr
-        }
-        return OSStatus(eventNotHandledErr)
-    }
-
-    var eventType = EventTypeSpec(eventClass: OSType(kEventClassKeyboard), eventKind: UInt32(kEventHotKeyPressed))
-    var handler: EventHandlerRef?
-    let status = InstallEventHandler(GetEventDispatcherTarget(), callback, 1, &eventType, nil, &handler)
-    if status == noErr {
-        globalEventHandlerRef = handler
-        globalEventHandlerInstalled = true
-    }
-}
-
-func uninstallGlobalEventHandler() {
-    if let ref = globalEventHandlerRef {
-        RemoveEventHandler(ref)
-        globalEventHandlerRef = nil
-    }
-    globalEventHandlerInstalled = false
 }
 
 // MARK: - MenuBar Window View (wrapper for window dragging)

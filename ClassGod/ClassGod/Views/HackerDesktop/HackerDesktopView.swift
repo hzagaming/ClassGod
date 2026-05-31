@@ -2,449 +2,488 @@
 //  HackerDesktopView.swift
 //  ClassGod
 //
+//  Widget Configuration Center — manage Desk Widget data & settings.
+//
 
 import SwiftUI
 
 struct HackerDesktopView: View {
-    @State private var widgets: [HackerWidgetItem] = []
-    @State private var showPicker = false
-    @State private var showGrid = false
     var onClose: () -> Void
     
-    private let gridSpacing: CGFloat = 40
+    @State private var todoItems: [TodoItem] = []
+    @State private var noteContent: String = ""
+    @State private var clockCity: String = "Beijing"
+    @State private var weatherCity: String = "Beijing"
+    @State private var cryptoBTC: String = "$64,230 ▲2.4%"
+    @State private var cryptoETH: String = "$3,450 ▼0.8%"
+    @State private var quoteText: String = "The only truly secure system is one that is powered off."
+    @State private var quoteAuthor: String = "Gene Spafford"
+    @State private var asciiArt: String = "  .--.\n /  o \\n|   __|\n \\__/"
+    @State private var terminalLogs: [String] = [
+        "[14:02:01] kernel: system boot",
+        "[14:02:05] sshd: accepted key",
+        "[14:03:12] cron: daily backup"
+    ]
+    @State private var filePaths: [FileItem] = []
+    @State private var appItems: [AppLauncherItem] = []
     
+    @State private var selectedTab = 0
+    
+    @ObservedObject private var prefs = PreferencesManager.shared
+    private var zoomScale: CGFloat { CGFloat(prefs.preferences.windowZoomScale) }
     var body: some View {
-        GeometryReader { geo in
-            ZStack {
-                // Background
-                hackerBackground(size: geo.size)
-                
-                // Widgets
-                ForEach($widgets) { $widget in
-                    WidgetContainerView(
-                        widget: $widget,
-                        onDelete: { deleteWidget(widget) },
-                        onBringToFront: { bringToFront(widget) },
-                        onChange: { saveWidgets() },
-                        canvasSize: geo.size,
-                        showGrid: showGrid,
-                        gridSize: gridSpacing
-                    )
-                }
-                
-                // Empty state
-                if widgets.isEmpty {
-                    emptyStateView
-                        .transition(.asymmetric(
-                            insertion: .scale(scale: 0.9).combined(with: .opacity),
-                            removal: .scale(scale: 0.9).combined(with: .opacity)
-                        ))
-                }
-                
-                // Toolbar
-                VStack {
-                    Spacer()
-                    toolbar(canvasSize: geo.size)
-                        .padding(.bottom, 16)
-                }
-                
-                // Widget picker sheet
-                if showPicker {
-                    Color.black.opacity(0.5)
-                        .ignoresSafeArea()
-                        .transition(.opacity)
-                        .onTapGesture {
-                            SoundEffectManager.shared.playButtonClick()
-                            withAnimation(.easeInOut(duration: 0.15)) {
-                                showPicker = false
-                            }
-                        }
-                    
-                    WidgetPickerView(
-                        onAdd: { type in
-                            addWidget(type: type, canvasSize: geo.size)
-                        },
-                        onClose: {
-                            withAnimation(.easeInOut(duration: 0.15)) {
-                                showPicker = false
-                            }
-                        }
-                    )
-                    .position(x: geo.size.width / 2, y: geo.size.height / 2)
-                    .transition(.asymmetric(
-                        insertion: .scale(scale: 0.9).combined(with: .opacity),
-                        removal: .scale(scale: 0.95).combined(with: .opacity)
-                    ))
-                }
-            }
-            .onAppear {
-                SystemMonitor.shared.start(interval: 1.0)
-                loadWidgets(canvasSize: geo.size)
-            }
-            .onDisappear {
-                SystemMonitor.shared.stop()
-                saveWidgets()
-            }
-
-        }
-    }
-    
-    // MARK: - Background
-    
-    private func hackerBackground(size: CGSize) -> some View {
-        ZStack {
-            Color.black
-            
-            // Subtle scanline effect
-            scanlines(size: size)
-            
-            // Grid lines
-            gridLines(size: size)
-                .opacity(showGrid ? 1 : 0)
-                .animation(.easeInOut(duration: 0.3), value: showGrid)
-            
-            // Corner accents
-            VStack {
-                HStack {
-                    cornerAccent
-                    Spacer()
-                    cornerAccent.rotationEffect(.degrees(90))
-                }
-                Spacer()
-                HStack {
-                    cornerAccent.rotationEffect(.degrees(-90))
-                    Spacer()
-                    cornerAccent.rotationEffect(.degrees(180))
-                }
-            }
-            .padding(12)
-        }
-    }
-    
-    private func scanlines(size: CGSize) -> some View {
-        Canvas { context, size in
-            let lineHeight: CGFloat = 2
-            let gapHeight: CGFloat = 3
-            let lineColor = Color.white.opacity(0.006)
-            
-            for y in stride(from: 0, to: size.height, by: lineHeight + gapHeight) {
-                var path = Path()
-                path.move(to: CGPoint(x: 0, y: y))
-                path.addLine(to: CGPoint(x: size.width, y: y))
-                context.stroke(path, with: .color(lineColor), lineWidth: lineHeight)
-            }
-        }
-    }
-    
-    private func gridLines(size: CGSize) -> some View {
-        Canvas { context, size in
-            let lineColor = Color.white.opacity(0.035)
-            
-            for x in stride(from: 0, to: size.width, by: gridSpacing) {
-                var path = Path()
-                path.move(to: CGPoint(x: x, y: 0))
-                path.addLine(to: CGPoint(x: x, y: size.height))
-                context.stroke(path, with: .color(lineColor), lineWidth: 0.5)
-            }
-            
-            for y in stride(from: 0, to: size.height, by: gridSpacing) {
-                var path = Path()
-                path.move(to: CGPoint(x: 0, y: y))
-                path.addLine(to: CGPoint(x: size.width, y: y))
-                context.stroke(path, with: .color(lineColor), lineWidth: 0.5)
-            }
-        }
-    }
-    
-    private var cornerAccent: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Rectangle()
-                .fill(Color.cyan.opacity(0.4))
-                .frame(width: 24, height: 1.5)
-            Rectangle()
-                .fill(Color.cyan.opacity(0.4))
-                .frame(width: 1.5, height: 24)
-        }
-    }
-    
-    // MARK: - Toolbar
-    
-    private func toolbar(canvasSize: CGSize) -> some View {
-        HStack(spacing: 12) {
-            ToolbarButton(
-                icon: "plus",
-                label: "Add Widget",
-                isPrimary: true,
-                action: {
-                    SoundEffectManager.shared.playWidgetPickerOpen()
-                    withAnimation(.easeInOut(duration: 0.2)) {
-                        showPicker = true
-                    }
-                }
-            )
-            
-            ToolbarButton(
-                icon: showGrid ? "grid" : "grid.circle",
-                label: showGrid ? "Hide Grid" : "Show Grid",
-                isActive: showGrid,
-                action: {
-                    SoundEffectManager.shared.playGridToggle()
-                    withAnimation(.easeInOut(duration: 0.3)) {
-                        showGrid.toggle()
-                    }
-                }
-            )
-            
-            ToolbarButton(
-                icon: "arrow.counterclockwise",
-                label: "Reset Layout",
-                isDisabled: widgets.isEmpty,
-                action: {
-                    SoundEffectManager.shared.playLayoutReset()
-                    HapticManager.shared.success()
-                    resetLayout(canvasSize: canvasSize)
-                }
-            )
-            
-            ToolbarButton(
-                icon: "trash",
-                label: "Clear All",
-                isDestructive: true,
-                isDisabled: widgets.isEmpty,
-                action: {
-                    SoundEffectManager.shared.playLayoutCleared()
-                    HapticManager.shared.warning()
-                    clearAllWidgets()
-                }
-            )
-            
-            Spacer()
-            
-            Text("\(widgets.count) widget\(widgets.count == 1 ? "" : "s")")
-                .font(.system(size: 10, design: .monospaced))
-                .foregroundStyle(.white.opacity(0.3))
-            
-            ToolbarButton(
-                icon: "xmark",
-                label: "Close",
-                action: {
+        VStack(spacing: 0 * zoomScale) {
+            // Title bar
+            HStack(spacing: 0 * zoomScale) {
+                Button(action: {
                     SoundEffectManager.shared.playButtonClick()
                     onClose()
+                }) {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 10 * zoomScale, weight: .bold))
+                        .foregroundStyle(.white.opacity(0.6))
+                        .frame(width: 24 * zoomScale, height: 24 * zoomScale)
+                        .background(Color(white: 0.08))
+                        .clipShape(Circle())
                 }
-            )
+                .buttonStyle(.plain)
+                .padding(.leading, 12 * zoomScale)
+                
+                Spacer()
+                
+                Text("Widget Config Center")
+                    .font(.system(size: 13 * zoomScale, weight: .bold, design: .monospaced))
+                    .foregroundStyle(.white)
+                
+                Spacer()
+                
+                Color.clear.frame(width: 36 * zoomScale, height: 24 * zoomScale)
+            }
+            .padding(.vertical, 8 * zoomScale)
+            .background(Color(white: 0.03))
+            
+            Divider().background(Color.white.opacity(0.1))
+            
+            // Tabs
+            HStack(spacing: 0 * zoomScale) {
+                TabButton(title: "Data", icon: "cpu", isSelected: selectedTab == 0) { selectedTab = 0 }
+                TabButton(title: "Tools", icon: "wrench", isSelected: selectedTab == 1) { selectedTab = 1 }
+                TabButton(title: "Fun", icon: "sparkles", isSelected: selectedTab == 2) { selectedTab = 2 }
+                TabButton(title: "About", icon: "info.circle", isSelected: selectedTab == 3) { selectedTab = 3 }
+            }
+            .padding(.horizontal, 8 * zoomScale)
+            .padding(.top, 8 * zoomScale)
+            
+            // Content
+            ScrollView {
+                VStack(spacing: 16 * zoomScale) {
+                    switch selectedTab {
+                    case 0: dataTab
+                    case 1: toolsTab
+                    case 2: funTab
+                    default: aboutTab
+                    }
+                }
+                .padding(14 * zoomScale)
+            }
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 10)
-        .background(
-            Capsule()
-                .fill(Color.black.opacity(0.6))
-                .overlay(Capsule().stroke(Color.white.opacity(0.08), lineWidth: 1))
+        .background(Color.black)
+        .overlay(
+            RoundedRectangle(cornerRadius: 12 * zoomScale)
+                .stroke(Color.white.opacity(0.12), lineWidth: 1 * zoomScale)
         )
-        .padding(.horizontal, 16)
+        .onAppear {
+            loadData()
+            SystemMonitor.shared.start(interval: 2.0)
+            // Periodically save system data to App Group
+            Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { _ in
+                saveSystemData()
+            }
+        }
+        .onDisappear {
+            SystemMonitor.shared.stop()
+        }
     }
     
-    // MARK: - Empty State
+    // MARK: - Tabs
     
-    private var emptyStateView: some View {
-        VStack(spacing: 20) {
-            ZStack {
-                Circle()
-                    .stroke(Color.cyan.opacity(0.12), lineWidth: 1)
-                    .frame(width: 88, height: 88)
+    private var dataTab: some View {
+        VStack(spacing: 14 * zoomScale) {
+            ConfigSection(title: "System Monitor", icon: "cpu") {
+                Text("System data is automatically collected every 5 seconds and synced to Desk Widgets via App Group.")
+                    .font(.system(size: 11 * zoomScale, design: .monospaced))
+                    .foregroundStyle(.white.opacity(0.45))
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 
-                Circle()
-                    .stroke(Color.cyan.opacity(0.06), lineWidth: 0.5)
-                    .frame(width: 72, height: 72)
-                
-                Image(systemName: "square.grid.2x2")
-                    .font(.system(size: 32, weight: .light))
-                    .foregroundStyle(.cyan.opacity(0.35))
+                HStack(spacing: 12 * zoomScale) {
+                    StatBadge(label: "CPU", value: "\(Int(SystemMonitor.shared.cpu.total))%", color: .cyan)
+                    StatBadge(label: "RAM", value: "\(Int(SystemMonitor.shared.memory.usedPercent * 100))%", color: .green)
+                    StatBadge(label: "Battery", value: "\(Int(SystemMonitor.shared.battery.level))%", color: .orange)
+                }
             }
             
-            VStack(spacing: 8) {
-                Text("HACKER DESKTOP")
-                    .font(.system(size: 14, weight: .bold, design: .monospaced))
-                    .foregroundStyle(.white)
-                    .tracking(4)
+            ConfigSection(title: "Clock & Weather", icon: "clock") {
+                HStack(spacing: 12 * zoomScale) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Clock City")
+                            .font(.system(size: 10 * zoomScale, design: .monospaced))
+                            .foregroundStyle(.white.opacity(0.4))
+                        TextField("City", text: $clockCity)
+                            .textFieldStyle(.plain)
+                            .font(.system(size: 12 * zoomScale, design: .monospaced))
+                            .foregroundStyle(.white)
+                            .padding(8 * zoomScale)
+                            .background(Color(white: 0.06))
+                            .clipShape(RoundedRectangle(cornerRadius: 6 * zoomScale))
+                    }
+                    
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Weather City")
+                            .font(.system(size: 10 * zoomScale, design: .monospaced))
+                            .foregroundStyle(.white.opacity(0.4))
+                        TextField("City", text: $weatherCity)
+                            .textFieldStyle(.plain)
+                            .font(.system(size: 12 * zoomScale, design: .monospaced))
+                            .foregroundStyle(.white)
+                            .padding(8 * zoomScale)
+                            .background(Color(white: 0.06))
+                            .clipShape(RoundedRectangle(cornerRadius: 6 * zoomScale))
+                    }
+                }
+            }
+        }
+    }
+    
+    private var toolsTab: some View {
+        VStack(spacing: 14 * zoomScale) {
+            ConfigSection(title: "Todo List", icon: "checkmark.square") {
+                VStack(spacing: 6 * zoomScale) {
+                    ForEach($todoItems) { $item in
+                        HStack(spacing: 8 * zoomScale) {
+                            Image(systemName: item.isDone ? "checkmark.square.fill" : "square")
+                                .font(.system(size: 12 * zoomScale))
+                                .foregroundStyle(item.isDone ? .green : .white.opacity(0.4))
+                                .onTapGesture {
+                                    item.isDone.toggle()
+                                    saveData()
+                                }
+                            TextField("Task", text: $item.text)
+                                .textFieldStyle(.plain)
+                                .font(.system(size: 11 * zoomScale, design: .monospaced))
+                                .foregroundStyle(item.isDone ? .white.opacity(0.3) : .white.opacity(0.8))
+                                .strikethrough(item.isDone)
+                            
+                            Button(action: {
+                                todoItems.removeAll { $0.id == item.id }
+                                saveData()
+                            }) {
+                                Image(systemName: "xmark")
+                                    .font(.system(size: 9 * zoomScale))
+                                    .foregroundStyle(.red.opacity(0.6))
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                }
                 
-                Text("Add widgets to build your system dashboard")
-                    .font(.system(size: 11, design: .monospaced))
-                    .foregroundStyle(.white.opacity(0.35))
+                Button(action: {
+                    todoItems.append(TodoItem(id: UUID(), text: "", isDone: false))
+                }) {
+                    HStack(spacing: 4 * zoomScale) {
+                        Image(systemName: "plus")
+                            .font(.system(size: 10 * zoomScale, weight: .bold))
+                        Text("Add Task")
+                            .font(.system(size: 11 * zoomScale, weight: .bold, design: .monospaced))
+                    }
+                    .foregroundStyle(.cyan)
+                    .padding(.vertical, 6 * zoomScale)
+                }
+                .buttonStyle(.plain)
+            }
+            
+            ConfigSection(title: "Quick Note", icon: "note.text") {
+                TextEditor(text: $noteContent)
+                    .font(.system(size: 11 * zoomScale, design: .monospaced))
+                    .foregroundStyle(.white.opacity(0.8))
+                    .scrollContentBackground(.hidden)
+                    .background(Color(white: 0.04))
+                    .clipShape(RoundedRectangle(cornerRadius: 8 * zoomScale))
+                    .frame(height: 100 * zoomScale)
+                    .onChange(of: noteContent) { _, _ in saveData() }
+            }
+        }
+    }
+    
+    private var funTab: some View {
+        VStack(spacing: 14 * zoomScale) {
+            ConfigSection(title: "Crypto Prices", icon: "bitcoinsign.circle") {
+                HStack(spacing: 12 * zoomScale) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("BTC")
+                            .font(.system(size: 10 * zoomScale, design: .monospaced))
+                            .foregroundStyle(.white.opacity(0.4))
+                        TextField("Price", text: $cryptoBTC)
+                            .textFieldStyle(.plain)
+                            .font(.system(size: 12 * zoomScale, design: .monospaced))
+                            .foregroundStyle(.white)
+                            .padding(8 * zoomScale)
+                            .background(Color(white: 0.06))
+                            .clipShape(RoundedRectangle(cornerRadius: 6 * zoomScale))
+                    }
+                    
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("ETH")
+                            .font(.system(size: 10 * zoomScale, design: .monospaced))
+                            .foregroundStyle(.white.opacity(0.4))
+                        TextField("Price", text: $cryptoETH)
+                            .textFieldStyle(.plain)
+                            .font(.system(size: 12 * zoomScale, design: .monospaced))
+                            .foregroundStyle(.white)
+                            .padding(8 * zoomScale)
+                            .background(Color(white: 0.06))
+                            .clipShape(RoundedRectangle(cornerRadius: 6 * zoomScale))
+                    }
+                }
+            }
+            
+            ConfigSection(title: "Hacker Quote", icon: "quote.bubble") {
+                VStack(alignment: .leading, spacing: 6) {
+                    TextField("Quote", text: $quoteText)
+                        .textFieldStyle(.plain)
+                        .font(.system(size: 11 * zoomScale, design: .monospaced))
+                        .foregroundStyle(.white.opacity(0.8))
+                        .padding(8 * zoomScale)
+                        .background(Color(white: 0.06))
+                        .clipShape(RoundedRectangle(cornerRadius: 6 * zoomScale))
+                    
+                    TextField("Author", text: $quoteAuthor)
+                        .textFieldStyle(.plain)
+                        .font(.system(size: 11 * zoomScale, design: .monospaced))
+                        .foregroundStyle(.white.opacity(0.5))
+                        .padding(8 * zoomScale)
+                        .background(Color(white: 0.06))
+                        .clipShape(RoundedRectangle(cornerRadius: 6 * zoomScale))
+                }
+            }
+            
+            ConfigSection(title: "Terminal Logs", icon: "terminal") {
+                VStack(spacing: 4 * zoomScale) {
+                    ForEach(terminalLogs.indices, id: \.self) { i in
+                        TextField("Log line", text: $terminalLogs[i])
+                            .textFieldStyle(.plain)
+                            .font(.system(size: 10 * zoomScale, design: .monospaced))
+                            .foregroundStyle(.green.opacity(0.8))
+                            .padding(6 * zoomScale)
+                            .background(Color(white: 0.04))
+                            .clipShape(RoundedRectangle(cornerRadius: 4 * zoomScale))
+                    }
+                }
+            }
+        }
+    }
+    
+    private var aboutTab: some View {
+        VStack(spacing: 16 * zoomScale) {
+            VStack(spacing: 8 * zoomScale) {
+                Image(systemName: "square.grid.2x2")
+                    .font(.system(size: 40 * zoomScale, weight: .light))
+                    .foregroundStyle(.cyan.opacity(0.4))
+                
+                Text("ClassGod Desk Widgets")
+                    .font(.system(size: 14 * zoomScale, weight: .bold, design: .monospaced))
+                    .foregroundStyle(.white)
+                
+                Text("macOS Sonoma-style Desk Widgets powered by WidgetKit")
+                    .font(.system(size: 11 * zoomScale, design: .monospaced))
+                    .foregroundStyle(.white.opacity(0.4))
                     .multilineTextAlignment(.center)
             }
             
-            Button(action: {
-                SoundEffectManager.shared.playWidgetPickerOpen()
-                withAnimation(.easeInOut(duration: 0.2)) {
-                    showPicker = true
+            VStack(alignment: .leading, spacing: 10) {
+                Text("Available Widgets")
+                    .font(.system(size: 11 * zoomScale, weight: .bold, design: .monospaced))
+                    .foregroundStyle(.white.opacity(0.6))
+                
+                let widgets = [
+                    ("System", "CPU, Memory, Disk, Network, Battery, Uptime"),
+                    ("Info", "Clock, World Clock, Calendar, Weather, System Info"),
+                    ("Tools", "Todo List, Notes, Files, App Launcher"),
+                    ("Hacker", "Terminal Log, ASCII Art, Crypto, Quotes")
+                ]
+                
+                ForEach(widgets, id: \.0) { category, list in
+                    HStack(alignment: .top, spacing: 8) {
+                        Text("\(category):")
+                            .font(.system(size: 10 * zoomScale, weight: .bold, design: .monospaced))
+                            .foregroundStyle(.cyan.opacity(0.7))
+                            .frame(width: 50, alignment: .leading)
+                        Text(list)
+                            .font(.system(size: 10 * zoomScale, design: .monospaced))
+                            .foregroundStyle(.white.opacity(0.5))
+                    }
                 }
-            }) {
-                HStack(spacing: 6) {
-                    Image(systemName: "plus")
-                        .font(.system(size: 11, weight: .bold))
-                    Text("Add First Widget")
-                        .font(.system(size: 12, weight: .bold, design: .monospaced))
-                }
-                .padding(.horizontal, 18)
-                .padding(.vertical, 9)
-                .background(Color.cyan.opacity(0.12))
-                .foregroundStyle(.cyan)
-                .clipShape(Capsule())
-                .overlay(Capsule().stroke(Color.cyan.opacity(0.35), lineWidth: 1))
             }
-            .buttonStyle(.plain)
+            .padding(12 * zoomScale)
+            .background(Color(white: 0.03))
+            .clipShape(RoundedRectangle(cornerRadius: 10 * zoomScale))
+            
+            Text("Right-click on desktop → Edit Widgets → Add ClassGod widgets")
+                .font(.system(size: 10 * zoomScale, design: .monospaced))
+                .foregroundStyle(.white.opacity(0.35))
+                .multilineTextAlignment(.center)
         }
-        .padding(36)
-        .background(
-            RoundedRectangle(cornerRadius: 14)
-                .fill(Color(white: 0.02))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 14)
-                        .stroke(Color.cyan.opacity(0.08), lineWidth: 1)
-                )
+        .padding(20 * zoomScale)
+    }
+    
+    // MARK: - Data Management
+    
+    private func saveSystemData() {
+        let store = WidgetDataStore.shared
+        let disk = SystemMonitor.shared.disks.first
+        store.saveSystemSnapshot(
+            cpu: SystemMonitor.shared.cpu.total,
+            memoryUsed: Double(SystemMonitor.shared.memory.used) / 1024 / 1024 / 1024,
+            memoryTotal: Double(SystemMonitor.shared.memory.total) / 1024 / 1024 / 1024,
+            diskFree: Double(disk?.free ?? 0) / 1024 / 1024 / 1024,
+            diskTotal: Double(disk?.total ?? 0) / 1024 / 1024 / 1024,
+            netDown: SystemMonitor.shared.network.downloadSpeedKBs / 1024,
+            netUp: SystemMonitor.shared.network.uploadSpeedKBs / 1024,
+            battery: SystemMonitor.shared.battery.level,
+            isCharging: SystemMonitor.shared.battery.isCharging,
+            uptime: Date().timeIntervalSince(SystemMonitor.shared.system.bootTime ?? Date())
         )
+        store.set(clockCity, forKey: .clockCity)
+        store.set(weatherCity, forKey: .weatherCity)
+        store.set(weatherCity, forKey: .weatherCity)
+        store.set("24°", forKey: .weatherTemp)
+        store.set("cloud.sun.fill", forKey: .weatherCondition)
+        store.setArray(todoItems, forKey: .todoItems)
+        store.set(noteContent, forKey: .noteContent)
+        store.setArray(filePaths, forKey: .filePaths)
+        store.setArray(appItems, forKey: .appBundleIDs)
+        store.set(cryptoBTC, forKey: .cryptoBTC)
+        store.set(cryptoETH, forKey: .cryptoETH)
+        store.set(quoteText, forKey: .quoteText)
+        store.set(quoteAuthor, forKey: .quoteAuthor)
+        store.set(terminalLogs, forKey: .terminalLogs)
+        store.set(asciiArt, forKey: .asciiArt)
+        store.reloadAllWidgets()
     }
     
-    // MARK: - Widget Management
+    private func saveData() {
+        saveSystemData()
+    }
     
-    private func addWidget(type: WidgetType, canvasSize: CGSize) {
-        let x = min(40 + Double(widgets.count % 5) * 30, canvasSize.width - type.defaultSize.width - 20)
-        let y = min(40 + Double(widgets.count / 5) * 30, canvasSize.height - type.defaultSize.height - 80)
-        let widget = HackerWidgetItem(type: type, x: x, y: y)
-        withAnimation(.spring(response: 0.4, dampingFraction: 0.75)) {
-            widgets.append(widget)
+    private func loadData() {
+        let store = WidgetDataStore.shared
+        clockCity = store.string(forKey: .clockCity) ?? "Beijing"
+        weatherCity = store.string(forKey: .weatherCity) ?? "Beijing"
+        todoItems = store.array(forKey: .todoItems, type: TodoItem.self)
+        noteContent = store.string(forKey: .noteContent) ?? ""
+        filePaths = store.array(forKey: .filePaths, type: FileItem.self)
+        appItems = store.array(forKey: .appBundleIDs, type: AppLauncherItem.self)
+        cryptoBTC = store.string(forKey: .cryptoBTC) ?? "$64,230 ▲2.4%"
+        cryptoETH = store.string(forKey: .cryptoETH) ?? "$3,450 ▼0.8%"
+        quoteText = store.string(forKey: .quoteText) ?? "The only truly secure system is one that is powered off."
+        quoteAuthor = store.string(forKey: .quoteAuthor) ?? "Gene Spafford"
+        terminalLogs = store.stringArray(forKey: .terminalLogs)
+        if terminalLogs.isEmpty {
+            terminalLogs = [
+                "[14:02:01] kernel: system boot",
+                "[14:02:05] sshd: accepted key",
+                "[14:03:12] cron: daily backup"
+            ]
         }
-        SoundEffectManager.shared.playWidgetAdded()
-        HapticManager.shared.success()
-        saveWidgets()
-    }
-    
-    private func deleteWidget(_ widget: HackerWidgetItem) {
-        withAnimation(.easeInOut(duration: 0.18)) {
-            widgets.removeAll { $0.id == widget.id }
-        }
-        saveWidgets()
-    }
-    
-    private func clearAllWidgets() {
-        withAnimation(.easeInOut(duration: 0.25)) {
-            widgets.removeAll()
-        }
-        saveWidgets()
-    }
-    
-    private func bringToFront(_ widget: HackerWidgetItem) {
-        guard let idx = widgets.firstIndex(where: { $0.id == widget.id }) else { return }
-        let item = widgets.remove(at: idx)
-        widgets.append(item)
-    }
-    
-    private func resetLayout(canvasSize: CGSize) {
-        withAnimation(.easeInOut(duration: 0.3)) {
-            for i in widgets.indices {
-                let type = widgets[i].type
-                let x = min(20 + Double(i % 4) * 30, canvasSize.width - type.defaultSize.width - 20)
-                let y = min(20 + Double(i / 4) * 30, canvasSize.height - type.defaultSize.height - 80)
-                widgets[i].x = x
-                widgets[i].y = y
-                widgets[i].width = type.defaultSize.width
-                widgets[i].height = type.defaultSize.height
-            }
-        }
-        saveWidgets()
-    }
-    
-    private func saveWidgets() {
-        do {
-            let data = try JSONEncoder().encode(widgets)
-            UserDefaults.standard.set(data, forKey: "com.hanazar.classgod.hackerdesktop.widgets")
-        } catch {
-            print("[HackerDesktop] Failed to save widgets: \(error)")
-        }
-    }
-    
-    private func loadWidgets(canvasSize: CGSize) {
-        guard let data = UserDefaults.standard.data(forKey: "com.hanazar.classgod.hackerdesktop.widgets") else { return }
-        do {
-            var loaded = try JSONDecoder().decode([HackerWidgetItem].self, from: data)
-            for i in loaded.indices {
-                let type = loaded[i].type
-                loaded[i].x = max(0, min(loaded[i].x, canvasSize.width - type.minSize.width))
-                loaded[i].y = max(0, min(loaded[i].y, canvasSize.height - type.minSize.height - 60))
-                loaded[i].width = max(type.minSize.width, min(loaded[i].width, canvasSize.width - loaded[i].x))
-                loaded[i].height = max(type.minSize.height, min(loaded[i].height, canvasSize.height - loaded[i].y - 60))
-            }
-            widgets = loaded
-        } catch {
-            print("[HackerDesktop] Failed to load widgets: \(error)")
-        }
+        asciiArt = store.string(forKey: .asciiArt) ?? "  .--.\n /  o \\n|   __|\n \\__/"
     }
 }
 
-// MARK: - Toolbar Button
+// MARK: - Components
 
-private struct ToolbarButton: View {
+private struct TabButton: View {
+    @ObservedObject private var prefs = PreferencesManager.shared
+    private var zoomScale: CGFloat { CGFloat(prefs.preferences.windowZoomScale) }
+    let title: String
     let icon: String
-    var label: String? = nil
-    var isPrimary: Bool = false
-    var isActive: Bool = false
-    var isDestructive: Bool = false
-    var isDisabled: Bool = false
+    let isSelected: Bool
     let action: () -> Void
-    
-    @State private var isHovered = false
     
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 5) {
+            HStack(spacing: 4 * zoomScale) {
                 Image(systemName: icon)
-                    .font(.system(size: isPrimary ? 11 : 12, weight: isPrimary ? .bold : .medium))
-                if let label = label, isPrimary {
-                    Text(label)
-                        .font(.system(size: 11, weight: .bold, design: .monospaced))
-                }
+                    .font(.system(size: 10 * zoomScale))
+                Text(title)
+                    .font(.system(size: 11 * zoomScale, weight: .medium, design: .monospaced))
             }
+            .foregroundStyle(isSelected ? .cyan : .white.opacity(0.5))
+            .padding(.horizontal, 12 * zoomScale)
+            .padding(.vertical, 6 * zoomScale)
+            .background(isSelected ? Color.cyan.opacity(0.1) : Color.clear)
+            .clipShape(Capsule())
+            .overlay(
+                Capsule()
+                    .stroke(isSelected ? Color.cyan.opacity(0.3) : Color.clear, lineWidth: 1 * zoomScale)
+            )
         }
         .buttonStyle(.plain)
-        .foregroundStyle(foregroundColor)
-        .padding(.horizontal, isPrimary ? 12 : 8)
-        .padding(.vertical, isPrimary ? 6 : 5)
-        .background(backgroundColor)
-        .clipShape(Capsule())
+    }
+}
+
+private struct ConfigSection<Content: View>: View {
+    @ObservedObject private var prefs = PreferencesManager.shared
+    private var zoomScale: CGFloat { CGFloat(prefs.preferences.windowZoomScale) }
+    let title: String
+    let icon: String
+    @ViewBuilder let content: Content
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 6 * zoomScale) {
+                Image(systemName: icon)
+                    .font(.system(size: 10 * zoomScale))
+                    .foregroundStyle(.cyan.opacity(0.7))
+                Text(title)
+                    .font(.system(size: 11 * zoomScale, weight: .bold, design: .monospaced))
+                    .foregroundStyle(.white.opacity(0.6))
+            }
+            content
+        }
+        .padding(12 * zoomScale)
+        .background(Color(white: 0.03))
+        .clipShape(RoundedRectangle(cornerRadius: 10 * zoomScale))
         .overlay(
-            Capsule()
-                .stroke(strokeColor, lineWidth: isPrimary ? 1 : (isHovered ? 1 : 0.5))
+            RoundedRectangle(cornerRadius: 10 * zoomScale)
+                .stroke(Color.white.opacity(0.06), lineWidth: 1 * zoomScale)
         )
-        .opacity(isDisabled ? 0.35 : 1)
-        .onHover { isHovered = $0 }
-        .animation(.easeInOut(duration: 0.15), value: isHovered)
-        .animation(.easeInOut(duration: 0.15), value: isActive)
-        .disabled(isDisabled)
     }
+}
+
+private struct StatBadge: View {
+    @ObservedObject private var prefs = PreferencesManager.shared
+    private var zoomScale: CGFloat { CGFloat(prefs.preferences.windowZoomScale) }
+    let label: String
+    let value: String
+    let color: Color
     
-    private var foregroundColor: Color {
-        if isPrimary { return .cyan }
-        if isDestructive { return .red.opacity(0.8) }
-        if isActive { return .cyan }
-        return .white.opacity(0.6)
-    }
-    
-    private var backgroundColor: Color {
-        if isPrimary { return Color.cyan.opacity(0.1) }
-        if isHovered { return Color.white.opacity(0.06) }
-        return Color.clear
-    }
-    
-    private var strokeColor: Color {
-        if isPrimary { return Color.cyan.opacity(0.3) }
-        if isActive { return Color.cyan.opacity(0.4) }
-        if isDestructive && isHovered { return Color.red.opacity(0.3) }
-        return Color.white.opacity(0.1)
+    var body: some View {
+        VStack(spacing: 2 * zoomScale) {
+            Text(value)
+                .font(.system(size: 14 * zoomScale, weight: .bold, design: .monospaced))
+                .foregroundStyle(color)
+            Text(label)
+                .font(.system(size: 8 * zoomScale, design: .monospaced))
+                .foregroundStyle(.white.opacity(0.35))
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 8 * zoomScale)
+        .background(Color(white: 0.05))
+        .clipShape(RoundedRectangle(cornerRadius: 6 * zoomScale))
     }
 }
 
 #Preview {
     HackerDesktopView(onClose: {})
-        .frame(width: 800, height: 600)
+        .frame(width: 520, height: 480)
         .background(Color.black)
 }

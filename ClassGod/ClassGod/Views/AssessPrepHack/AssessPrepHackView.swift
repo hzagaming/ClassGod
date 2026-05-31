@@ -16,9 +16,10 @@ struct AssessPrepHackView: View {
     
     var onClose: () -> Void
     
+    private var zoomScale: CGFloat { CGFloat(prefs.preferences.windowZoomScale) }
     var body: some View {
         ZStack {
-            VStack(spacing: 0) {
+            VStack(spacing: 0 * zoomScale) {
                 header
                 
                 if viewModel.assessPrepDetected {
@@ -41,14 +42,14 @@ struct AssessPrepHackView: View {
                 footer
             }
         }
-        .frame(width: prefs.preferences.panelWidth)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(
             RoundedRectangle(cornerRadius: prefs.preferences.panelCornerRadius)
                 .fill(Color.black)
         )
         .overlay(
             RoundedRectangle(cornerRadius: prefs.preferences.panelCornerRadius)
-                .stroke(Color.white.opacity(0.15), lineWidth: 1)
+                .stroke(Color.white.opacity(0.15), lineWidth: 1 * zoomScale)
         )
         .sheet(isPresented: $showAddSheet) {
             AddPanicAppView(viewModel: viewModel, app: nil)
@@ -90,15 +91,15 @@ struct AssessPrepHackView: View {
     // MARK: - Header
     
     private var header: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: 10 * zoomScale) {
             Button(action: {
                 SoundEffectManager.shared.playButtonClick()
                 onClose()
             }) {
                 Image(systemName: "xmark")
-                    .font(.system(size: 10, weight: .bold))
+                    .font(.system(size: 10 * zoomScale, weight: .bold))
                     .foregroundStyle(.white.opacity(0.6))
-                    .frame(width: 24, height: 24)
+                    .frame(width: 24 * zoomScale, height: 24 * zoomScale)
                     .background(Color(white: 0.08))
                     .clipShape(Circle())
             }
@@ -115,7 +116,7 @@ struct AssessPrepHackView: View {
                     .foregroundStyle(.white)
                 
                 Text("Break free from proctoring")
-                    .font(.system(size: 9, design: .monospaced))
+                    .font(.system(size: 9 * zoomScale, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.4))
             }
             
@@ -138,17 +139,17 @@ struct AssessPrepHackView: View {
     // MARK: - Detection Banner
     
     private var detectionBanner: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: 8 * zoomScale) {
             Image(systemName: "exclamationmark.triangle.fill")
                 .foregroundStyle(.yellow)
-                .font(.system(size: 14))
+                .font(.system(size: 14 * zoomScale))
             
             VStack(alignment: .leading, spacing: 2) {
                 Text("AssessPrep Detected")
-                    .font(.system(size: 11, weight: .bold, design: .monospaced))
+                    .font(.system(size: 11 * zoomScale, weight: .bold, design: .monospaced))
                     .foregroundStyle(.yellow)
                 Text(viewModel.assessPrepProcessName)
-                    .font(.system(size: 9, design: .monospaced))
+                    .font(.system(size: 9 * zoomScale, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.5))
             }
             
@@ -159,18 +160,18 @@ struct AssessPrepHackView: View {
                 viewModel.scanForAssessPrep()
             }) {
                 Image(systemName: "arrow.clockwise")
-                    .font(.system(size: 11))
+                    .font(.system(size: 11 * zoomScale))
                     .foregroundStyle(.white.opacity(0.5))
             }
             .buttonStyle(.plain)
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
+        .padding(.horizontal, 12 * zoomScale)
+        .padding(.vertical, 8 * zoomScale)
         .background(Color.yellow.opacity(0.08))
         .overlay(
             Rectangle()
                 .fill(Color.yellow.opacity(0.3))
-                .frame(height: 1),
+                .frame(height: 1 * zoomScale),
             alignment: .bottom
         )
     }
@@ -178,17 +179,17 @@ struct AssessPrepHackView: View {
     // MARK: - Active Bypass Banner
     
     private var activeBypassBanner: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: 8 * zoomScale) {
             Image(systemName: "shield.fill")
                 .foregroundStyle(.green)
-                .font(.system(size: 14))
+                .font(.system(size: 14 * zoomScale))
             
             VStack(alignment: .leading, spacing: 2) {
                 Text("Bypass Active")
-                    .font(.system(size: 11, weight: .bold, design: .monospaced))
+                    .font(.system(size: 11 * zoomScale, weight: .bold, design: .monospaced))
                     .foregroundStyle(.green)
                 Text(viewModel.activeTechniques.map(\.displayName).joined(separator: ", "))
-                    .font(.system(size: 9, design: .monospaced))
+                    .font(.system(size: 9 * zoomScale, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.5))
                     .lineLimit(1)
             }
@@ -200,22 +201,22 @@ struct AssessPrepHackView: View {
                 viewModel.stopAllBypasses()
             }) {
                 Text("Stop")
-                    .font(.system(size: 10, weight: .bold, design: .monospaced))
+                    .font(.system(size: 10 * zoomScale, weight: .bold, design: .monospaced))
                     .foregroundStyle(.red)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 4)
+                    .padding(.horizontal, 10 * zoomScale)
+                    .padding(.vertical, 4 * zoomScale)
                     .background(Color.red.opacity(0.1))
                     .cornerRadius(4)
             }
             .buttonStyle(.plain)
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
+        .padding(.horizontal, 12 * zoomScale)
+        .padding(.vertical, 8 * zoomScale)
         .background(Color.green.opacity(0.08))
         .overlay(
             Rectangle()
                 .fill(Color.green.opacity(0.3))
-                .frame(height: 1),
+                .frame(height: 1 * zoomScale),
             alignment: .bottom
         )
     }
@@ -224,7 +225,7 @@ struct AssessPrepHackView: View {
     
     private var appList: some View {
         ScrollView(showsIndicators: false) {
-            LazyVStack(spacing: 0) {
+            LazyVStack(spacing: 0 * zoomScale) {
                 ForEach(viewModel.panicApps) { app in
                     PanicAppRow(
                         app: app,
@@ -261,18 +262,18 @@ struct AssessPrepHackView: View {
     // MARK: - Empty State
     
     private var emptyState: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 12 * zoomScale) {
             Spacer()
             Image(systemName: "bolt.shield")
-                .font(.system(size: 40))
+                .font(.system(size: 40 * zoomScale))
                 .foregroundStyle(.white.opacity(0.15))
             
             Text("No panic apps configured")
-                .font(.system(size: 13, weight: .medium, design: .monospaced))
+                .font(.system(size: 13 * zoomScale, weight: .medium, design: .monospaced))
                 .foregroundStyle(.white.opacity(0.4))
             
             Text("Add apps to bypass AssessPrep lockdown")
-                .font(.system(size: 10, design: .monospaced))
+                .font(.system(size: 10 * zoomScale, design: .monospaced))
                 .foregroundStyle(.white.opacity(0.25))
                 .multilineTextAlignment(.center)
             
@@ -285,15 +286,15 @@ struct AssessPrepHackView: View {
     // MARK: - Footer
     
     private var footer: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 12 * zoomScale) {
             Button(action: {
                 SoundEffectManager.shared.playButtonClick()
                 viewModel.scanForAssessPrep()
             }) {
                 Image(systemName: "magnifyingglass")
-                    .font(.system(size: 11))
+                    .font(.system(size: 11 * zoomScale))
                 Text("Scan")
-                    .font(.system(size: 11, design: .monospaced))
+                    .font(.system(size: 11 * zoomScale, design: .monospaced))
             }
             .buttonStyle(.plain)
             .foregroundStyle(.white.opacity(0.5))
@@ -306,7 +307,7 @@ struct AssessPrepHackView: View {
                     viewModel.stopAllBypasses()
                 }) {
                     Text("Stop All")
-                        .font(.system(size: 11, weight: .bold, design: .monospaced))
+                        .font(.system(size: 11 * zoomScale, weight: .bold, design: .monospaced))
                         .foregroundStyle(.red.opacity(0.8))
                 }
                 .buttonStyle(.plain)
@@ -317,15 +318,15 @@ struct AssessPrepHackView: View {
                 showAddSheet = true
             }) {
                 Image(systemName: "plus")
-                    .font(.system(size: 11))
+                    .font(.system(size: 11 * zoomScale))
                 Text("Add App")
-                    .font(.system(size: 11, design: .monospaced))
+                    .font(.system(size: 11 * zoomScale, design: .monospaced))
             }
             .buttonStyle(.plain)
             .foregroundStyle(.white.opacity(0.5))
         }
         .padding(.horizontal)
-        .padding(.vertical, 10)
+        .padding(.vertical, 10 * zoomScale)
     }
     
     // MARK: - Toast Overlay
@@ -334,19 +335,19 @@ struct AssessPrepHackView: View {
         Group {
             if viewModel.showToast, let message = viewModel.toastMessage {
                 Text(message)
-                    .font(.system(size: 11, design: .monospaced))
+                    .font(.system(size: 11 * zoomScale, design: .monospaced))
                     .foregroundStyle(.white)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 8)
+                    .padding(.horizontal, 16 * zoomScale)
+                    .padding(.vertical, 8 * zoomScale)
                     .background(
                         Capsule()
                             .fill(Color(white: 0.12))
                             .overlay(
                                 Capsule()
-                                    .stroke(Color.white.opacity(0.15), lineWidth: 1)
+                                    .stroke(Color.white.opacity(0.15), lineWidth: 1 * zoomScale)
                             )
                     )
-                    .padding(.bottom, 16)
+                    .padding(.bottom, 16 * zoomScale)
                     .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
@@ -356,6 +357,8 @@ struct AssessPrepHackView: View {
 // MARK: - Panic App Row
 
 struct PanicAppRow: View {
+    @ObservedObject private var prefs = PreferencesManager.shared
+    private var zoomScale: CGFloat { CGFloat(prefs.preferences.windowZoomScale) }
     let app: PanicApp
     let onExecute: () -> Void
     let onToggle: () -> Void
@@ -365,16 +368,16 @@ struct PanicAppRow: View {
     @State private var isHovered = false
     
     var body: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: 10 * zoomScale) {
             // Execute button
             Button(action: onExecute) {
                 ZStack {
-                    RoundedRectangle(cornerRadius: 6)
+                    RoundedRectangle(cornerRadius: 6 * zoomScale)
                         .fill(app.isEnabled ? Color.red.opacity(0.15) : Color(white: 0.06))
-                        .frame(width: 36, height: 36)
+                        .frame(width: 36 * zoomScale, height: 36 * zoomScale)
                     
                     Image(systemName: app.bypassTechnique.iconName)
-                        .font(.system(size: 16))
+                        .font(.system(size: 16 * zoomScale))
                         .foregroundStyle(app.isEnabled ? .red : .white.opacity(0.2))
                 }
             }
@@ -383,11 +386,11 @@ struct PanicAppRow: View {
             
             VStack(alignment: .leading, spacing: 2) {
                 Text(app.name)
-                    .font(.system(size: 12, weight: .medium, design: .monospaced))
+                    .font(.system(size: 12 * zoomScale, weight: .medium, design: .monospaced))
                     .foregroundStyle(app.isEnabled ? .white : .white.opacity(0.3))
                 
                 Text(app.bypassTechnique.displayName)
-                    .font(.system(size: 9, design: .monospaced))
+                    .font(.system(size: 9 * zoomScale, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.35))
             }
             
@@ -396,23 +399,23 @@ struct PanicAppRow: View {
             // Toggle
             Button(action: onToggle) {
                 Image(systemName: app.isEnabled ? "checkmark.circle.fill" : "circle")
-                    .font(.system(size: 14))
+                    .font(.system(size: 14 * zoomScale))
                     .foregroundStyle(app.isEnabled ? .green : .white.opacity(0.15))
             }
             .buttonStyle(.plain)
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
+        .padding(.horizontal, 12 * zoomScale)
+        .padding(.vertical, 8 * zoomScale)
         .background(
-            RoundedRectangle(cornerRadius: 6)
+            RoundedRectangle(cornerRadius: 6 * zoomScale)
                 .fill(isHovered ? Color(white: 0.06) : Color.clear)
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 6)
-                .stroke(isHovered ? Color.white.opacity(0.1) : Color.clear, lineWidth: 1)
+            RoundedRectangle(cornerRadius: 6 * zoomScale)
+                .stroke(isHovered ? Color.white.opacity(0.1) : Color.clear, lineWidth: 1 * zoomScale)
         )
-        .padding(.horizontal, 8)
-        .padding(.vertical, 2)
+        .padding(.horizontal, 8 * zoomScale)
+        .padding(.vertical, 2 * zoomScale)
         .onHover { hovering in
             isHovered = hovering
         }

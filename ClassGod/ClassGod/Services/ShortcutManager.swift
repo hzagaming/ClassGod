@@ -11,6 +11,7 @@ import Carbon
 final class ShortcutManager {
     static let shared = ShortcutManager()
     private static let hotKeySignature = FourCharCode(bitPattern: 0x434C4744) // 'CLGD'
+    private static let customHotKeySignature = FourCharCode(bitPattern: 0x43555354) // 'CUST'
     
     private var registeredHotKeys: [UUID: EventHotKeyRef] = [:]
     private var callbackMap: [UInt32: UUID] = [:]
@@ -19,6 +20,11 @@ final class ShortcutManager {
     
     private var hotKeyHandlers: [(UUID) -> Void] = []
     
+    // MARK: - Custom Hot Keys (non-UUID, e.g. show popover)
+    private var customHotKeys: [UInt32: EventHotKeyRef] = [:]
+    private var customCallbacks: [UInt32: () -> Void] = [:]
+    private var nextCustomHotKeyID: UInt32 = 1
+    
     private init() {}
     
     deinit {
@@ -26,7 +32,7 @@ final class ShortcutManager {
         removeEventHandler()
     }
     
-    // MARK: - Carbon Event Hot Keys
+    // MARK: - Carbon Event Hot Keys (UUID-based)
     
     func registerShortcut(for tab: BrowserTab) -> Bool {
         unregisterShortcut(for: tab.id)
@@ -128,10 +134,61 @@ final class ShortcutManager {
         registeredHotKeys.removeAll()
         callbackMap.removeAll()
         nextHotKeyID = 1
+        
+        for (_, ref) in customHotKeys {
+            UnregisterEventHotKey(ref)
+        }
+        customHotKeys.removeAll()
+        customCallbacks.removeAll()
+        nextCustomHotKeyID = 1
     }
     
     func addHotKeyHandler(_ handler: @escaping (UUID) -> Void) {
         hotKeyHandlers.append(handler)
+    }
+    
+    // MARK: - Custom Hot Keys (no UUID)
+    
+    /// Register a custom hotkey with a closure callback. Returns a unique ID for later unregistration.
+    @discardableResult
+    func registerCustomHotKey(keyCode: UInt32, cocoaModifiers: UInt32, handler: @escaping () -> Void) -> UInt32? {
+        let carbonModifiers = cocoaToCarbonModifiers(UInt(cocoaModifiers))
+        guard keyCode != 0 || carbonModifiers != 0 else { return nil }
+        
+        let hotKeyID = EventHotKeyID(signature: Self.customHotKeySignature, id: nextCustomHotKeyID)
+        nextCustomHotKeyID += 1
+        
+        var hotKeyRef: EventHotKeyRef?
+        let status = RegisterEventHotKey(
+            keyCode,
+            carbonModifiers,
+            hotKeyID,
+            GetEventDispatcherTarget(),
+            0,
+            &hotKeyRef
+        )
+        
+        guard status == noErr, let ref = hotKeyRef else {
+            print("[ShortcutManager] Failed to register custom hotkey (keyCode: \(keyCode), modifiers: \(carbonModifiers))")
+            return nil
+        }
+        
+        customHotKeys[hotKeyID.id] = ref
+        customCallbacks[hotKeyID.id] = handler
+        
+        installHotKeyHandlerIfNeeded()
+        
+        return hotKeyID.id
+    }
+    
+    func unregisterCustomHotKey(id: UInt32) {
+        guard let ref = customHotKeys[id] else { return }
+        let status = UnregisterEventHotKey(ref)
+        if status != noErr {
+            print("[ShortcutManager] Warning: Failed to unregister custom hotkey (status: \(status))")
+        }
+        customHotKeys.removeValue(forKey: id)
+        customCallbacks.removeValue(forKey: id)
     }
     
     // MARK: - Hot Key Handler
@@ -155,10 +212,20 @@ final class ShortcutManager {
             
             guard status == noErr else { return OSStatus(eventNotHandledErr) }
             
+            // UUID-based shortcuts (BrowserTab / SwitchTarget)
             if hotKeyID.signature == ShortcutManager.hotKeySignature,
                let targetID = ShortcutManager.shared.callbackMap[hotKeyID.id] {
                 for handler in ShortcutManager.shared.hotKeyHandlers {
                     handler(targetID)
+                }
+                return noErr
+            }
+            
+            // Custom shortcuts (e.g. show popover)
+            if hotKeyID.signature == ShortcutManager.customHotKeySignature,
+               let handler = ShortcutManager.shared.customCallbacks[hotKeyID.id] {
+                DispatchQueue.main.async {
+                    handler()
                 }
                 return noErr
             }
@@ -193,7 +260,7 @@ final class ShortcutManager {
     
     // MARK: - Modifier Conversion
     
-    private func cocoaToCarbonModifiers(_ cocoaFlags: UInt) -> UInt32 {
+    func cocoaToCarbonModifiers(_ cocoaFlags: UInt) -> UInt32 {
         let flags = NSEvent.ModifierFlags(rawValue: cocoaFlags)
         var carbon: UInt32 = 0
         if flags.contains(.command) { carbon |= UInt32(cmdKey) }

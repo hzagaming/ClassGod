@@ -16,9 +16,10 @@ struct SuperSwitchView: View {
     
     var onClose: () -> Void
     
+    private var zoomScale: CGFloat { CGFloat(prefs.preferences.windowZoomScale) }
     var body: some View {
         ZStack {
-            VStack(spacing: 0) {
+            VStack(spacing: 0 * zoomScale) {
                 header
                 
                 if viewModel.targets.isEmpty {
@@ -33,14 +34,14 @@ struct SuperSwitchView: View {
                 footer
             }
         }
-        .frame(width: prefs.preferences.panelWidth)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(
             RoundedRectangle(cornerRadius: prefs.preferences.panelCornerRadius)
                 .fill(Color.black)
         )
         .overlay(
             RoundedRectangle(cornerRadius: prefs.preferences.panelCornerRadius)
-                .stroke(Color.white.opacity(0.15), lineWidth: 1)
+                .stroke(Color.white.opacity(0.15), lineWidth: 1 * zoomScale)
         )
         .sheet(isPresented: $showAddSheet) {
             AddSwitchTargetView(viewModel: viewModel, target: nil)
@@ -76,15 +77,15 @@ struct SuperSwitchView: View {
     // MARK: - Header
     
     private var header: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: 10 * zoomScale) {
             Button(action: {
                 SoundEffectManager.shared.playButtonClick()
                 onClose()
             }) {
                 Image(systemName: "xmark")
-                    .font(.system(size: 10, weight: .bold))
+                    .font(.system(size: 10 * zoomScale, weight: .bold))
                     .foregroundStyle(.white.opacity(0.6))
-                    .frame(width: 24, height: 24)
+                    .frame(width: 24 * zoomScale, height: 24 * zoomScale)
                     .background(Color(white: 0.08))
                     .clipShape(Circle())
             }
@@ -96,7 +97,7 @@ struct SuperSwitchView: View {
                     .foregroundStyle(.white)
                 
                 Text("Quick app switcher")
-                    .font(.system(size: 9, design: .monospaced))
+                    .font(.system(size: 9 * zoomScale, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.4))
             }
             
@@ -113,14 +114,14 @@ struct SuperSwitchView: View {
             .buttonStyle(.plain)
         }
         .padding(.horizontal)
-        .padding(.vertical, 10)
+        .padding(.vertical, 10 * zoomScale)
     }
     
     // MARK: - Target List
     
     private var targetList: some View {
         ScrollView {
-            VStack(spacing: 0) {
+            VStack(spacing: 0 * zoomScale) {
                 ForEach(viewModel.targets) { target in
                     TargetRow(
                         target: target,
@@ -136,7 +137,7 @@ struct SuperSwitchView: View {
                     )
                     if target.id != viewModel.targets.last?.id {
                         Divider()
-                            .padding(.leading, 48)
+                            .padding(.leading, 48 * zoomScale)
                             .opacity(0.3)
                     }
                 }
@@ -148,14 +149,14 @@ struct SuperSwitchView: View {
     // MARK: - Empty State
     
     private var emptyState: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: 10 * zoomScale) {
             ZStack {
                 Circle()
                     .fill(Color.white.opacity(0.1))
-                    .frame(width: 52, height: 52)
+                    .frame(width: 52 * zoomScale, height: 52 * zoomScale)
                 
                 Image(systemName: "arrow.left.arrow.right")
-                    .font(.system(size: 24))
+                    .font(.system(size: 24 * zoomScale))
                     .foregroundStyle(.white.opacity(0.7))
                     .symbolRenderingMode(.monochrome)
             }
@@ -169,22 +170,22 @@ struct SuperSwitchView: View {
                 .foregroundStyle(.white.opacity(0.5))
                 .multilineTextAlignment(.center)
         }
-        .frame(maxWidth: .infinity, minHeight: 120)
+        .frame(maxWidth: .infinity, minHeight: 120 * zoomScale)
         .padding()
     }
     
     // MARK: - Footer
     
     private var footer: some View {
-        HStack(spacing: 14) {
+        HStack(spacing: 14 * zoomScale) {
             Text("Click a target to switch. Set shortcuts for instant access.")
-                .font(.system(size: 9, design: .monospaced))
+                .font(.system(size: 9 * zoomScale, design: .monospaced))
                 .foregroundStyle(.white.opacity(0.4))
             
             Spacer()
         }
         .padding(.horizontal)
-        .padding(.vertical, 8)
+        .padding(.vertical, 8 * zoomScale)
     }
     
     // MARK: - Toast Overlay
@@ -192,21 +193,21 @@ struct SuperSwitchView: View {
     private var toastOverlay: some View {
         Group {
             if viewModel.showToast, let message = viewModel.toastMessage {
-                HStack(spacing: 6) {
+                HStack(spacing: 6 * zoomScale) {
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundStyle(.white)
                     Text(message)
-                        .font(.system(size: 12, weight: .medium, design: .monospaced))
+                        .font(.system(size: 12 * zoomScale, weight: .medium, design: .monospaced))
                         .foregroundStyle(.white)
                 }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 7)
+                .padding(.horizontal, 12 * zoomScale)
+                .padding(.vertical, 7 * zoomScale)
                 .background(Color(white: 0.12))
                 .overlay(
                     Rectangle()
-                        .stroke(Color.white.opacity(0.3), lineWidth: 1)
+                        .stroke(Color.white.opacity(0.3), lineWidth: 1 * zoomScale)
                 )
-                .padding(.bottom, 10)
+                .padding(.bottom, 10 * zoomScale)
                 .transition(.opacity)
             }
         }
@@ -216,6 +217,8 @@ struct SuperSwitchView: View {
 // MARK: - Target Row
 
 struct TargetRow: View {
+    @ObservedObject private var prefs = PreferencesManager.shared
+    private var zoomScale: CGFloat { CGFloat(prefs.preferences.windowZoomScale) }
     let target: SwitchTarget
     let onSwitch: () -> Void
     let onEdit: () -> Void
@@ -237,21 +240,21 @@ struct TargetRow: View {
             }
             onSwitch()
         }) {
-            HStack(spacing: 10) {
+            HStack(spacing: 10 * zoomScale) {
                 Image(systemName: target.iconName)
-                    .font(.system(size: 18, weight: .medium))
+                    .font(.system(size: 18 * zoomScale, weight: .medium))
                     .foregroundStyle(.white.opacity(0.8))
-                    .frame(width: 24)
+                    .frame(width: 24 * zoomScale)
                     .symbolRenderingMode(.monochrome)
                 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(target.name)
-                        .font(.system(size: 13, weight: .medium, design: .monospaced))
+                        .font(.system(size: 13 * zoomScale, weight: .medium, design: .monospaced))
                         .foregroundStyle(.white)
                         .lineLimit(1)
                     
                     Text(target.bundleIdentifier)
-                        .font(.system(size: 9, design: .monospaced))
+                        .font(.system(size: 9 * zoomScale, design: .monospaced))
                         .foregroundStyle(.white.opacity(0.4))
                         .lineLimit(1)
                 }
@@ -260,20 +263,20 @@ struct TargetRow: View {
                 
                 if target.isValidShortcut {
                     Text(target.shortcutDisplayString)
-                        .font(.system(size: 11, weight: .semibold, design: .monospaced))
+                        .font(.system(size: 11 * zoomScale, weight: .semibold, design: .monospaced))
                         .foregroundStyle(.white.opacity(0.8))
-                        .padding(.horizontal, 7)
-                        .padding(.vertical, 2)
+                        .padding(.horizontal, 7 * zoomScale)
+                        .padding(.vertical, 2 * zoomScale)
                         .background(Color(white: 0.15))
                         .overlay(
                             Rectangle()
-                                .stroke(Color.white.opacity(0.2), lineWidth: 0.5)
+                                .stroke(Color.white.opacity(0.2), lineWidth: 0.5 * zoomScale)
                         )
                 }
             }
             .padding(.horizontal)
-            .padding(.vertical, 8)
-            .frame(minHeight: 44)
+            .padding(.vertical, 8 * zoomScale)
+            .frame(minHeight: 44 * zoomScale)
             .contentShape(Rectangle())
             .background(
                 Rectangle()
@@ -281,7 +284,7 @@ struct TargetRow: View {
             )
             .overlay(
                 Rectangle()
-                    .stroke(borderColor, lineWidth: 1)
+                    .stroke(borderColor, lineWidth: 1 * zoomScale)
             )
             .scaleEffect(isPressed ? 0.98 : 1.0)
         }
@@ -331,6 +334,8 @@ struct TargetRow: View {
 // MARK: - Add Switch Target View
 
 struct AddSwitchTargetView: View {
+    @ObservedObject private var prefs = PreferencesManager.shared
+    private var zoomScale: CGFloat { CGFloat(prefs.preferences.windowZoomScale) }
     @ObservedObject var viewModel: SuperSwitchViewModel
     var target: SwitchTarget?
     
@@ -347,15 +352,15 @@ struct AddSwitchTargetView: View {
     private let iconOptions = ["app.fill", "safari", "terminal", "doc.text", "folder", "gearshape.fill", "message.fill", "music.note", "photo", "video.fill", "gamecontroller", "creditcard"]
     
     var body: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 16 * zoomScale) {
             Text(target == nil ? "Add Switch Target" : "Edit Switch Target")
-                .font(.system(size: 18, weight: .bold, design: .monospaced))
+                .font(.system(size: 18 * zoomScale, weight: .bold, design: .monospaced))
                 .foregroundStyle(.white)
             
             // Running apps picker
             VStack(alignment: .leading, spacing: 6) {
                 Text("Running Application")
-                    .font(.system(size: 11, weight: .semibold, design: .monospaced))
+                    .font(.system(size: 11 * zoomScale, weight: .semibold, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.7))
                 
                 Picker("", selection: $selectedAppIndex) {
@@ -376,7 +381,7 @@ struct AddSwitchTargetView: View {
             // Name
             VStack(alignment: .leading, spacing: 6) {
                 Text("Name")
-                    .font(.system(size: 11, weight: .semibold, design: .monospaced))
+                    .font(.system(size: 11 * zoomScale, weight: .semibold, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.7))
                 TextField("App Name", text: $name)
                     .textFieldStyle(.roundedBorder)
@@ -385,7 +390,7 @@ struct AddSwitchTargetView: View {
             // Bundle ID
             VStack(alignment: .leading, spacing: 6) {
                 Text("Bundle Identifier")
-                    .font(.system(size: 11, weight: .semibold, design: .monospaced))
+                    .font(.system(size: 11 * zoomScale, weight: .semibold, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.7))
                 TextField("com.company.app", text: $bundleIdentifier)
                     .textFieldStyle(.roundedBorder)
@@ -394,26 +399,26 @@ struct AddSwitchTargetView: View {
             // Icon picker
             VStack(alignment: .leading, spacing: 6) {
                 Text("Icon")
-                    .font(.system(size: 11, weight: .semibold, design: .monospaced))
+                    .font(.system(size: 11 * zoomScale, weight: .semibold, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.7))
                 
                 ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 8) {
+                    HStack(spacing: 8 * zoomScale) {
                         ForEach(iconOptions, id: \.self) { icon in
                             Button(action: {
                                 iconName = icon
                             }) {
                                 Image(systemName: icon)
-                                    .font(.system(size: 18))
+                                    .font(.system(size: 18 * zoomScale))
                                     .foregroundStyle(iconName == icon ? .green : .white.opacity(0.6))
-                                    .frame(width: 36, height: 36)
+                                    .frame(width: 36 * zoomScale, height: 36 * zoomScale)
                                     .background(
-                                        RoundedRectangle(cornerRadius: 6)
+                                        RoundedRectangle(cornerRadius: 6 * zoomScale)
                                             .fill(iconName == icon ? Color.white.opacity(0.15) : Color.clear)
                                     )
                                     .overlay(
-                                        RoundedRectangle(cornerRadius: 6)
-                                            .stroke(iconName == icon ? Color.white.opacity(0.3) : Color.white.opacity(0.1), lineWidth: 1)
+                                        RoundedRectangle(cornerRadius: 6 * zoomScale)
+                                            .stroke(iconName == icon ? Color.white.opacity(0.3) : Color.white.opacity(0.1), lineWidth: 1 * zoomScale)
                                     )
                             }
                             .buttonStyle(.plain)
@@ -425,17 +430,17 @@ struct AddSwitchTargetView: View {
             // Shortcut
             VStack(alignment: .leading, spacing: 6) {
                 Text("Shortcut (optional)")
-                    .font(.system(size: 11, weight: .semibold, design: .monospaced))
+                    .font(.system(size: 11 * zoomScale, weight: .semibold, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.7))
                 
-                HStack(spacing: 8) {
+                HStack(spacing: 8 * zoomScale) {
                     ShortcutPicker(key: $shortcutKey, modifiers: $shortcutModifiers, isRecording: $isRecordingShortcut)
                 }
             }
             
             Spacer()
             
-            HStack(spacing: 12) {
+            HStack(spacing: 12 * zoomScale) {
                 Button("Cancel") {
                     dismiss()
                 }
@@ -451,7 +456,7 @@ struct AddSwitchTargetView: View {
             }
         }
         .padding()
-        .frame(width: 340, height: 480)
+        .frame(width: 340 * zoomScale, height: 480 * zoomScale)
         .background(Color.black)
         .onAppear {
             runningApps = viewModel.getRunningApps()
