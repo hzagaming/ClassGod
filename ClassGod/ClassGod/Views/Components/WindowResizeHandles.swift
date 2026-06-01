@@ -11,9 +11,6 @@ struct WindowResizeHandles: View {
     var handleSize: CGFloat = 14
     var lineWidth: CGFloat = 1.5
     var color: Color = Color.white.opacity(0.25)
-    var hoverColor: Color = Color.cyan.opacity(0.5)
-
-    @State private var hoverCorner: Corner? = nil
 
     private enum Corner: String, CaseIterable {
         case topLeft, topRight, bottomLeft, bottomRight
@@ -22,31 +19,26 @@ struct WindowResizeHandles: View {
     var body: some View {
         GeometryReader { geo in
             ZStack {
+                // Allow events to pass through to content below; we only show visual handles
+                // DraggableWindow handles actual resize via mouseDown/mouseDragged
                 // Top-left
                 cornerPath(for: .topLeft, in: geo)
-                    .stroke(hoverCorner == .topLeft ? hoverColor : color, lineWidth: lineWidth)
-                    .contentShape(Rectangle())
-                    .onHover { hoverCorner = $0 ? .topLeft : nil }
+                    .stroke(color, lineWidth: lineWidth)
 
                 // Top-right
                 cornerPath(for: .topRight, in: geo)
-                    .stroke(hoverCorner == .topRight ? hoverColor : color, lineWidth: lineWidth)
-                    .contentShape(Rectangle())
-                    .onHover { hoverCorner = $0 ? .topRight : nil }
+                    .stroke(color, lineWidth: lineWidth)
 
                 // Bottom-left
                 cornerPath(for: .bottomLeft, in: geo)
-                    .stroke(hoverCorner == .bottomLeft ? hoverColor : color, lineWidth: lineWidth)
-                    .contentShape(Rectangle())
-                    .onHover { hoverCorner = $0 ? .bottomLeft : nil }
+                    .stroke(color, lineWidth: lineWidth)
 
                 // Bottom-right
                 cornerPath(for: .bottomRight, in: geo)
-                    .stroke(hoverCorner == .bottomRight ? hoverColor : color, lineWidth: lineWidth)
-                    .contentShape(Rectangle())
-                    .onHover { hoverCorner = $0 ? .bottomRight : nil }
+                    .stroke(color, lineWidth: lineWidth)
             }
         }
+        .allowsHitTesting(false)
     }
 
     private func cornerPath(for corner: Corner, in geo: GeometryProxy) -> Path {

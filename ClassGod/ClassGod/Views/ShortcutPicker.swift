@@ -25,7 +25,8 @@ struct ShortcutPicker: View {
                 .overlay(
                     Rectangle()
                         .stroke(isRecording ? Color.white : Color.white.opacity(0.15), lineWidth: 1)
-                )
+                
+                    .allowsHitTesting(false))
                 .onTapGesture {
                     if isRecording {
                         stopRecording()

@@ -120,6 +120,7 @@ struct MenuBarView: View {
         .overlay(
             RoundedRectangle(cornerRadius: prefs.preferences.panelCornerRadius)
                 .stroke(Color.white.opacity(0.12), lineWidth: 1 * zoomScale)
+                .allowsHitTesting(false)
         )
     }
     
@@ -220,6 +221,7 @@ struct FeatureButton: View {
             .overlay(
                 RoundedRectangle(cornerRadius: 8 * zoomScale)
                     .stroke(isHovered && isEnabled ? Color.white.opacity(0.25) : Color.white.opacity(0.06), lineWidth: 1 * zoomScale)
+                    .allowsHitTesting(false)
             )
             .scaleEffect(isPressed ? 0.97 : 1.0)
         }

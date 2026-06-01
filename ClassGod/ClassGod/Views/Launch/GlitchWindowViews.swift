@@ -83,7 +83,7 @@ struct ErrorGlitchView: View {
         .padding(10)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color(white: 0.06))
-        .overlay(Rectangle().stroke(Color.red.opacity(0.5), lineWidth: 1))
+        .overlay(Rectangle().stroke(Color.red.opacity(0.5), lineWidth: 1).allowsHitTesting(false))
     }
 }
 
@@ -117,7 +117,7 @@ struct WarningGlitchView: View {
         .padding(8)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .background(Color.black)
-        .overlay(Rectangle().stroke(Color.yellow.opacity(0.3), lineWidth: 1))
+        .overlay(Rectangle().stroke(Color.yellow.opacity(0.3), lineWidth: 1).allowsHitTesting(false))
     }
 }
 
@@ -186,7 +186,7 @@ struct CrashGlitchView: View {
         .padding(8)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color(white: 0.04))
-        .overlay(Rectangle().stroke(Color.white.opacity(0.15), lineWidth: 0.5))
+        .overlay(Rectangle().stroke(Color.white.opacity(0.15), lineWidth: 0.5).allowsHitTesting(false))
     }
 }
 
@@ -313,7 +313,7 @@ struct JSONErrorView: View {
             .padding(8)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             .background(Color.black)
-            .overlay(Rectangle().stroke(Color.orange.opacity(0.3), lineWidth: 1))
+            .overlay(Rectangle().stroke(Color.orange.opacity(0.3), lineWidth: 1).allowsHitTesting(false))
     }
 }
 

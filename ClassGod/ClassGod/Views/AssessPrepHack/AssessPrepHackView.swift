@@ -50,7 +50,8 @@ struct AssessPrepHackView: View {
         .overlay(
             RoundedRectangle(cornerRadius: prefs.preferences.panelCornerRadius)
                 .stroke(Color.white.opacity(0.15), lineWidth: 1 * zoomScale)
-        )
+        
+            .allowsHitTesting(false))
         .sheet(isPresented: $showAddSheet) {
             AddPanicAppView(viewModel: viewModel, app: nil)
         }
@@ -413,7 +414,8 @@ struct PanicAppRow: View {
         .overlay(
             RoundedRectangle(cornerRadius: 6 * zoomScale)
                 .stroke(isHovered ? Color.white.opacity(0.1) : Color.clear, lineWidth: 1 * zoomScale)
-        )
+        
+            .allowsHitTesting(false))
         .padding(.horizontal, 8 * zoomScale)
         .padding(.vertical, 2 * zoomScale)
         .onHover { hovering in

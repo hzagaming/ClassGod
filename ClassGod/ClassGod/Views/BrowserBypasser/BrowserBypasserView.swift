@@ -53,7 +53,8 @@ struct BrowserBypasserView: View {
         .overlay(
             RoundedRectangle(cornerRadius: prefs.preferences.panelCornerRadius)
                 .stroke(Color.white.opacity(0.15), lineWidth: 1 * zoomScale)
-        )
+        
+            .allowsHitTesting(false))
         .sheet(isPresented: $showAddSheet) {
             AddBypassRuleView(viewModel: viewModel, rule: nil)
         }
@@ -161,7 +162,8 @@ struct BrowserBypasserView: View {
         .overlay(
             Rectangle()
                 .stroke(Color.green.opacity(0.4), lineWidth: 1 * zoomScale)
-        )
+        
+            .allowsHitTesting(false))
     }
     
     // MARK: - Detection Banner
@@ -190,7 +192,8 @@ struct BrowserBypasserView: View {
         .overlay(
             Rectangle()
                 .stroke(Color.yellow.opacity(0.4), lineWidth: 1 * zoomScale)
-        )
+        
+            .allowsHitTesting(false))
     }
     
     // MARK: - Rule List
@@ -305,7 +308,8 @@ struct BrowserBypasserView: View {
                 .overlay(
                     Rectangle()
                         .stroke(Color.white.opacity(0.3), lineWidth: 1 * zoomScale)
-                )
+                
+                    .allowsHitTesting(false))
                 .padding(.bottom, 10 * zoomScale)
                 .transition(.opacity)
             }
@@ -379,7 +383,7 @@ struct RuleRow: View {
             .overlay(
                 Rectangle()
                     .stroke(borderColor, lineWidth: 1 * zoomScale)
-            )
+            .allowsHitTesting(false)            )
             .scaleEffect(isPressed ? 0.98 : 1.0)
         }
         .buttonStyle(.plain)
@@ -479,7 +483,8 @@ struct AddBypassRuleView: View {
                                     .overlay(
                                         RoundedRectangle(cornerRadius: 4 * zoomScale)
                                             .stroke(Color.white.opacity(0.15), lineWidth: 1 * zoomScale)
-                                    )
+                                    
+                                        .allowsHitTesting(false))
                                     .cornerRadius(4)
                             }
                             .buttonStyle(.plain)

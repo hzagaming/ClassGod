@@ -71,7 +71,8 @@ struct AddTabView: View {
         .overlay(
             Rectangle()
                 .stroke(Color.white.opacity(0.15), lineWidth: 1)
-        )
+        
+            .allowsHitTesting(false))
         .alert(String(localized: "shortcut.conflict.title"), isPresented: $showConflictAlert) {
             Button(String(localized: "button.overwrite"), role: .destructive) {
                 SoundEffectManager.shared.playButtonClick()

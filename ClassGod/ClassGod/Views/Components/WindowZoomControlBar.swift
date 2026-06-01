@@ -65,7 +65,8 @@ struct WindowZoomControlBar: View {
                 .overlay(
                     RoundedRectangle(cornerRadius: 6)
                         .stroke(Color.white.opacity(0.06), lineWidth: 1)
-                )
+                
+                    .allowsHitTesting(false))
         )
     }
 }

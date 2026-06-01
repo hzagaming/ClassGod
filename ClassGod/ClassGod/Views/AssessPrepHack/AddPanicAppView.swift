@@ -83,7 +83,8 @@ struct AddPanicAppView: View {
                             .overlay(
                                 RoundedRectangle(cornerRadius: 6)
                                     .stroke(Color.white.opacity(0.1), lineWidth: 1)
-                            )
+                            
+                                .allowsHitTesting(false))
                     }
                     
                     // Bundle ID
@@ -98,7 +99,8 @@ struct AddPanicAppView: View {
                             .overlay(
                                 RoundedRectangle(cornerRadius: 6)
                                     .stroke(Color.white.opacity(0.1), lineWidth: 1)
-                            )
+                            
+                                .allowsHitTesting(false))
                     }
                     
                     // Technique picker
@@ -140,7 +142,8 @@ struct AddPanicAppView: View {
                                     .overlay(
                                         RoundedRectangle(cornerRadius: 6)
                                             .stroke(selectedTechnique == technique ? Color.red.opacity(0.2) : Color.white.opacity(0.06), lineWidth: 1)
-                                    )
+                                    
+                                        .allowsHitTesting(false))
                                 }
                                 .buttonStyle(.plain)
                             }
@@ -165,7 +168,8 @@ struct AddPanicAppView: View {
                                         .overlay(
                                             RoundedRectangle(cornerRadius: 6)
                                                 .stroke(selectedIcon == icon ? Color.red.opacity(0.3) : Color.white.opacity(0.08), lineWidth: 1)
-                                        )
+                                        
+                                            .allowsHitTesting(false))
                                 }
                                 .buttonStyle(.plain)
                             }

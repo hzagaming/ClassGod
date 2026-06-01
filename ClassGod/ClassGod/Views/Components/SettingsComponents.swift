@@ -254,7 +254,8 @@ struct SettingsActionRow: View {
                     .overlay(
                         RoundedRectangle(cornerRadius: 6)
                             .stroke(Color.white.opacity(isHovered ? 0.1 : 0.04), lineWidth: 1)
-                    )
+                    
+                        .allowsHitTesting(false))
             )
         }
         .buttonStyle(.plain)

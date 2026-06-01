@@ -48,7 +48,8 @@ struct CollapsibleSection<Content: View>: View {
                         .overlay(
                             RoundedRectangle(cornerRadius: 8)
                                 .stroke(Color.white.opacity(hover ? 0.1 : 0.04), lineWidth: 1)
-                        )
+                        
+                            .allowsHitTesting(false))
                 )
             }
             .buttonStyle(.plain)
@@ -67,7 +68,8 @@ struct CollapsibleSection<Content: View>: View {
                         .overlay(
                             RoundedRectangle(cornerRadius: 8)
                                 .stroke(Color.white.opacity(0.04), lineWidth: 1)
-                        )
+                        
+                            .allowsHitTesting(false))
                 )
                 .transition(.asymmetric(
                     insertion: .opacity.combined(with: .move(edge: .top).combined(with: .scale(scale: 0.97, anchor: .top))),

@@ -69,7 +69,8 @@ struct WallpaperBrowserView: View {
         .overlay(
             RoundedRectangle(cornerRadius: 12 * zoomScale)
                 .stroke(Color.white.opacity(0.12), lineWidth: 1 * zoomScale)
-        )
+        
+            .allowsHitTesting(false))
         .fileImporter(
             isPresented: $showImportPanel,
             allowedContentTypes: [
@@ -167,7 +168,8 @@ struct WallpaperBrowserView: View {
             .overlay(
                 RoundedRectangle(cornerRadius: 10 * zoomScale)
                     .stroke(engine.isEnabled ? Color.cyan.opacity(0.15) : Color.white.opacity(0.06), lineWidth: 1 * zoomScale)
-            )
+            
+                .allowsHitTesting(false))
 
             // Controls
             HStack(spacing: 10 * zoomScale) {
@@ -346,7 +348,8 @@ struct WallpaperBrowserView: View {
         .overlay(
             RoundedRectangle(cornerRadius: 8 * zoomScale)
                 .stroke(Color.white.opacity(0.06), style: StrokeStyle(lineWidth: 1, dash: [5, 4]))
-        )
+        
+            .allowsHitTesting(false))
         .onDrop(of: [.fileURL], isTargeted: nil) { providers in
             handleDrop(providers: providers)
             return true
@@ -444,7 +447,8 @@ struct WallpaperBrowserView: View {
             RoundedRectangle(cornerRadius: 8 * zoomScale)
                 .stroke(isSelected ? Color.cyan.opacity(0.5) : (isHovered ? Color.white.opacity(0.12) : Color.clear), lineWidth: isSelected ? 1.5 : 1)
                 .shadow(color: isSelected ? Color.cyan.opacity(0.2) : Color.clear, radius: 4)
-        )
+        
+            .allowsHitTesting(false))
         .scaleEffect(isHovered ? 1.03 : 1.0)
         .animation(.easeOut(duration: 0.15), value: isHovered)
     }

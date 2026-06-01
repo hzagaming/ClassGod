@@ -55,7 +55,8 @@ struct ErrorHubView: View {
         .overlay(
             RoundedRectangle(cornerRadius: prefs.preferences.panelCornerRadius)
                 .stroke(Color.white.opacity(0.12), lineWidth: 1 * zoomScale)
-        )
+        
+            .allowsHitTesting(false))
         .sheet(item: $selectedEntry) { entry in
             ErrorDetailView(entry: entry, onDismiss: { selectedEntry = nil })
                 .frame(minWidth: 500 * zoomScale, minHeight: 400 * zoomScale)
@@ -132,7 +133,8 @@ struct ErrorHubView: View {
         .overlay(
             RoundedRectangle(cornerRadius: 8 * zoomScale)
                 .stroke(Color.white.opacity(0.1), lineWidth: 1 * zoomScale)
-        )
+        
+            .allowsHitTesting(false))
         .padding(.horizontal, 12 * zoomScale)
         .padding(.vertical, 8 * zoomScale)
     }
@@ -213,7 +215,8 @@ struct ErrorHubView: View {
                     .overlay(
                         RoundedRectangle(cornerRadius: 4 * zoomScale)
                             .stroke(selectedSeverity == severity ? Color(hex: severity.colorHex).opacity(0.5) : Color.clear, lineWidth: 1 * zoomScale)
-                    )
+                    
+                        .allowsHitTesting(false))
                 }
                 .buttonStyle(.plain)
             }
@@ -287,7 +290,8 @@ struct CategoryPill: View {
             .overlay(
                 RoundedRectangle(cornerRadius: 6 * zoomScale)
                     .stroke(isSelected ? Color.white.opacity(0.3) : Color.white.opacity(0.05), lineWidth: 1 * zoomScale)
-            )
+            
+                .allowsHitTesting(false))
         }
         .buttonStyle(.plain)
     }
@@ -372,7 +376,8 @@ struct ErrorRowView: View {
             .overlay(
                 RoundedRectangle(cornerRadius: 8 * zoomScale)
                     .stroke(isHovered ? Color.white.opacity(0.15) : Color.white.opacity(0.05), lineWidth: 1 * zoomScale)
-            )
+            
+                .allowsHitTesting(false))
         }
         .buttonStyle(.plain)
         .onHover { hovering in

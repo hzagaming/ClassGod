@@ -91,7 +91,8 @@ struct HackerDesktopView: View {
         .overlay(
             RoundedRectangle(cornerRadius: 12 * zoomScale)
                 .stroke(Color.white.opacity(0.12), lineWidth: 1 * zoomScale)
-        )
+        
+            .allowsHitTesting(false))
         .onAppear {
             loadData()
             SystemMonitor.shared.start(interval: 2.0)
@@ -455,7 +456,8 @@ private struct ConfigSection<Content: View>: View {
         .overlay(
             RoundedRectangle(cornerRadius: 10 * zoomScale)
                 .stroke(Color.white.opacity(0.06), lineWidth: 1 * zoomScale)
-        )
+        
+            .allowsHitTesting(false))
     }
 }
 

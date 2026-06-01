@@ -46,7 +46,8 @@ struct ErrorDetailView: View {
         .overlay(
             RoundedRectangle(cornerRadius: prefs.preferences.panelCornerRadius)
                 .stroke(Color.white.opacity(0.12), lineWidth: 1 * zoomScale)
-        )
+        
+            .allowsHitTesting(false))
     }
     
     // MARK: - Header
@@ -94,7 +95,8 @@ struct ErrorDetailView: View {
             .overlay(
                 RoundedRectangle(cornerRadius: 4 * zoomScale)
                     .stroke(Color(hex: entry.severity.colorHex).opacity(0.3), lineWidth: 1 * zoomScale)
-            )
+            
+                .allowsHitTesting(false))
             
             // Title
             Text(entry.title)
@@ -204,7 +206,8 @@ struct ErrorDetailView: View {
                     .overlay(
                         RoundedRectangle(cornerRadius: 6 * zoomScale)
                             .stroke(Color(hex: "#34C759").opacity(0.15), lineWidth: 1 * zoomScale)
-                    )
+                    
+                        .allowsHitTesting(false))
                 }
             }
         }
@@ -267,7 +270,8 @@ struct ErrorDetailView: View {
                             .overlay(
                                 RoundedRectangle(cornerRadius: 4 * zoomScale)
                                     .stroke(Color(hex: "#FF3B30").opacity(0.2), lineWidth: 1 * zoomScale)
-                            )
+                            
+                                .allowsHitTesting(false))
                     }
                     
                     // Good code
@@ -291,7 +295,8 @@ struct ErrorDetailView: View {
                             .overlay(
                                 RoundedRectangle(cornerRadius: 4 * zoomScale)
                                     .stroke(Color(hex: "#34C759").opacity(0.2), lineWidth: 1 * zoomScale)
-                            )
+                            
+                                .allowsHitTesting(false))
                     }
                     
                     // Explanation
@@ -306,7 +311,8 @@ struct ErrorDetailView: View {
                 .overlay(
                     RoundedRectangle(cornerRadius: 8 * zoomScale)
                         .stroke(Color.white.opacity(0.06), lineWidth: 1 * zoomScale)
-                )
+                
+                    .allowsHitTesting(false))
             }
         }
         .padding(12 * zoomScale)

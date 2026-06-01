@@ -59,7 +59,8 @@ struct DestinTabView: View {
         .overlay(
             RoundedRectangle(cornerRadius: prefs.preferences.panelCornerRadius * zoomScale)
                 .stroke(Color.white.opacity(0.15), lineWidth: 1 * zoomScale)
-        )
+        
+            .allowsHitTesting(false))
         .preferredColorScheme(prefs.preferences.theme.colorScheme)
         .sheet(isPresented: $showAddSheet) {
             AddTabView(viewModel: viewModel, tab: nil)

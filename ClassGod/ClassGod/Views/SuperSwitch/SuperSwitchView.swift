@@ -42,7 +42,8 @@ struct SuperSwitchView: View {
         .overlay(
             RoundedRectangle(cornerRadius: prefs.preferences.panelCornerRadius)
                 .stroke(Color.white.opacity(0.15), lineWidth: 1 * zoomScale)
-        )
+        
+            .allowsHitTesting(false))
         .sheet(isPresented: $showAddSheet) {
             AddSwitchTargetView(viewModel: viewModel, target: nil)
         }
@@ -206,7 +207,8 @@ struct SuperSwitchView: View {
                 .overlay(
                     Rectangle()
                         .stroke(Color.white.opacity(0.3), lineWidth: 1 * zoomScale)
-                )
+                
+                    .allowsHitTesting(false))
                 .padding(.bottom, 10 * zoomScale)
                 .transition(.opacity)
             }
@@ -271,7 +273,8 @@ struct TargetRow: View {
                         .overlay(
                             Rectangle()
                                 .stroke(Color.white.opacity(0.2), lineWidth: 0.5 * zoomScale)
-                        )
+                        
+                            .allowsHitTesting(false))
                 }
             }
             .padding(.horizontal)
@@ -285,7 +288,7 @@ struct TargetRow: View {
             .overlay(
                 Rectangle()
                     .stroke(borderColor, lineWidth: 1 * zoomScale)
-            )
+            .allowsHitTesting(false)            )
             .scaleEffect(isPressed ? 0.98 : 1.0)
         }
         .buttonStyle(.plain)
@@ -419,7 +422,8 @@ struct AddSwitchTargetView: View {
                                     .overlay(
                                         RoundedRectangle(cornerRadius: 6 * zoomScale)
                                             .stroke(iconName == icon ? Color.white.opacity(0.3) : Color.white.opacity(0.1), lineWidth: 1 * zoomScale)
-                                    )
+                                    
+                                        .allowsHitTesting(false))
                             }
                             .buttonStyle(.plain)
                         }
