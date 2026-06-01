@@ -26,6 +26,19 @@
     "%lld" : {
 
     },
+    "%lld error%@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld error%2$@"
+          }
+        }
+      }
+    },
+    "%lld errors documented" : {
+
+    },
     "%lld item%@" : {
       "localizations" : {
         "zh-Hans" : {
@@ -39,7 +52,13 @@
     "%lld selected" : {
 
     },
+    "%lld." : {
+
+    },
     "%lld%%" : {
+
+    },
+    "• %@" : {
 
     },
     "0% complete" : {
@@ -772,6 +791,9 @@
     "All" : {
 
     },
+    "Also known as:" : {
+
+    },
     "animation.off_caption" : {
       "localizations" : {
         "de" : {
@@ -891,6 +913,9 @@
           }
         }
       }
+    },
+    "Apple Documentation:" : {
+
     },
     "AssessPrep Detected" : {
 
@@ -2457,10 +2482,16 @@
     "Click a target to switch. Set shortcuts for instant access." : {
 
     },
+    "Click for full solution →" : {
+
+    },
     "Clock City" : {
 
     },
     "com.company.app" : {
+
+    },
+    "Common in:" : {
 
     },
     "context.edit" : {
@@ -2580,6 +2611,12 @@
           }
         }
       }
+    },
+    "Copied!" : {
+
+    },
+    "Copy Fix" : {
+
     },
     "Crashed Thread: %lld" : {
 
@@ -3006,6 +3043,15 @@
 
     },
     "Error" : {
+
+    },
+    "ERROR CODE:" : {
+
+    },
+    "Error Detail" : {
+
+    },
+    "Error Encyclopedia" : {
 
     },
     "error.applescript_failed" : {
@@ -4067,6 +4113,9 @@
         }
       }
     },
+    "Fixed Code" : {
+
+    },
     "Hanazar Software" : {
 
     },
@@ -4805,6 +4854,9 @@
     "No panic apps configured" : {
 
     },
+    "No related errors documented." : {
+
+    },
     "No targets configured" : {
 
     },
@@ -5479,6 +5531,9 @@
     "Price" : {
 
     },
+    "Problematic Code" : {
+
+    },
     "Process: ClassGod [%lld]" : {
 
     },
@@ -5637,7 +5692,13 @@
     "Scan" : {
 
     },
+    "Search errors by name, code, or keyword..." : {
+
+    },
     "Search tabs..." : {
+
+    },
+    "Searching: \"%@\"" : {
 
     },
     "section.about" : {
@@ -8554,6 +8615,9 @@
     "Settings" : {
 
     },
+    "Severity:" : {
+
+    },
     "Shortcut (optional)" : {
 
     },
@@ -9804,6 +9868,9 @@
       }
     },
     "Tag (optional, e.g. work, dev)" : {
+
+    },
+    "Tags:" : {
 
     },
     "Task" : {
