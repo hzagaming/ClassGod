@@ -142,4 +142,5 @@ final class StorageManager {
 extension Notification.Name {
     static let classGodTabsDidChange = Notification.Name("classGodTabsDidChange")
     static let draggableWindowDidMove = Notification.Name("draggableWindowDidMove")
+    static let classGodShowErrorHubEntry = Notification.Name("classGodShowErrorHubEntry")
 }

@@ -141,6 +141,30 @@ struct ErrorDetailView: View {
                         .cornerRadius(2 * zoomScale)
                 }
             }
+            
+            // Open in Encyclopedia
+            Button(action: {
+                SoundEffectManager.shared.playButtonClick()
+                ErrorHubNavigationState.shared.navigateToEntry(id: entry.id)
+            }) {
+                HStack(spacing: 4 * zoomScale) {
+                    Image(systemName: "book.fill")
+                        .font(.system(size: 8 * zoomScale))
+                    Text("Open in Encyclopedia")
+                        .font(.system(size: 8 * zoomScale, weight: .bold, design: .monospaced))
+                }
+                .foregroundStyle(Color(hex: "#007AFF"))
+                .padding(.horizontal, 8 * zoomScale)
+                .padding(.vertical, 3 * zoomScale)
+                .background(Color(hex: "#007AFF").opacity(0.1))
+                .cornerRadius(4 * zoomScale)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 4 * zoomScale)
+                        .stroke(Color(hex: "#007AFF").opacity(0.3), lineWidth: 1 * zoomScale)
+                        .allowsHitTesting(false)
+                )
+            }
+            .buttonStyle(.plain)
         }
         .padding(.vertical, 12 * zoomScale)
         .background(Color(white: 0.02))

@@ -13,29 +13,57 @@ struct ErrorHubView: View {
     var onClose: () -> Void
     
     @ObservedObject private var prefs = PreferencesManager.shared
+    @ObservedObject private var navState = ErrorHubNavigationState.shared
     @State private var searchQuery = ""
     @State private var selectedCategory: ErrorCategory = .all
     @State private var selectedSeverity: ErrorSeverity? = nil
+    @State private var selectedTag: String? = nil
     @State private var selectedEntry: ErrorEntry? = nil
     @State private var searchResults: [ErrorSearchResult] = []
-    @State private var isSearching = false
-    @State private var showingDetail = false
-    @State private var scrollToTop = false
     
     private var zoomScale: CGFloat { CGFloat(prefs.preferences.windowZoomScale) }
     
+    // Base entries after category/severity/tag filtering (excluding search)
+    private var baseEntries: [ErrorEntry] {
+        let catFiltered = selectedCategory == .all
+            ? ErrorKnowledgeBase.shared.allEntries
+            : ErrorKnowledgeBase.shared.entries(for: selectedCategory)
+        let sevFiltered: [ErrorEntry]
+        if let severity = selectedSeverity {
+            sevFiltered = catFiltered.filter { $0.severity == severity }
+        } else {
+            sevFiltered = catFiltered
+        }
+        if let tag = selectedTag {
+            return sevFiltered.filter { $0.tags.contains(tag) }
+        }
+        return sevFiltered
+    }
+    
     private var displayedEntries: [ErrorEntry] {
         if searchQuery.isEmpty {
-            let base = selectedCategory == .all 
-                ? ErrorKnowledgeBase.shared.allEntries 
-                : ErrorKnowledgeBase.shared.entries(for: selectedCategory)
-            if let severity = selectedSeverity {
-                return base.filter { $0.severity == severity }
-            }
-            return base
+            return baseEntries
         } else {
             return searchResults.map { $0.entry }
         }
+    }
+    
+    // Grouped by category when showing all without search/tag filter
+    private var groupedEntries: [(category: ErrorCategory, entries: [ErrorEntry])]? {
+        guard searchQuery.isEmpty, selectedCategory == .all, selectedTag == nil else { return nil }
+        let cats = ErrorCategory.allCases.filter { $0 != .all }
+        return cats.compactMap { cat in
+            let entries = displayedEntries.filter { $0.category == cat }
+            return entries.isEmpty ? nil : (cat, entries)
+        }
+    }
+    
+    // Popular tags from current base entries
+    private var availableTags: [String] {
+        let allTags = baseEntries.flatMap { $0.tags }
+        var counts: [String: Int] = [:]
+        for tag in allTags { counts[tag, default: 0] += 1 }
+        return counts.sorted { $0.value > $1.value }.prefix(16).map { $0.key }
     }
     
     var body: some View {
@@ -46,6 +74,7 @@ struct ErrorHubView: View {
                 titleBar
                 searchBar
                 categoryBar
+                tagBar
                 severityFilter
                 statsBar
                 contentArea
@@ -55,11 +84,31 @@ struct ErrorHubView: View {
         .overlay(
             RoundedRectangle(cornerRadius: prefs.preferences.panelCornerRadius)
                 .stroke(Color.white.opacity(0.12), lineWidth: 1 * zoomScale)
-        
-            .allowsHitTesting(false))
+                .allowsHitTesting(false)
+        )
         .sheet(item: $selectedEntry) { entry in
             ErrorDetailView(entry: entry, onDismiss: { selectedEntry = nil })
                 .frame(minWidth: 500 * zoomScale, minHeight: 400 * zoomScale)
+        }
+        .onChange(of: navState.targetEntryID, initial: true) { _, newID in
+            guard let id = newID else { return }
+            if let entry = ErrorKnowledgeBase.shared.allEntries.first(where: { $0.id == id }) {
+                selectedCategory = .all
+                searchQuery = ""
+                selectedTag = nil
+                selectedSeverity = nil
+                selectedEntry = entry
+            }
+            navState.clearTarget()
+        }
+        .onChange(of: selectedCategory) { _, _ in
+            if !searchQuery.isEmpty { performSearch(query: searchQuery) }
+        }
+        .onChange(of: selectedSeverity) { _, _ in
+            if !searchQuery.isEmpty { performSearch(query: searchQuery) }
+        }
+        .onChange(of: selectedTag) { _, _ in
+            if !searchQuery.isEmpty { performSearch(query: searchQuery) }
         }
     }
     
@@ -110,7 +159,7 @@ struct ErrorHubView: View {
                 .font(.system(size: 11 * zoomScale, design: .monospaced))
                 .foregroundStyle(.white)
                 .textFieldStyle(.plain)
-                .onChange(of: searchQuery) { newValue in
+                .onChange(of: searchQuery) { _, newValue in
                     performSearch(query: newValue)
                 }
             
@@ -133,8 +182,8 @@ struct ErrorHubView: View {
         .overlay(
             RoundedRectangle(cornerRadius: 8 * zoomScale)
                 .stroke(Color.white.opacity(0.1), lineWidth: 1 * zoomScale)
-        
-            .allowsHitTesting(false))
+                .allowsHitTesting(false)
+        )
         .padding(.horizontal, 12 * zoomScale)
         .padding(.vertical, 8 * zoomScale)
     }
@@ -144,7 +193,16 @@ struct ErrorHubView: View {
             searchResults = []
             return
         }
-        let results = ErrorKnowledgeBase.shared.search(query: query, category: selectedCategory == .all ? nil : selectedCategory)
+        var results = ErrorKnowledgeBase.shared.search(
+            query: query,
+            category: selectedCategory == .all ? nil : selectedCategory
+        )
+        if let severity = selectedSeverity {
+            results = results.filter { $0.entry.severity == severity }
+        }
+        if let tag = selectedTag {
+            results = results.filter { $0.entry.tags.contains(tag) }
+        }
         searchResults = results
     }
     
@@ -156,22 +214,59 @@ struct ErrorHubView: View {
                     CategoryPill(
                         category: category,
                         isSelected: selectedCategory == category,
-                        count: category == .all 
+                        count: category == .all
                             ? ErrorKnowledgeBase.shared.allEntries.count
                             : ErrorKnowledgeBase.shared.entries(for: category).count,
                         zoomScale: zoomScale
                     ) {
                         SoundEffectManager.shared.playButtonClick()
                         selectedCategory = category
-                        if !searchQuery.isEmpty {
-                            performSearch(query: searchQuery)
-                        }
                     }
                 }
             }
             .padding(.horizontal, 12 * zoomScale)
         }
         .padding(.vertical, 4 * zoomScale)
+    }
+    
+    // MARK: - Tag Bar
+    private var tagBar: some View {
+        VStack(spacing: 0) {
+            if !availableTags.isEmpty {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 6 * zoomScale) {
+                        if selectedTag != nil {
+                            Button(action: {
+                                SoundEffectManager.shared.playButtonClick()
+                                selectedTag = nil
+                            }) {
+                                HStack(spacing: 3 * zoomScale) {
+                                    Image(systemName: "xmark.circle.fill")
+                                        .font(.system(size: 9 * zoomScale))
+                                    Text("Clear")
+                                        .font(.system(size: 8 * zoomScale, design: .monospaced))
+                                }
+                                .foregroundStyle(.white.opacity(0.5))
+                            }
+                            .buttonStyle(.plain)
+                        }
+                        
+                        ForEach(availableTags, id: \.self) { tag in
+                            TagPill(
+                                tag: tag,
+                                isSelected: selectedTag == tag,
+                                zoomScale: zoomScale
+                            ) {
+                                SoundEffectManager.shared.playButtonClick()
+                                selectedTag = selectedTag == tag ? nil : tag
+                            }
+                        }
+                    }
+                    .padding(.horizontal, 12 * zoomScale)
+                }
+                .padding(.vertical, 4 * zoomScale)
+            }
+        }
     }
     
     // MARK: - Severity Filter
@@ -215,8 +310,8 @@ struct ErrorHubView: View {
                     .overlay(
                         RoundedRectangle(cornerRadius: 4 * zoomScale)
                             .stroke(selectedSeverity == severity ? Color(hex: severity.colorHex).opacity(0.5) : Color.clear, lineWidth: 1 * zoomScale)
-                    
-                        .allowsHitTesting(false))
+                            .allowsHitTesting(false)
+                    )
                 }
                 .buttonStyle(.plain)
             }
@@ -240,6 +335,10 @@ struct ErrorHubView: View {
                 Text("Searching: \"\(searchQuery)\"")
                     .font(.system(size: 9 * zoomScale, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.35))
+            } else if let tag = selectedTag {
+                Text("Tag: #\(tag)")
+                    .font(.system(size: 9 * zoomScale, design: .monospaced))
+                    .foregroundStyle(.white.opacity(0.35))
             }
         }
         .padding(.horizontal, 12 * zoomScale)
@@ -249,17 +348,58 @@ struct ErrorHubView: View {
     // MARK: - Content Area
     private var contentArea: some View {
         ScrollView(showsIndicators: false) {
-            LazyVStack(spacing: 6 * zoomScale) {
-                ForEach(displayedEntries) { entry in
-                    ErrorRowView(entry: entry, zoomScale: zoomScale) {
-                        SoundEffectManager.shared.playButtonClick()
-                        selectedEntry = entry
+            if let groups = groupedEntries {
+                LazyVStack(spacing: 16 * zoomScale) {
+                    ForEach(groups, id: \.category) { group in
+                        VStack(alignment: .leading, spacing: 8 * zoomScale) {
+                            sectionHeader(for: group.category)
+                            LazyVStack(spacing: 6 * zoomScale) {
+                                ForEach(group.entries) { entry in
+                                    ErrorRowView(entry: entry, zoomScale: zoomScale) {
+                                        SoundEffectManager.shared.playButtonClick()
+                                        selectedEntry = entry
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
+                .padding(.horizontal, 12 * zoomScale)
+                .padding(.vertical, 4 * zoomScale)
+            } else {
+                LazyVStack(spacing: 6 * zoomScale) {
+                    ForEach(displayedEntries) { entry in
+                        ErrorRowView(entry: entry, zoomScale: zoomScale) {
+                            SoundEffectManager.shared.playButtonClick()
+                            selectedEntry = entry
+                        }
+                    }
+                }
+                .padding(.horizontal, 12 * zoomScale)
+                .padding(.vertical, 4 * zoomScale)
             }
-            .padding(.horizontal, 12 * zoomScale)
-            .padding(.vertical, 4 * zoomScale)
         }
+    }
+    
+    private func sectionHeader(for category: ErrorCategory) -> some View {
+        HStack(spacing: 6 * zoomScale) {
+            Image(systemName: category.icon)
+                .font(.system(size: 10 * zoomScale))
+                .foregroundStyle(.white.opacity(0.6))
+            Text(category.rawValue)
+                .font(.system(size: 11 * zoomScale, weight: .bold, design: .monospaced))
+                .foregroundStyle(.white.opacity(0.8))
+            Text("\(ErrorKnowledgeBase.shared.entries(for: category).count)")
+                .font(.system(size: 9 * zoomScale, weight: .bold, design: .monospaced))
+                .foregroundStyle(.white.opacity(0.3))
+                .padding(.horizontal, 5 * zoomScale)
+                .padding(.vertical, 1 * zoomScale)
+                .background(Color(white: 0.1))
+                .cornerRadius(3 * zoomScale)
+            Spacer()
+        }
+        .padding(.horizontal, 12 * zoomScale)
+        .padding(.vertical, 4 * zoomScale)
     }
 }
 
@@ -290,8 +430,34 @@ struct CategoryPill: View {
             .overlay(
                 RoundedRectangle(cornerRadius: 6 * zoomScale)
                     .stroke(isSelected ? Color.white.opacity(0.3) : Color.white.opacity(0.05), lineWidth: 1 * zoomScale)
-            
-                .allowsHitTesting(false))
+                    .allowsHitTesting(false)
+            )
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+// MARK: - Tag Pill
+struct TagPill: View {
+    let tag: String
+    let isSelected: Bool
+    let zoomScale: CGFloat
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            Text("#\(tag)")
+                .font(.system(size: 8 * zoomScale, weight: isSelected ? .bold : .regular, design: .monospaced))
+                .foregroundStyle(isSelected ? .white : .white.opacity(0.5))
+                .padding(.horizontal, 8 * zoomScale)
+                .padding(.vertical, 3 * zoomScale)
+                .background(isSelected ? Color(hex: "#007AFF").opacity(0.2) : Color(white: 0.05))
+                .cornerRadius(4 * zoomScale)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 4 * zoomScale)
+                        .stroke(isSelected ? Color(hex: "#007AFF").opacity(0.5) : Color.white.opacity(0.05), lineWidth: 1 * zoomScale)
+                        .allowsHitTesting(false)
+                )
         }
         .buttonStyle(.plain)
     }
@@ -376,8 +542,8 @@ struct ErrorRowView: View {
             .overlay(
                 RoundedRectangle(cornerRadius: 8 * zoomScale)
                     .stroke(isHovered ? Color.white.opacity(0.15) : Color.white.opacity(0.05), lineWidth: 1 * zoomScale)
-            
-                .allowsHitTesting(false))
+                    .allowsHitTesting(false)
+            )
         }
         .buttonStyle(.plain)
         .onHover { hovering in

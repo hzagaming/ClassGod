@@ -89,6 +89,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 name: .draggableWindowDidMove,
                 object: nil
             )
+            
+            NotificationCenter.default.addObserver(
+                self,
+                selector: #selector(self.showErrorHubFromNotification(_:)),
+                name: .classGodShowErrorHubEntry,
+                object: nil
+            )
 
             // Phase 2: Setup main menu window first (hidden at bottom layer)
             self.setupMainWindow()
@@ -1018,6 +1025,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         } else {
             showErrorHubWindow(animated: true)
         }
+    }
+    
+    @objc func showErrorHubFromNotification(_ notification: Notification) {
+        showErrorHubWindow(animated: true)
     }
 
     private func updateMainWindowSize() {

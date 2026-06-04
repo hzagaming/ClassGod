@@ -121,7 +121,7 @@ final class ErrorToastManager: ObservableObject {
         
         let view = ErrorToastView(item: toast, onTap: { [weak self] in
             if let entry = toast.entry {
-                self?.showDetailWindow(entry)
+                self?.navigateToEncyclopedia(entry)
             }
             self?.dismiss(id: toast.id)
         }, onDismiss: { [weak self] in
@@ -170,6 +170,11 @@ final class ErrorToastManager: ObservableObject {
         window.contentView = NSHostingView(rootView: view)
         window.makeKeyAndOrderFront(nil)
     }
+    
+    // MARK: - Navigate to Encyclopedia
+    func navigateToEncyclopedia(_ entry: ErrorEntry) {
+        ErrorHubNavigationState.shared.navigateToEntry(id: entry.id)
+    }
 }
 
 // MARK: - Error Toast View
@@ -206,7 +211,7 @@ struct ErrorToastView: View {
                         .lineLimit(2)
                     
                     if item.entry != nil {
-                        Text("Click for full solution →")
+                        Text("Click to open in Encyclopedia →")
                             .font(.system(size: 9, weight: .bold, design: .monospaced))
                             .foregroundStyle(Color(hex: "#007AFF"))
                     }
@@ -271,7 +276,7 @@ struct ErrorToastOverlay: View {
             ForEach(manager.toasts) { toast in
                 ErrorToastView(item: toast, onTap: {
                     if let entry = toast.entry {
-                        ErrorToastManager.shared.showDetailWindow(entry)
+                        ErrorToastManager.shared.navigateToEncyclopedia(entry)
                     }
                     ErrorToastManager.shared.dismiss(id: toast.id)
                 }, onDismiss: {

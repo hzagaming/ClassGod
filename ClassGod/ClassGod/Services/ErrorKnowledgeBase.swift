@@ -129,6 +129,9 @@ final class ErrorKnowledgeBase {
         entries.append(contentsOf: moreCoreDataErrors2())
         entries.append(contentsOf: moreSecurityErrors2())
         entries.append(contentsOf: moreGeneralErrors2())
+        entries.append(contentsOf: moreSwiftCompileErrors2())
+        entries.append(contentsOf: moreXcodeBuildErrors2())
+        entries.append(contentsOf: moreSwiftUIErrors3())
         allEntries = entries
     }
     
@@ -12918,6 +12921,1137 @@ extension Array {
                 tags: ["watchdog", "sigkill", "launch", "runtime"],
                 appleDocURL: "https://developer.apple.com/documentation/xcode/addressing-watchdog-terminations",
                 commonInVersions: ["iOS 13+", "macOS 11+"]
+            ),
+        ]
+    }
+
+
+    // =========================================================================
+    // MARK: - ADDITIONAL SWIFT COMPILE ERRORS (Extra Batch 2)
+    // =========================================================================
+    
+    private func moreSwiftCompileErrors2() -> [ErrorEntry] {
+        return [
+            ErrorEntry(
+                category: .swiftCompile,
+                severity: .high,
+                title: "Type 'X' does not conform to protocol 'Y'",
+                errorCode: "SWIFT_COMPILE_PROTOCOL_CONFORM_2",
+                description: "A type is missing required methods or properties to conform to a protocol.",
+                cause: "1. Missing required protocol stubs. 2. Method signatures don't match. 3. Associated type not resolved. 4. Property type mismatch.",
+                solutions: [
+                    "Use Fix-All to auto-generate missing stubs",
+                    "Check protocol requirements in documentation",
+                    "Ensure associated types are correctly inferred",
+                    "Verify method signatures match exactly (including labels)",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Protocol Conformance",
+                        badCode: "struct User: Codable {\n    let name: String\n    // Missing init(from:) or encode(to:)\n}",
+                        goodCode: "struct User: Codable {\n    let name: String\n}",
+                        explanation: "For Codable, Swift can auto-synthesize if all properties are Codable. For custom protocols, implement all requirements."
+                    ),
+                ],
+                relatedErrors: ["Protocol conformance failure"],
+                tags: ["protocol", "conformance", "compile", "codable"],
+                appleDocURL: "https://docs.swift.org/swift-book/LanguageGuide/Protocols.html",
+                commonInVersions: ["Swift 5.x"]
+            ),
+            ErrorEntry(
+                category: .swiftCompile,
+                severity: .high,
+                title: "Initializer does not override a designated initializer from its superclass",
+                errorCode: "SWIFT_COMPILE_OVERRIDE_INIT_2",
+                description: "An override init was declared but no matching designated init exists in the superclass.",
+                cause: "1. Superclass init was renamed. 2. Parameter labels don't match. 3. Init was made convenience in superclass. 4. Superclass no longer has that init.",
+                solutions: [
+                    "Check superclass available inits",
+                    "Match parameter labels exactly",
+                    "Remove override if this is a new init",
+                    "Ensure superclass is imported correctly",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Override Init",
+                        badCode: "class Base { init(value: Int) {} }\nclass Derived: Base {\n    override init(val: Int) { }  // Wrong label\n}",
+                        goodCode: "class Base { init(value: Int) {} }\nclass Derived: Base {\n    override init(value: Int) {\n        super.init(value: value)\n    }\n}",
+                        explanation: "Parameter labels in override must match the superclass exactly."
+                    ),
+                ],
+                relatedErrors: ["Method does not override any method"],
+                tags: ["init", "override", "superclass", "compile"],
+                appleDocURL: "https://docs.swift.org/swift-book/LanguageGuide/Inheritance.html",
+                commonInVersions: ["Swift 5.x"]
+            ),
+            ErrorEntry(
+                category: .swiftCompile,
+                severity: .medium,
+                title: "@available attribute cannot be applied to this declaration",
+                errorCode: "SWIFT_COMPILE_AVAILABLE_INVALID",
+                description: "The @available attribute was used on a declaration that doesn't support it.",
+                cause: "1. Using @available on a local variable. 2. Using platform-deprecated on unsupported type. 3. Wrong syntax for @available.",
+                solutions: [
+                    "Move @available to the enclosing type or method",
+                    "Use #available for runtime checks instead",
+                    "Check which declarations support @available",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Available Usage",
+                        badCode: "func test() {\n    @available(iOS 14, *)\n    let feature = NewFeature()  // Invalid\n}",
+                        goodCode: "@available(iOS 14, *)\nfunc useFeature() {\n    let feature = NewFeature()\n}",
+                        explanation: "@available can only be used on declarations at type, function, or property level, not local variables."
+                    ),
+                ],
+                relatedErrors: ["Attribute requires function, method, or property"],
+                tags: ["available", "attribute", "compile"],
+                appleDocURL: "https://docs.swift.org/swift-book/ReferenceManual/Attributes.html",
+                commonInVersions: ["Swift 5.x"]
+            ),
+            ErrorEntry(
+                category: .swiftCompile,
+                severity: .high,
+                title: "Missing return in a function expected to return 'X'",
+                errorCode: "SWIFT_COMPILE_MISSING_RETURN_2",
+                description: "A function declares a return type but not all code paths return a value.",
+                cause: "1. Guard statement missing return in else. 2. Switch statement missing default case. 3. Conditional branches where one path doesn't return. 4. Implicit fallthrough.",
+                solutions: [
+                    "Ensure every code path returns a value",
+                    "Add default case to switches",
+                    "Use guard with explicit return in else",
+                    "Consider making return type optional",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Missing Return",
+                        badCode: "func getStatus(_ ok: Bool) -> String {\n    if ok {\n        return \"OK\"\n    }\n    // Missing return for false\n}",
+                        goodCode: "func getStatus(_ ok: Bool) -> String {\n    if ok {\n        return \"OK\"\n    }\n    return \"Failed\"\n}",
+                        explanation: "Every code path in a non-void function must return a value."
+                    ),
+                ],
+                relatedErrors: ["Missing return in function"],
+                tags: ["return", "function", "compile", "control-flow"],
+                appleDocURL: "https://docs.swift.org/swift-book/LanguageGuide/Functions.html",
+                commonInVersions: ["Swift 5.x"]
+            ),
+            ErrorEntry(
+                category: .swiftCompile,
+                severity: .medium,
+                title: "Variable 'self.X' passed by reference before being initialized",
+                errorCode: "SWIFT_COMPILE_SELF_UNINIT_REF",
+                description: "A property was passed as inout before all properties were initialized.",
+                cause: "1. Using inout parameter in init before all properties set. 2. Calling mutating method before full initialization. 3. Self captured in closure before init complete.",
+                solutions: [
+                    "Initialize all properties before using inout",
+                    "Defer mutating operations until after init",
+                    "Use lazy properties for deferred initialization",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Self Reference in Init",
+                        badCode: "struct Point {\n    var x: Int\n    var y: Int\n    init() {\n        modify(&x)  // y not initialized yet\n        y = 0\n    }\n}",
+                        goodCode: "struct Point {\n    var x: Int\n    var y: Int\n    init() {\n        x = 0\n        y = 0\n        modify(&x)\n    }\n}",
+                        explanation: "All stored properties must be initialized before passing self or its properties by reference."
+                    ),
+                ],
+                relatedErrors: ["Variable used before being initialized"],
+                tags: ["init", "inout", "self", "compile"],
+                appleDocURL: "https://docs.swift.org/swift-book/LanguageGuide/Initialization.html",
+                commonInVersions: ["Swift 5.x"]
+            ),
+            ErrorEntry(
+                category: .swiftCompile,
+                severity: .high,
+                title: "Ambiguous use of 'X'",
+                errorCode: "SWIFT_COMPILE_AMBIGUOUS_USE",
+                description: "The compiler cannot determine which overloaded function or operator to use.",
+                cause: "1. Multiple overloads with matching signatures. 2. Imported modules with conflicting names. 3. Type inference can't pick between candidates. 4. Custom operators conflicting with built-in.",
+                solutions: [
+                    "Explicitly specify types to disambiguate",
+                    "Use fully qualified names (ModuleName.function)",
+                    "Remove or rename conflicting overloads",
+                    "Cast arguments to specific types",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Disambiguate Overloads",
+                        badCode: "func process(_ value: Int) {}\nfunc process(_ value: Double) {}\nprocess(1)  // Ambiguous",
+                        goodCode: "func process(_ value: Int) {}\nfunc process(_ value: Double) {}\nprocess(1 as Int)  // Explicit",
+                        explanation: "When multiple overloads match, explicitly cast or specify types to help the compiler choose."
+                    ),
+                ],
+                relatedErrors: ["Ambiguous operator usage"],
+                tags: ["overload", "ambiguous", "compile", "types"],
+                appleDocURL: "https://docs.swift.org/swift-book/LanguageGuide/Functions.html",
+                commonInVersions: ["Swift 5.x"]
+            ),
+            ErrorEntry(
+                category: .swiftCompile,
+                severity: .medium,
+                title: "Invalid redeclaration of 'X'",
+                errorCode: "SWIFT_COMPILE_REDECLARATION",
+                description: "A variable, function, or type was declared more than once in the same scope.",
+                cause: "1. Copy-paste error. 2. Same name in nested scopes. 3. Protocol extension and class both define same method. 4. Imported modules with same symbol.",
+                solutions: [
+                    "Remove duplicate declaration",
+                    "Rename one of the conflicting symbols",
+                    "Check for accidental copy-paste",
+                    "Use selective imports to avoid conflicts",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Redeclaration Fix",
+                        badCode: "let name = \"A\"\nlet name = \"B\"  // Redeclaration",
+                        goodCode: "let name = \"A\"\nlet name2 = \"B\"  // Unique names",
+                        explanation: "Each symbol in a scope must have a unique name."
+                    ),
+                ],
+                relatedErrors: ["Redefinition of identifier"],
+                tags: ["redeclaration", "scope", "compile"],
+                appleDocURL: "https://docs.swift.org/swift-book/LanguageGuide/TheBasics.html",
+                commonInVersions: ["Swift 5.x"]
+            ),
+            ErrorEntry(
+                category: .swiftCompile,
+                severity: .high,
+                title: "Class 'X' has no initializers",
+                errorCode: "SWIFT_COMPILE_NO_INIT_3",
+                description: "A class with stored properties has no init method and cannot be auto-initialized.",
+                cause: "1. Stored properties without default values. 2. No custom init provided. 3. Required init from superclass not implemented. 4. Convenience init missing designated init call.",
+                solutions: [
+                    "Provide default values for all stored properties",
+                    "Add an explicit init method",
+                    "Implement required superclass inits",
+                    "Use convenience init calling designated init",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Add Initializer",
+                        badCode: "class Person {\n    var name: String  // No default, no init\n}",
+                        goodCode: "class Person {\n    var name: String\n    init(name: String) {\n        self.name = name\n    }\n}",
+                        explanation: "Classes must initialize all stored properties. Provide defaults or an explicit init."
+                    ),
+                ],
+                relatedErrors: ["Stored property without initial value"],
+                tags: ["init", "class", "compile", "properties"],
+                appleDocURL: "https://docs.swift.org/swift-book/LanguageGuide/Initialization.html",
+                commonInVersions: ["Swift 5.x"]
+            ),
+            ErrorEntry(
+                category: .swiftCompile,
+                severity: .medium,
+                title: "Tuple pattern cannot match values of non-tuple type 'X'",
+                errorCode: "SWIFT_COMPILE_TUPLE_MISMATCH",
+                description: "A tuple destructuring pattern was used on a non-tuple value.",
+                cause: "1. Type changed from tuple to single value. 2. Wrong variable in switch case. 3. Dictionary value type no longer a tuple. 4. API changed return type.",
+                solutions: [
+                    "Remove extra parentheses if value is not a tuple",
+                    "Update pattern to match actual type",
+                    "Check API documentation for return type changes",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Tuple Pattern Fix",
+                        badCode: "let value: Int = 5\nswitch value {\ncase (let x, let y):  // Not a tuple\n    break\n}",
+                        goodCode: "let value: Int = 5\nswitch value {\ncase let x:\n    break\n}",
+                        explanation: "Tuple patterns can only be used on tuple types. Match the actual type structure."
+                    ),
+                ],
+                relatedErrors: ["Pattern match failure"],
+                tags: ["tuple", "pattern", "switch", "compile"],
+                appleDocURL: "https://docs.swift.org/swift-book/LanguageGuide/ControlFlow.html",
+                commonInVersions: ["Swift 5.x"]
+            ),
+            ErrorEntry(
+                category: .swiftCompile,
+                severity: .high,
+                title: "'X' is not a member type of 'Y'",
+                errorCode: "SWIFT_COMPILE_NOT_MEMBER_TYPE_2",
+                description: "A nested type reference doesn't exist in the parent type.",
+                cause: "1. Typo in nested type name. 2. Type was renamed or removed. 3. Accessing typealias from wrong scope. 4. Generic type argument misplaced.",
+                solutions: [
+                    "Check the parent type for available nested types",
+                    "Verify no typos in type names",
+                    "Import the correct module",
+                    "Check if type was renamed in newer SDK",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Nested Type",
+                        badCode: "let fmt: JSONEncoder.OutputFormatting  // Correct\nlet fmt: JSONEncoder.Format  // Wrong",
+                        goodCode: "let fmt: JSONEncoder.OutputFormatting",
+                        explanation: "Use the exact nested type name as declared. Check documentation for correct names."
+                    ),
+                ],
+                relatedErrors: ["Type resolution failure"],
+                tags: ["nested-type", "type", "compile"],
+                appleDocURL: "https://docs.swift.org/swift-book/LanguageGuide/NestedTypes.html",
+                commonInVersions: ["Swift 5.x"]
+            ),
+            ErrorEntry(
+                category: .swiftCompile,
+                severity: .medium,
+                title: "Expression type is ambiguous without more context",
+                errorCode: "SWIFT_COMPILE_AMBIGUOUS_EXPR",
+                description: "The compiler cannot infer the type of an expression.",
+                cause: "1. Complex generic expression. 2. Type inference overloaded. 3. Missing type annotations in closure. 4. Operator overloading with many candidates.",
+                solutions: [
+                    "Add explicit type annotations",
+                    "Simplify complex generic expressions",
+                    "Specify closure parameter and return types",
+                    "Break expression into smaller parts",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Explicit Types",
+                        badCode: "let result = [1,2,3].map { $0 + 1 }.filter { $0 > 2 }.reduce(0, +)  // May be ambiguous",
+                        goodCode: "let result: Int = [1,2,3].map { (n: Int) -> Int in n + 1 }.filter { $0 > 2 }.reduce(0, +)",
+                        explanation: "Add explicit types to help the compiler resolve complex chained expressions."
+                    ),
+                ],
+                relatedErrors: ["Ambiguous use of operator"],
+                tags: ["inference", "ambiguous", "types", "compile"],
+                appleDocURL: "https://docs.swift.org/swift-book/LanguageGuide/TheBasics.html",
+                commonInVersions: ["Swift 5.x"]
+            ),
+            ErrorEntry(
+                category: .swiftCompile,
+                severity: .high,
+                title: "Immutable value 'X' may only be initialized once",
+                errorCode: "SWIFT_COMPILE_IMMUTABLE_INIT_ONCE",
+                description: "A let constant was assigned more than once.",
+                cause: "1. Assigning to let in a loop. 2. Conditional branches both assign. 3. Closure captures and assigns. 4. Shadowing var with let.",
+                solutions: [
+                    "Change let to var if reassignment is needed",
+                    "Restructure code to assign exactly once",
+                    "Use different variable names for different values",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Mutable vs Immutable",
+                        badCode: "let count = 0\nfor i in 1...5 {\n    count = count + i  // Cannot reassign let\n}",
+                        goodCode: "var count = 0\nfor i in 1...5 {\n    count += i\n}",
+                        explanation: "Use var for values that need to change. let guarantees single assignment."
+                    ),
+                ],
+                relatedErrors: ["Cannot assign to let"],
+                tags: ["let", "var", "immutable", "compile"],
+                appleDocURL: "https://docs.swift.org/swift-book/LanguageGuide/TheBasics.html",
+                commonInVersions: ["Swift 5.x"]
+            ),
+            ErrorEntry(
+                category: .swiftCompile,
+                severity: .medium,
+                title: "Subscripts cannot have default arguments",
+                errorCode: "SWIFT_COMPILE_SUBSCRIPT_DEFAULT_ARG",
+                description: "A subscript declaration includes default parameter values, which are not supported.",
+                cause: "1. Trying to add default value to subscript parameter. 2. Confusing subscript with function syntax. 3. Porting function behavior to subscript.",
+                solutions: [
+                    "Remove default arguments from subscript",
+                    "Use a method instead of subscript for optional params",
+                    "Provide multiple subscript overloads",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Subscript Overloads",
+                        badCode: "subscript(index: Int = 0) -> Int {  // Not allowed\n    return values[index]\n}",
+                        goodCode: "subscript(index: Int) -> Int {\n    return values[index]\n}\nsubscript() -> Int {\n    return values[0]\n}",
+                        explanation: "Subscripts don't support default arguments. Use overloads or methods instead."
+                    ),
+                ],
+                relatedErrors: ["Default argument not permitted"],
+                tags: ["subscript", "default", "compile"],
+                appleDocURL: "https://docs.swift.org/swift-book/LanguageGuide/Subscripts.html",
+                commonInVersions: ["Swift 5.x"]
+            ),
+            ErrorEntry(
+                category: .swiftCompile,
+                severity: .high,
+                title: "'X' is only available in macOS Y.Z or newer",
+                errorCode: "SWIFT_COMPILE_AVAILABILITY_OS",
+                description: "An API is being used that's not available on the deployment target.",
+                cause: "1. Deployment target lower than API availability. 2. Missing @available or #available check. 3. Using new API in old project. 4. Wrong SDK version.",
+                solutions: [
+                    "Raise deployment target in project settings",
+                    "Add @available or #available checks",
+                    "Use older equivalent API",
+                    "Conditionally compile with #if available",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Availability Check",
+                        badCode: "let scene = UIWindowScene()  // iOS 13+ only",
+                        goodCode: "if #available(iOS 13, *) {\n    let scene = UIWindowScene()\n} else {\n    // Fallback\n}",
+                        explanation: "Always check API availability when using newer platform features."
+                    ),
+                ],
+                relatedErrors: ["API only available on"],
+                tags: ["availability", "api", "platform", "compile"],
+                appleDocURL: "https://docs.swift.org/swift-book/ReferenceManual/Statements.html",
+                commonInVersions: ["Swift 5.x"]
+            ),
+            ErrorEntry(
+                category: .swiftCompile,
+                severity: .medium,
+                title: "Result of call to 'X' is unused",
+                errorCode: "SWIFT_COMPILE_UNUSED_RESULT_2",
+                description: "A function with a return value was called but the result was not used.",
+                cause: "1. Called mutating method thinking it modifies in place. 2. Forgot to assign return value. 3. Side-effect-only function incorrectly returns value. 4. Debugging code left in.",
+                solutions: [
+                    "Assign the result to a variable or property",
+                    "Use @discardableResult if intentional",
+                    "Prefix with _ = to explicitly ignore",
+                    "Remove call if not needed",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Handle Return Value",
+                        badCode: "var items = [\"a\", \"b\"]\nitems.sorted()  // Result unused, array unchanged",
+                        goodCode: "var items = [\"a\", \"b\"]\nitems = items.sorted()  // Assign result",
+                        explanation: "Many Swift methods return new values rather than mutating in place. Always use the return value."
+                    ),
+                ],
+                relatedErrors: ["Expression resolves to unused type"],
+                tags: ["unused", "result", "compile", "warning"],
+                appleDocURL: "https://docs.swift.org/swift-book/LanguageGuide/Functions.html",
+                commonInVersions: ["Swift 5.x"]
+            ),
+        ]
+    }
+
+    // =========================================================================
+    // MARK: - ADDITIONAL XCODE BUILD ERRORS (Extra Batch 2)
+    // =========================================================================
+    
+    private func moreXcodeBuildErrors2() -> [ErrorEntry] {
+        return [
+            ErrorEntry(
+                category: .xcodeBuild,
+                severity: .high,
+                title: "Build input file cannot be found: 'X.xcassets'",
+                errorCode: "XCODE_ASSETS_MISSING",
+                description: "An asset catalog referenced in the build phases was not found on disk.",
+                cause: "1. File was deleted or renamed outside Xcode. 2. Reference path is wrong. 3. File not committed to git. 4. Case sensitivity mismatch.",
+                solutions: [
+                    "Verify file exists at the referenced path",
+                    "Remove red references and re-add files",
+                    "Check git status for missing files",
+                    "Ensure case-sensitive paths match",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Fix Asset Reference",
+                        badCode: "// Assets.xcassets referenced but missing",
+                        goodCode: "// Ensure Assets.xcassets exists in project directory\n// Re-add if needed via File > Add Files",
+                        explanation: "Xcode references files by path. If moved externally, the reference breaks."
+                    ),
+                ],
+                relatedErrors: ["XCODE_FILE_NOT_FOUND"],
+                tags: ["assets", "xcassets", "build", "missing-file"],
+                appleDocURL: "https://developer.apple.com/documentation/xcode/managing-assets-with-asset-catalogs",
+                commonInVersions: ["Xcode 14+", "Xcode 15+"]
+            ),
+            ErrorEntry(
+                category: .xcodeBuild,
+                severity: .critical,
+                title: "Provisioning profile 'X' doesn't include signing certificate 'Y'",
+                errorCode: "XCODE_PROV_CERT_MISMATCH",
+                description: "The provisioning profile was created without the current signing certificate.",
+                cause: "1. New Mac/setup without certificate in profile. 2. Certificate expired or revoked. 3. Profile downloaded from another machine. 4. Team membership changed.",
+                solutions: [
+                    "Regenerate provisioning profile with current certificate",
+                    "Download updated profile from Apple Developer portal",
+                    "Use automatic signing in Xcode",
+                    "Check Keychain for valid certificates",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Fix Signing",
+                        badCode: "// Manual profile doesn't include cert",
+                        goodCode: "// Xcode > Target > Signing & Capabilities > Enable Automatic Signing",
+                        explanation: "Automatic signing manages certificates and profiles automatically."
+                    ),
+                ],
+                relatedErrors: ["XCODE_CODE_SIGN_FAIL", "XCODE_EMBED_SIGN_MISMATCH"],
+                tags: ["provisioning", "certificate", "signing", "build"],
+                appleDocURL: "https://developer.apple.com/documentation/xcode/signing-apps",
+                commonInVersions: ["Xcode 14+", "Xcode 15+"]
+            ),
+            ErrorEntry(
+                category: .xcodeBuild,
+                severity: .high,
+                title: "Multiple commands produce 'X/ DerivedData / ... / file.o'",
+                errorCode: "XCODE_DERIVED_DATA_DUPLICATE",
+                description: "Two or more build rules are trying to produce the same output file.",
+                cause: "1. Same file added to Compile Sources twice. 2. Copy Bundle Resources and Compile Sources overlap. 3. Custom build scripts producing same output. 4. Derived data corruption.",
+                solutions: [
+                    "Remove duplicate references in Build Phases",
+                    "Clean DerivedData folder",
+                    "Check for files in both Compile and Copy phases",
+                    "Delete and re-add conflicting files",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Clean Build Phases",
+                        badCode: "// Same .swift file in Compile Sources twice",
+                        goodCode: "// Build Phases > Compile Sources: remove duplicates",
+                        explanation: "Each source file should only appear once in Compile Sources."
+                    ),
+                ],
+                relatedErrors: ["XCODE_MULTIPLE_OUTPUTS"],
+                tags: ["derived-data", "duplicate", "build-phases", "build"],
+                appleDocURL: "https://developer.apple.com/documentation/xcode/build-phases",
+                commonInVersions: ["Xcode 14+", "Xcode 15+"]
+            ),
+            ErrorEntry(
+                category: .xcodeBuild,
+                severity: .medium,
+                title: "Swift package target 'X' is outside the package root",
+                errorCode: "SPM_TARGET_OUTSIDE_ROOT",
+                description: "A Swift Package Manager target references source files outside the package directory.",
+                cause: "1. Symlinked sources outside package. 2. Path references using '../'. 3. Monorepo structure with shared code. 4. Incorrect target path in Package.swift.",
+                solutions: [
+                    "Move source files inside the package directory",
+                    "Use package dependencies instead of relative paths",
+                    "Create local packages for shared code",
+                    "Check target paths in Package.swift",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Package Structure",
+                        badCode: "// Package.swift\n.target(name: \"Lib\", path: \"../Shared\")  // Outside root",
+                        goodCode: "// Package.swift\n.target(name: \"Lib\", path: \"Sources/Lib\")  // Inside root",
+                        explanation: "SPM targets must be within the package root. Use dependencies for external code."
+                    ),
+                ],
+                relatedErrors: ["SPM_PATH_OUTSIDE"],
+                tags: ["spm", "package", "target", "build"],
+                appleDocURL: "https://docs.swift.org/package-manager/PackageDescription/PackageDescription.html",
+                commonInVersions: ["Xcode 14+", "Xcode 15+"]
+            ),
+            ErrorEntry(
+                category: .xcodeBuild,
+                severity: .high,
+                title: "The sandbox is not in sync with the Podfile.lock",
+                errorCode: "COCOAPODS_LOCK_OUT_OF_SYNC",
+                description: "CocoaPods dependencies are out of date compared to the lock file.",
+                cause: "1. Podfile changed without running pod install. 2. Lock file not committed. 3. Different CocoaPods version. 4. Pods directory missing.",
+                solutions: [
+                    "Run pod install to update dependencies",
+                    "Commit Podfile.lock to version control",
+                    "Ensure all team members use same CocoaPods version",
+                    "Delete Pods/ and Podfile.lock, then pod install",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "bash",
+                        title: "Sync Pods",
+                        badCode: "// Build fails with lock out of sync",
+                        goodCode: "$ pod deintegrate\n$ pod install\n// Commit Podfile.lock",
+                        explanation: "Always run pod install after modifying Podfile, and commit the lock file."
+                    ),
+                ],
+                relatedErrors: ["XCODE_PODFILE_LOCK"],
+                tags: ["cocoapods", "podfile", "lock", "build"],
+                appleDocURL: "https://guides.cocoapods.org/using/using-cocoapods.html",
+                commonInVersions: ["Xcode 14+", "Xcode 15+"]
+            ),
+            ErrorEntry(
+                category: .xcodeBuild,
+                severity: .medium,
+                title: "Target 'X' requires a provisioning profile but none was found",
+                errorCode: "XCODE_PROV_REQUIRED_NONE",
+                description: "A target configured for device deployment lacks a provisioning profile.",
+                cause: "1. First build on new machine. 2. Profile expired or deleted. 3. Automatic signing disabled without manual profile. 4. Team ID not set.",
+                solutions: [
+                    "Enable automatic signing in target settings",
+                    "Select a development team",
+                    "Download profile from Apple Developer portal",
+                    "Check bundle identifier matches profile",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Enable Signing",
+                        badCode: "// Team: None, Provisioning: None",
+                        goodCode: "// Target > Signing & Capabilities > Team: Your Team",
+                        explanation: "Device builds require a valid provisioning profile. Use automatic signing for easiest setup."
+                    ),
+                ],
+                relatedErrors: ["XCODE_PROV_CERT_MISMATCH"],
+                tags: ["provisioning", "signing", "team", "build"],
+                appleDocURL: "https://developer.apple.com/documentation/xcode/signing-apps",
+                commonInVersions: ["Xcode 14+", "Xcode 15+"]
+            ),
+            ErrorEntry(
+                category: .xcodeBuild,
+                severity: .high,
+                title: "Linker command failed with exit code 1 (use -v to see invocation)",
+                errorCode: "XCODE_LINK_FAIL_1",
+                description: "The linker encountered an error while combining object files into the final binary.",
+                cause: "1. Undefined symbols from missing frameworks. 2. Duplicate symbols. 3. Architecture mismatch. 4. Library not found. 5. Bitcode incompatibility.",
+                solutions: [
+                    "Check 'Undefined symbols' in build log for missing imports",
+                    "Add missing frameworks to Link Binary With Libraries",
+                    "Check for duplicate class names across targets",
+                    "Verify library search paths",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Add Framework",
+                        badCode: "// Using UIKit without linking it",
+                        goodCode: "// Build Phases > Link Binary With Libraries > + > UIKit.framework",
+                        explanation: "The linker needs all referenced frameworks explicitly linked."
+                    ),
+                ],
+                relatedErrors: ["XCODE_LINK_ERROR", "XCODE_UNDEF_SYMBOL"],
+                tags: ["linker", "ld", "symbols", "build"],
+                appleDocURL: "https://developer.apple.com/documentation/xcode/build-settings-reference",
+                commonInVersions: ["Xcode 14+", "Xcode 15+"]
+            ),
+            ErrorEntry(
+                category: .xcodeBuild,
+                severity: .medium,
+                title: "Invalid Info.plist value: 'X' must be a string",
+                errorCode: "XCODE_PLIST_TYPE_ERROR",
+                description: "An Info.plist entry has the wrong data type for its key.",
+                cause: "1. Boolean used where string expected. 2. Number used for version string. 3. Array used for single value. 4. Manual plist editing error.",
+                solutions: [
+                    "Open Info.plist and correct the data type",
+                    "Use Xcode's property list editor",
+                    "Check Apple's documentation for expected types",
+                    "Validate plist with plutil",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "xml",
+                        title: "Correct Plist Type",
+                        badCode: "<key>CFBundleShortVersionString</key>\n<integer>1</integer>  // Wrong type",
+                        goodCode: "<key>CFBundleShortVersionString</key>\n<string>1.0</string>  // Correct",
+                        explanation: "CFBundleShortVersionString must be a string. Check Apple's Info.plist key reference for correct types."
+                    ),
+                ],
+                relatedErrors: ["XCODE_PLIST_INVALID"],
+                tags: ["plist", "info.plist", "type", "build"],
+                appleDocURL: "https://developer.apple.com/documentation/bundleresources/information_property_list",
+                commonInVersions: ["Xcode 14+", "Xcode 15+"]
+            ),
+            ErrorEntry(
+                category: .xcodeBuild,
+                severity: .high,
+                title: "Build service could not create build operation: internal error",
+                errorCode: "XCODE_BUILD_SERVICE_ERROR",
+                description: "Xcode's build system encountered an internal error and could not start the build.",
+                cause: "1. Xcode derived data corruption. 2. Build system cache invalid. 3. Multiple Xcode versions installed. 4. File system permissions issue. 5. External drive disconnection.",
+                solutions: [
+                    "Clean build folder (Shift+Cmd+K)",
+                    "Delete DerivedData",
+                    "Restart Xcode",
+                    "Reset build system with defaults write",
+                    "Check disk space and permissions",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "bash",
+                        title: "Reset Build System",
+                        badCode: "// Build fails with internal error",
+                        goodCode: "$ rm -rf ~/Library/Developer/Xcode/DerivedData\n$ defaults write com.apple.dt.Xcode BuildSystemScheduleInherentlyParallelCommandsExclusively -bool NO",
+                        explanation: "DerivedData corruption is a common cause of build system internal errors. Cleaning usually fixes it."
+                    ),
+                ],
+                relatedErrors: ["XCODE_BUILD_SYSTEM_ERROR"],
+                tags: ["build-service", "internal-error", "derived-data", "build"],
+                appleDocURL: "https://developer.apple.com/documentation/xcode/building-your-app",
+                commonInVersions: ["Xcode 14+", "Xcode 15+"]
+            ),
+            ErrorEntry(
+                category: .xcodeBuild,
+                severity: .medium,
+                title: "Swift package 'X' cannot be resolved",
+                errorCode: "SPM_RESOLVE_FAIL_2",
+                description: "Xcode could not download or resolve a Swift package dependency.",
+                cause: "1. Network connectivity issue. 2. Repository was deleted or made private. 3. Invalid version/tag specified. 4. Git credentials expired. 5. Package URL changed.",
+                solutions: [
+                    "Check internet connection and retry",
+                    "Verify package URL is accessible",
+                    "Update to a valid version/tag",
+                    "Check Git credentials and SSH keys",
+                    "File > Packages > Reset Package Caches",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Fix Package Resolution",
+                        badCode: "// Package URL returns 404",
+                        goodCode: "// Use correct URL and valid version\n.package(url: \"https://github.com/owner/repo.git\", from: \"1.0.0\")",
+                        explanation: "Package URLs must be valid and accessible. Tags must exist in the remote repository."
+                    ),
+                ],
+                relatedErrors: ["SPM_CHECKOUT_FAIL"],
+                tags: ["spm", "package", "resolve", "network", "build"],
+                appleDocURL: "https://developer.apple.com/documentation/xcode/adding-package-dependencies-to-your-app",
+                commonInVersions: ["Xcode 14+", "Xcode 15+"]
+            ),
+            ErrorEntry(
+                category: .xcodeBuild,
+                severity: .high,
+                title: "Cycle in dependencies between targets 'X' and 'Y'",
+                errorCode: "XCODE_TARGET_DEPENDENCY_CYCLE",
+                description: "Two or more targets depend on each other, creating a circular dependency.",
+                cause: "1. Target A links Target B and vice versa. 2. Framework imports its own sub-framework incorrectly. 3. Build phase dependencies create cycle. 4. Header search paths cause cross-import.",
+                solutions: [
+                    "Refactor shared code into a third target",
+                    "Remove one direction of the dependency",
+                    "Use protocols to break concrete dependencies",
+                    "Review target dependencies in Build Phases",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Break Circular Dependency",
+                        badCode: "// Target A imports Target B\n// Target B imports Target A",
+                        goodCode: "// Create Target C with shared protocols\n// Target A imports C\n// Target B imports C",
+                        explanation: "Circular dependencies are not allowed. Extract shared interfaces into a separate target."
+                    ),
+                ],
+                relatedErrors: ["XCODE_DEPENDENCY_CYCLE"],
+                tags: ["dependency", "cycle", "target", "build"],
+                appleDocURL: "https://developer.apple.com/documentation/xcode/creating-a-project",
+                commonInVersions: ["Xcode 14+", "Xcode 15+"]
+            ),
+            ErrorEntry(
+                category: .xcodeBuild,
+                severity: .medium,
+                title: "Warning: User-supplied CFBundleIdentifier value 'X' must be the same as the PRODUCT_BUNDLE_IDENTIFIER",
+                errorCode: "XCODE_BUNDLE_ID_MISMATCH",
+                description: "The Info.plist bundle identifier doesn't match the build setting.",
+                cause: "1. Manual Info.plist edit overriding build setting. 2. Different bundle IDs in plist and build settings. 3. Multiple plist files with conflicting values. 4. Inherited build settings.",
+                solutions: [
+                    "Set CFBundleIdentifier to $(PRODUCT_BUNDLE_IDENTIFIER) in Info.plist",
+                    "Manage bundle ID only in build settings",
+                    "Delete hardcoded bundle ID from plist",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "xml",
+                        title: "Dynamic Bundle ID",
+                        badCode: "<key>CFBundleIdentifier</key>\n<string>com.old.id</string>",
+                        goodCode: "<key>CFBundleIdentifier</key>\n<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>",
+                        explanation: "Use the build setting variable so Xcode manages the bundle ID consistently."
+                    ),
+                ],
+                relatedErrors: ["XCODE_BUNDLE_ID_INVALID"],
+                tags: ["bundle-id", "plist", "build-settings", "build"],
+                appleDocURL: "https://developer.apple.com/documentation/xcode/setting-the-bundle-id",
+                commonInVersions: ["Xcode 14+", "Xcode 15+"]
+            ),
+            ErrorEntry(
+                category: .xcodeBuild,
+                severity: .high,
+                title: "CoreData model version error: Can't find model for source store",
+                errorCode: "XCODE_COREDATA_MODEL_MISSING",
+                description: "The app references a Core Data model that is not included in the target.",
+                cause: "1. .xcdatamodeld not in Compile Sources. 2. Model file deleted. 3. Wrong model version set. 4. Model in wrong target. 5. Bundle lookup incorrect.",
+                solutions: [
+                    "Add .xcdatamodeld to Compile Sources",
+                    "Verify model file exists in project navigator",
+                    "Check target membership",
+                    "Ensure correct model version is set as current",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Include Model",
+                        badCode: "// Model.xcdatamodeld not in target",
+                        goodCode: "// Select model > File Inspector > Target Membership > Check main target",
+                        explanation: "Core Data models must be included in the target's Compile Sources build phase."
+                    ),
+                ],
+                relatedErrors: ["COREDATA_STORE_INCOMPATIBLE"],
+                tags: ["coredata", "model", "xcdatamodeld", "build"],
+                appleDocURL: "https://developer.apple.com/documentation/coredata",
+                commonInVersions: ["Xcode 14+", "Xcode 15+"]
+            ),
+        ]
+    }
+
+    // =========================================================================
+    // MARK: - ADDITIONAL SWIFTUI ERRORS (Extra Batch 3)
+    // =========================================================================
+    
+    private func moreSwiftUIErrors3() -> [ErrorEntry] {
+        return [
+            ErrorEntry(
+                category: .swiftUI,
+                severity: .high,
+                title: "Modifying state during view update, this will cause undefined behavior",
+                errorCode: "SWIFTUI_STATE_DURING_UPDATE_3",
+                description: "A @State or @ObservedObject property was modified while SwiftUI was updating the view hierarchy.",
+                cause: "1. Calling async method from body. 2. Modifying state in computed property. 3. onReceive handler modifies state synchronously. 4. Property observer triggers view update.",
+                solutions: [
+                    "Move state changes to user actions (onTap, onAppear)",
+                    "Use DispatchQueue.main.async to defer state changes",
+                    "Avoid modifying @State in computed properties",
+                    "Use onChange modifier for reactive updates",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Defer State Change",
+                        badCode: "var body: some View {\n    Text(\"\\(count)\").onAppear {\n        count += 1  // During update\n    }\n}",
+                        goodCode: "var body: some View {\n    Text(\"\\(count)\").onAppear {\n        DispatchQueue.main.async {\n            count += 1  // Deferred\n        }\n    }\n}",
+                        explanation: "State changes during view updates cause SwiftUI to re-evaluate unpredictably. Defer with async dispatch."
+                    ),
+                ],
+                relatedErrors: ["SWIFTUI_STATE_UPDATE_WARNING"],
+                tags: ["state", "update", "swiftui", "runtime"],
+                appleDocURL: "https://developer.apple.com/documentation/swiftui/managing-user-interface-state",
+                commonInVersions: ["iOS 14+", "macOS 11+"]
+            ),
+            ErrorEntry(
+                category: .swiftUI,
+                severity: .medium,
+                title: "NavigationLink is only supported in a NavigationStack or NavigationSplitView",
+                errorCode: "SWIFTUI_NAVLINK_NO_STACK",
+                description: "A NavigationLink was used outside of a navigation container.",
+                cause: "1. NavigationLink without NavigationStack. 2. NavigationView removed but links remain. 3. Link in sheet without nested stack. 4. Conditional navigation container.",
+                solutions: [
+                    "Wrap content in NavigationStack or NavigationSplitView",
+                    "Use NavigationView for older OS versions",
+                    "Ensure navigation container is an ancestor",
+                    "For sheets, add NavigationStack inside the sheet",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Navigation Stack",
+                        badCode: "VStack {\n    NavigationLink(\"Go\", value: route)\n}  // Missing stack",
+                        goodCode: "NavigationStack {\n    VStack {\n        NavigationLink(\"Go\", value: route)\n    }\n}",
+                        explanation: "NavigationLink requires a navigation container (NavigationStack/NavigationSplitView) as an ancestor."
+                    ),
+                ],
+                relatedErrors: ["SWIFTUI_NAVIGATION_ERROR"],
+                tags: ["navigation", "navigationlink", "swiftui"],
+                appleDocURL: "https://developer.apple.com/documentation/swiftui/navigationstack",
+                commonInVersions: ["iOS 16+", "macOS 13+"]
+            ),
+            ErrorEntry(
+                category: .swiftUI,
+                severity: .medium,
+                title: "ForEach requires that 'X' conform to 'Identifiable' or use an explicit id parameter",
+                errorCode: "SWIFTUI_FOREACH_NO_ID_2",
+                description: "ForEach cannot determine how to identify items in a collection.",
+                cause: "1. Custom type not Identifiable. 2. Primitive array without id parameter. 3. id property doesn't conform to Hashable. 4. Tuple used in ForEach.",
+                solutions: [
+                    "Make the element type conform to Identifiable",
+                    "Use ForEach(items, id: \\.uniqueProperty)",
+                    "Use enumerated() with offset as id",
+                    "For simple arrays, use indices as id (not recommended for dynamic lists)",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "ForEach ID",
+                        badCode: "struct Item { let name: String }\nForEach(items) { item in  // No id\n    Text(item.name)\n}",
+                        goodCode: "struct Item: Identifiable { let id = UUID(); let name: String }\nForEach(items) { item in\n    Text(item.name)\n}",
+                        explanation: "ForEach needs a way to uniquely identify each item. Conform to Identifiable or provide an explicit id key path."
+                    ),
+                ],
+                relatedErrors: ["SWIFTUI_FOREACH_ID"],
+                tags: ["foreach", "identifiable", "swiftui"],
+                appleDocURL: "https://developer.apple.com/documentation/swiftui/foreach",
+                commonInVersions: ["iOS 13+", "macOS 10.15+"]
+            ),
+            ErrorEntry(
+                category: .swiftUI,
+                severity: .high,
+                title: "EnvironmentObject 'X' not found in environment",
+                errorCode: "SWIFTUI_ENV_OBJECT_MISSING_2",
+                description: "A view tried to access an EnvironmentObject that was not injected into the environment.",
+                cause: "1. Forgot .environmentObject() on ancestor. 2. Object injected in wrong branch. 3. Navigation destination missing injection. 4. Sheet/presented view not receiving object.",
+                solutions: [
+                    "Add .environmentObject(instance) to the root view",
+                    "Ensure injection happens before the view that uses it",
+                    "Pass object explicitly for sheets using .sheet(item:)",
+                    "Use @StateObject instead if ownership belongs to the view",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Inject Environment",
+                        badCode: "ContentView()  // Missing injection\n// Child uses @EnvironmentObject var store: Store",
+                        goodCode: "ContentView()\n    .environmentObject(Store())  // Injected at root",
+                        explanation: "EnvironmentObject must be injected by an ancestor view. Pass it at the appropriate level in the view hierarchy."
+                    ),
+                ],
+                relatedErrors: ["SWIFTUI_ENVIRONMENT_MISSING"],
+                tags: ["environmentobject", "environment", "swiftui"],
+                appleDocURL: "https://developer.apple.com/documentation/swiftui/environmentobject",
+                commonInVersions: ["iOS 13+", "macOS 10.15+"]
+            ),
+            ErrorEntry(
+                category: .swiftUI,
+                severity: .medium,
+                title: "View 'X' does not conform to protocol 'View'",
+                errorCode: "SWIFTUI_VIEW_CONFORMANCE",
+                description: "A type declared as a SwiftUI View is missing the required body property or has wrong return type.",
+                cause: "1. Missing var body: some View. 2. Body returns non-View type. 3. Conditional returns different View types without Group. 4. Protocol method not implemented.",
+                solutions: [
+                    "Ensure body returns some View",
+                    "Use Group or AnyView to unify conditional branches",
+                    "Check for missing return in body",
+                    "Verify all protocol requirements are met",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "View Conformance",
+                        badCode: "struct MyView: View {\n    var body: String {  // Wrong type\n        \"Hello\"\n    }\n}",
+                        goodCode: "struct MyView: View {\n    var body: some View {\n        Text(\"Hello\")\n    }\n}",
+                        explanation: "A View's body must return some View. Text, Image, VStack, etc. are all Views."
+                    ),
+                ],
+                relatedErrors: ["Type does not conform to protocol View"],
+                tags: ["view", "protocol", "conformance", "swiftui"],
+                appleDocURL: "https://developer.apple.com/documentation/swiftui/view",
+                commonInVersions: ["iOS 13+", "macOS 10.15+"]
+            ),
+            ErrorEntry(
+                category: .swiftUI,
+                severity: .high,
+                title: "AttributeGraph: cycle detected in attribute 'X'",
+                errorCode: "SWIFTUI_ATTRIBUTEGRAPH_CYCLE",
+                description: "SwiftUI's internal attribute graph detected a dependency cycle.",
+                cause: "1. Two @State objects mutually dependent. 2. onChange triggers state that triggers onChange. 3. Binding creates circular update. 4. Custom preference key cycles.",
+                solutions: [
+                    "Break the circular dependency",
+                    "Use a single source of truth",
+                    "Replace two-way binding with one-way flow",
+                    "Check preference keys for infinite propagation",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Break Cycle",
+                        badCode: "@State var a = 0\n@State var b = 0\n// onChange(of: a) { b = $0 }\n// onChange(of: b) { a = $0 }  // Cycle",
+                        goodCode: "@State var a = 0\nvar b: Int { a * 2 }  // Computed, not stored",
+                        explanation: "Avoid mutually dependent state. Use computed properties or a single source of truth."
+                    ),
+                ],
+                relatedErrors: ["SWIFTUI_CYCLE_DETECTED"],
+                tags: ["attributegraph", "cycle", "swiftui", "runtime"],
+                appleDocURL: "https://developer.apple.com/documentation/swiftui",
+                commonInVersions: ["iOS 14+", "macOS 11+"]
+            ),
+            ErrorEntry(
+                category: .swiftUI,
+                severity: .medium,
+                title: "Cannot convert value of type 'X' to expected argument type 'Binding<Y>'",
+                errorCode: "SWIFTUI_BINDING_TYPE_MISMATCH",
+                description: "A SwiftUI modifier expects a Binding but received a different type.",
+                cause: "1. Passing value instead of $value. 2. Constant binding used where mutable needed. 3. Wrong property wrapper. 4. Optional binding mismatch.",
+                solutions: [
+                    "Use $property to pass a binding",
+                    "Create binding with .constant() for read-only",
+                    "Use Binding(get:set:) for custom behavior",
+                    "Ensure types match (String vs Binding<String>)",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Pass Binding",
+                        badCode: "TextField(\"Name\", text: name)  // Missing $",
+                        goodCode: "TextField(\"Name\", text: $name)  // Binding",
+                        explanation: "SwiftUI controls that need two-way communication require a Binding, obtained with the $ prefix."
+                    ),
+                ],
+                relatedErrors: ["SWIFTUI_BINDING_FAIL"],
+                tags: ["binding", "type", "swiftui", "compile"],
+                appleDocURL: "https://developer.apple.com/documentation/swiftui/binding",
+                commonInVersions: ["iOS 13+", "macOS 10.15+"]
+            ),
+            ErrorEntry(
+                category: .swiftUI,
+                severity: .medium,
+                title: "PreviewProvider preview 'X' crashed",
+                errorCode: "SWIFTUI_PREVIEW_CRASH_2",
+                description: "A SwiftUI Canvas preview crashed during rendering.",
+                cause: "1. Fatal error in preview code. 2. Missing environment object. 3. File/resource not in preview target. 4. Infinite recursion. 5. Core Data context missing.",
+                solutions: [
+                    "Check preview code for force unwraps",
+                    "Inject required environment objects in preview",
+                    "Use preview-specific mock data",
+                    "Ensure resources are in preview target",
+                    "Restart Xcode Canvas",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Safe Preview",
+                        badCode: "#Preview {\n    MyView()  // Missing required env object\n}",
+                        goodCode: "#Preview {\n    MyView()\n        .environmentObject(MockStore())\n}",
+                        explanation: "Previews run in a special process. Provide all dependencies and avoid side effects."
+                    ),
+                ],
+                relatedErrors: ["SWIFTUI_PREVIEW_TIMEOUT"],
+                tags: ["preview", "canvas", "crash", "swiftui"],
+                appleDocURL: "https://developer.apple.com/documentation/swiftui/previews",
+                commonInVersions: ["Xcode 15+", "Xcode 16+"]
+            ),
+            ErrorEntry(
+                category: .swiftUI,
+                severity: .high,
+                title: "WindowGroup requires a Scene to be returned from body",
+                errorCode: "SWIFTUI_WINDOWGROUP_SCENE",
+                description: "An App's body returned something other than a Scene.",
+                cause: "1. Returning a View instead of a Scene. 2. Custom type not conforming to Scene. 3. Multiple top-level views without WindowGroup. 4. Importing wrong framework.",
+                solutions: [
+                    "Return WindowGroup, DocumentGroup, or Settings from App body",
+                    "Ensure the top-level type conforms to Scene",
+                    "Use WindowGroup as the root container for views",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "App Scene",
+                        badCode: "@main\nstruct MyApp: App {\n    var body: some View {  // Should be Scene\n        ContentView()\n    }\n}",
+                        goodCode: "@main\nstruct MyApp: App {\n    var body: some Scene {\n        WindowGroup {\n            ContentView()\n        }\n    }\n}",
+                        explanation: "An App's body must return a Scene (WindowGroup, DocumentGroup, etc.), not a View."
+                    ),
+                ],
+                relatedErrors: ["SWIFTUI_SCENE_REQUIRED"],
+                tags: ["windowgroup", "scene", "app", "swiftui"],
+                appleDocURL: "https://developer.apple.com/documentation/swiftui/app",
+                commonInVersions: ["iOS 14+", "macOS 11+"]
+            ),
+            ErrorEntry(
+                category: .swiftUI,
+                severity: .medium,
+                title: "Cannot assign to property: 'X' is a get-only property",
+                errorCode: "SWIFTUI_GETONLY_PROPERTY",
+                description: "Attempted to assign a value to a property that has no setter.",
+                cause: "1. Trying to set a computed read-only property. 2. Modifying @State without binding. 3. Setting environment value directly. 4. Protocol property without setter.",
+                solutions: [
+                    "Use @State or @Binding for mutable view state",
+                    "Check if property should be a Binding",
+                    "Use .environment() on ancestor to set values",
+                    "Add setter to computed property if needed",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Mutable State",
+                        badCode: "struct Counter: View {\n    let count = 0  // let is immutable\n    var body: some View {\n        Button(\"+\") { count += 1 }\n    }\n}",
+                        goodCode: "struct Counter: View {\n    @State var count = 0  // Mutable state\n    var body: some View {\n        Button(\"+\") { count += 1 }\n    }\n}",
+                        explanation: "Use @State for mutable data owned by a view. let and computed get-only properties cannot be assigned."
+                    ),
+                ],
+                relatedErrors: ["SWIFTUI_READONLY_ASSIGN"],
+                tags: ["property", "readonly", "state", "swiftui"],
+                appleDocURL: "https://developer.apple.com/documentation/swiftui/state",
+                commonInVersions: ["iOS 13+", "macOS 10.15+"]
+            ),
+            ErrorEntry(
+                category: .swiftUI,
+                severity: .high,
+                title: "Context in environment is not connected to a persistent store coordinator",
+                errorCode: "SWIFTUI_COREDATA_NO_COORDINATOR",
+                description: "A SwiftUI view tried to use a Core Data managed object context that isn't properly configured.",
+                cause: "1. NSPersistentContainer not loaded. 2. Wrong context passed in environment. 3. Preview missing Core Data setup. 4. Context from wrong persistent store.",
+                solutions: [
+                    "Ensure persistent container loads before UI appears",
+                    "Pass viewContext via .environment(\\.managedObjectContext, context)",
+                    "Set up in-memory store for previews",
+                    "Check for loading errors in persistent container",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Core Data Setup",
+                        badCode: "ContentView()  // No context in environment",
+                        goodCode: "let container = NSPersistentContainer(name: \"Model\")\nContentView()\n    .environment(\\.managedObjectContext, container.viewContext)",
+                        explanation: "Core Data contexts must be injected into the SwiftUI environment before views can use them."
+                    ),
+                ],
+                relatedErrors: ["COREDATA_NO_STORE"],
+                tags: ["coredata", "context", "environment", "swiftui"],
+                appleDocURL: "https://developer.apple.com/documentation/swiftui/core-data",
+                commonInVersions: ["iOS 13+", "macOS 10.15+"]
+            ),
+            ErrorEntry(
+                category: .swiftUI,
+                severity: .medium,
+                title: "The compiler is unable to type-check this expression in reasonable time",
+                errorCode: "SWIFTUI_TYPE_CHECK_TIMEOUT_2",
+                description: "A complex SwiftUI view expression is causing the Swift compiler's type checker to time out.",
+                cause: "1. Very deeply nested view builder. 2. Complex generic inference with many modifiers. 3. Ternary with different view types. 4. Large tuple or complex closure.",
+                solutions: [
+                    "Break view into smaller subviews",
+                    "Add explicit type annotations",
+                    "Reduce nesting depth (extract Group or subview)",
+                    "Simplify complex ternary operators",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Break Up View",
+                        badCode: "VStack { HStack { ZStack { ... 10 levels deep ... } } }",
+                        goodCode: "var body: some View {\n    VStack {\n        headerSection\n        contentSection\n        footerSection\n    }\n}\n\nvar headerSection: some View { ... }",
+                        explanation: "Break complex views into computed properties or separate view structs to help the type checker."
+                    ),
+                ],
+                relatedErrors: ["SWIFTUI_TYPE_INFERENCE"],
+                tags: ["type-check", "compiler", "performance", "swiftui"],
+                appleDocURL: "https://developer.apple.com/documentation/swiftui/app-essentials",
+                commonInVersions: ["Xcode 14+", "Xcode 15+"]
+            ),
+            ErrorEntry(
+                category: .swiftUI,
+                severity: .medium,
+                title: "Modifier 'X' can only be applied to types conforming to 'View'",
+                errorCode: "SWIFTUI_MODIFIER_VIEW_CONSTRAINT",
+                description: "A SwiftUI view modifier was applied to something that is not a View.",
+                cause: "1. Modifier applied to non-view closure result. 2. Conditional branch returns non-View. 3. Using UIKit/AppKit type directly. 4. String literal without Text wrapper.",
+                solutions: [
+                    "Ensure the receiver conforms to View",
+                    "Wrap non-View values in Text() or appropriate view",
+                    "Use Group to unify conditional branches",
+                    "Convert UIKit views with UIViewRepresentable",
+                ],
+                codeExamples: [
+                    CodeExample(
+                        language: "swift",
+                        title: "Wrap Values",
+                        badCode: "\"Hello\".foregroundColor(.red)  // String is not View",
+                        goodCode: "Text(\"Hello\").foregroundColor(.red)  // Text is View",
+                        explanation: "Modifiers like foregroundColor only work on View types. Wrap raw values in SwiftUI view types."
+                    ),
+                ],
+                relatedErrors: ["SWIFTUI_VIEW_MODIFIER"],
+                tags: ["modifier", "view", "constraint", "swiftui"],
+                appleDocURL: "https://developer.apple.com/documentation/swiftui/viewmodifier",
+                commonInVersions: ["iOS 13+", "macOS 10.15+"]
             ),
         ]
     }
