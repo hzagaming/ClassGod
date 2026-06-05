@@ -1677,7 +1677,7 @@ struct SettingsContainerView: View {
 
                 FanControlSettingsView()
                     .tabItem {
-                        Label("Fan", systemImage: "fanblades")
+                        Label(String(localized: "tab.fan"), systemImage: "fanblades")
                     }
                     .tag(5)
             }

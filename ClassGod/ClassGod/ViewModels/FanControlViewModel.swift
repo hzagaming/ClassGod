@@ -58,7 +58,7 @@ final class FanControlViewModel: ObservableObject {
     }
 
     var averageCPUTemp: Double {
-        let cpuSensors = sensors.filter { $0.name.contains("CPU") || $0.name.contains("Cluster") || $0.name.contains("Core") }
+        let cpuSensors = sensors.filter { $0.name.contains("CPU") || $0.name.contains("Cluster") }
         guard !cpuSensors.isEmpty else { return 0 }
         return cpuSensors.map(\.value).reduce(0, +) / Double(cpuSensors.count)
     }
@@ -69,13 +69,13 @@ final class FanControlViewModel: ObservableObject {
         case .all:
             filtered = sensors
         case .cpu:
-            filtered = sensors.filter { $0.name.contains("CPU") || $0.name.contains("Cluster") || $0.name.contains("Core") }
+            filtered = sensors.filter { $0.name.contains("CPU") || $0.name.contains("Cluster") }
         case .gpu:
             filtered = sensors.filter { $0.name.contains("GPU") }
         case .battery:
             filtered = sensors.filter { $0.name.contains("Battery") }
         case .other:
-            filtered = sensors.filter { !($0.name.contains("CPU") || $0.name.contains("Cluster") || $0.name.contains("Core") || $0.name.contains("GPU") || $0.name.contains("Battery")) }
+            filtered = sensors.filter { !($0.name.contains("CPU") || $0.name.contains("Cluster") || $0.name.contains("GPU") || $0.name.contains("Battery")) }
         }
         let searchFiltered = sensorSearchText.isEmpty
             ? filtered
@@ -108,6 +108,11 @@ final class FanControlViewModel: ObservableObject {
         fanMode = prefs.preferences.fanControlMode
         setupSleepObservers()
         requestNotificationPermission()
+    }
+
+    deinit {
+        NSWorkspace.shared.notificationCenter.removeObserver(self, name: NSWorkspace.willSleepNotification, object: nil)
+        NSWorkspace.shared.notificationCenter.removeObserver(self, name: NSWorkspace.didWakeNotification, object: nil)
     }
 
     func startMonitoring() {
@@ -516,13 +521,13 @@ final class FanControlViewModel: ObservableObject {
                 }
             }
             startGradualTimer()
+            if fanMode == .autoMax {
+                startAutoMax()
+            }
         }
         // Restore pre-sleep fan mode if sleep-disable is enabled
         if prefs.preferences.fanControlDisableOnSleep, let mode = preSleepFanMode {
             applyFanModeToSMC(mode)
-            if mode == .autoMax {
-                startAutoMax()
-            }
             fanMode = mode
         }
         preSleepFanMode = nil
@@ -533,7 +538,7 @@ final class FanControlViewModel: ObservableObject {
     private func valueForSensor(_ sensor: RuleSensor) -> Double {
         switch sensor {
         case .highestCPU:
-            return sensors.filter { $0.name.contains("CPU") || $0.name.contains("Cluster") || $0.name.contains("Core") }.map(\.value).max() ?? 0
+            return sensors.filter { $0.name.contains("CPU") || $0.name.contains("Cluster") }.map(\.value).max() ?? 0
         case .highestGPU:
             return sensors.filter { $0.name.contains("GPU") }.map(\.value).max() ?? 0
         case .anySensor:

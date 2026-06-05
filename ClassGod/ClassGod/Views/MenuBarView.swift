@@ -92,7 +92,8 @@ struct MenuBarView: View {
                             icon: "fanblades",
                             title: "Fan Control",
                             description: "Monitor temps & control fan speeds",
-                            action: onOpenFanControl
+                            action: onOpenFanControl,
+                            isEnabled: prefs.preferences.enableFanControl
                         )
                     }
                     .padding()
