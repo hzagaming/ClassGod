@@ -1,0 +1,768 @@
+//
+//  FanControlView.swift
+//  ClassGod
+//
+
+import SwiftUI
+
+struct FanControlView: View {
+    @StateObject private var viewModel = FanControlViewModel()
+    @ObservedObject private var prefs = PreferencesManager.shared
+
+    var onClose: () -> Void
+
+    private var zoomScale: CGFloat { CGFloat(prefs.preferences.windowZoomScale) }
+    private var unit: TemperatureUnit { prefs.preferences.fanControlTemperatureUnit }
+
+    var body: some View {
+        ZStack {
+            VStack(spacing: 0) {
+                header
+                ScrollView(showsIndicators: false) {
+                    VStack(spacing: 12 * zoomScale) {
+                        temperatureSection
+                        fanSection
+                        diagnosticsSection
+                    }
+                    .padding(.vertical, 10 * zoomScale)
+                }
+                .frame(maxHeight: prefs.preferences.panelMaxHeight - 140)
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(
+            RoundedRectangle(cornerRadius: prefs.preferences.panelCornerRadius)
+                .fill(Color.black)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: prefs.preferences.panelCornerRadius)
+                .stroke(Color.white.opacity(0.15), lineWidth: 1 * zoomScale)
+                .allowsHitTesting(false)
+        )
+        .onAppear {
+            viewModel.startMonitoring()
+        }
+        .onDisappear {
+            viewModel.stopMonitoring()
+        }
+        .alert("Error", isPresented: $viewModel.showError) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(viewModel.errorMessage ?? "Unknown error")
+        }
+        .overlay(
+            toastOverlay
+                .animation(.easeInOut(duration: 0.2), value: viewModel.showToast),
+            alignment: .bottom
+        )
+    }
+
+    // MARK: - Header
+
+    private var header: some View {
+        VStack(spacing: 0) {
+            HStack(spacing: 10 * zoomScale) {
+                Button(action: {
+                    SoundEffectManager.shared.playButtonClick()
+                    onClose()
+                }) {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 10 * zoomScale, weight: .bold))
+                        .foregroundStyle(.white.opacity(0.6))
+                        .frame(width: 24 * zoomScale, height: 24 * zoomScale)
+                        .background(Color(white: 0.08))
+                        .clipShape(Circle())
+                }
+                .buttonStyle(.plain)
+
+                VStack(alignment: .leading, spacing: 0) {
+                    Text("Fan Control")
+                        .font(.system(.headline, design: .monospaced))
+                        .foregroundStyle(.white)
+
+                    Text("Avg: \(unit.formatted(viewModel.averageComputerTemp)) ・ CPU: \(unit.formatted(viewModel.averageCPUTemp)) ・ Fans: \(Int(viewModel.averageFanRPM)) RPM")
+                        .font(.system(size: 9 * zoomScale, design: .monospaced))
+                        .foregroundStyle(.white.opacity(0.4))
+                }
+
+                Spacer()
+
+                HStack(spacing: 0) {
+                    ForEach(FanControlMode.allCases) { mode in
+                        Button(action: {
+                            SoundEffectManager.shared.playButtonClick()
+                            viewModel.setFanMode(mode)
+                        }) {
+                            Text(mode.displayName)
+                                .font(.system(size: 10 * zoomScale, weight: .medium, design: .monospaced))
+                                .foregroundStyle(viewModel.fanMode == mode ? .black : .white.opacity(0.7))
+                                .padding(.horizontal, 10 * zoomScale)
+                                .padding(.vertical, 4 * zoomScale)
+                                .background(
+                                    viewModel.fanMode == mode
+                                    ? Color.white
+                                    : Color.white.opacity(0.05)
+                                )
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .background(Color.white.opacity(0.05))
+                .clipShape(RoundedRectangle(cornerRadius: 6 * zoomScale))
+
+                // Boost button
+                Button(action: {
+                    SoundEffectManager.shared.playButtonClick()
+                    if viewModel.isBoostActive {
+                        viewModel.cancelBoost()
+                    } else {
+                        viewModel.startBoost(duration: 30)
+                    }
+                }) {
+                    HStack(spacing: 3 * zoomScale) {
+                        Image(systemName: viewModel.isBoostActive ? "bolt.fill" : "bolt")
+                            .font(.system(size: 9 * zoomScale, weight: .bold))
+                        Text(viewModel.isBoostActive ? "Boosting" : "Boost")
+                            .font(.system(size: 9 * zoomScale, weight: .bold, design: .monospaced))
+                    }
+                    .foregroundStyle(viewModel.isBoostActive ? .black : .yellow.opacity(0.8))
+                    .padding(.horizontal, 8 * zoomScale)
+                    .padding(.vertical, 4 * zoomScale)
+                    .background(
+                        viewModel.isBoostActive
+                        ? Color.yellow
+                        : Color.yellow.opacity(0.1)
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 4 * zoomScale)
+                            .stroke(Color.yellow.opacity(viewModel.isBoostActive ? 1 : 0.3), lineWidth: 1)
+                            .allowsHitTesting(false)
+                    )
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.horizontal)
+            .padding(.vertical, 10 * zoomScale)
+
+            // Status bar
+            HStack(spacing: 8) {
+                HStack(spacing: 4) {
+                    Circle()
+                        .fill(viewModel.smcConnected ? Color.green : (viewModel.usingIORegistry ? Color.yellow : Color.red))
+                        .frame(width: 6 * zoomScale, height: 6 * zoomScale)
+
+                    Text(viewModel.smcConnected ? "SMC Connected" : (viewModel.usingIORegistry ? "IORegistry Fallback" : "No Hardware Access"))
+                        .font(.system(size: 9 * zoomScale, design: .monospaced))
+                        .foregroundStyle(.white.opacity(0.4))
+                }
+
+                Spacer()
+
+                Text("\(viewModel.sensors.count) sensors ・ \(viewModel.fans.count) fans")
+                    .font(.system(size: 9 * zoomScale, design: .monospaced))
+                    .foregroundStyle(.white.opacity(0.3))
+            }
+            .padding(.horizontal)
+            .padding(.vertical, 4 * zoomScale)
+
+            Divider()
+                .background(Color.white.opacity(0.1))
+        }
+    }
+
+    // MARK: - Temperature Section
+
+    private var temperatureSection: some View {
+        VStack(alignment: .leading, spacing: 8 * zoomScale) {
+            HStack {
+                Label("Temperatures", systemImage: "thermometer")
+                    .font(.system(size: 12 * zoomScale, weight: .bold, design: .monospaced))
+                    .foregroundStyle(.white)
+
+                Spacer()
+
+                HStack(spacing: 8) {
+                    Text("Highest: \(unit.formatted(viewModel.highestTemperature))")
+                        .font(.system(size: 10 * zoomScale, design: .monospaced))
+                        .foregroundStyle(.white.opacity(0.5))
+
+                    Button(action: {
+                        SoundEffectManager.shared.playButtonClick()
+                        prefs.preferences.fanControlTemperatureUnit = (prefs.preferences.fanControlTemperatureUnit == .celsius) ? .fahrenheit : .celsius
+                    }) {
+                        Text(unit == .celsius ? "°C" : "°F")
+                            .font(.system(size: 9 * zoomScale, weight: .bold, design: .monospaced))
+                            .foregroundStyle(.cyan.opacity(0.7))
+                    }
+                    .buttonStyle(.plain)
+
+                    Button(action: {
+                        SoundEffectManager.shared.playButtonClick()
+                        viewModel.resetMaxTemperatures()
+                    }) {
+                        Text("Reset")
+                            .font(.system(size: 9 * zoomScale, weight: .medium, design: .monospaced))
+                            .foregroundStyle(.cyan.opacity(0.7))
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.horizontal)
+
+            // Sensor filter + search
+            HStack(spacing: 6 * zoomScale) {
+                HStack(spacing: 4 * zoomScale) {
+                    ForEach(SensorFilter.allCases) { filter in
+                        Button(action: {
+                            SoundEffectManager.shared.playButtonClick()
+                            viewModel.sensorFilter = filter
+                        }) {
+                            Text(filter.rawValue)
+                                .font(.system(size: 9 * zoomScale, weight: .medium, design: .monospaced))
+                                .foregroundStyle(viewModel.sensorFilter == filter ? .black : .white.opacity(0.6))
+                                .padding(.horizontal, 8 * zoomScale)
+                                .padding(.vertical, 3 * zoomScale)
+                                .background(
+                                    viewModel.sensorFilter == filter
+                                    ? Color.cyan.opacity(0.8)
+                                    : Color.white.opacity(0.05)
+                                )
+                                .clipShape(Capsule())
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+
+                HStack(spacing: 2 * zoomScale) {
+                    Image(systemName: "magnifyingglass")
+                        .font(.system(size: 8 * zoomScale))
+                        .foregroundStyle(.white.opacity(0.3))
+
+                    TextField("Search", text: $viewModel.sensorSearchText)
+                        .font(.system(size: 9 * zoomScale, design: .monospaced))
+                        .foregroundStyle(.white)
+                        .textFieldStyle(.plain)
+                        .frame(width: 70 * zoomScale)
+
+                    if !viewModel.sensorSearchText.isEmpty {
+                        Button(action: {
+                            SoundEffectManager.shared.playButtonClick()
+                            viewModel.sensorSearchText = ""
+                        }) {
+                            Image(systemName: "xmark.circle.fill")
+                                .font(.system(size: 8 * zoomScale))
+                                .foregroundStyle(.white.opacity(0.3))
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(.horizontal, 6 * zoomScale)
+                .padding(.vertical, 2 * zoomScale)
+                .background(Color.white.opacity(0.03))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 4 * zoomScale)
+                        .stroke(Color.white.opacity(0.08), lineWidth: 1)
+                        .allowsHitTesting(false)
+                )
+            }
+            .padding(.horizontal)
+
+            VStack(spacing: 4 * zoomScale) {
+                if viewModel.filteredSensors.isEmpty {
+                    HStack {
+                        Spacer()
+                        Text(viewModel.sensorSearchText.isEmpty ? "No sensors available" : "No sensors match \"\(viewModel.sensorSearchText)\"")
+                            .font(.system(size: 10 * zoomScale, design: .monospaced))
+                            .foregroundStyle(.white.opacity(0.3))
+                        Spacer()
+                    }
+                    .padding(.vertical, 8 * zoomScale)
+                } else {
+                    ForEach(viewModel.filteredSensors) { sensor in
+                        TemperatureRow(
+                            sensor: sensor,
+                            unit: unit,
+                            zoomScale: zoomScale,
+                            observedMax: viewModel.observedMaxTemp(for: sensor.key),
+                            trend: viewModel.trendForSensor(key: sensor.key),
+                            history: viewModel.historyForSensor(key: sensor.key)
+                        )
+                    }
+                }
+            }
+            .padding(.horizontal)
+        }
+    }
+
+    // MARK: - Fan Section
+
+    private var fanSection: some View {
+        VStack(alignment: .leading, spacing: 8 * zoomScale) {
+            HStack {
+                Label("Fans", systemImage: "fanblades")
+                    .font(.system(size: 12 * zoomScale, weight: .bold, design: .monospaced))
+                    .foregroundStyle(.white)
+
+                Spacer()
+
+                if viewModel.fans.isEmpty {
+                    Text("No fans detected")
+                        .font(.system(size: 10 * zoomScale, design: .monospaced))
+                        .foregroundStyle(.white.opacity(0.4))
+                }
+            }
+            .padding(.horizontal)
+
+            // Active rules indicator
+            if viewModel.fanMode == .autoMax && !viewModel.activeRuleIDs.isEmpty {
+                let activeRules = prefs.preferences.fanControlAutoMaxRules.filter { viewModel.activeRuleIDs.contains($0.id) }
+                HStack(spacing: 4 * zoomScale) {
+                    Image(systemName: "bolt.fill")
+                        .font(.system(size: 8 * zoomScale))
+                        .foregroundStyle(.yellow)
+
+                    Text("Active: \(activeRules.map { "\($0.fanTarget.displayName) \(Int($0.targetPercentage))%" }.joined(separator: ", "))")
+                        .font(.system(size: 9 * zoomScale, design: .monospaced))
+                        .foregroundStyle(.yellow.opacity(0.8))
+                        .lineLimit(1)
+                }
+                .padding(.horizontal)
+                .padding(.vertical, 3 * zoomScale)
+                .background(Color.yellow.opacity(0.05))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 4 * zoomScale)
+                        .stroke(Color.yellow.opacity(0.15), lineWidth: 1)
+                        .allowsHitTesting(false)
+                )
+                .padding(.horizontal)
+            }
+
+            VStack(spacing: 10 * zoomScale) {
+                ForEach(Array(viewModel.fans.enumerated()), id: \.element.id) { index, fan in
+                    FanRow(
+                        fan: fan,
+                        mode: viewModel.fanMode,
+                        zoomScale: zoomScale,
+                        history: viewModel.historyForFan(index: index),
+                        onRPMChange: { newRPM in
+                            viewModel.setFanRPM(newRPM, fanIndex: index)
+                        }
+                    )
+                }
+            }
+            .padding(.horizontal)
+        }
+    }
+
+    // MARK: - Diagnostics Section
+
+    private var diagnosticsSection: some View {
+        VStack(alignment: .leading, spacing: 6 * zoomScale) {
+            HStack {
+                Label("Diagnostics", systemImage: "stethoscope")
+                    .font(.system(size: 12 * zoomScale, weight: .bold, design: .monospaced))
+                    .foregroundStyle(.white)
+
+                Spacer()
+            }
+            .padding(.horizontal)
+
+            VStack(spacing: 4 * zoomScale) {
+                DiagnosticRow(
+                    icon: "checkmark.circle.fill",
+                    title: "Fans",
+                    message: viewModel.fans.isEmpty ? "No fan data available" : "Fans appear to be working properly.",
+                    isGood: !viewModel.fans.isEmpty,
+                    zoomScale: zoomScale
+                )
+
+                DiagnosticRow(
+                    icon: "checkmark.circle.fill",
+                    title: "Temperature Sensors",
+                    message: viewModel.sensors.isEmpty ? "No sensor data available" : "\(viewModel.sensors.count) sensors active.",
+                    isGood: !viewModel.sensors.isEmpty,
+                    zoomScale: zoomScale
+                )
+
+                if !viewModel.sensors.isEmpty {
+                    Button(action: {
+                        SoundEffectManager.shared.playButtonClick()
+                        viewModel.copySensorDataToClipboard()
+                    }) {
+                        HStack(spacing: 4 * zoomScale) {
+                            Image(systemName: "doc.on.doc")
+                                .font(.system(size: 9 * zoomScale))
+                            Text("Copy Sensor Data")
+                                .font(.system(size: 10 * zoomScale, weight: .medium, design: .monospaced))
+                        }
+                        .foregroundStyle(.cyan.opacity(0.7))
+                        .padding(.horizontal, 8 * zoomScale)
+                        .padding(.vertical, 4 * zoomScale)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.horizontal)
+        }
+    }
+
+    // MARK: - Toast Overlay
+
+    private var toastOverlay: some View {
+        Group {
+            if viewModel.showToast, let message = viewModel.toastMessage {
+                HStack(spacing: 6 * zoomScale) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundStyle(.white)
+                    Text(message)
+                        .font(.system(size: 12 * zoomScale, weight: .medium, design: .monospaced))
+                        .foregroundStyle(.white)
+                }
+                .padding(.horizontal, 12 * zoomScale)
+                .padding(.vertical, 7 * zoomScale)
+                .background(Color(white: 0.12))
+                .overlay(
+                    Rectangle()
+                        .stroke(Color.white.opacity(0.3), lineWidth: 1 * zoomScale)
+                        .allowsHitTesting(false)
+                )
+                .padding(.bottom, 10 * zoomScale)
+                .transition(.opacity)
+            }
+        }
+    }
+}
+
+// MARK: - Temperature Row
+
+struct TemperatureRow: View {
+    let sensor: TemperatureSensor
+    let unit: TemperatureUnit
+    let zoomScale: CGFloat
+    var observedMax: Double?
+    var trend: TemperatureTrend = .stable
+    var history: [Double] = []
+
+    private var displayValue: Double {
+        unit.convert(sensor.value)
+    }
+
+    private var progress: Double {
+        guard sensor.maxValue > 0 else { return 0 }
+        return min(1.0, sensor.value / sensor.maxValue)
+    }
+
+    private var barColor: Color {
+        switch sensor.value {
+        case ..<60: return .green
+        case 60..<80: return .yellow
+        default: return .red
+        }
+    }
+
+    var body: some View {
+        HStack(spacing: 6 * zoomScale) {
+            Text(sensor.name)
+                .font(.system(size: 11 * zoomScale, design: .monospaced))
+                .foregroundStyle(.white.opacity(0.85))
+                .frame(minWidth: 90 * zoomScale, alignment: .leading)
+                .lineLimit(1)
+
+            // Trend arrow
+            Text(trend.rawValue)
+                .font(.system(size: 9 * zoomScale, weight: .bold, design: .monospaced))
+                .foregroundStyle(trend.color)
+                .frame(width: 14 * zoomScale, alignment: .center)
+
+            // Current value
+            Text(unit == .celsius
+                 ? String(format: "%.0f°C", displayValue)
+                 : String(format: "%.0f°F", displayValue))
+                .font(.system(size: 11 * zoomScale, weight: .semibold, design: .monospaced))
+                .foregroundStyle(.white)
+                .frame(width: 42 * zoomScale, alignment: .trailing)
+
+            // Observed max
+            if let max = observedMax, max > 0 {
+                let displayMax = unit.convert(max)
+                Text(unit == .celsius
+                     ? String(format: "→ %.0f°C", displayMax)
+                     : String(format: "→ %.0f°F", displayMax))
+                    .font(.system(size: 9 * zoomScale, design: .monospaced))
+                    .foregroundStyle(.white.opacity(0.35))
+                    .frame(width: 44 * zoomScale, alignment: .trailing)
+            }
+
+            VStack(spacing: 2 * zoomScale) {
+                GeometryReader { geo in
+                    ZStack(alignment: .leading) {
+                        RoundedRectangle(cornerRadius: 2 * zoomScale)
+                            .fill(Color.white.opacity(0.08))
+                            .frame(height: 6 * zoomScale)
+
+                        RoundedRectangle(cornerRadius: 2 * zoomScale)
+                            .fill(barColor)
+                            .frame(width: max(0, geo.size.width * CGFloat(progress)), height: 6 * zoomScale)
+                    }
+                }
+                .frame(height: 6 * zoomScale)
+
+                if history.count >= 3 {
+                    TemperatureSparkline(
+                        values: history,
+                        zoomScale: zoomScale,
+                        color: barColor
+                    )
+                    .frame(height: 10 * zoomScale)
+                }
+            }
+        }
+        .padding(.vertical, 3 * zoomScale)
+        .background(
+            sensor.value >= 85
+                ? Color.red.opacity(0.08)
+                : Color.clear
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 3 * zoomScale)
+                .stroke(
+                    sensor.value >= 85 ? Color.red.opacity(0.25) : Color.clear,
+                    lineWidth: 1 * zoomScale
+                )
+                .allowsHitTesting(false)
+        )
+        .animation(.easeInOut(duration: 0.3), value: sensor.value >= 85)
+    }
+}
+
+// MARK: - Temperature Sparkline
+
+struct TemperatureSparkline: View {
+    let values: [Double]
+    let zoomScale: CGFloat
+    let color: Color
+
+    var body: some View {
+        GeometryReader { geo in
+            sparklinePath(in: geo.size)
+                .stroke(color.opacity(0.6), lineWidth: 1 * zoomScale)
+        }
+    }
+
+    private func sparklinePath(in size: CGSize) -> Path {
+        guard let minVal = values.min(), let maxVal = values.max(), maxVal > minVal else {
+            return Path()
+        }
+
+        let width = size.width
+        let height = size.height
+        let stepX = width / CGFloat(max(1, values.count - 1))
+        let range = maxVal - minVal
+
+        var path = Path()
+        for (index, value) in values.enumerated() {
+            let x = CGFloat(index) * stepX
+            let y = height - ((value - minVal) / range) * height
+            let point = CGPoint(x: x, y: y)
+            if index == 0 {
+                path.move(to: point)
+            } else {
+                path.addLine(to: point)
+            }
+        }
+        return path
+    }
+}
+
+// MARK: - Fan Row
+
+struct FanRow: View {
+    let fan: FanInfo
+    let mode: FanControlMode
+    let zoomScale: CGFloat
+    var history: [Double] = []
+    var onRPMChange: ((Double) -> Void)?
+
+    @State private var sliderValue: Double = 0
+
+    private var progress: Double {
+        guard fan.maximumRPM > fan.minimumRPM else { return 0 }
+        return (fan.actualRPM - fan.minimumRPM) / (fan.maximumRPM - fan.minimumRPM)
+    }
+
+    private var barColor: Color {
+        if fan.actualRPM > fan.maximumRPM * 0.9 {
+            return .red
+        } else if fan.actualRPM > fan.maximumRPM * 0.6 {
+            return .yellow
+        }
+        return .green
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4 * zoomScale) {
+            HStack {
+                Text(fan.name)
+                    .font(.system(size: 11 * zoomScale, weight: .medium, design: .monospaced))
+                    .foregroundStyle(.white.opacity(0.85))
+
+                Spacer()
+
+                Text("\(Int(fan.actualRPM)) RPM")
+                    .font(.system(size: 11 * zoomScale, weight: .bold, design: .monospaced))
+                    .foregroundStyle(.white)
+
+                let pct = fan.maximumRPM > fan.minimumRPM
+                    ? Int((fan.actualRPM - fan.minimumRPM) / (fan.maximumRPM - fan.minimumRPM) * 100)
+                    : 0
+                Text("(\(pct)%)")
+                    .font(.system(size: 10 * zoomScale, design: .monospaced))
+                    .foregroundStyle(.white.opacity(0.4))
+                    .frame(width: 36 * zoomScale, alignment: .trailing)
+
+                if fan.targetRPM > 0 && mode == .autoMax {
+                    Text("/ \(Int(fan.targetRPM))")
+                        .font(.system(size: 10 * zoomScale, design: .monospaced))
+                        .foregroundStyle(.white.opacity(0.4))
+                }
+            }
+
+            GeometryReader { geo in
+                ZStack(alignment: .leading) {
+                    RoundedRectangle(cornerRadius: 2 * zoomScale)
+                        .fill(Color.white.opacity(0.08))
+                        .frame(height: 10 * zoomScale)
+
+                    RoundedRectangle(cornerRadius: 2 * zoomScale)
+                        .fill(barColor)
+                        .frame(width: max(0, geo.size.width * CGFloat(progress)), height: 10 * zoomScale)
+                }
+            }
+            .frame(height: 10 * zoomScale)
+
+            if history.count >= 3 {
+                TemperatureSparkline(
+                    values: history,
+                    zoomScale: zoomScale,
+                    color: barColor
+                )
+                .frame(height: 10 * zoomScale)
+            }
+
+            HStack {
+                Text("\(Int(fan.minimumRPM))")
+                    .font(.system(size: 9 * zoomScale, design: .monospaced))
+                    .foregroundStyle(.white.opacity(0.3))
+
+                Spacer()
+
+                Text("\(Int(fan.maximumRPM))")
+                    .font(.system(size: 9 * zoomScale, design: .monospaced))
+                    .foregroundStyle(.white.opacity(0.3))
+            }
+
+            // Manual RPM slider (shown in Auto Max mode for manual override)
+            if mode == .autoMax {
+                HStack(spacing: 8 * zoomScale) {
+                    Text("Manual")
+                        .font(.system(size: 9 * zoomScale, design: .monospaced))
+                        .foregroundStyle(.white.opacity(0.4))
+                        .frame(width: 45 * zoomScale, alignment: .leading)
+
+                    Slider(
+                        value: Binding(
+                            get: {
+                                if fan.maximumRPM > fan.minimumRPM {
+                                    return (fan.targetRPM - fan.minimumRPM) / (fan.maximumRPM - fan.minimumRPM)
+                                }
+                                return sliderValue
+                            },
+                            set: { newValue in
+                                sliderValue = newValue
+                                let rpm = fan.minimumRPM + (fan.maximumRPM - fan.minimumRPM) * newValue
+                                onRPMChange?(rpm)
+                            }
+                        ),
+                        in: 0...1
+                    )
+                    .frame(height: 14 * zoomScale)
+
+                    Text("\(Int(fan.minimumRPM + (fan.maximumRPM - fan.minimumRPM) * sliderValue))")
+                        .font(.system(size: 9 * zoomScale, design: .monospaced))
+                        .foregroundStyle(.white.opacity(0.5))
+                        .frame(width: 40 * zoomScale, alignment: .trailing)
+                }
+                .padding(.top, 2 * zoomScale)
+            }
+        }
+        .padding(.vertical, 4 * zoomScale)
+    }
+}
+
+// MARK: - Diagnostic Row
+
+struct DiagnosticRow: View {
+    let icon: String
+    let title: String
+    let message: String
+    let isGood: Bool
+    let zoomScale: CGFloat
+
+    var body: some View {
+        HStack(spacing: 8 * zoomScale) {
+            Image(systemName: isGood ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
+                .font(.system(size: 10 * zoomScale))
+                .foregroundStyle(isGood ? .green : .yellow)
+
+            VStack(alignment: .leading, spacing: 1) {
+                Text(title)
+                    .font(.system(size: 10 * zoomScale, weight: .semibold, design: .monospaced))
+                    .foregroundStyle(.white.opacity(0.8))
+
+                Text(message)
+                    .font(.system(size: 9 * zoomScale, design: .monospaced))
+                    .foregroundStyle(.white.opacity(0.4))
+                    .lineLimit(1)
+            }
+
+            Spacer()
+        }
+        .padding(.horizontal, 8 * zoomScale)
+        .padding(.vertical, 5 * zoomScale)
+        .background(Color.white.opacity(0.02))
+        .overlay(
+            RoundedRectangle(cornerRadius: 4 * zoomScale)
+                .stroke(Color.white.opacity(0.06), lineWidth: 1 * zoomScale)
+                .allowsHitTesting(false)
+        )
+    }
+}
+
+// MARK: - Window Wrapper
+
+enum TemperatureTrend: String {
+    case rising = "↑"
+    case falling = "↓"
+    case stable = "→"
+
+    var color: Color {
+        switch self {
+        case .rising: return .red.opacity(0.7)
+        case .falling: return .green.opacity(0.7)
+        case .stable: return .white.opacity(0.25)
+        }
+    }
+}
+
+struct FanControlWindowView: View {
+    var onClose: () -> Void
+    var body: some View {
+        FanControlView(onClose: onClose)
+    }
+}
+
+#Preview {
+    FanControlView(onClose: {})
+        .frame(width: 420, height: 600)
+        .background(Color.black)
+}

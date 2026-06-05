@@ -19,6 +19,7 @@
 		481380154C837A998EB47B46 /* NetworkWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6CCBEC8868C2C8B176AC0DEE /* NetworkWidgetView.swift */; };
 		5ABF01673A5620820B3B9190 /* AppLauncherWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4413005E8908D10F88EE5FC8 /* AppLauncherWidgetView.swift */; };
 		5AD0356824FA644EFA75CDF4 /* CryptoWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E940B37C487A1D844DCFA523 /* CryptoWidgetView.swift */; };
+		5E66A870A8C7426EABC045A212077FBA /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6C3176EB29B843718FBEF63E15783A10 /* IOKit.framework */; };
 		633E4A8BBCBBD1341AC53D4F /* WidgetDataStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA8B143F344F8F5831C0BFA9 /* WidgetDataStore.swift */; };
 		6C9BFA5C1C8842BB7CD1E474 /* TerminalLogWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B3770C1B8DAE22615720722 /* TerminalLogWidgetView.swift */; };
 		769FB4940B9B56DC00D23E23 /* WidgetProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 801D7EDB041A172A4B4375C6 /* WidgetProvider.swift */; };
@@ -43,6 +44,7 @@
 		5AE60636E0D4FE2399EA2FCF /* WidgetEntry.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = WidgetEntry.swift; path = ClassGodWidget/WidgetEntry.swift; sourceTree = "<group>"; };
 		5F230C477466435602A08DB6 /* ClassGodWidgetBundle.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ClassGodWidgetBundle.swift; path = ClassGodWidget/ClassGodWidgetBundle.swift; sourceTree = "<group>"; };
 		6A8D528774D0307DE6803D5B /* MemoryWidgetView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = MemoryWidgetView.swift; path = ClassGodWidget/Views/MemoryWidgetView.swift; sourceTree = "<group>"; };
+		6C3176EB29B843718FBEF63E15783A10 /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.0.sdk/System/Library/Frameworks/IOKit.framework; sourceTree = DEVELOPER_DIR; };
 		6CCBEC8868C2C8B176AC0DEE /* NetworkWidgetView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = NetworkWidgetView.swift; path = ClassGodWidget/Views/NetworkWidgetView.swift; sourceTree = "<group>"; };
 		7B2E5AC86B5A5DADCB80CB61 /* WorldClockWidgetView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = WorldClockWidgetView.swift; path = ClassGodWidget/Views/WorldClockWidgetView.swift; sourceTree = "<group>"; };
 		7B9F77485B9CA75A1B081397 /* ClassGodWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = ClassGodWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -84,6 +86,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5E66A870A8C7426EABC045A212077FBA /* IOKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -94,6 +97,7 @@
 			isa = PBXGroup;
 			children = (
 				9952EB925E6414B5F1E73DED /* Foundation.framework */,
+				6C3176EB29B843718FBEF63E15783A10 /* IOKit.framework */,
 			);
 			name = "OS X";
 			sourceTree = "<group>";
@@ -458,7 +462,7 @@
 				CODE_SIGN_ENTITLEMENTS = ClassGod/ClassGod.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 10;
+				CURRENT_PROJECT_VERSION = 13;
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
@@ -471,7 +475,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.2.3;
+				MARKETING_VERSION = 1.3.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "Hanazar-Software.ClassGod";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
@@ -492,7 +496,7 @@
 				CODE_SIGN_ENTITLEMENTS = ClassGod/ClassGod.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 10;
+				CURRENT_PROJECT_VERSION = 13;
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
@@ -505,7 +509,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.2.3;
+				MARKETING_VERSION = 1.3.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "Hanazar-Software.ClassGod";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;

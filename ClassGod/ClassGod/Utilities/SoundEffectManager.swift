@@ -33,6 +33,7 @@ enum SoundEffect: String, CaseIterable {
     case gridToggle = "GridToggle"
     case dragStart = "DragStart"
     case resizeStart = "ResizeStart"
+    case temperatureWarning = "TemperatureWarning"
     
     var systemSoundID: SystemSoundID? {
         switch self {
@@ -59,6 +60,7 @@ enum SoundEffect: String, CaseIterable {
         case .gridToggle:        return 1106  // Tock — toggle grid
         case .dragStart:         return 1107  // Tock — light grab
         case .resizeStart:       return 1107  // Tock — light grab
+        case .temperatureWarning: return 1005  // Basso — warning alert
         }
     }
 }
@@ -258,6 +260,10 @@ final class SoundEffectManager {
     
     func playResizeStart() {
         play(.resizeStart)
+    }
+    
+    func playTemperatureWarning() {
+        play(.temperatureWarning)
     }
 }
 

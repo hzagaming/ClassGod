@@ -36,6 +36,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var wallpaperBrowserWindow: NSWindow?
     var hackerDesktopWindow: NSWindow?
     var errorHubWindow: NSWindow?
+    var fanControlWindow: NSWindow?
     var showPopoverCustomHotKeyID: UInt32?
 
     var splashWindow: NSWindow?
@@ -66,6 +67,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             PreferencesManager.shared.onPreferencesChanged = { [weak self] _ in
                 self?.setupShowPopoverShortcut()
                 self?.updateStatusItemIcon()
+                self?.updateStatusItemTimer()
                 self?.updateMainWindowSize()
                 self?.updateAllWindowLevels()
                 self?.updateClickOutsideMonitor()
@@ -226,6 +228,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             self?.showWallpaperBrowserWindow()
         }, onOpenHackerDesktop: { [weak self] in
             self?.showHackerDesktopWindow()
+        }, onOpenFanControl: { [weak self] in
+            self?.showFanControlWindow()
         }, onOpenErrorHub: { [weak self] in
             self?.showErrorHubWindow()
         })
@@ -1031,6 +1035,107 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         showErrorHubWindow(animated: true)
     }
 
+    // MARK: - Fan Control Window
+
+    private func setupFanControlWindow() {
+        let prefs = PreferencesManager.shared.preferences
+        let zoom = CGFloat(prefs.windowZoomScale)
+        let size = NSSize(
+            width: min(520, prefs.panelWidth * 1.3) * zoom,
+            height: prefs.panelMaxHeight * zoom
+        )
+
+        let window = DraggableWindow(
+            contentRect: NSRect(origin: .zero, size: size),
+            styleMask: [.borderless],
+            backing: .buffered,
+            defer: false
+        )
+
+        window.level = windowLevel
+        window.backgroundColor = .clear
+        window.hasShadow = true
+        window.isMovableByWindowBackground = false
+        window.isReleasedWhenClosed = false
+        window.isOpaque = false
+
+        window.contentView?.wantsLayer = true
+        window.contentView?.layer?.cornerRadius = prefs.panelCornerRadius
+        window.contentView?.layer?.masksToBounds = true
+
+        if let main = mainWindow {
+            let mainFrame = main.frame
+            let offset: CGFloat = 30
+            window.setFrameOrigin(NSPoint(x: mainFrame.minX + offset, y: mainFrame.minY + offset))
+        } else if let screen = NSScreen.main {
+            let screenFrame = screen.visibleFrame
+            let x = screenFrame.midX - size.width / 2 + 30
+            let y = screenFrame.midY - size.height / 2 + 30
+            window.setFrameOrigin(NSPoint(x: x, y: y))
+        }
+
+        let rootView = FanControlWindowView(onClose: { [weak self] in
+            self?.hideFanControlWindow()
+        })
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Color.clear)
+            .overlay(WindowResizeHandles())
+
+        window.contentView = NSHostingView(rootView: rootView)
+
+        fanControlWindow = window
+    }
+
+    func showFanControlWindow(animated: Bool = true) {
+        guard let window = fanControlWindow else {
+            setupFanControlWindow()
+            showFanControlWindow(animated: animated)
+            return
+        }
+
+        SoundEffectManager.shared.playWindowOpen(feature: "fancontrol")
+
+        if animated {
+            window.alphaValue = 0
+            window.makeKeyAndOrderFront(nil)
+
+            NSAnimationContext.runAnimationGroup { context in
+                context.duration = 0.18
+                context.timingFunction = .init(name: .easeOut)
+                window.animator().alphaValue = targetWindowAlpha
+            }
+        } else {
+            window.makeKeyAndOrderFront(nil)
+        }
+    }
+
+    func hideFanControlWindow() {
+        guard let window = fanControlWindow else { return }
+        SoundEffectManager.shared.playWindowClose(feature: "fancontrol")
+
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = 0.12
+            context.timingFunction = .init(name: .easeIn)
+            window.animator().alphaValue = 0
+        } completionHandler: { [weak self] in
+            self?.fanControlWindow?.orderOut(nil)
+        }
+    }
+
+    @objc func toggleFanControlWindow() {
+        guard let window = fanControlWindow else {
+            setupFanControlWindow()
+            showFanControlWindow(animated: true)
+            return
+        }
+
+        if window.isVisible && window.alphaValue > 0 {
+            hideFanControlWindow()
+        } else {
+            showFanControlWindow(animated: true)
+        }
+    }
+
     private func updateMainWindowSize() {
         guard let window = mainWindow else { return }
         let prefs = PreferencesManager.shared.preferences
@@ -1119,6 +1224,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         browserBypasserWindow?.level = level
         assessPrepHackWindow?.level = level
         settingsWindow?.level = level
+        fanControlWindow?.level = level
     }
 
     func updateAllWindowSizes() {
@@ -1164,6 +1270,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             w.setContentSize(NSSize(width: base.width * zoom, height: base.height * zoom))
         }
 
+        // fanControlWindow
+        if let w = fanControlWindow {
+            let base = NSSize(width: min(520, prefs.panelWidth * 1.3), height: prefs.panelMaxHeight)
+            w.setContentSize(NSSize(width: base.width * zoom, height: base.height * zoom))
+        }
+
         // hackerDesktopWindow
         if let w = hackerDesktopWindow, let screen = NSScreen.main {
             let frame = screen.visibleFrame
@@ -1198,6 +1310,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             (browserBypasserWindow, { [weak self] in self?.hideBrowserBypasserWindow() }),
             (assessPrepHackWindow, { [weak self] in self?.hideAssessPrepHackWindow() }),
             (settingsWindow, { [weak self] in self?.hideSettingsWindow() }),
+            (fanControlWindow, { [weak self] in self?.hideFanControlWindow() }),
         ]
 
         for (window, hideAction) in windows {
@@ -1247,6 +1360,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     // MARK: - Lifecycle
 
     func applicationWillTerminate(_ notification: Notification) {
+        statusItemTimer?.invalidate()
         DesktopWallpaperController.shared.hideWallpapers()
         
         if let id = showPopoverCustomHotKeyID {
@@ -1281,6 +1395,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         if let window = errorHubWindow {
             window.orderOut(nil)
         }
+        if let window = fanControlWindow {
+            window.orderOut(nil)
+        }
     }
 
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
@@ -1293,6 +1410,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     // MARK: - Status Item
+    private var statusItemTimer: Timer?
 
     private func setupStatusItem() {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
@@ -1301,6 +1419,21 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         if let button = statusItem.button {
             button.action = #selector(toggleMainWindow)
             button.target = self
+        }
+
+        updateStatusItemTimer()
+    }
+
+    private func updateStatusItemTimer() {
+        statusItemTimer?.invalidate()
+        statusItemTimer = nil
+
+        let prefs = PreferencesManager.shared.preferences
+        guard prefs.fanControlShowInMenuBar else { return }
+
+        let interval = max(2.0, prefs.fanControlUpdateInterval)
+        statusItemTimer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
+            self?.updateStatusItemIcon()
         }
     }
 
@@ -1319,8 +1452,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func updateStatusItemIcon() {
-        let style = PreferencesManager.shared.preferences.menuBarIconStyle
-        let showBadge = PreferencesManager.shared.preferences.showTabCountBadge
+        let prefs = PreferencesManager.shared.preferences
+        let style = prefs.menuBarIconStyle
+        let showBadge = prefs.showTabCountBadge
         let count = StorageManager.shared.loadTabs().count
 
         let baseImage = NSImage(
@@ -1332,7 +1466,22 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let badgeText = count > 99 ? "99+" : "\(count)"
         statusItem?.button?.image = baseImage
         statusItem?.button?.imagePosition = .imageLeading
-        statusItem?.button?.title = showBadge && count > 0 ? " \(badgeText)" : ""
+
+        var title = ""
+        if prefs.fanControlShowInMenuBar {
+            let sensors = SMCService.shared.readTemperatures()
+            let fans = SMCService.shared.readFans()
+            let highestTemp = sensors.map(\.value).max() ?? 0
+            let avgRPM = fans.isEmpty ? 0 : fans.map(\.actualRPM).reduce(0, +) / Double(fans.count)
+            let unit = prefs.fanControlTemperatureUnit
+            let tempStr = unit.formatted(highestTemp)
+            let rpmStr = "\(Int(avgRPM)) RPM"
+            title = " \(tempStr) / \(rpmStr)"
+        }
+        if showBadge && count > 0 && title.isEmpty {
+            title = " \(badgeText)"
+        }
+        statusItem?.button?.title = title
         statusItem?.button?.toolTip = "ClassGod"
     }
 
@@ -1397,10 +1546,11 @@ struct MenuBarWindowView: View {
     var onOpenSettings: () -> Void
     var onOpenWallpaper: () -> Void
     var onOpenHackerDesktop: () -> Void
+    var onOpenFanControl: () -> Void = {}
     var onOpenErrorHub: () -> Void = {}
-    
+
     var body: some View {
-        MenuBarView(onClose: onClose, onOpenDestinTab: onOpenDestinTab, onOpenSuperSwitch: onOpenSuperSwitch, onOpenBrowserBypasser: onOpenBrowserBypasser, onOpenAssessPrepHack: onOpenAssessPrepHack, onOpenSettings: onOpenSettings, onOpenWallpaper: onOpenWallpaper, onOpenHackerDesktop: onOpenHackerDesktop, onOpenErrorHub: onOpenErrorHub)
+        MenuBarView(onClose: onClose, onOpenDestinTab: onOpenDestinTab, onOpenSuperSwitch: onOpenSuperSwitch, onOpenBrowserBypasser: onOpenBrowserBypasser, onOpenAssessPrepHack: onOpenAssessPrepHack, onOpenSettings: onOpenSettings, onOpenWallpaper: onOpenWallpaper, onOpenHackerDesktop: onOpenHackerDesktop, onOpenFanControl: onOpenFanControl, onOpenErrorHub: onOpenErrorHub)
     }
 }
 
@@ -1524,6 +1674,12 @@ struct SettingsContainerView: View {
                         Label(String(localized: "tab.advanced"), systemImage: "wrench.and.screwdriver")
                     }
                     .tag(4)
+
+                FanControlSettingsView()
+                    .tabItem {
+                        Label("Fan", systemImage: "fanblades")
+                    }
+                    .tag(5)
             }
             .padding(.horizontal, 4)
             .preferredColorScheme(prefs.preferences.theme.colorScheme)

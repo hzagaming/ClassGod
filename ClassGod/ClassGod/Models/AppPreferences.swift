@@ -248,6 +248,19 @@ struct AppPreferences: Codable, Equatable {
     // MARK: - Version
     var version: Int
 
+    // MARK: - Fan Control
+    var enableFanControl: Bool
+    var fanControlShowInMenuBar: Bool
+    var fanControlUpdateInterval: Double
+    var fanControlTemperatureUnit: TemperatureUnit
+    var fanControlMode: FanControlMode
+    var fanControlAutoMaxThreshold: Double
+    var fanControlAutoMaxRules: [AutoMaxRule]
+    var fanControlGradualTime: Double
+    var fanControlDisableOnSleep: Bool
+    var fanControlEnableNotifications: Bool
+    var fanControlNotificationThreshold: Double
+
     // MARK: - Advanced
     var animationSpeed: AnimationSpeed
     var enableDebugLogging: Bool
@@ -262,6 +275,149 @@ struct AppPreferences: Codable, Equatable {
     var enableDeveloperMode: Bool
     var enableAutoBackup: Bool
     var autoBackupIntervalHours: Int
+
+    // MARK: - Memberwise Init
+    init(
+        launchAtLogin: Bool,
+        showPopoverOnLaunch: Bool,
+        showToastNotifications: Bool,
+        toastDuration: Double,
+        switchBehavior: SwitchBehavior,
+        urlMatchPrecision: URLMatchPrecision,
+        autoDetectOnShow: Bool,
+        enableKeyboardNavigation: Bool,
+        switchDelayMs: Double,
+        enableClipboardMonitoring: Bool,
+        autoSaveIntervalMinutes: Int,
+        preferredLanguage: LanguageOverride,
+        closeOnClickOutside: Bool,
+        keepWindowOnTop: Bool,
+        rememberWindowPosition: Bool,
+        windowOpacity: Double,
+        windowZoomScale: Double,
+        windowMaximizeBehavior: WindowMaximizeBehavior,
+        minimizeAnimationDuration: Double,
+        showPopoverAnimation: Bool,
+        showPopoverKeyCode: UInt32,
+        showPopoverModifiers: UInt32,
+        suppressSystemShortcutConflict: Bool,
+        defaultBrowser: BrowserType?,
+        browserNotRunningBehavior: BrowserNotRunningBehavior,
+        askBeforeOpening: Bool,
+        forceIncognitoMode: Bool,
+        customUserAgent: String,
+        menuBarIconStyle: MenuBarIconStyle,
+        panelWidth: Double,
+        panelMaxHeight: Double,
+        panelCornerRadius: Double,
+        theme: AppTheme,
+        showURLPreview: Bool,
+        rowHeight: Double,
+        showBrowserIcon: Bool,
+        showShortcutBadge: Bool,
+        useCompactMode: Bool,
+        showTabCountBadge: Bool,
+        appIconStyle: AppIconStyle,
+        borderWidth: Double,
+        fontSizeScale: Double,
+        enableBlurBackground: Bool,
+        listDividerStyle: ListDividerStyle,
+        version: Int,
+        animationSpeed: AnimationSpeed,
+        enableDebugLogging: Bool,
+        enableSoundEffects: Bool,
+        enableHapticFeedback: Bool,
+        confirmBeforeDelete: Bool,
+        confirmBeforeClear: Bool,
+        maxTabsInPopover: Int,
+        useInstantAnimations: Bool,
+        chaosParticleCount: Int,
+        logRetentionDays: Int,
+        enableDeveloperMode: Bool,
+        enableAutoBackup: Bool,
+        autoBackupIntervalHours: Int,
+        enableFanControl: Bool,
+        fanControlShowInMenuBar: Bool,
+        fanControlUpdateInterval: Double,
+        fanControlTemperatureUnit: TemperatureUnit,
+        fanControlMode: FanControlMode,
+        fanControlAutoMaxThreshold: Double,
+        fanControlAutoMaxRules: [AutoMaxRule],
+        fanControlGradualTime: Double,
+        fanControlDisableOnSleep: Bool,
+        fanControlEnableNotifications: Bool,
+        fanControlNotificationThreshold: Double
+    ) {
+        self.launchAtLogin = launchAtLogin
+        self.showPopoverOnLaunch = showPopoverOnLaunch
+        self.showToastNotifications = showToastNotifications
+        self.toastDuration = toastDuration
+        self.switchBehavior = switchBehavior
+        self.urlMatchPrecision = urlMatchPrecision
+        self.autoDetectOnShow = autoDetectOnShow
+        self.enableKeyboardNavigation = enableKeyboardNavigation
+        self.switchDelayMs = switchDelayMs
+        self.enableClipboardMonitoring = enableClipboardMonitoring
+        self.autoSaveIntervalMinutes = autoSaveIntervalMinutes
+        self.preferredLanguage = preferredLanguage
+        self.closeOnClickOutside = closeOnClickOutside
+        self.keepWindowOnTop = keepWindowOnTop
+        self.rememberWindowPosition = rememberWindowPosition
+        self.windowOpacity = windowOpacity
+        self.windowZoomScale = windowZoomScale
+        self.windowMaximizeBehavior = windowMaximizeBehavior
+        self.minimizeAnimationDuration = minimizeAnimationDuration
+        self.showPopoverAnimation = showPopoverAnimation
+        self.showPopoverKeyCode = showPopoverKeyCode
+        self.showPopoverModifiers = showPopoverModifiers
+        self.suppressSystemShortcutConflict = suppressSystemShortcutConflict
+        self.defaultBrowser = defaultBrowser
+        self.browserNotRunningBehavior = browserNotRunningBehavior
+        self.askBeforeOpening = askBeforeOpening
+        self.forceIncognitoMode = forceIncognitoMode
+        self.customUserAgent = customUserAgent
+        self.menuBarIconStyle = menuBarIconStyle
+        self.panelWidth = panelWidth
+        self.panelMaxHeight = panelMaxHeight
+        self.panelCornerRadius = panelCornerRadius
+        self.theme = theme
+        self.showURLPreview = showURLPreview
+        self.rowHeight = rowHeight
+        self.showBrowserIcon = showBrowserIcon
+        self.showShortcutBadge = showShortcutBadge
+        self.useCompactMode = useCompactMode
+        self.showTabCountBadge = showTabCountBadge
+        self.appIconStyle = appIconStyle
+        self.borderWidth = borderWidth
+        self.fontSizeScale = fontSizeScale
+        self.enableBlurBackground = enableBlurBackground
+        self.listDividerStyle = listDividerStyle
+        self.version = version
+        self.animationSpeed = animationSpeed
+        self.enableDebugLogging = enableDebugLogging
+        self.enableSoundEffects = enableSoundEffects
+        self.enableHapticFeedback = enableHapticFeedback
+        self.confirmBeforeDelete = confirmBeforeDelete
+        self.confirmBeforeClear = confirmBeforeClear
+        self.maxTabsInPopover = maxTabsInPopover
+        self.useInstantAnimations = useInstantAnimations
+        self.chaosParticleCount = chaosParticleCount
+        self.logRetentionDays = logRetentionDays
+        self.enableDeveloperMode = enableDeveloperMode
+        self.enableAutoBackup = enableAutoBackup
+        self.autoBackupIntervalHours = autoBackupIntervalHours
+        self.enableFanControl = enableFanControl
+        self.fanControlShowInMenuBar = fanControlShowInMenuBar
+        self.fanControlUpdateInterval = fanControlUpdateInterval
+        self.fanControlTemperatureUnit = fanControlTemperatureUnit
+        self.fanControlMode = fanControlMode
+        self.fanControlAutoMaxThreshold = fanControlAutoMaxThreshold
+        self.fanControlAutoMaxRules = fanControlAutoMaxRules
+        self.fanControlGradualTime = fanControlGradualTime
+        self.fanControlDisableOnSleep = fanControlDisableOnSleep
+        self.fanControlEnableNotifications = fanControlEnableNotifications
+        self.fanControlNotificationThreshold = fanControlNotificationThreshold
+    }
 
     // MARK: - Defaults
     static let `default` = AppPreferences(
@@ -322,7 +478,20 @@ struct AppPreferences: Codable, Equatable {
         logRetentionDays: 7,
         enableDeveloperMode: false,
         enableAutoBackup: false,
-        autoBackupIntervalHours: 24
+        autoBackupIntervalHours: 24,
+        enableFanControl: true,
+        fanControlShowInMenuBar: false,
+        fanControlUpdateInterval: 2,
+        fanControlTemperatureUnit: .celsius,
+        fanControlMode: .system,
+        fanControlAutoMaxThreshold: 70,
+        fanControlAutoMaxRules: [
+            AutoMaxRule(fanTarget: .allFans, targetPercentage: 100, sensor: .highestCPU, comparison: .above, threshold: 70, hysteresis: 5, durationSeconds: 3, isEnabled: true)
+        ],
+        fanControlGradualTime: 21,
+        fanControlDisableOnSleep: true,
+        fanControlEnableNotifications: false,
+        fanControlNotificationThreshold: 85
     )
 
     private static var defaultShowPopoverModifiers: UInt32 {
@@ -392,6 +561,17 @@ extension AppPreferences {
         case enableDeveloperMode
         case enableAutoBackup
         case autoBackupIntervalHours
+        case enableFanControl
+        case fanControlShowInMenuBar
+        case fanControlUpdateInterval
+        case fanControlTemperatureUnit
+        case fanControlMode
+        case fanControlAutoMaxThreshold
+        case fanControlAutoMaxRules
+        case fanControlGradualTime
+        case fanControlDisableOnSleep
+        case fanControlEnableNotifications
+        case fanControlNotificationThreshold
     }
 
     init(from decoder: Decoder) throws {
@@ -470,6 +650,19 @@ extension AppPreferences {
         preferences.enableDeveloperMode = try container.decodeIfPresent(Bool.self, forKey: .enableDeveloperMode) ?? preferences.enableDeveloperMode
         preferences.enableAutoBackup = try container.decodeIfPresent(Bool.self, forKey: .enableAutoBackup) ?? preferences.enableAutoBackup
         preferences.autoBackupIntervalHours = try container.decodeIfPresent(Int.self, forKey: .autoBackupIntervalHours) ?? preferences.autoBackupIntervalHours
+
+        // Fan Control
+        preferences.enableFanControl = try container.decodeIfPresent(Bool.self, forKey: .enableFanControl) ?? preferences.enableFanControl
+        preferences.fanControlShowInMenuBar = try container.decodeIfPresent(Bool.self, forKey: .fanControlShowInMenuBar) ?? preferences.fanControlShowInMenuBar
+        preferences.fanControlUpdateInterval = try container.decodeIfPresent(Double.self, forKey: .fanControlUpdateInterval) ?? preferences.fanControlUpdateInterval
+        preferences.fanControlTemperatureUnit = try container.decodeIfPresent(TemperatureUnit.self, forKey: .fanControlTemperatureUnit) ?? preferences.fanControlTemperatureUnit
+        preferences.fanControlMode = try container.decodeIfPresent(FanControlMode.self, forKey: .fanControlMode) ?? preferences.fanControlMode
+        preferences.fanControlAutoMaxThreshold = try container.decodeIfPresent(Double.self, forKey: .fanControlAutoMaxThreshold) ?? preferences.fanControlAutoMaxThreshold
+        preferences.fanControlAutoMaxRules = try container.decodeIfPresent([AutoMaxRule].self, forKey: .fanControlAutoMaxRules) ?? preferences.fanControlAutoMaxRules
+        preferences.fanControlGradualTime = try container.decodeIfPresent(Double.self, forKey: .fanControlGradualTime) ?? preferences.fanControlGradualTime
+        preferences.fanControlDisableOnSleep = try container.decodeIfPresent(Bool.self, forKey: .fanControlDisableOnSleep) ?? preferences.fanControlDisableOnSleep
+        preferences.fanControlEnableNotifications = try container.decodeIfPresent(Bool.self, forKey: .fanControlEnableNotifications) ?? preferences.fanControlEnableNotifications
+        preferences.fanControlNotificationThreshold = try container.decodeIfPresent(Double.self, forKey: .fanControlNotificationThreshold) ?? preferences.fanControlNotificationThreshold
 
         if storedVersion < 2 {
             preferences.showPopoverOnLaunch = true

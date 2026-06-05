@@ -1,5 +1,40 @@
 # ClassGod 更新日志
 
+## v1.3.0 — 2026-06-04
+
+### 新增
+- **Fan Control 风扇控制模块**（对标 TG Pro）：
+  - 实时温度传感器监控：支持 Intel / Apple Silicon SMC 直连 + IORegistry fallback + 系统估计三重读取
+  - 风扇 RPM 实时监控与手动/自动控制
+  - 三种风扇模式：System（系统自控）、Max（全速）、Auto Max（智能规则）
+  - Auto Max 规则引擎：支持多规则、目标风扇选择、温度阈值、滞后（hysteresis）、持续时长条件，避免风扇频繁启停
+  - 渐进式转速过渡：可配置过渡时间，避免风扇噪音突变
+  - 高温系统通知：可开关，阈值可调，带 10 分钟冷却 + Basso 警告音效
+  - 睡眠/唤醒自动处理：可选睡眠时切回 System 模式，唤醒后恢复先前模式
+  - 温度趋势箭头（↑/↓/→）和迷你历史折线图（sparkline）
+  - 临界温度视觉警告（≥85°C 行泛红光）
+  - Boost 按钮：一键 30 秒全速，自动恢复
+  - 传感器名称实时搜索过滤 + 分类筛选（All/CPU/GPU/Battery/Other）
+  - 一键复制传感器数据到剪贴板
+  - 菜单栏可选实时温/RPM 显示
+  - 完整的 Settings 面板：General / Temperature / Notifications / Fan Mode / Auto Max Rules / System / About
+
+### 优化
+- 温度单位（°C/°F）全局统一，含 Menu Bar、通知、导出数据
+- 传感器按温度从高到低排序
+- Fan Row 显示转速百分比
+
+### 修复
+- 修复 Auto Max 规则状态残留导致的活跃指示器不准确
+- 修复睡眠唤醒后风扇模式未恢复
+- 修复旧版 AutoMaxRule 数据缺失新字段时全部偏好丢失
+- 修复 AppleARMIODevice fallback 误报电压/频率为温度传感器
+- 修复菜单栏 Fan Control 摘要在睡眠期间继续 SMC 轮询
+
+- 版本号更新为 v1.3.0 (Build 13)
+
+---
+
 ## v0.4.4 — 2026-05-25
 
 ### 新增

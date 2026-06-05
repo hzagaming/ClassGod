@@ -9,6 +9,11 @@ import SwiftUI
 
 struct MenuBarView: View {
     @ObservedObject private var prefs = PreferencesManager.shared
+    @State private var fanSummaryTemp: Double = 0
+    @State private var fanSummaryRPM: Double = 0
+    @State private var fanSummaryTimer: Timer?
+    @State private var sleepObserverTokens: [any NSObjectProtocol] = []
+
     var onClose: () -> Void
     var onOpenDestinTab: () -> Void
     var onOpenSuperSwitch: () -> Void
@@ -17,6 +22,7 @@ struct MenuBarView: View {
     var onOpenSettings: () -> Void
     var onOpenWallpaper: () -> Void
     var onOpenHackerDesktop: () -> Void
+    var onOpenFanControl: () -> Void
     var onOpenErrorHub: () -> Void
     
     private var zoomScale: CGFloat { CGFloat(prefs.preferences.windowZoomScale) }
@@ -29,6 +35,10 @@ struct MenuBarView: View {
                 
                 ScrollView(showsIndicators: false) {
                     VStack(spacing: 10 * zoomScale) {
+                        if prefs.preferences.enableFanControl {
+                            fanSummaryCard
+                        }
+
                         FeatureButton(
                             icon: "link",
                             title: "DestinTab",
@@ -77,6 +87,13 @@ struct MenuBarView: View {
                             description: "Search & solve all Swift/macOS errors",
                             action: onOpenErrorHub
                         )
+                        
+                        FeatureButton(
+                            icon: "fanblades",
+                            title: "Fan Control",
+                            description: "Monitor temps & control fan speeds",
+                            action: onOpenFanControl
+                        )
                     }
                     .padding()
                 }
@@ -122,10 +139,116 @@ struct MenuBarView: View {
                 .stroke(Color.white.opacity(0.12), lineWidth: 1 * zoomScale)
                 .allowsHitTesting(false)
         )
+        .onAppear {
+            let willSleep = NSWorkspace.shared.notificationCenter.addObserver(
+                forName: NSWorkspace.willSleepNotification,
+                object: nil,
+                queue: .main
+            ) { _ in
+                fanSummaryTimer?.invalidate()
+                fanSummaryTimer = nil
+            }
+            let didWake = NSWorkspace.shared.notificationCenter.addObserver(
+                forName: NSWorkspace.didWakeNotification,
+                object: nil,
+                queue: .main
+            ) { _ in
+                guard prefs.preferences.enableFanControl else { return }
+                updateFanSummary()
+                fanSummaryTimer = Timer.scheduledTimer(withTimeInterval: 3, repeats: true) { _ in
+                    updateFanSummary()
+                }
+            }
+            sleepObserverTokens = [willSleep, didWake]
+        }
+        .onDisappear {
+            fanSummaryTimer?.invalidate()
+            fanSummaryTimer = nil
+            for token in sleepObserverTokens {
+                NSWorkspace.shared.notificationCenter.removeObserver(token)
+            }
+            sleepObserverTokens.removeAll()
+        }
     }
     
+    // MARK: - Fan Summary Card
+
+    private var fanSummaryCard: some View {
+        HStack(spacing: 10 * zoomScale) {
+            Image(systemName: "fanblades")
+                .font(.system(size: 16 * zoomScale))
+                .foregroundStyle(.cyan)
+                .frame(width: 32 * zoomScale, height: 32 * zoomScale)
+                .background(Color.cyan.opacity(0.1))
+                .clipShape(RoundedRectangle(cornerRadius: 8 * zoomScale))
+
+            VStack(alignment: .leading, spacing: 2) {
+                HStack(spacing: 4) {
+                    Image(systemName: "thermometer")
+                        .font(.system(size: 9 * zoomScale))
+                        .foregroundStyle(.white.opacity(0.5))
+                    Text(prefs.preferences.fanControlTemperatureUnit.formatted(fanSummaryTemp))
+                        .font(.system(size: 11 * zoomScale, weight: .bold, design: .monospaced))
+                        .foregroundStyle(.white)
+                }
+
+                HStack(spacing: 4) {
+                    Image(systemName: "fanblades")
+                        .font(.system(size: 9 * zoomScale))
+                        .foregroundStyle(.white.opacity(0.5))
+                    Text("\(Int(fanSummaryRPM)) RPM")
+                        .font(.system(size: 11 * zoomScale, weight: .bold, design: .monospaced))
+                        .foregroundStyle(.white)
+                }
+            }
+
+            Spacer()
+
+            Button(action: {
+                SoundEffectManager.shared.playButtonClick()
+                onOpenFanControl()
+            }) {
+                Text("Open")
+                    .font(.system(size: 9 * zoomScale, weight: .bold, design: .monospaced))
+                    .foregroundStyle(.cyan)
+                    .padding(.horizontal, 10 * zoomScale)
+                    .padding(.vertical, 4 * zoomScale)
+                    .background(Color.cyan.opacity(0.1))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 4 * zoomScale)
+                            .stroke(Color.cyan.opacity(0.3), lineWidth: 1)
+                    )
+            }
+            .buttonStyle(.plain)
+        }
+        .padding()
+        .background(Color.white.opacity(0.02))
+        .overlay(
+            RoundedRectangle(cornerRadius: 8 * zoomScale)
+                .stroke(Color.white.opacity(0.08), lineWidth: 1)
+                .allowsHitTesting(false)
+        )
+        .onAppear {
+            updateFanSummary()
+            fanSummaryTimer = Timer.scheduledTimer(withTimeInterval: 3, repeats: true) { _ in
+                updateFanSummary()
+            }
+        }
+        .onDisappear {
+            fanSummaryTimer?.invalidate()
+            fanSummaryTimer = nil
+        }
+    }
+
+    private func updateFanSummary() {
+        let sensors = SMCService.shared.readTemperatures()
+        let fans = SMCService.shared.readFans()
+        fanSummaryTemp = sensors.map(\.value).max() ?? 0
+        fanSummaryRPM = fans.isEmpty ? 0 : fans.map(\.actualRPM).reduce(0, +) / Double(fans.count)
+    }
+
     // MARK: - Title Bar with Close Button
-    
+
     private var titleBar: some View {
         HStack(spacing: 0 * zoomScale) {
             // Close button
@@ -242,5 +365,5 @@ struct FeatureButton: View {
 }
 
 #Preview {
-    MenuBarView(onClose: {}, onOpenDestinTab: {}, onOpenSuperSwitch: {}, onOpenBrowserBypasser: {}, onOpenAssessPrepHack: {}, onOpenSettings: {}, onOpenWallpaper: {}, onOpenHackerDesktop: {}, onOpenErrorHub: {})
+    MenuBarView(onClose: {}, onOpenDestinTab: {}, onOpenSuperSwitch: {}, onOpenBrowserBypasser: {}, onOpenAssessPrepHack: {}, onOpenSettings: {}, onOpenWallpaper: {}, onOpenHackerDesktop: {}, onOpenFanControl: {}, onOpenErrorHub: {})
 }
