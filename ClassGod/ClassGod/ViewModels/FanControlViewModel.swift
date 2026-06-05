@@ -118,6 +118,7 @@ final class FanControlViewModel: ObservableObject {
         boostTimer?.invalidate()
         NSWorkspace.shared.notificationCenter.removeObserver(self, name: NSWorkspace.willSleepNotification, object: nil)
         NSWorkspace.shared.notificationCenter.removeObserver(self, name: NSWorkspace.didWakeNotification, object: nil)
+        NotificationCenter.default.removeObserver(self, name: Notification.Name("fanControlWindowWillHide"), object: nil)
     }
 
     func startMonitoring() {
@@ -160,7 +161,12 @@ final class FanControlViewModel: ObservableObject {
         gradualTimer = nil
         boostTimer?.invalidate()
         boostTimer = nil
+        // Restore pre-boost mode if window hides during boost
+        if isBoostActive, let mode = preBoostFanMode {
+            setFanMode(mode)
+        }
         isBoostActive = false
+        preBoostFanMode = nil
     }
 
     func refresh() {
@@ -286,7 +292,7 @@ final class FanControlViewModel: ObservableObject {
     // MARK: - Boost
 
     func startBoost(duration: TimeInterval = 30) {
-        guard !fans.isEmpty else { return }
+        guard !fans.isEmpty, !isBoostActive else { return }
         isBoostActive = true
 
         // Save current mode
@@ -311,6 +317,7 @@ final class FanControlViewModel: ObservableObject {
                 self.isBoostActive = false
                 // Restore previous mode
                 self.setFanMode(previousMode)
+                self.preBoostFanMode = nil
                 self.showToast(message: "Boost ended — restored \(previousMode.displayName)")
             }
         }
@@ -513,6 +520,8 @@ final class FanControlViewModel: ObservableObject {
         autoMaxTimer = nil
         gradualTimer?.invalidate()
         gradualTimer = nil
+        boostTimer?.invalidate()
+        boostTimer = nil
     }
 
     @objc private func systemDidWake() {

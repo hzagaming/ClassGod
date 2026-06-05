@@ -108,6 +108,15 @@ final class TabListViewModel: ObservableObject {
         setupStorageChangeObserver()
     }
     
+    deinit {
+        let ids = registeredTabIDs
+        Task { @MainActor in
+            for id in ids {
+                ShortcutManager.shared.unregisterShortcut(for: id)
+            }
+        }
+    }
+    
     // MARK: - Tabs CRUD
     
     func loadTabs() {

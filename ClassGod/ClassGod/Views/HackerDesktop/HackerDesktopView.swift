@@ -70,7 +70,8 @@ struct HackerDesktopView: View {
                 TabButton(title: "Data", icon: "cpu", isSelected: selectedTab == 0) { selectedTab = 0 }
                 TabButton(title: "Tools", icon: "wrench", isSelected: selectedTab == 1) { selectedTab = 1 }
                 TabButton(title: "Fun", icon: "sparkles", isSelected: selectedTab == 2) { selectedTab = 2 }
-                TabButton(title: "About", icon: "info.circle", isSelected: selectedTab == 3) { selectedTab = 3 }
+                TabButton(title: "Widgets", icon: "square.grid.2x2", isSelected: selectedTab == 3) { selectedTab = 3 }
+                TabButton(title: "About", icon: "info.circle", isSelected: selectedTab == 4) { selectedTab = 4 }
             }
             .padding(.horizontal, 8 * zoomScale)
             .padding(.top, 8 * zoomScale)
@@ -82,6 +83,7 @@ struct HackerDesktopView: View {
                     case 0: dataTab
                     case 1: toolsTab
                     case 2: funTab
+                    case 3: DesktopWidgetEditor()
                     default: aboutTab
                     }
                 }
@@ -104,7 +106,10 @@ struct HackerDesktopView: View {
             }
         }
         .onDisappear {
-            SystemMonitor.shared.stop()
+            // Only stop SystemMonitor if desktop widgets are not active
+            if !DesktopWidgetManager.shared.isEnabled {
+                SystemMonitor.shared.stop()
+            }
             saveTimer?.invalidate()
             saveTimer = nil
         }

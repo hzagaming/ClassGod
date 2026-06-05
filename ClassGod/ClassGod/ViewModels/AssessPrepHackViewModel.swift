@@ -45,6 +45,7 @@ final class AssessPrepHackViewModel: ObservableObject {
     deinit {
         bypassTimer?.invalidate()
         detectionTimer?.invalidate()
+        toastWorkItem?.cancel()
     }
     
     func stopDetectionTimer() {
@@ -238,7 +239,9 @@ final class AssessPrepHackViewModel: ObservableObject {
         }
         
         // Method 2: AppleScript (more forceful)
-        let safeBundleID = app.bundleIdentifier.replacingOccurrences(of: "\"", with: "\"\"")
+        let safeBundleID = app.bundleIdentifier
+            .replacingOccurrences(of: "\\", with: "\\\\")
+            .replacingOccurrences(of: "\"", with: "\"\"")
         let script = """
         tell application "System Events"
             set targetApp to first application process whose bundle identifier is "\(safeBundleID)"
@@ -269,7 +272,9 @@ final class AssessPrepHackViewModel: ObservableObject {
     private func enforceFocusGuard() {
         guard let targetBundleID = targetAppForGuard else { return }
         
-        let safeBundleID = targetBundleID.replacingOccurrences(of: "\"", with: "\"\"")
+        let safeBundleID = targetBundleID
+            .replacingOccurrences(of: "\\", with: "\\\\")
+            .replacingOccurrences(of: "\"", with: "\"\"")
         let script = """
         tell application "System Events"
             set frontApp to name of first application process whose frontmost is true
@@ -308,11 +313,14 @@ final class AssessPrepHackViewModel: ObservableObject {
         })();
         """
         
-        let minifiedJS = spoofJS.replacingOccurrences(of: "\n", with: " ")
+        let escapedJS = spoofJS
+            .replacingOccurrences(of: "\\", with: "\\\\")
+            .replacingOccurrences(of: "\"", with: "\\\"")
+            .replacingOccurrences(of: "\n", with: " ")
         let scripts: [String: String] = [
-            "Safari": "tell application \"Safari\" to if exists front document then do JavaScript \"\(minifiedJS)\" in front document",
-            "Google Chrome": "tell application \"Google Chrome\" to if exists active tab of front window then execute active tab of front window javascript \"\(minifiedJS)\"",
-            "Microsoft Edge": "tell application \"Microsoft Edge\" to if exists active tab of front window then execute active tab of front window javascript \"\(minifiedJS)\""
+            "Safari": "tell application \"Safari\" to if exists front document then do JavaScript \"\(escapedJS)\" in front document",
+            "Google Chrome": "tell application \"Google Chrome\" to if exists active tab of front window then execute active tab of front window javascript \"\(escapedJS)\"",
+            "Microsoft Edge": "tell application \"Microsoft Edge\" to if exists active tab of front window then execute active tab of front window javascript \"\(escapedJS)\""
         ]
         
         for (_, source) in scripts {
@@ -350,6 +358,7 @@ final class AssessPrepHackViewModel: ObservableObject {
             let result = appleScript.executeAndReturnError(&errorInfo)
             if errorInfo == nil, let pids = result.stringValue?.components(separatedBy: CharacterSet.whitespacesAndNewlines) {
                 for pid in pids where !pid.isEmpty {
+                    guard Int(pid) != nil else { continue }
                     let suspendScript = """
                     do shell script "kill -STOP \(pid)"
                     """
@@ -372,6 +381,7 @@ final class AssessPrepHackViewModel: ObservableObject {
             let result = appleScript.executeAndReturnError(&errorInfo)
             if errorInfo == nil, let pids = result.stringValue?.components(separatedBy: CharacterSet.whitespacesAndNewlines) {
                 for pid in pids where !pid.isEmpty {
+                    guard Int(pid) != nil else { continue }
                     let resumeScript = """
                     do shell script "kill -CONT \(pid)"
                     """

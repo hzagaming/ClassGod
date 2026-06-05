@@ -25,6 +25,15 @@ final class SuperSwitchViewModel: ObservableObject {
         loadTargets()
     }
     
+    deinit {
+        let ids = registeredTargetIDs
+        Task { @MainActor in
+            for id in ids {
+                ShortcutManager.shared.unregisterShortcut(for: id)
+            }
+        }
+    }
+    
     func loadTargets() {
         targets = StorageManager.shared.loadSwitchTargets()
         refreshShortcuts()

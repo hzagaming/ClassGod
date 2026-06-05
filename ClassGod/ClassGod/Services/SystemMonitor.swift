@@ -107,14 +107,18 @@ final class SystemMonitor: ObservableObject, @unchecked Sendable {
         loadStaticSystemInfo()
     }
     
+    @MainActor
     func start(interval: TimeInterval = 1.0) {
         timer?.invalidate()
         updateAll()
         timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
-            self?.updateAll()
+            Task { @MainActor [weak self] in
+                self?.updateAll()
+            }
         }
     }
     
+    @MainActor
     func stop() {
         timer?.invalidate()
         timer = nil

@@ -44,6 +44,7 @@ final class BrowserBypasserViewModel: ObservableObject {
     
     deinit {
         bypassTimer?.invalidate()
+        toastWorkItem?.cancel()
     }
     
     func loadRules() {

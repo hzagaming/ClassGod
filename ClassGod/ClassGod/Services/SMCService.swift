@@ -70,6 +70,8 @@ enum TemperatureUnit: String, Codable, CaseIterable, Identifiable {
 
 // MARK: - SMC Service
 
+private let KERNEL_INDEX_SMC: UInt32 = 2
+
 final class SMCService {
     static let shared = SMCService()
 
@@ -120,6 +122,13 @@ final class SMCService {
         connect()
     }
 
+    deinit {
+        if conn != 0 {
+            IOServiceClose(conn)
+            conn = 0
+        }
+    }
+
     // MARK: - Connection
 
     private func connect() {
@@ -137,11 +146,14 @@ final class SMCService {
         var outputSize = output.count
         return input.withUnsafeMutableBytes { inputPtr in
             output.withUnsafeMutableBytes { outputPtr in
-                IOConnectCallStructMethod(
+                guard let inputAddr = inputPtr.baseAddress, let outputAddr = outputPtr.baseAddress else {
+                    return KERN_INVALID_ADDRESS
+                }
+                return IOConnectCallStructMethod(
                     conn,
-                    2, // KERNEL_INDEX_SMC
-                    inputPtr.baseAddress!, inputSize,
-                    outputPtr.baseAddress!, &outputSize
+                    KERNEL_INDEX_SMC,
+                    inputAddr, inputSize,
+                    outputAddr, &outputSize
                 )
             }
         }
@@ -271,7 +283,7 @@ final class SMCService {
             return fans
         }
 
-        let numFans = Int(numBytes[0])
+        let numFans = min(Int(numBytes[0]), 16)
 
         for i in 0..<numFans {
             let actualKey = "F\(i)Ac"

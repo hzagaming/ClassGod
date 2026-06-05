@@ -51,8 +51,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        // Initialize desktop wallpaper controller early so it can react to persisted state
+        // Initialize desktop wallpaper controller and widget manager early
         _ = DesktopWallpaperController.shared
+        _ = DesktopWidgetManager.shared
         
         showSplashScreen()
 
@@ -77,6 +78,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             // Apply saved icon style immediately
             AppIconManager.shared.refreshIcon()
             self.updateClickOutsideMonitor()
+            
+            // Restore desktop widgets if previously enabled
+            if DesktopWidgetManager.shared.isEnabled {
+                DesktopWidgetManager.shared.setEnabled(true)
+            }
 
             NotificationCenter.default.addObserver(
                 self,
@@ -157,9 +163,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         NSAnimationContext.runAnimationGroup { ctx in
             ctx.duration = 0.25
             window.animator().alphaValue = 0
-        } completionHandler: {
+        } completionHandler: { [weak self] in
             window.orderOut(nil)
-            self.splashWindow = nil
+            self?.splashWindow = nil
         }
     }
 
@@ -887,6 +893,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func showHackerDesktopWindow(animated: Bool = true) {
         guard let window = hackerDesktopWindow else {
             setupHackerDesktopWindow()
+            // Prevent infinite recursion if screen is unavailable
+            guard hackerDesktopWindow != nil else { return }
             showHackerDesktopWindow(animated: animated)
             return
         }
@@ -1151,8 +1159,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func showMainWindow(animated: Bool = false) {
         guard let window = mainWindow else { return }
 
-        // Always center the main window on screen before showing
-        centerWindowOnScreen(window)
+        // Center only on first show; respect user-dragged position afterwards
+        if !PreferencesManager.shared.preferences.rememberWindowPosition || window.frame.origin == .zero {
+            centerWindowOnScreen(window)
+        }
 
         SoundEffectManager.shared.playWindowOpen()
 
@@ -1225,6 +1235,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         browserBypasserWindow?.level = level
         assessPrepHackWindow?.level = level
         settingsWindow?.level = level
+        wallpaperBrowserWindow?.level = level
+        hackerDesktopWindow?.level = level
+        errorHubWindow?.level = level
         fanControlWindow?.level = level
     }
 
@@ -1311,6 +1324,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             (browserBypasserWindow, { [weak self] in self?.hideBrowserBypasserWindow() }),
             (assessPrepHackWindow, { [weak self] in self?.hideAssessPrepHackWindow() }),
             (settingsWindow, { [weak self] in self?.hideSettingsWindow() }),
+            (wallpaperBrowserWindow, { [weak self] in self?.hideWallpaperBrowserWindow() }),
+            (hackerDesktopWindow, { [weak self] in self?.hideHackerDesktopWindow() }),
+            (errorHubWindow, { [weak self] in self?.hideErrorHubWindow() }),
             (fanControlWindow, { [weak self] in self?.hideFanControlWindow() }),
         ]
 
@@ -1363,6 +1379,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationWillTerminate(_ notification: Notification) {
         statusItemTimer?.invalidate()
         DesktopWallpaperController.shared.hideWallpapers()
+        DesktopWidgetManager.shared.setEnabled(false)
         
         if let id = showPopoverCustomHotKeyID {
             ShortcutManager.shared.unregisterCustomHotKey(id: id)
@@ -1372,6 +1389,18 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
         ShortcutManager.shared.unregisterAllShortcuts()
         LaunchAnimationManager.shared.cancelAnimation()
+        if let monitor = clickOutsideMonitor {
+            NSEvent.removeMonitor(monitor)
+            clickOutsideMonitor = nil
+        }
+        NotificationCenter.default.removeObserver(self)
+        PreferencesManager.shared.onPreferencesChanged = nil
+        if let window = mainWindow {
+            window.orderOut(nil)
+        }
+        if let window = splashWindow {
+            window.orderOut(nil)
+        }
         if let window = destinTabWindow {
             window.orderOut(nil)
         }

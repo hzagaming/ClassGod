@@ -18,6 +18,13 @@ final class DesktopWallpaperController {
     private var cancellables = Set<AnyCancellable>()
     private var screenObserver: NSObjectProtocol?
     
+    deinit {
+        if let observer = screenObserver {
+            NotificationCenter.default.removeObserver(observer)
+        }
+        cancellables.removeAll()
+    }
+    
     private init() {
         // Listen for screen configuration changes (plug/unplug monitors)
         screenObserver = NotificationCenter.default.addObserver(
