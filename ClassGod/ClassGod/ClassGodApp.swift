@@ -1429,7 +1429,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         statusItemTimer = nil
 
         let prefs = PreferencesManager.shared.preferences
-        guard prefs.fanControlShowInMenuBar else { return }
+        guard prefs.enableFanControl, prefs.fanControlShowInMenuBar else { return }
 
         let interval = max(2.0, prefs.fanControlUpdateInterval)
         statusItemTimer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
@@ -1468,7 +1468,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         statusItem?.button?.imagePosition = .imageLeading
 
         var title = ""
-        if prefs.fanControlShowInMenuBar {
+        if prefs.enableFanControl, prefs.fanControlShowInMenuBar {
             let sensors = SMCService.shared.readTemperatures()
             let fans = SMCService.shared.readFans()
             let highestTemp = sensors.map(\.value).max() ?? 0
