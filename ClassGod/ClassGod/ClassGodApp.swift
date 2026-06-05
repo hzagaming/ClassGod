@@ -1112,6 +1112,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func hideFanControlWindow() {
         guard let window = fanControlWindow else { return }
         SoundEffectManager.shared.playWindowClose(feature: "fancontrol")
+        NotificationCenter.default.post(name: .fanControlWindowWillHide, object: nil)
 
         NSAnimationContext.runAnimationGroup { context in
             context.duration = 0.12

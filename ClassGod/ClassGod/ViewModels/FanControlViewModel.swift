@@ -108,6 +108,7 @@ final class FanControlViewModel: ObservableObject {
         fanMode = prefs.preferences.fanControlMode
         setupSleepObservers()
         requestNotificationPermission()
+        NotificationCenter.default.addObserver(self, selector: #selector(stopMonitoring), name: .fanControlWindowWillHide, object: nil)
     }
 
     deinit {
@@ -149,7 +150,7 @@ final class FanControlViewModel: ObservableObject {
         }
     }
 
-    func stopMonitoring() {
+    @objc func stopMonitoring() {
         isMonitoring = false
         timer?.invalidate()
         timer = nil
