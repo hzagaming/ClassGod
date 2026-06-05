@@ -238,9 +238,10 @@ final class AssessPrepHackViewModel: ObservableObject {
         }
         
         // Method 2: AppleScript (more forceful)
+        let safeBundleID = app.bundleIdentifier.replacingOccurrences(of: "\"", with: "\"\"")
         let script = """
         tell application "System Events"
-            set targetApp to first application process whose bundle identifier is "\(app.bundleIdentifier)"
+            set targetApp to first application process whose bundle identifier is "\(safeBundleID)"
             set frontmost of targetApp to true
         end tell
         """
@@ -268,16 +269,17 @@ final class AssessPrepHackViewModel: ObservableObject {
     private func enforceFocusGuard() {
         guard let targetBundleID = targetAppForGuard else { return }
         
+        let safeBundleID = targetBundleID.replacingOccurrences(of: "\"", with: "\"\"")
         let script = """
         tell application "System Events"
             set frontApp to name of first application process whose frontmost is true
             set frontAppBundle to bundle identifier of first application process whose frontmost is true
             
-            if frontAppBundle is not "\(targetBundleID)" then
+            if frontAppBundle is not "\(safeBundleID)" then
                 -- Check if front app is AssessPrep
                 if frontApp contains "AssessPrep" or frontApp contains "assessprep" or frontApp contains "Secure Browser" then
                     -- Force switch back to target
-                    set targetProc to first application process whose bundle identifier is "\(targetBundleID)"
+                    set targetProc to first application process whose bundle identifier is "\(safeBundleID)"
                     set frontmost of targetProc to true
                 end if
             end if
@@ -306,10 +308,11 @@ final class AssessPrepHackViewModel: ObservableObject {
         })();
         """
         
+        let minifiedJS = spoofJS.replacingOccurrences(of: "\n", with: " ")
         let scripts: [String: String] = [
-            "Safari": "tell application \"Safari\" to if exists front document then do JavaScript \"\(spoofJS)\" in front document",
-            "Google Chrome": "tell application \"Google Chrome\" to if exists active tab of front window then execute active tab of front window javascript \"\(spoofJS)\"",
-            "Microsoft Edge": "tell application \"Microsoft Edge\" to if exists active tab of front window then execute active tab of front window javascript \"\(spoofJS)\""
+            "Safari": "tell application \"Safari\" to if exists front document then do JavaScript \"\(minifiedJS)\" in front document",
+            "Google Chrome": "tell application \"Google Chrome\" to if exists active tab of front window then execute active tab of front window javascript \"\(minifiedJS)\"",
+            "Microsoft Edge": "tell application \"Microsoft Edge\" to if exists active tab of front window then execute active tab of front window javascript \"\(minifiedJS)\""
         ]
         
         for (_, source) in scripts {
