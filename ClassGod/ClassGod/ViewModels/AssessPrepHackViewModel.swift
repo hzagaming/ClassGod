@@ -42,6 +42,11 @@ final class AssessPrepHackViewModel: ObservableObject {
         loadApps()
     }
     
+    deinit {
+        bypassTimer?.invalidate()
+        detectionTimer?.invalidate()
+    }
+    
     func stopDetectionTimer() {
         detectionTimer?.invalidate()
         detectionTimer = nil

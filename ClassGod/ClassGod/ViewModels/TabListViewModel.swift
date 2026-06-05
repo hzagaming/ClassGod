@@ -170,7 +170,7 @@ final class TabListViewModel: ObservableObject {
         selectedTabIDs.removeAll()
         applySort()
         saveTabs()
-        onShowToast?("Deleted \(count) tabs")
+        onShowToast?(String(format: String(localized: "toast.deleted_count"), count))
     }
     
     func togglePin(_ tab: BrowserTab) {
@@ -288,7 +288,7 @@ final class TabListViewModel: ObservableObject {
         do {
             return try JSONEncoder().encode(tabs)
         } catch {
-            errorMessage = "Export failed: \(error.localizedDescription)"
+            errorMessage = String(format: String(localized: "error.export_failed"), error.localizedDescription)
             showError = true
             return nil
         }
@@ -307,10 +307,10 @@ final class TabListViewModel: ObservableObject {
             }
             applySort()
             saveTabs()
-            onShowToast?("Imported \(addedCount) tabs")
+            onShowToast?(String(format: String(localized: "toast.imported_count"), addedCount))
             return true
         } catch {
-            errorMessage = "Import failed: \(error.localizedDescription)"
+            errorMessage = String(format: String(localized: "error.import_failed"), error.localizedDescription)
             showError = true
             return false
         }

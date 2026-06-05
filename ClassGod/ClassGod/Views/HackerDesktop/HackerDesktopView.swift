@@ -28,6 +28,7 @@ struct HackerDesktopView: View {
     @State private var appItems: [AppLauncherItem] = []
     
     @State private var selectedTab = 0
+    @State private var saveTimer: Timer?
     
     @ObservedObject private var prefs = PreferencesManager.shared
     private var zoomScale: CGFloat { CGFloat(prefs.preferences.windowZoomScale) }
@@ -97,12 +98,15 @@ struct HackerDesktopView: View {
             loadData()
             SystemMonitor.shared.start(interval: 2.0)
             // Periodically save system data to App Group
-            Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { _ in
+            saveTimer?.invalidate()
+            saveTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { _ in
                 saveSystemData()
             }
         }
         .onDisappear {
             SystemMonitor.shared.stop()
+            saveTimer?.invalidate()
+            saveTimer = nil
         }
     }
     

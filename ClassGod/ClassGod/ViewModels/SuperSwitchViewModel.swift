@@ -72,15 +72,15 @@ final class SuperSwitchViewModel: ObservableObject {
         if let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: target.bundleIdentifier) {
             let config = NSWorkspace.OpenConfiguration()
             config.activates = true
-            NSWorkspace.shared.openApplication(at: url, configuration: config) { app, error in
+            NSWorkspace.shared.openApplication(at: url, configuration: config) { [weak self] app, error in
                 if let error = error {
-                    DispatchQueue.main.async {
-                        self.errorMessage = "Failed to launch \(target.name): \(error.localizedDescription)"
-                        self.showError = true
+                    DispatchQueue.main.async { [weak self] in
+                        self?.errorMessage = "Failed to launch \(target.name): \(error.localizedDescription)"
+                        self?.showError = true
                     }
                 } else {
-                    DispatchQueue.main.async {
-                        self.showToast(message: "Launched \(target.name)")
+                    DispatchQueue.main.async { [weak self] in
+                        self?.showToast(message: "Launched \(target.name)")
                     }
                 }
             }
@@ -120,8 +120,8 @@ final class SuperSwitchViewModel: ObservableObject {
     private func showToast(message: String) {
         toastMessage = message
         showToast = true
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-            self.showToast = false
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
+            self?.showToast = false
         }
     }
 }

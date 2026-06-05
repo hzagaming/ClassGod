@@ -42,6 +42,10 @@ final class BrowserBypasserViewModel: ObservableObject {
         loadRules()
     }
     
+    deinit {
+        bypassTimer?.invalidate()
+    }
+    
     func loadRules() {
         rules = StorageManager.shared.loadBypassRules()
     }

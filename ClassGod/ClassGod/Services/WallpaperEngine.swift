@@ -167,7 +167,7 @@ final class WallpaperEngine: ObservableObject {
                 next = playlist[0]
             }
         case .random:
-            next = playlist.randomElement()!
+            next = playlist.randomElement() ?? playlist[0]
         }
         selectWallpaper(next)
     }
@@ -192,7 +192,7 @@ final class WallpaperEngine: ObservableObject {
                 prev = playlist[0]
             }
         case .random:
-            prev = playlist.randomElement()!
+            prev = playlist.randomElement() ?? playlist[0]
         }
         selectWallpaper(prev)
     }

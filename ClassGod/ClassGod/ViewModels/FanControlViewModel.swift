@@ -111,6 +111,10 @@ final class FanControlViewModel: ObservableObject {
     }
 
     deinit {
+        timer?.invalidate()
+        autoMaxTimer?.invalidate()
+        gradualTimer?.invalidate()
+        boostTimer?.invalidate()
         NSWorkspace.shared.notificationCenter.removeObserver(self, name: NSWorkspace.willSleepNotification, object: nil)
         NSWorkspace.shared.notificationCenter.removeObserver(self, name: NSWorkspace.didWakeNotification, object: nil)
     }

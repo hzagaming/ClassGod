@@ -156,6 +156,7 @@ struct MenuBarView: View {
             ) { _ in
                 guard prefs.preferences.enableFanControl else { return }
                 updateFanSummary()
+                fanSummaryTimer?.invalidate()
                 fanSummaryTimer = Timer.scheduledTimer(withTimeInterval: 3, repeats: true) { _ in
                     updateFanSummary()
                 }
@@ -231,6 +232,7 @@ struct MenuBarView: View {
         )
         .onAppear {
             updateFanSummary()
+            fanSummaryTimer?.invalidate()
             fanSummaryTimer = Timer.scheduledTimer(withTimeInterval: 3, repeats: true) { _ in
                 updateFanSummary()
             }
