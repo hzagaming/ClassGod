@@ -470,6 +470,14 @@
 				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSAccessibilityUsageDescription = "ClassGod needs Accessibility permission to detect the frontmost browser and switch to specific tabs.";
 				INFOPLIST_KEY_NSAppleEventsUsageDescription = "ClassGod needs to control Safari, Chrome, and Edge to detect and switch browser tabs.";
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "ClassGod may use Bluetooth for future peripheral detection features.";
+				INFOPLIST_KEY_NSCalendarsUsageDescription = "ClassGod may access calendars for future class schedule integrations.";
+				INFOPLIST_KEY_NSCameraUsageDescription = "ClassGod uses camera access for video-related features.";
+				INFOPLIST_KEY_NSContactsUsageDescription = "ClassGod may access contacts for future integrations.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "ClassGod may use location for future geo-aware features.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "ClassGod uses microphone access for audio-related features.";
+				INFOPLIST_KEY_NSRemindersUsageDescription = "ClassGod may access reminders for future task integrations.";
+				INFOPLIST_KEY_NSScreenCaptureUsageDescription = "ClassGod needs screen recording permission for browser detection and window capture features.";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -504,6 +512,14 @@
 				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSAccessibilityUsageDescription = "ClassGod needs Accessibility permission to detect the frontmost browser and switch to specific tabs.";
 				INFOPLIST_KEY_NSAppleEventsUsageDescription = "ClassGod needs to control Safari, Chrome, and Edge to detect and switch browser tabs.";
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "ClassGod may use Bluetooth for future peripheral detection features.";
+				INFOPLIST_KEY_NSCalendarsUsageDescription = "ClassGod may access calendars for future class schedule integrations.";
+				INFOPLIST_KEY_NSCameraUsageDescription = "ClassGod uses camera access for video-related features.";
+				INFOPLIST_KEY_NSContactsUsageDescription = "ClassGod may access contacts for future integrations.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "ClassGod may use location for future geo-aware features.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "ClassGod uses microphone access for audio-related features.";
+				INFOPLIST_KEY_NSRemindersUsageDescription = "ClassGod may access reminders for future task integrations.";
+				INFOPLIST_KEY_NSScreenCaptureUsageDescription = "ClassGod needs screen recording permission for browser detection and window capture features.";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",

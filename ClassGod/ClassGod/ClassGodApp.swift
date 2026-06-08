@@ -38,6 +38,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var errorHubWindow: NSWindow?
     var fanControlWindow: NSWindow?
     var activityMonitorWindow: NSWindow?
+    var permissionCenterWindow: NSWindow?
     var showPopoverCustomHotKeyID: UInt32?
     var panicHotKeyID: UInt32?
 
@@ -243,6 +244,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             self?.showErrorHubWindow()
         }, onOpenActivityMonitor: { [weak self] in
             self?.showActivityMonitorWindow()
+        }, onOpenPermissionCenter: { [weak self] in
+            self?.showPermissionCenterWindow()
         })
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Color.clear)
@@ -1247,6 +1250,103 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
+    // MARK: - Permission Center Window
+
+    private func setupPermissionCenterWindow() {
+        let prefs = PreferencesManager.shared.preferences
+        let zoom = CGFloat(prefs.windowZoomScale)
+        guard let screen = NSScreen.main else { return }
+        let screenFrame = screen.visibleFrame
+        let size = NSSize(
+            width: min(820, screenFrame.width - 80) * zoom,
+            height: min(620, screenFrame.height - 80) * zoom
+        )
+
+        let window = DraggableWindow(
+            contentRect: NSRect(origin: .zero, size: size),
+            styleMask: [.borderless],
+            backing: .buffered,
+            defer: false
+        )
+
+        window.level = windowLevel
+        window.backgroundColor = .clear
+        window.hasShadow = true
+        window.isMovableByWindowBackground = false
+        window.isReleasedWhenClosed = false
+        window.isOpaque = false
+
+        window.contentView?.wantsLayer = true
+        window.contentView?.layer?.cornerRadius = prefs.panelCornerRadius
+        window.contentView?.layer?.masksToBounds = true
+
+        let x = screenFrame.midX - size.width / 2
+        let y = screenFrame.midY - size.height / 2
+        window.setFrameOrigin(NSPoint(x: x, y: y))
+
+        let rootView = PermissionCenterWindowView(onClose: { [weak self] in
+            self?.hidePermissionCenterWindow()
+        })
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Color.clear)
+            .overlay(WindowResizeHandles())
+
+        window.contentView = NSHostingView(rootView: rootView)
+
+        permissionCenterWindow = window
+    }
+
+    func showPermissionCenterWindow(animated: Bool = true) {
+        guard let window = permissionCenterWindow else {
+            setupPermissionCenterWindow()
+            guard permissionCenterWindow != nil else { return }
+            showPermissionCenterWindow(animated: animated)
+            return
+        }
+
+        SoundEffectManager.shared.playWindowOpen(feature: "permissioncenter")
+
+        if animated {
+            window.alphaValue = 0
+            window.makeKeyAndOrderFront(nil)
+
+            NSAnimationContext.runAnimationGroup { context in
+                context.duration = 0.18
+                context.timingFunction = .init(name: .easeOut)
+                window.animator().alphaValue = targetWindowAlpha
+            }
+        } else {
+            window.makeKeyAndOrderFront(nil)
+        }
+    }
+
+    func hidePermissionCenterWindow() {
+        guard let window = permissionCenterWindow else { return }
+        SoundEffectManager.shared.playWindowClose(feature: "permissioncenter")
+
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = 0.12
+            context.timingFunction = .init(name: .easeIn)
+            window.animator().alphaValue = 0
+        } completionHandler: { [weak self] in
+            self?.permissionCenterWindow?.orderOut(nil)
+        }
+    }
+
+    @objc func togglePermissionCenterWindow() {
+        guard let window = permissionCenterWindow else {
+            setupPermissionCenterWindow()
+            showPermissionCenterWindow(animated: true)
+            return
+        }
+
+        if window.isVisible && window.alphaValue > 0 {
+            hidePermissionCenterWindow()
+        } else {
+            showPermissionCenterWindow(animated: true)
+        }
+    }
+
     private func updateMainWindowSize() {
         guard let window = mainWindow else { return }
         let prefs = PreferencesManager.shared.preferences
@@ -1341,6 +1441,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         hackerDesktopWindow?.level = level
         errorHubWindow?.level = level
         fanControlWindow?.level = level
+        activityMonitorWindow?.level = level
+        permissionCenterWindow?.level = level
     }
 
     func updateAllWindowSizes() {
@@ -1392,6 +1494,22 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             w.setContentSize(NSSize(width: base.width * zoom, height: base.height * zoom))
         }
 
+        // activityMonitorWindow
+        if let w = activityMonitorWindow, let screen = NSScreen.main {
+            let frame = screen.visibleFrame
+            let baseW = min(960, frame.width - 80)
+            let baseH = min(640, frame.height - 80)
+            w.setContentSize(NSSize(width: baseW * zoom, height: baseH * zoom))
+        }
+
+        // permissionCenterWindow
+        if let w = permissionCenterWindow, let screen = NSScreen.main {
+            let frame = screen.visibleFrame
+            let baseW = min(820, frame.width - 80)
+            let baseH = min(620, frame.height - 80)
+            w.setContentSize(NSSize(width: baseW * zoom, height: baseH * zoom))
+        }
+
         // hackerDesktopWindow
         if let w = hackerDesktopWindow, let screen = NSScreen.main {
             let frame = screen.visibleFrame
@@ -1429,6 +1547,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             (wallpaperBrowserWindow, { [weak self] in self?.hideWallpaperBrowserWindow() }),
             (hackerDesktopWindow, { [weak self] in self?.hideHackerDesktopWindow() }),
             (errorHubWindow, { [weak self] in self?.hideErrorHubWindow() }),
+            (activityMonitorWindow, { [weak self] in self?.hideActivityMonitorWindow() }),
+            (permissionCenterWindow, { [weak self] in self?.hidePermissionCenterWindow() }),
             // FanControl is intentionally excluded: it should only close via its own close button.
         ]
 
@@ -1727,9 +1847,10 @@ struct MenuBarWindowView: View {
     var onOpenFanControl: () -> Void = {}
     var onOpenErrorHub: () -> Void = {}
     var onOpenActivityMonitor: () -> Void = {}
+    var onOpenPermissionCenter: () -> Void = {}
 
     var body: some View {
-        MenuBarView(onClose: onClose, onOpenDestinTab: onOpenDestinTab, onOpenSuperSwitch: onOpenSuperSwitch, onOpenBrowserBypasser: onOpenBrowserBypasser, onOpenAssessPrepHack: onOpenAssessPrepHack, onOpenSettings: onOpenSettings, onOpenWallpaper: onOpenWallpaper, onOpenHackerDesktop: onOpenHackerDesktop, onOpenFanControl: onOpenFanControl, onOpenErrorHub: onOpenErrorHub, onOpenActivityMonitor: onOpenActivityMonitor)
+        MenuBarView(onClose: onClose, onOpenDestinTab: onOpenDestinTab, onOpenSuperSwitch: onOpenSuperSwitch, onOpenBrowserBypasser: onOpenBrowserBypasser, onOpenAssessPrepHack: onOpenAssessPrepHack, onOpenSettings: onOpenSettings, onOpenWallpaper: onOpenWallpaper, onOpenHackerDesktop: onOpenHackerDesktop, onOpenFanControl: onOpenFanControl, onOpenErrorHub: onOpenErrorHub, onOpenActivityMonitor: onOpenActivityMonitor, onOpenPermissionCenter: onOpenPermissionCenter)
     }
 }
 
@@ -1878,6 +1999,16 @@ struct ActivityMonitorWindowView: View {
     
     var body: some View {
         ActivityMonitorView(onClose: onClose)
+    }
+}
+
+// MARK: - Permission Center Window View
+
+struct PermissionCenterWindowView: View {
+    var onClose: () -> Void
+    
+    var body: some View {
+        PermissionCenterView(onClose: onClose)
     }
 }
 

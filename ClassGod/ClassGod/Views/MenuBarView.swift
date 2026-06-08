@@ -25,6 +25,7 @@ struct MenuBarView: View {
     var onOpenFanControl: () -> Void
     var onOpenErrorHub: () -> Void
     var onOpenActivityMonitor: () -> Void
+    var onOpenPermissionCenter: () -> Void
     
     private var zoomScale: CGFloat { CGFloat(prefs.preferences.windowZoomScale) }
     var body: some View {
@@ -102,6 +103,13 @@ struct MenuBarView: View {
                             title: "Activity Monitor",
                             description: "System processes & resource usage",
                             action: onOpenActivityMonitor
+                        )
+                        
+                        FeatureButton(
+                            icon: "checkmark.shield.fill",
+                            title: "Permission Center",
+                            description: "Grant & manage system permissions",
+                            action: onOpenPermissionCenter
                         )
                     }
                     .padding()
@@ -376,5 +384,5 @@ struct FeatureButton: View {
 }
 
 #Preview {
-    MenuBarView(onClose: {}, onOpenDestinTab: {}, onOpenSuperSwitch: {}, onOpenBrowserBypasser: {}, onOpenAssessPrepHack: {}, onOpenSettings: {}, onOpenWallpaper: {}, onOpenHackerDesktop: {}, onOpenFanControl: {}, onOpenErrorHub: {}, onOpenActivityMonitor: {})
+    MenuBarView(onClose: {}, onOpenDestinTab: {}, onOpenSuperSwitch: {}, onOpenBrowserBypasser: {}, onOpenAssessPrepHack: {}, onOpenSettings: {}, onOpenWallpaper: {}, onOpenHackerDesktop: {}, onOpenFanControl: {}, onOpenErrorHub: {}, onOpenActivityMonitor: {}, onOpenPermissionCenter: {})
 }

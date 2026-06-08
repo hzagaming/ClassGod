@@ -303,16 +303,18 @@ struct WallpaperOverlayView: View {
 
 struct WallpaperQuickAccessBar: View {
     @ObservedObject var engine = WallpaperEngine.shared
+    @ObservedObject private var prefs = PreferencesManager.shared
+    private var zoomScale: CGFloat { CGFloat(prefs.preferences.windowZoomScale) }
     @State private var isHovered = false
     
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 10 * zoomScale) {
             Button(action: {
                 SoundEffectManager.shared.playWallpaperSwitched()
                 engine.previousWallpaper()
             }) {
                 Image(systemName: "backward.fill")
-                    .font(.system(size: 10))
+                    .font(.system(size: 10 * zoomScale))
             }
             .buttonStyle(.plain)
             .foregroundStyle(.white.opacity(0.7))
@@ -323,7 +325,7 @@ struct WallpaperQuickAccessBar: View {
                 engine.togglePlayPause()
             }) {
                 Image(systemName: engine.isPlaying ? "pause.fill" : "play.fill")
-                    .font(.system(size: 12))
+                    .font(.system(size: 12 * zoomScale))
             }
             .buttonStyle(.plain)
             .foregroundStyle(.white)
@@ -334,7 +336,7 @@ struct WallpaperQuickAccessBar: View {
                 engine.nextWallpaper()
             }) {
                 Image(systemName: "forward.fill")
-                    .font(.system(size: 10))
+                    .font(.system(size: 10 * zoomScale))
             }
             .buttonStyle(.plain)
             .foregroundStyle(.white.opacity(0.7))
@@ -342,32 +344,32 @@ struct WallpaperQuickAccessBar: View {
             
             Divider()
                 .background(Color.white.opacity(0.15))
-                .frame(height: 14)
+                .frame(height: 14 * zoomScale)
             
             Button(action: {
                 SoundEffectManager.shared.playButtonClick()
                 engine.toggleMute()
             }) {
                 Image(systemName: engine.isMuted ? "speaker.slash.fill" : "speaker.wave.2.fill")
-                    .font(.system(size: 9))
+                    .font(.system(size: 9 * zoomScale))
             }
             .buttonStyle(.plain)
             .foregroundStyle(.white.opacity(0.5))
             
             Text(engine.currentWallpaper?.name ?? "No wallpaper")
-                .font(.system(size: 9, design: .monospaced))
+                .font(.system(size: 9 * zoomScale, design: .monospaced))
                 .foregroundStyle(.white.opacity(0.4))
                 .lineLimit(1)
-                .frame(maxWidth: 80)
+                .frame(maxWidth: 100 * zoomScale)
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 6)
+        .padding(.horizontal, 12 * zoomScale)
+        .padding(.vertical, 6 * zoomScale)
         .background(
             Capsule()
                 .fill(Color.black.opacity(0.5))
                 .overlay(
                     Capsule()
-                        .stroke(Color.white.opacity(0.08), lineWidth: 1)
+                        .stroke(Color.white.opacity(0.08), lineWidth: 1 * zoomScale)
                 )
         )
         .opacity(isHovered ? 1 : 0)
