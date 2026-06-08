@@ -1327,7 +1327,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             (wallpaperBrowserWindow, { [weak self] in self?.hideWallpaperBrowserWindow() }),
             (hackerDesktopWindow, { [weak self] in self?.hideHackerDesktopWindow() }),
             (errorHubWindow, { [weak self] in self?.hideErrorHubWindow() }),
-            (fanControlWindow, { [weak self] in self?.hideFanControlWindow() }),
+            // FanControl is intentionally excluded: it should only close via its own close button.
         ]
 
         for (window, hideAction) in windows {
