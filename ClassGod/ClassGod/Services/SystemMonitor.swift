@@ -59,6 +59,14 @@ struct ProcessMonitorInfo: Equatable, Identifiable {
     var name: String
     var cpuPercent: Double
     var memoryMB: Double
+    var uid: UInt32 = 0
+    var threads: Int32 = 0
+    var diskReadBytes: UInt64 = 0
+    var diskWriteBytes: UInt64 = 0
+    var energyNanojoules: UInt64 = 0
+    var isEstimatedNetwork: Bool = false
+    var networkRecvBytes: UInt64 = 0
+    var networkSentBytes: UInt64 = 0
 }
 
 struct BatteryInfo: Equatable {
@@ -102,6 +110,9 @@ final class SystemMonitor: ObservableObject, @unchecked Sendable {
     private var previousCPUInfo: host_cpu_load_info?
     private var previousNetworkBytesIn: UInt64 = 0
     private var previousNetworkBytesOut: UInt64 = 0
+    
+    // Per-process IO history for delta calculation (Activity Monitor)
+    private var previousProcessIO: [Int32: (diskRead: UInt64, diskWrite: UInt64)] = [:]
     
     private init() {
         loadStaticSystemInfo()
@@ -276,15 +287,92 @@ final class SystemMonitor: ObservableObject, @unchecked Sendable {
         guard result == 0 else { return }
         
         var infos: [ProcessMonitorInfo] = []
-        for proc in procs.prefix(15) {
+        var currentIO: [Int32: (diskRead: UInt64, diskWrite: UInt64)] = [:]
+        
+        // Gather per-process rusage (disk + energy) where accessible.
+        for proc in procs {
             let pid = proc.kp_proc.p_pid
-            let comm = withUnsafeBytes(of: proc.kp_proc.p_comm) { ptr -> String in
-                let buffer = ptr.bindMemory(to: CChar.self)
-                return String(cString: buffer.baseAddress!)
-            }
+            
+            // Try to get a nicer process name than the 16-char p_comm
+            let comm: String = {
+                var path = [CChar](repeating: 0, count: Int(MAXPATHLEN))
+                if proc_pidpath(pid, &path, UInt32(MAXPATHLEN)) > 0 {
+                    let full = String(cString: path)
+                    let name = (full as NSString).lastPathComponent
+                    if !name.isEmpty { return name }
+                }
+                return withUnsafeBytes(of: proc.kp_proc.p_comm) { ptr -> String in
+                    let buffer = ptr.bindMemory(to: CChar.self)
+                    return String(cString: buffer.baseAddress!)
+                }
+            }()
+            
             let cpu = Double(proc.kp_proc.p_pctcpu) / 1000.0
             let mem = Double(proc.kp_eproc.e_xrssize) * Double(vm_kernel_page_size) / 1024.0 / 1024.0
-            infos.append(ProcessMonitorInfo(pid: pid, name: comm, cpuPercent: cpu, memoryMB: mem))
+            let uid = proc.kp_eproc.e_ucred.cr_uid
+            
+            // Thread count via proc_pidinfo
+            var taskinfo = proc_taskinfo()
+            var threads: Int32 = 0
+            let taskInfoSize = Int32(MemoryLayout<proc_taskinfo>.size)
+            let taskRet = withUnsafeMutablePointer(to: &taskinfo) {
+                proc_pidinfo(pid, PROC_PIDTASKINFO, 0, $0, taskInfoSize)
+            }
+            if taskRet == taskInfoSize {
+                threads = taskinfo.pti_threadnum
+            }
+            
+            // Disk IO and energy via proc_pid_rusage
+            var rusage = rusage_info_v6()
+            var diskRead: UInt64 = 0
+            var diskWrite: UInt64 = 0
+            var energy: UInt64 = 0
+            let rusageRet = withUnsafeMutablePointer(to: &rusage) { ptr -> Int32 in
+                proc_pid_rusage(pid, RUSAGE_INFO_V6, UnsafeMutableRawPointer(ptr).assumingMemoryBound(to: rusage_info_t?.self))
+            }
+            if rusageRet == 0 {
+                diskRead = rusage.ri_diskio_bytesread
+                diskWrite = rusage.ri_diskio_byteswritten
+                energy = rusage.ri_energy_nj
+            }
+            currentIO[pid] = (diskRead: diskRead, diskWrite: diskWrite)
+            
+            // Calculate disk deltas using previous snapshot
+            var diskDeltaRead: UInt64 = 0
+            var diskDeltaWrite: UInt64 = 0
+            if let prev = previousProcessIO[pid] {
+                diskDeltaRead = diskRead >= prev.diskRead ? diskRead - prev.diskRead : 0
+                diskDeltaWrite = diskWrite >= prev.diskWrite ? diskWrite - prev.diskWrite : 0
+            }
+            
+            infos.append(ProcessMonitorInfo(
+                pid: pid,
+                name: comm,
+                cpuPercent: cpu,
+                memoryMB: mem,
+                uid: uid,
+                threads: threads,
+                diskReadBytes: diskDeltaRead,
+                diskWriteBytes: diskDeltaWrite,
+                energyNanojoules: energy,
+                isEstimatedNetwork: true,
+                networkRecvBytes: 0,
+                networkSentBytes: 0
+            ))
+        }
+        
+        previousProcessIO = currentIO
+        
+        // Estimate per-process network share based on CPU weighting among top consumers.
+        // Real per-process network bytes require root / kernel task access; this is a
+        // best-effort proxy so the Network tab still shows relative activity.
+        let totalNetworkDelta = max(1, network.deltaIn + network.deltaOut)
+        let topProcs = infos.sorted { $0.cpuPercent > $1.cpuPercent }.prefix(30)
+        let totalCPU = max(1.0, topProcs.map(\.cpuPercent).reduce(0, +))
+        for i in infos.indices where infos[i].cpuPercent > 0.05 {
+            let share = infos[i].cpuPercent / totalCPU
+            infos[i].networkRecvBytes = UInt64(Double(totalNetworkDelta) * share * 0.5)
+            infos[i].networkSentBytes = UInt64(Double(totalNetworkDelta) * share * 0.5)
         }
         
         self.processes = infos.sorted { $0.cpuPercent > $1.cpuPercent }

@@ -24,6 +24,7 @@ struct MenuBarView: View {
     var onOpenHackerDesktop: () -> Void
     var onOpenFanControl: () -> Void
     var onOpenErrorHub: () -> Void
+    var onOpenActivityMonitor: () -> Void
     
     private var zoomScale: CGFloat { CGFloat(prefs.preferences.windowZoomScale) }
     var body: some View {
@@ -94,6 +95,13 @@ struct MenuBarView: View {
                             description: "Monitor temps & control fan speeds",
                             action: onOpenFanControl,
                             isEnabled: prefs.preferences.enableFanControl
+                        )
+                        
+                        FeatureButton(
+                            icon: "waveform.path.ecg.rectangle",
+                            title: "Activity Monitor",
+                            description: "System processes & resource usage",
+                            action: onOpenActivityMonitor
                         )
                     }
                     .padding()
@@ -368,5 +376,5 @@ struct FeatureButton: View {
 }
 
 #Preview {
-    MenuBarView(onClose: {}, onOpenDestinTab: {}, onOpenSuperSwitch: {}, onOpenBrowserBypasser: {}, onOpenAssessPrepHack: {}, onOpenSettings: {}, onOpenWallpaper: {}, onOpenHackerDesktop: {}, onOpenFanControl: {}, onOpenErrorHub: {})
+    MenuBarView(onClose: {}, onOpenDestinTab: {}, onOpenSuperSwitch: {}, onOpenBrowserBypasser: {}, onOpenAssessPrepHack: {}, onOpenSettings: {}, onOpenWallpaper: {}, onOpenHackerDesktop: {}, onOpenFanControl: {}, onOpenErrorHub: {}, onOpenActivityMonitor: {})
 }

@@ -37,6 +37,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var hackerDesktopWindow: NSWindow?
     var errorHubWindow: NSWindow?
     var fanControlWindow: NSWindow?
+    var activityMonitorWindow: NSWindow?
     var showPopoverCustomHotKeyID: UInt32?
     var panicHotKeyID: UInt32?
 
@@ -240,6 +241,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             self?.showFanControlWindow()
         }, onOpenErrorHub: { [weak self] in
             self?.showErrorHubWindow()
+        }, onOpenActivityMonitor: { [weak self] in
+            self?.showActivityMonitorWindow()
         })
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Color.clear)
@@ -1147,6 +1150,103 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
+    // MARK: - Activity Monitor Window
+
+    private func setupActivityMonitorWindow() {
+        let prefs = PreferencesManager.shared.preferences
+        let zoom = CGFloat(prefs.windowZoomScale)
+        guard let screen = NSScreen.main else { return }
+        let screenFrame = screen.visibleFrame
+        let size = NSSize(
+            width: min(960, screenFrame.width - 80) * zoom,
+            height: min(640, screenFrame.height - 80) * zoom
+        )
+
+        let window = DraggableWindow(
+            contentRect: NSRect(origin: .zero, size: size),
+            styleMask: [.borderless],
+            backing: .buffered,
+            defer: false
+        )
+
+        window.level = windowLevel
+        window.backgroundColor = .clear
+        window.hasShadow = true
+        window.isMovableByWindowBackground = false
+        window.isReleasedWhenClosed = false
+        window.isOpaque = false
+
+        window.contentView?.wantsLayer = true
+        window.contentView?.layer?.cornerRadius = prefs.panelCornerRadius
+        window.contentView?.layer?.masksToBounds = true
+
+        let x = screenFrame.midX - size.width / 2
+        let y = screenFrame.midY - size.height / 2
+        window.setFrameOrigin(NSPoint(x: x, y: y))
+
+        let rootView = ActivityMonitorWindowView(onClose: { [weak self] in
+            self?.hideActivityMonitorWindow()
+        })
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Color.clear)
+            .overlay(WindowResizeHandles())
+
+        window.contentView = NSHostingView(rootView: rootView)
+
+        activityMonitorWindow = window
+    }
+
+    func showActivityMonitorWindow(animated: Bool = true) {
+        guard let window = activityMonitorWindow else {
+            setupActivityMonitorWindow()
+            guard activityMonitorWindow != nil else { return }
+            showActivityMonitorWindow(animated: animated)
+            return
+        }
+
+        SoundEffectManager.shared.playWindowOpen(feature: "activitymonitor")
+
+        if animated {
+            window.alphaValue = 0
+            window.makeKeyAndOrderFront(nil)
+
+            NSAnimationContext.runAnimationGroup { context in
+                context.duration = 0.18
+                context.timingFunction = .init(name: .easeOut)
+                window.animator().alphaValue = targetWindowAlpha
+            }
+        } else {
+            window.makeKeyAndOrderFront(nil)
+        }
+    }
+
+    func hideActivityMonitorWindow() {
+        guard let window = activityMonitorWindow else { return }
+        SoundEffectManager.shared.playWindowClose(feature: "activitymonitor")
+
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = 0.12
+            context.timingFunction = .init(name: .easeIn)
+            window.animator().alphaValue = 0
+        } completionHandler: { [weak self] in
+            self?.activityMonitorWindow?.orderOut(nil)
+        }
+    }
+
+    @objc func toggleActivityMonitorWindow() {
+        guard let window = activityMonitorWindow else {
+            setupActivityMonitorWindow()
+            showActivityMonitorWindow(animated: true)
+            return
+        }
+
+        if window.isVisible && window.alphaValue > 0 {
+            hideActivityMonitorWindow()
+        } else {
+            showActivityMonitorWindow(animated: true)
+        }
+    }
+
     private func updateMainWindowSize() {
         guard let window = mainWindow else { return }
         let prefs = PreferencesManager.shared.preferences
@@ -1626,9 +1726,10 @@ struct MenuBarWindowView: View {
     var onOpenHackerDesktop: () -> Void
     var onOpenFanControl: () -> Void = {}
     var onOpenErrorHub: () -> Void = {}
+    var onOpenActivityMonitor: () -> Void = {}
 
     var body: some View {
-        MenuBarView(onClose: onClose, onOpenDestinTab: onOpenDestinTab, onOpenSuperSwitch: onOpenSuperSwitch, onOpenBrowserBypasser: onOpenBrowserBypasser, onOpenAssessPrepHack: onOpenAssessPrepHack, onOpenSettings: onOpenSettings, onOpenWallpaper: onOpenWallpaper, onOpenHackerDesktop: onOpenHackerDesktop, onOpenFanControl: onOpenFanControl, onOpenErrorHub: onOpenErrorHub)
+        MenuBarView(onClose: onClose, onOpenDestinTab: onOpenDestinTab, onOpenSuperSwitch: onOpenSuperSwitch, onOpenBrowserBypasser: onOpenBrowserBypasser, onOpenAssessPrepHack: onOpenAssessPrepHack, onOpenSettings: onOpenSettings, onOpenWallpaper: onOpenWallpaper, onOpenHackerDesktop: onOpenHackerDesktop, onOpenFanControl: onOpenFanControl, onOpenErrorHub: onOpenErrorHub, onOpenActivityMonitor: onOpenActivityMonitor)
     }
 }
 
@@ -1767,6 +1868,16 @@ struct SettingsContainerView: View {
             RoundedRectangle(cornerRadius: 12)
                 .stroke(Color.white.opacity(0.12), lineWidth: 1)
         )
+    }
+}
+
+// MARK: - Activity Monitor Window View
+
+struct ActivityMonitorWindowView: View {
+    var onClose: () -> Void
+    
+    var body: some View {
+        ActivityMonitorView(onClose: onClose)
     }
 }
 
