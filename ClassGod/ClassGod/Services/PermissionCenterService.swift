@@ -265,8 +265,8 @@ final class PermissionCenterService: ObservableObject {
             return (CGPreflightScreenCaptureAccess(), nil)
             
         case .fullDiskAccess:
-            // Probe a protected location; this is only a heuristic.
-            let protectedPath = NSHomeDirectory() + "/Library/Mail"
+            // Probe a system-protected location; this is only a heuristic.
+            let protectedPath = "/Library/Application Support/com.apple.TCC/TCC.db"
             let granted = FileManager.default.isReadableFile(atPath: protectedPath)
             return (granted, granted ? nil : "Open System Settings → Privacy & Security → Full Disk Access")
             

@@ -416,14 +416,15 @@ struct PermissionOnboardingView: View {
                     Spacer()
                     
                     if step < pendingPermissions.count {
+                        let item = pendingPermissions[step]
                         Button(action: {
-                            service.requestPermission(pendingPermissions[step].type)
+                            service.requestPermission(item.type)
                             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                                 service.refreshAll()
                                 step += 1
                             }
                         }) {
-                            Text("Allow & Continue")
+                            Text(item.canPrompt ? "Allow & Continue" : "Open Settings & Continue")
                                 .font(.system(size: 10 * zoomScale, weight: .bold, design: .monospaced))
                                 .foregroundStyle(.black)
                                 .padding(.horizontal, 16 * zoomScale)

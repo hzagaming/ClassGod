@@ -1,5 +1,48 @@
 # ClassGod 更新日志
 
+## v1.4.0 — 2026-06-08
+
+### 新增
+- **Permission Center 权限控制中心**：
+  - Hacker 风格面板，按 Core / Browser / System / Hardware / Optional 分类展示所有 macOS 权限
+  - 实时检测 Accessibility、AppleEvents、Screen Recording、Full Disk、Mic、Camera、Location、Notifications、Contacts、Reminders、Calendar、Bluetooth 授权状态
+  - 一键请求权限或跳转系统设置对应页面
+  - 顶部总进度条与分类筛选
+  - First-Time Setup onboarding 引导新用户逐条授权
+  - UI 完整使用 `zoomScale` 适配窗口缩放
+- **Activity Monitor 活动监视器**：
+  - 5 个标签页：CPU / Memory / Energy / Disk / Network
+  - 基于 `proc_pidinfo` + `proc_pid_rusage(RUSAGE_INFO_V6)` 的真实进程数据
+  - 支持搜索、排序、强制退出/正常退出
+  - 权限不足时顶部提示 banner，UI 使用 `zoomScale` 缩放
+- **桌面小组件扩展**：
+  - 新增 `fanThermalList`、`fanControlDash`、`taskManager` 桌面小组件
+  - 新增 5 种桌面标签页：`noteTab`、`todoTab`、`terminalTab`、`cryptoTab`、`quoteTab`
+  - 标签页支持锁定、拖拽、标题栏关闭，层级为 `desktopIconWindow + 20`
+
+### 优化
+- **AssessPrepHack 强化**：
+  - 改为单例 ViewModel，使用真实监考进程标识
+  - 增加 Accessibility 检测与系统引导
+  - 使用 `kill -STOP/CONT` 精确挂起/恢复监考进程，避免误杀
+  - 新增全局 F6 紧急快捷键
+- **Wallpaper Engine UI/UX 重做**：
+  - 更大更清晰的信息卡片 + 居中胶囊式播放控制按钮
+  - 选项行改为水平滚动，彻底解决窗口较窄或高缩放下按钮重叠问题
+  - 全部尺寸、间距、描边、控制图标按 `windowZoomScale` 缩放
+  - 修复缩略图文字区域在高缩放下被截断的问题
+  - `WallpaperQuickAccessBar` 同样适配 `zoomScale`
+- Activity Monitor 与 Permission Center 窗口统一纳入 `updateAllWindowLevels` / `updateAllWindowSizes` / `handleClickOutside` 管理
+
+### 修复
+- 补充所有可弹窗权限的 `INFOPLIST_KEY` 使用描述（Bluetooth / Calendars / Camera / Contacts / Location / Microphone / Reminders），避免系统弹窗空白或崩溃
+- 修复 Location 授权状态判断兼容性（同时接受 `.authorized` 与 `.authorizedAlways`）
+- 修复 Full Disk Access 检测使用的探针路径（改为系统 TCC 数据库），减少误判
+
+- 版本号更新为 v1.4.0 (Build 14)
+
+---
+
 ## v1.3.0 — 2026-06-04
 
 ### 新增
