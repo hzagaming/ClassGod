@@ -196,6 +196,7 @@ struct FanControlSettingsView: View {
 struct AutoMaxRuleRow: View {
     @Binding var rule: AutoMaxRule
     @ObservedObject private var prefs = PreferencesManager.shared
+    @State private var availableSensors: [TemperatureSensor] = []
 
     var body: some View {
         HStack(spacing: 8) {
@@ -219,13 +220,32 @@ struct AutoMaxRuleRow: View {
                         .font(.system(size: 10))
                         .foregroundStyle(.white.opacity(0.4))
 
-                    Text("\(Int(rule.targetPercentage))%")
-                        .font(.system(size: 10, weight: .semibold, design: .monospaced))
-                        .foregroundStyle(.white)
-                        .frame(width: 28)
+                    Picker("", selection: $rule.targetMode) {
+                        ForEach(RuleTargetMode.allCases) { mode in
+                            Text(mode.displayName).tag(mode)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    .labelsHidden()
+                    .frame(width: 70)
 
-                    Slider(value: $rule.targetPercentage, in: 0...100, step: 5)
-                        .frame(width: 60)
+                    if rule.targetMode == .percentage {
+                        Text("\(Int(rule.targetPercentage))%")
+                            .font(.system(size: 10, weight: .semibold, design: .monospaced))
+                            .foregroundStyle(.white)
+                            .frame(width: 32)
+
+                        Slider(value: $rule.targetPercentage, in: 0...100, step: 5)
+                            .frame(width: 60)
+                    } else {
+                        TextField("", value: $rule.targetRPM, format: .number)
+                            .textFieldStyle(.roundedBorder)
+                            .frame(width: 55)
+
+                        Text("RPM")
+                            .font(.system(size: 10))
+                            .foregroundStyle(.white.opacity(0.4))
+                    }
                 }
 
                 HStack(spacing: 4) {
@@ -241,6 +261,24 @@ struct AutoMaxRuleRow: View {
                     .pickerStyle(.menu)
                     .labelsHidden()
                     .frame(width: 90)
+
+                    // Specific sensor override (only shown when sensors are available)
+                    if !availableSensors.isEmpty {
+                        Picker("", selection: $rule.specificSensorKey) {
+                            Text("Any matched").tag(nil as String?)
+                            ForEach(availableSensors) { sensor in
+                                Text(sensor.name).tag(sensor.key as String?)
+                            }
+                            // Preserve a rule that references a sensor not currently discovered.
+                            if let key = rule.specificSensorKey,
+                               !availableSensors.contains(where: { $0.key == key }) {
+                                Text("\(key) (missing)").tag(key as String?)
+                            }
+                        }
+                        .pickerStyle(.menu)
+                        .labelsHidden()
+                        .frame(width: 110)
+                    }
 
                     Picker("", selection: $rule.comparison) {
                         ForEach(RuleComparison.allCases) { comp in
@@ -310,6 +348,9 @@ struct AutoMaxRuleRow: View {
                 .stroke(Color.white.opacity(0.06), lineWidth: 1)
                 .allowsHitTesting(false)
         )
+        .onAppear {
+            availableSensors = SMCService.shared.readTemperatures().filter { !$0.isEstimated }
+        }
     }
 }
 

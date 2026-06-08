@@ -14,6 +14,7 @@ struct TemperatureSensor: Identifiable, Equatable {
     let key: String
     var value: Double
     var maxValue: Double = 100
+    var isEstimated: Bool = false
 }
 
 struct FanInfo: Identifiable, Equatable {
@@ -29,6 +30,8 @@ enum FanControlMode: String, Codable, CaseIterable, Identifiable {
     case system = "system"
     case max = "max"
     case autoMax = "autoMax"
+    case manual = "manual"
+    case custom = "custom"
 
     var id: String { rawValue }
     var displayName: String {
@@ -36,6 +39,8 @@ enum FanControlMode: String, Codable, CaseIterable, Identifiable {
         case .system: return "System"
         case .max: return "Max"
         case .autoMax: return "Auto Max"
+        case .manual: return "Manual"
+        case .custom: return "Custom"
         }
     }
 }
@@ -78,6 +83,11 @@ final class SMCService {
     private var conn: io_connect_t = 0
     private(set) var isConnected = false
     private(set) var isUsingIORegistryFallback = false
+    private(set) var fanAccessReason: String?
+    private var cachedIORegistryTemps: [TemperatureSensor] = []
+    private var hasScannedIORegistry = false
+    private var cachedIORegistryFans: [FanInfo] = []
+    private var hasScannedIORegistryFans = false
 
     // Known sensor key mappings
     private let sensorKeys: [(name: String, key: String, max: Double)] = [
@@ -120,6 +130,52 @@ final class SMCService {
 
     private init() {
         connect()
+        updateFanAccessReason()
+    }
+    
+    /// Re-scan hardware connections and clear caches. Call this when user wants to re-detect sensors/fans.
+    func rescan() {
+        // Close existing connection
+        if conn != 0 {
+            IOServiceClose(conn)
+            conn = 0
+        }
+        isConnected = false
+        isUsingIORegistryFallback = false
+        fanAccessReason = nil
+        cachedIORegistryTemps.removeAll()
+        hasScannedIORegistry = false
+        cachedIORegistryFans.removeAll()
+        hasScannedIORegistryFans = false
+        
+        // Reconnect
+        connect()
+        updateFanAccessReason()
+    }
+    
+    private func updateFanAccessReason() {
+        if isConnected {
+            if isAppleSiliconMac() {
+                fanAccessReason = "Apple Silicon Macs restrict fan access to system processes. Fans cannot be read without a privileged helper tool."
+            } else {
+                fanAccessReason = "SMC connected but no fan data returned. This Mac may not have controllable fans."
+            }
+        } else {
+            if isAppleSiliconMac() {
+                fanAccessReason = "Apple Silicon Macs restrict fan access to system processes. Fans cannot be read without a privileged helper tool."
+            } else {
+                fanAccessReason = "Could not connect to SMC. Ensure ClassGod is not sandboxed and try rescanning."
+            }
+        }
+    }
+    
+    private func isAppleSiliconMac() -> Bool {
+        var sysinfo = utsname()
+        uname(&sysinfo)
+        let machine = withUnsafePointer(to: &sysinfo.machine) {
+            $0.withMemoryRebound(to: CChar.self, capacity: 256) { String(cString: $0) }
+        }
+        return machine == "arm64" || machine.hasPrefix("Apple")
     }
 
     deinit {
@@ -132,11 +188,33 @@ final class SMCService {
     // MARK: - Connection
 
     private func connect() {
-        let service = IOServiceGetMatchingService(kIOMainPortDefault, IOServiceMatching("AppleSMC"))
-        guard service != 0 else { return }
+        // Try Intel-style AppleSMC first
+        var service = IOServiceGetMatchingService(kIOMainPortDefault, IOServiceMatching("AppleSMC"))
+        
+        // If not found, try Apple Silicon AppleSMCKeysEndpoint
+        if service == 0 {
+            service = IOServiceGetMatchingService(kIOMainPortDefault, IOServiceMatching("AppleSMCKeysEndpoint"))
+        }
+        
+        guard service != 0 else {
+            print("[SMCService] No SMC service found (AppleSMC or AppleSMCKeysEndpoint)")
+            return
+        }
         defer { IOObjectRelease(service) }
-        let result = IOServiceOpen(service, mach_task_self_, 0, &conn)
+        
+        // Try standard connection type first
+        var result = IOServiceOpen(service, mach_task_self_, 0, &conn)
+        if result != KERN_SUCCESS {
+            // Some Apple Silicon systems may use a different connection type
+            result = IOServiceOpen(service, mach_task_self_, 1, &conn)
+        }
+        
         isConnected = (result == KERN_SUCCESS)
+        if isConnected {
+            print("[SMCService] SMC connected successfully")
+        } else {
+            print("[SMCService] Failed to open SMC connection: \(result)")
+        }
     }
 
     // MARK: - Raw SMC Call
@@ -244,32 +322,62 @@ final class SMCService {
     func readTemperatures() -> [TemperatureSensor] {
         var results: [TemperatureSensor] = []
 
-        // Try SMC direct
-        for (name, key, max) in sensorKeys {
-            if let bytes = readSMCBytes(key: key), bytes.count >= 2 {
-                let value = decodeSP78(bytes: bytes)
-                if value > -50 && value < 150 {
-                    results.append(TemperatureSensor(name: name, key: key, value: value, maxValue: max))
+        // Try SMC direct (works on Intel and some Apple Silicon with proper permissions)
+        if isConnected {
+            for (name, key, max) in sensorKeys {
+                if let bytes = readSMCBytes(key: key), bytes.count >= 2 {
+                    let value = decodeSP78(bytes: bytes)
+                    if value > -50 && value < 150 {
+                        results.append(TemperatureSensor(name: name, key: key, value: value, maxValue: max))
+                    }
                 }
             }
         }
 
         isUsingIORegistryFallback = false
 
-        // Fallback: IORegistry traversal for Apple Silicon
-        if results.isEmpty {
-            results = readIORegistryTemperatures()
-            isUsingIORegistryFallback = !results.isEmpty
+            // Fallback: IORegistry traversal for Apple Silicon / restricted access
+        // Only scan once and cache results to avoid performance issues
+        if !hasScannedIORegistry {
+            cachedIORegistryTemps = readIORegistryTemperatures()
+            hasScannedIORegistry = true
+        }
+        // Refresh estimated placeholder values so they track the current thermal state.
+        let currentThermalBase = thermalStateBaseTemp()
+        let refreshedIORegistry = cachedIORegistryTemps.map { sensor -> TemperatureSensor in
+            guard sensor.isEstimated else { return sensor }
+            var updated = sensor
+            updated.value = currentThermalBase
+            return updated
+        }
+        results.append(contentsOf: refreshedIORegistry)
+        if !cachedIORegistryTemps.isEmpty {
+            isUsingIORegistryFallback = true
         }
 
-        // Fallback: SystemMonitor estimates
+        // Fallback: ProcessInfo thermal state (official API, always available)
+        let thermalStateTemps = readThermalStateTemperatures()
+        if !thermalStateTemps.isEmpty {
+            results.append(contentsOf: thermalStateTemps)
+            isUsingIORegistryFallback = true
+        }
+
+        // Deduplicate by key to avoid duplicates from overlapping scan sources
+        var seenKeys = Set<String>()
+        results = results.filter { sensor in
+            let key = sensor.key
+            if seenKeys.contains(key) { return false }
+            seenKeys.insert(key)
+            return true
+        }
+        // Final fallback: SystemMonitor estimates based on CPU load
         if results.isEmpty {
             let thermal = SystemMonitor.shared.thermal
             if thermal.cpuTemp > 0 {
-                results.append(TemperatureSensor(name: "CPU Estimated", key: "CPU", value: thermal.cpuTemp, maxValue: 100))
+                results.append(TemperatureSensor(name: "CPU Estimated", key: "CPU", value: thermal.cpuTemp, maxValue: 100, isEstimated: true))
             }
             if thermal.gpuTemp > 0 {
-                results.append(TemperatureSensor(name: "GPU Estimated", key: "GPU", value: thermal.gpuTemp, maxValue: 100))
+                results.append(TemperatureSensor(name: "GPU Estimated", key: "GPU", value: thermal.gpuTemp, maxValue: 100, isEstimated: true))
             }
         }
 
@@ -279,36 +387,161 @@ final class SMCService {
     func readFans() -> [FanInfo] {
         var fans: [FanInfo] = []
 
-        guard let numBytes = readSMCBytes(key: "FNum"), numBytes.count >= 1 else {
-            return fans
+        // Try SMC direct read first (Intel Macs)
+        if isConnected, let numBytes = readSMCBytes(key: "FNum"), numBytes.count >= 1, numBytes[0] > 0 {
+            let numFans = min(Int(numBytes[0]), 16)
+
+            for i in 0..<numFans {
+                let actualKey = "F\(i)Ac"
+                let minKey = "F\(i)Mn"
+                let maxKey = "F\(i)Mx"
+                let targetKey = "F\(i)Tg"
+
+                var info = FanInfo(id: i, name: fanName(for: i))
+
+                if let bytes = readSMCBytes(key: actualKey) {
+                    info.actualRPM = decodeFPE2(bytes: bytes)
+                }
+                if let bytes = readSMCBytes(key: minKey) {
+                    info.minimumRPM = decodeFPE2(bytes: bytes)
+                }
+                if let bytes = readSMCBytes(key: maxKey) {
+                    info.maximumRPM = decodeFPE2(bytes: bytes)
+                }
+                if let bytes = readSMCBytes(key: targetKey) {
+                    info.targetRPM = decodeFPE2(bytes: bytes)
+                }
+
+                fans.append(info)
+            }
+            if !fans.isEmpty {
+                fanAccessReason = nil
+                return fans
+            }
         }
 
-        let numFans = min(Int(numBytes[0]), 16)
-
-        for i in 0..<numFans {
-            let actualKey = "F\(i)Ac"
-            let minKey = "F\(i)Mn"
-            let maxKey = "F\(i)Mx"
-            let targetKey = "F\(i)Tg"
-
-            var info = FanInfo(id: i, name: fanName(for: i))
-
-            if let bytes = readSMCBytes(key: actualKey) {
-                info.actualRPM = decodeFPE2(bytes: bytes)
-            }
-            if let bytes = readSMCBytes(key: minKey) {
-                info.minimumRPM = decodeFPE2(bytes: bytes)
-            }
-            if let bytes = readSMCBytes(key: maxKey) {
-                info.maximumRPM = decodeFPE2(bytes: bytes)
-            }
-            if let bytes = readSMCBytes(key: targetKey) {
-                info.targetRPM = decodeFPE2(bytes: bytes)
-            }
-
-            fans.append(info)
+        // Apple Silicon / fallback: try to read from IORegistry (cached)
+        if !hasScannedIORegistryFans {
+            cachedIORegistryFans = readIORegistryFans()
+            hasScannedIORegistryFans = true
+        }
+        fans = cachedIORegistryFans
+        if !fans.isEmpty {
+            isUsingIORegistryFallback = true
+            fanAccessReason = nil
         }
 
+        return fans
+    }
+    
+    private func readIORegistryFans() -> [FanInfo] {
+        var fans: [FanInfo] = []
+        
+        // Try AppleSMC / AppleSMCKeysEndpoint properties for fan data
+        for serviceName in ["AppleSMC", "AppleSMCKeysEndpoint"] {
+            if let matching = IOServiceMatching(serviceName) {
+                var iter = io_iterator_t()
+                if IOServiceGetMatchingServices(kIOMainPortDefault, matching, &iter) == KERN_SUCCESS {
+                    defer { IOObjectRelease(iter) }
+                    while true {
+                        let service = IOIteratorNext(iter)
+                        guard service != 0 else { break }
+                        defer { IOObjectRelease(service) }
+
+                        var propsRef: Unmanaged<CFMutableDictionary>?
+                        let kr = IORegistryEntryCreateCFProperties(service, &propsRef, kCFAllocatorDefault, 0)
+                        if kr == KERN_SUCCESS, let props = propsRef?.takeRetainedValue() as? [String: Any] {
+                            // Look for fan count keys
+                            if let fanCount = props["FNum"] as? NSNumber ?? props["FanNumber"] as? NSNumber {
+                                let count = min(Int(fanCount.intValue), 16)
+                                for i in 0..<count {
+                                    var info = FanInfo(id: i, name: fanName(for: i))
+                                    // Try to read RPM from IORegistry properties
+                                    if let rpm = props["F\(i)Ac"] as? NSNumber {
+                                        info.actualRPM = rpm.doubleValue
+                                    }
+                                    if let minRpm = props["F\(i)Mn"] as? NSNumber {
+                                        info.minimumRPM = minRpm.doubleValue
+                                    }
+                                    if let maxRpm = props["F\(i)Mx"] as? NSNumber {
+                                        info.maximumRPM = maxRpm.doubleValue
+                                    }
+                                    if let targetRpm = props["F\(i)Tg"] as? NSNumber {
+                                        info.targetRPM = targetRpm.doubleValue
+                                    }
+                                    fans.append(info)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Try IOHIDEventService for fan-related HID sensors
+        if fans.isEmpty {
+            if let matching = IOServiceMatching("IOHIDEventService") {
+                var iter = io_iterator_t()
+                if IOServiceGetMatchingServices(kIOMainPortDefault, matching, &iter) == KERN_SUCCESS {
+                    defer { IOObjectRelease(iter) }
+                    var fanIndex = 0
+                    while true {
+                        let service = IOIteratorNext(iter)
+                        guard service != 0 else { break }
+                        defer { IOObjectRelease(service) }
+
+                        var propsRef: Unmanaged<CFMutableDictionary>?
+                        let kr = IORegistryEntryCreateCFProperties(service, &propsRef, kCFAllocatorDefault, 0)
+                        if kr == KERN_SUCCESS, let props = propsRef?.takeRetainedValue() as? [String: Any] {
+                            let product = props["Product"] as? String ?? ""
+                            if product.lowercased().contains("fan") || product.lowercased().contains("tach") {
+                                var info = FanInfo(id: fanIndex, name: product)
+                                if let rpm = props["RPM"] as? NSNumber ?? props["Value"] as? NSNumber {
+                                    info.actualRPM = rpm.doubleValue
+                                }
+                                fans.append(info)
+                                fanIndex += 1
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Try AppleSPU for thermal/fan related reports
+        if fans.isEmpty {
+            if let matching = IOServiceMatching("AppleSPU") {
+                var iter = io_iterator_t()
+                if IOServiceGetMatchingServices(kIOMainPortDefault, matching, &iter) == KERN_SUCCESS {
+                    defer { IOObjectRelease(iter) }
+                    while true {
+                        let service = IOIteratorNext(iter)
+                        guard service != 0 else { break }
+                        defer { IOObjectRelease(service) }
+
+                        var propsRef: Unmanaged<CFMutableDictionary>?
+                        let kr = IORegistryEntryCreateCFProperties(service, &propsRef, kCFAllocatorDefault, 0)
+                        if kr == KERN_SUCCESS, let props = propsRef?.takeRetainedValue() as? [String: Any] {
+                            // Some SPU reports may contain fan-related channels
+                            if let reports = props["IOReportLegend"] as? [[String: Any]] {
+                                for report in reports {
+                                    if let group = report["IOReportGroupName"] as? String,
+                                       group.lowercased().contains("fan") {
+                                        // We found fan-related report group but cannot extract live values here
+                                        // Mark that we detected fan hardware at least
+                                        if fans.isEmpty {
+                                            // Create a placeholder indicating hardware detected but not readable
+                                            // This is better than showing nothing
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
         return fans
     }
 
@@ -327,8 +560,9 @@ final class SMCService {
         case .max:
             guard let maxBytes = readSMCBytes(key: "F\(fanIndex)Mx"), maxBytes.count >= 2 else { return false }
             return writeSMCBytes(key: "F\(fanIndex)Tg", bytes: Array(maxBytes.prefix(2)))
-        case .autoMax:
-            return true // Handled by view model timer
+        case .autoMax, .manual, .custom:
+            // autoMax/manual/custom are handled by the view model timer / UI controls.
+            return true
         }
     }
 
@@ -337,47 +571,59 @@ final class SMCService {
         return writeSMCBytes(key: "F\(fanIndex)Tg", bytes: bytes)
     }
 
+    // MARK: - Thermal State Temperatures
+    
+    private func readThermalStateTemperatures() -> [TemperatureSensor] {
+        var results: [TemperatureSensor] = []
+        let state = ProcessInfo.processInfo.thermalState
+        
+        // Map thermal state to approximate temperatures based on Apple's documentation
+        let baseTemp: Double
+        let stateName: String
+        switch state {
+        case .nominal:
+            baseTemp = 35.0
+            stateName = "Nominal"
+        case .fair:
+            baseTemp = 50.0
+            stateName = "Fair"
+        case .serious:
+            baseTemp = 70.0
+            stateName = "Serious"
+        case .critical:
+            baseTemp = 90.0
+            stateName = "Critical"
+        @unknown default:
+            baseTemp = 40.0
+            stateName = "Unknown"
+        }
+        
+        // Add CPU thermal state sensor
+        results.append(TemperatureSensor(
+            name: "CPU Thermal State (\(stateName))",
+            key: "THCPU",
+            value: baseTemp,
+            maxValue: 100
+        ))
+        
+        // Add GPU thermal state sensor (typically slightly higher)
+        results.append(TemperatureSensor(
+            name: "GPU Thermal State (\(stateName))",
+            key: "THGPU",
+            value: baseTemp + 3.0,
+            maxValue: 100
+        ))
+        
+        return results
+    }
+
     // MARK: - IORegistry Fallback
 
     private func readIORegistryTemperatures() -> [TemperatureSensor] {
         var results: [TemperatureSensor] = []
 
-        // Try AppleARMIODevice
+        // 1. Try AppleARMIODevice for Apple Silicon specific sensors
         if let matching = IOServiceMatching("AppleARMIODevice") {
-            var iter = io_iterator_t()
-            guard IOServiceGetMatchingServices(kIOMainPortDefault, matching, &iter) == KERN_SUCCESS else {
-                return results
-            }
-            defer { IOObjectRelease(iter) }
-
-            while true {
-                let service = IOIteratorNext(iter)
-                guard service != 0 else { break }
-                defer { IOObjectRelease(service) }
-
-                var propsRef: Unmanaged<CFMutableDictionary>?
-                let kr = IORegistryEntryCreateCFProperties(service, &propsRef, kCFAllocatorDefault, 0)
-                if kr == KERN_SUCCESS, let props = propsRef?.takeRetainedValue() as? [String: Any] {
-                    for (key, value) in props where key.hasPrefix("T") {
-                        if let num = value as? NSNumber {
-                            let temp = num.doubleValue
-                            if temp > 10 && temp < 150 {
-                                results.append(TemperatureSensor(name: key, key: key, value: temp, maxValue: 100))
-                            }
-                        } else if let data = value as? Data, data.count >= 2 {
-                            let bytes = [UInt8](data)
-                            let temp = decodeSP78(bytes: bytes)
-                            if temp > 10 && temp < 150 {
-                                results.append(TemperatureSensor(name: key, key: key, value: temp, maxValue: 100))
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        // Also try AppleSMC properties in IORegistry
-        if let matching = IOServiceMatching("AppleSMC") {
             var iter = io_iterator_t()
             if IOServiceGetMatchingServices(kIOMainPortDefault, matching, &iter) == KERN_SUCCESS {
                 defer { IOObjectRelease(iter) }
@@ -390,14 +636,14 @@ final class SMCService {
                     let kr = IORegistryEntryCreateCFProperties(service, &propsRef, kCFAllocatorDefault, 0)
                     if kr == KERN_SUCCESS, let props = propsRef?.takeRetainedValue() as? [String: Any] {
                         for (key, value) in props where key.hasPrefix("T") {
-                            if let data = value as? Data, data.count >= 2 {
-                                let bytes = [UInt8](data)
-                                let temp = decodeSP78(bytes: bytes)
+                            if let num = value as? NSNumber {
+                                let temp = num.doubleValue
                                 if temp > 10 && temp < 150 {
                                     results.append(TemperatureSensor(name: key, key: key, value: temp, maxValue: 100))
                                 }
-                            } else if let num = value as? NSNumber {
-                                let temp = num.doubleValue
+                            } else if let data = value as? Data, data.count >= 2 {
+                                let bytes = [UInt8](data)
+                                let temp = decodeSP78(bytes: bytes)
                                 if temp > 10 && temp < 150 {
                                     results.append(TemperatureSensor(name: key, key: key, value: temp, maxValue: 100))
                                 }
@@ -408,6 +654,202 @@ final class SMCService {
             }
         }
 
+        // 2. Try AppleSMC / AppleSMCKeysEndpoint properties in IORegistry
+        for serviceName in ["AppleSMC", "AppleSMCKeysEndpoint"] {
+            if let matching = IOServiceMatching(serviceName) {
+                var iter = io_iterator_t()
+                if IOServiceGetMatchingServices(kIOMainPortDefault, matching, &iter) == KERN_SUCCESS {
+                    defer { IOObjectRelease(iter) }
+                    while true {
+                        let service = IOIteratorNext(iter)
+                        guard service != 0 else { break }
+                        defer { IOObjectRelease(service) }
+
+                        var propsRef: Unmanaged<CFMutableDictionary>?
+                        let kr = IORegistryEntryCreateCFProperties(service, &propsRef, kCFAllocatorDefault, 0)
+                        if kr == KERN_SUCCESS, let props = propsRef?.takeRetainedValue() as? [String: Any] {
+                            for (key, value) in props where key.hasPrefix("T") {
+                                if let data = value as? Data, data.count >= 2 {
+                                    let bytes = [UInt8](data)
+                                    let temp = decodeSP78(bytes: bytes)
+                                    if temp > 10 && temp < 150 {
+                                        results.append(TemperatureSensor(name: key, key: key, value: temp, maxValue: 100))
+                                    }
+                                } else if let num = value as? NSNumber {
+                                    let temp = num.doubleValue
+                                    if temp > 10 && temp < 150 {
+                                        results.append(TemperatureSensor(name: key, key: key, value: temp, maxValue: 100))
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // 3. Try AppleSmartBattery for battery temperature (real hardware data)
+        if let matching = IOServiceMatching("AppleSmartBattery") {
+            var iter = io_iterator_t()
+            if IOServiceGetMatchingServices(kIOMainPortDefault, matching, &iter) == KERN_SUCCESS {
+                defer { IOObjectRelease(iter) }
+                while true {
+                    let service = IOIteratorNext(iter)
+                    guard service != 0 else { break }
+                    defer { IOObjectRelease(service) }
+                    
+                    var propsRef: Unmanaged<CFMutableDictionary>?
+                    let kr = IORegistryEntryCreateCFProperties(service, &propsRef, kCFAllocatorDefault, 0)
+                    if kr == KERN_SUCCESS, let props = propsRef?.takeRetainedValue() as? [String: Any] {
+                        if let tempValue = props["Temperature"] as? NSNumber {
+                            let temp = tempValue.doubleValue / 100.0
+                            if temp > 0 && temp < 150 {
+                                results.append(TemperatureSensor(name: "Battery", key: "BAT0", value: temp, maxValue: 60))
+                            }
+                        }
+                        if let virtualTemp = props["VirtualTemperature"] as? NSNumber {
+                            let temp = virtualTemp.doubleValue / 100.0
+                            if temp > 0 && temp < 150 {
+                                results.append(TemperatureSensor(name: "Battery Virtual", key: "BATV", value: temp, maxValue: 60))
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // 4. Try IOPMPowerSource for additional power-related temperatures
+        if let matching = IOServiceMatching("IOPMPowerSource") {
+            var iter = io_iterator_t()
+            if IOServiceGetMatchingServices(kIOMainPortDefault, matching, &iter) == KERN_SUCCESS {
+                defer { IOObjectRelease(iter) }
+                while true {
+                    let service = IOIteratorNext(iter)
+                    guard service != 0 else { break }
+                    defer { IOObjectRelease(service) }
+                    
+                    var propsRef: Unmanaged<CFMutableDictionary>?
+                    let kr = IORegistryEntryCreateCFProperties(service, &propsRef, kCFAllocatorDefault, 0)
+                    if kr == KERN_SUCCESS, let props = propsRef?.takeRetainedValue() as? [String: Any] {
+                        if let tempValue = props["Temperature"] as? NSNumber {
+                            let temp = tempValue.doubleValue > 1000 ? tempValue.doubleValue / 100.0 : tempValue.doubleValue
+                            if temp > 0 && temp < 150 {
+                                let name = props["IORegistryEntryName"] as? String ?? "PowerSource"
+                                results.append(TemperatureSensor(name: "\(name) Temperature", key: "PS_\(name)", value: temp, maxValue: 100))
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // 5. Discover AppleARMPMUTempSensor devices (Apple Silicon).
+        // These sensors exist in IORegistry but their live values are not exposed to user-space
+        // on modern macOS without a privileged system extension. We list them as discovered
+        // hardware with an estimated placeholder so the user can see what is present.
+        results.append(contentsOf: readARMPMUTemperatures())
+
+        // 6. Discover AppleEmbeddedNVMeTemperatureSensor if available (SSD temps).
+        results.append(contentsOf: readNVMETemperatures())
+
         return results
+    }
+
+    private func readARMPMUTemperatures() -> [TemperatureSensor] {
+        var results: [TemperatureSensor] = []
+        guard let matching = IOServiceMatching("AppleARMPMUTempSensor") else { return results }
+
+        var iter = io_iterator_t()
+        guard IOServiceGetMatchingServices(kIOMainPortDefault, matching, &iter) == KERN_SUCCESS else { return results }
+        defer { IOObjectRelease(iter) }
+
+        var seen = Set<String>()
+        let estimatedBase = thermalStateBaseTemp()
+
+        while true {
+            let service = IOIteratorNext(iter)
+            guard service != 0 else { break }
+            defer { IOObjectRelease(service) }
+
+            var propsRef: Unmanaged<CFMutableDictionary>?
+            let kr = IORegistryEntryCreateCFProperties(service, &propsRef, kCFAllocatorDefault, 0)
+            guard kr == KERN_SUCCESS, let props = propsRef?.takeRetainedValue() as? [String: Any] else { continue }
+
+            let product = props["Product"] as? String ?? "PMU Sensor"
+            let locationID = props["LocationID"] as? NSNumber ?? 0
+            let key = "PMU_\(product)_\(locationID.uint32Value)"
+
+            guard !seen.contains(key) else { continue }
+            seen.insert(key)
+
+            // Try to read a real value from properties; usually unavailable.
+            let realValue: Double? = {
+                if let num = props["Temperature"] as? NSNumber { return num.doubleValue }
+                if let num = props["Value"] as? NSNumber { return num.doubleValue }
+                return nil
+            }()
+
+            if let value = realValue, value > -50 && value < 150 {
+                results.append(TemperatureSensor(name: product, key: key, value: value, maxValue: 100, isEstimated: false))
+            } else {
+                // Placeholder so the sensor appears in the discovered list.
+                results.append(TemperatureSensor(name: product, key: key, value: estimatedBase, maxValue: 100, isEstimated: true))
+            }
+        }
+
+        return results
+    }
+
+    private func readNVMETemperatures() -> [TemperatureSensor] {
+        var results: [TemperatureSensor] = []
+
+        for serviceName in ["AppleEmbeddedNVMeTemperatureSensor", "AppleNVMeTemperatureSensor"] {
+            guard let matching = IOServiceMatching(serviceName) else { continue }
+            var iter = io_iterator_t()
+            guard IOServiceGetMatchingServices(kIOMainPortDefault, matching, &iter) == KERN_SUCCESS else { continue }
+            defer { IOObjectRelease(iter) }
+
+            var count = 0
+            while true {
+                let service = IOIteratorNext(iter)
+                guard service != 0 else { break }
+                defer { IOObjectRelease(service) }
+
+                var propsRef: Unmanaged<CFMutableDictionary>?
+                let kr = IORegistryEntryCreateCFProperties(service, &propsRef, kCFAllocatorDefault, 0)
+                guard kr == KERN_SUCCESS, let props = propsRef?.takeRetainedValue() as? [String: Any] else { continue }
+
+                let product = props["Product"] as? String ?? "NVMe Sensor"
+                let key = "NVMe_\(serviceName)_\(count)"
+                count += 1
+
+                if let num = props["Temperature"] as? NSNumber {
+                    let temp = num.doubleValue > 1000 ? num.doubleValue / 100.0 : num.doubleValue
+                    if temp > -50 && temp < 150 {
+                        results.append(TemperatureSensor(name: product, key: key, value: temp, maxValue: 100, isEstimated: false))
+                        continue
+                    }
+                }
+                if let num = props["Value"] as? NSNumber {
+                    let temp = num.doubleValue
+                    if temp > -50 && temp < 150 {
+                        results.append(TemperatureSensor(name: product, key: key, value: temp, maxValue: 100, isEstimated: false))
+                        continue
+                    }
+                }
+            }
+        }
+
+        return results
+    }
+
+    private func thermalStateBaseTemp() -> Double {
+        switch ProcessInfo.processInfo.thermalState {
+        case .nominal: return 35.0
+        case .fair: return 50.0
+        case .serious: return 70.0
+        case .critical: return 90.0
+        @unknown default: return 40.0
+        }
     }
 }

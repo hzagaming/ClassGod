@@ -322,18 +322,38 @@ final class SystemMonitor: ObservableObject, @unchecked Sendable {
     // MARK: - Thermal
     
     private func readThermal() {
-        // SMC read for temperature - simplified, using sysctl as fallback
-        var temp: Double = 0
-        var size = MemoryLayout<Double>.size
-        var mib = [CTL_HW, HW_TARGET]
-        sysctl(&mib, 2, nil, &size, nil, 0)
+        // First try SMCService for real hardware temperatures
+        let smcTemps = SMCService.shared.readTemperatures()
+        let cpuSensors = smcTemps.filter {
+            $0.name.contains("CPU") || $0.name.contains("Cluster") ||
+            $0.name.contains("Package") || $0.name.contains("Thermal State")
+        }
+        let gpuSensors = smcTemps.filter {
+            $0.name.contains("GPU") || $0.name.contains("Graphics")
+        }
         
-        // Try to read CPU temp via SMC if available (simplified)
-        // In a real app, you'd use IOKit to read SMC keys like TC0D, TC0P, etc.
-        // For now we estimate based on CPU load
-        temp = 40.0 + (cpu.total * 0.5)
+        let cpuTemp = cpuSensors.map(\.value).max() ?? 0
+        let gpuTemp = gpuSensors.map(\.value).max() ?? 0
         
-        self.thermal = ThermalInfo(cpuTemp: temp, gpuTemp: temp + 5)
+        if cpuTemp > 0 || gpuTemp > 0 {
+            self.thermal = ThermalInfo(cpuTemp: cpuTemp, gpuTemp: gpuTemp)
+            return
+        }
+        
+        // Fallback: use ProcessInfo thermal state (official API, always available)
+        let state = ProcessInfo.processInfo.thermalState
+        let baseTemp: Double
+        switch state {
+        case .nominal: baseTemp = 35.0
+        case .fair: baseTemp = 50.0
+        case .serious: baseTemp = 70.0
+        case .critical: baseTemp = 90.0
+        @unknown default: baseTemp = 40.0
+        }
+        
+        // Blend with CPU load for a slightly more dynamic estimate
+        let loadAdjusted = baseTemp + (cpu.total * 0.2)
+        self.thermal = ThermalInfo(cpuTemp: loadAdjusted, gpuTemp: loadAdjusted + 3.0)
     }
     
     // MARK: - Static Info

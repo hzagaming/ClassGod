@@ -22,6 +22,7 @@ final class FanControlViewModel: ObservableObject {
     @Published var sensorFilter: SensorFilter = .all
     @Published var smcConnected: Bool = false
     @Published var usingIORegistry: Bool = false
+    @Published var fanAccessReason: String?
     @Published var isSleeping: Bool = false
     @Published var activeRuleIDs: Set<UUID> = []
     @Published var isBoostActive: Bool = false
@@ -44,7 +45,7 @@ final class FanControlViewModel: ObservableObject {
     private var ruleActiveStates: [UUID: Bool] = [:]
 
     var highestTemperature: Double {
-        sensors.map(\.value).max() ?? 0
+        sensors.filter { !$0.isEstimated }.map(\.value).max() ?? 0
     }
 
     var averageFanRPM: Double {
@@ -53,12 +54,13 @@ final class FanControlViewModel: ObservableObject {
     }
 
     var averageComputerTemp: Double {
-        guard !sensors.isEmpty else { return 0 }
-        return sensors.map(\.value).reduce(0, +) / Double(sensors.count)
+        let real = sensors.filter { !$0.isEstimated }
+        guard !real.isEmpty else { return 0 }
+        return real.map(\.value).reduce(0, +) / Double(real.count)
     }
 
     var averageCPUTemp: Double {
-        let cpuSensors = sensors.filter { $0.name.contains("CPU") || $0.name.contains("Cluster") }
+        let cpuSensors = sensors.filter { !$0.isEstimated && ($0.name.contains("CPU") || $0.name.contains("Cluster")) }
         guard !cpuSensors.isEmpty else { return 0 }
         return cpuSensors.map(\.value).reduce(0, +) / Double(cpuSensors.count)
     }
@@ -80,7 +82,11 @@ final class FanControlViewModel: ObservableObject {
         let searchFiltered = sensorSearchText.isEmpty
             ? filtered
             : filtered.filter { $0.name.localizedCaseInsensitiveContains(sensorSearchText) }
-        return searchFiltered.sorted { $0.value > $1.value }
+        return searchFiltered.sorted {
+            // Estimated sensors should appear at the bottom so real readings are visible first.
+            if $0.isEstimated != $1.isEstimated { return !$0.isEstimated }
+            return $0.value > $1.value
+        }
     }
 
     func observedMaxTemp(for key: String) -> Double? {
@@ -130,11 +136,40 @@ final class FanControlViewModel: ObservableObject {
 
         // Apply saved fan mode to SMC now that we know fan count
         applyFanModeToSMC(fanMode)
-        if fanMode == .autoMax {
+        if fanMode == .autoMax || fanMode == .custom {
             startAutoMax()
         }
 
+        // Start periodic refresh timer
         let interval = max(1.0, prefs.preferences.fanControlUpdateInterval)
+        timer?.invalidate()
+        timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                self?.refresh()
+            }
+        }
+
+        startGradualTimer()
+    }
+    
+    func rescanHardware() {
+        SMCService.shared.rescan()
+        // Clear cached history since sensor keys may change after rescan
+        sensorHistory.removeAll()
+        fanHistory.removeAll()
+        maxTemps.removeAll()
+        previousSensorValues.removeAll()
+        // Force refresh
+        refresh()
+        // Update UI state
+        smcConnected = SMCService.shared.isConnected
+        usingIORegistry = SMCService.shared.isUsingIORegistryFallback
+        fanAccessReason = SMCService.shared.fanAccessReason
+        showToast(message: "Hardware rescan complete")
+
+        // Restart periodic refresh timer
+        let interval = max(1.0, prefs.preferences.fanControlUpdateInterval)
+        timer?.invalidate()
         timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
             Task { @MainActor [weak self] in
                 self?.refresh()
@@ -145,7 +180,8 @@ final class FanControlViewModel: ObservableObject {
     }
 
     private func applyFanModeToSMC(_ mode: FanControlMode) {
-        guard mode != .system else { return }
+        // Only command the SMC for system/max modes. Manual/custom are UI-driven.
+        guard mode == .max || mode == .system else { return }
         for i in fans.indices {
             _ = SMCService.shared.setFanMode(mode, fanIndex: i)
         }
@@ -177,12 +213,15 @@ final class FanControlViewModel: ObservableObject {
         fans = SMCService.shared.readFans()
         smcConnected = SMCService.shared.isConnected
         usingIORegistry = SMCService.shared.isUsingIORegistryFallback
+        fanAccessReason = SMCService.shared.fanAccessReason
 
-        // Track max temperatures and history
+        // Track max temperatures and history (skip estimated placeholders)
         for sensor in sensors {
-            let currentMax = maxTemps[sensor.key] ?? 0
-            if sensor.value > currentMax {
-                maxTemps[sensor.key] = sensor.value
+            if !sensor.isEstimated {
+                let currentMax = maxTemps[sensor.key] ?? 0
+                if sensor.value > currentMax {
+                    maxTemps[sensor.key] = sensor.value
+                }
             }
             var history = sensorHistory[sensor.key] ?? []
             history.append(sensor.value)
@@ -217,36 +256,47 @@ final class FanControlViewModel: ObservableObject {
         boostTimer = nil
         isBoostActive = false
 
-        // Clear auto targets when leaving auto mode to prevent gradual ramp from fighting
-        if mode != .autoMax {
+        // Clear auto targets when leaving auto/custom/manual mode to prevent gradual ramp from fighting
+        if mode != .autoMax && mode != .custom {
             fanTargets.removeAll()
             activeRuleIDs.removeAll()
         }
 
-        var success = true
-        for i in fans.indices {
-            if !SMCService.shared.setFanMode(mode, fanIndex: i) {
-                success = false
+        // For system/max we actually command the SMC. Manual/custom are UI-driven.
+        let requiresSMC: Bool = (mode == .system || mode == .max)
+        var smcSuccess = true
+        if requiresSMC {
+            for i in fans.indices {
+                if !SMCService.shared.setFanMode(mode, fanIndex: i) {
+                    smcSuccess = false
+                }
             }
         }
 
-        if mode == .autoMax {
+        if mode == .autoMax || mode == .custom {
             startAutoMax()
         }
 
         // Refresh to show updated target RPMs
         fans = SMCService.shared.readFans()
 
-        if success {
-            showToast(message: "Fan mode set to \(mode.displayName)")
+        if requiresSMC {
+            if smcSuccess {
+                showToast(message: "Fan mode set to \(mode.displayName)")
+            } else {
+                showError(message: "Failed to set fan mode. May require elevated privileges.")
+            }
         } else {
-            showError(message: "Failed to set fan mode. May require elevated privileges.")
+            showToast(message: "Fan mode set to \(mode.displayName)")
         }
     }
 
     func setFanRPM(_ rpm: Double, fanIndex: Int) {
         guard fanIndex < fans.count else { return }
-        if SMCService.shared.setFanRPM(rpm, fanIndex: fanIndex) {
+        let success = SMCService.shared.setFanRPM(rpm, fanIndex: fanIndex)
+        // In manual mode always update the local target so the UI reflects the slider.
+        // In autoMax/custom only update if the SMC actually accepted the write.
+        if success || fanMode == .manual {
             fans[fanIndex].targetRPM = rpm
             // Update fanTargets so gradual ramp doesn't fight manual control
             fanTargets[fanIndex] = rpm
@@ -266,11 +316,12 @@ final class FanControlViewModel: ObservableObject {
         lines.append("")
         lines.append("=== Temperature Sensors ===")
         for sensor in sensors.sorted(by: { $0.value > $1.value }) {
+            let estimateMarker = sensor.isEstimated ? " [estimated]" : ""
             let display = unit == .celsius
                 ? String(format: "%.1f°C", sensor.value)
                 : String(format: "%.1f°F", unit.convert(sensor.value))
             let maxDisplay = maxTemps[sensor.key].map { unit == .celsius ? String(format: "%.1f°C", $0) : String(format: "%.1f°F", unit.convert($0)) } ?? "N/A"
-            lines.append("\(sensor.name): \(display) (Max: \(maxDisplay))")
+            lines.append("\(sensor.name): \(display) (Max: \(maxDisplay))\(estimateMarker)")
         }
         lines.append("")
         lines.append("=== Fans ===")
@@ -346,6 +397,7 @@ final class FanControlViewModel: ObservableObject {
 
     private func evaluateAutoMaxRules() {
         guard !isSleeping || !prefs.preferences.fanControlDisableOnSleep else { return }
+        guard fanMode == .autoMax || fanMode == .custom else { return }
 
         let rules = prefs.preferences.fanControlAutoMaxRules.filter { $0.isEnabled }
         guard !rules.isEmpty else {
@@ -362,7 +414,7 @@ final class FanControlViewModel: ObservableObject {
         let now = Date()
 
         for rule in rules {
-            let sensorValue = valueForSensor(rule.sensor)
+            let sensorValue = valueForSensor(rule.sensor, specificKey: rule.specificSensorKey)
             let wasActive = ruleActiveStates[rule.id] ?? false
 
             let conditionMet: Bool
@@ -419,7 +471,13 @@ final class FanControlViewModel: ObservableObject {
             }
 
             for i in targetIndices {
-                let targetRPM = fans[i].minimumRPM + (fans[i].maximumRPM - fans[i].minimumRPM) * (rule.targetPercentage / 100.0)
+                let targetRPM: Double
+                switch rule.targetMode {
+                case .percentage:
+                    targetRPM = fans[i].minimumRPM + (fans[i].maximumRPM - fans[i].minimumRPM) * (rule.targetPercentage / 100.0)
+                case .rpm:
+                    targetRPM = max(fans[i].minimumRPM, min(rule.targetRPM, fans[i].maximumRPM))
+                }
                 fanTargets[i] = targetRPM
             }
         }
@@ -535,7 +593,7 @@ final class FanControlViewModel: ObservableObject {
                 }
             }
             startGradualTimer()
-            if fanMode == .autoMax {
+            if fanMode == .autoMax || fanMode == .custom {
                 startAutoMax()
             }
         }
@@ -549,14 +607,19 @@ final class FanControlViewModel: ObservableObject {
 
     // MARK: - Helpers
 
-    private func valueForSensor(_ sensor: RuleSensor) -> Double {
+    private func valueForSensor(_ sensor: RuleSensor, specificKey: String? = nil) -> Double {
+        if let key = specificKey, let matched = sensors.first(where: { $0.key == key }) {
+            return matched.value
+        }
+        // Aggregate rules should ignore estimated placeholders so they only react to real readings.
+        let candidates = sensors.filter { !$0.isEstimated }
         switch sensor {
         case .highestCPU:
-            return sensors.filter { $0.name.contains("CPU") || $0.name.contains("Cluster") }.map(\.value).max() ?? 0
+            return candidates.filter { $0.name.contains("CPU") || $0.name.contains("Cluster") }.map(\.value).max() ?? 0
         case .highestGPU:
-            return sensors.filter { $0.name.contains("GPU") }.map(\.value).max() ?? 0
+            return candidates.filter { $0.name.contains("GPU") }.map(\.value).max() ?? 0
         case .anySensor:
-            return sensors.map(\.value).max() ?? 0
+            return candidates.map(\.value).max() ?? 0
         }
     }
 

@@ -486,7 +486,7 @@ struct AppPreferences: Codable, Equatable {
         fanControlMode: .system,
         fanControlAutoMaxThreshold: 70,
         fanControlAutoMaxRules: [
-            AutoMaxRule(fanTarget: .allFans, targetPercentage: 100, sensor: .highestCPU, comparison: .above, threshold: 70, hysteresis: 5, durationSeconds: 3, isEnabled: true)
+            AutoMaxRule(fanTarget: .allFans, sensor: .highestCPU, comparison: .above, threshold: 70, hysteresis: 5, durationSeconds: 3, isEnabled: true, targetMode: .percentage, targetPercentage: 100)
         ],
         fanControlGradualTime: 21,
         fanControlDisableOnSleep: true,

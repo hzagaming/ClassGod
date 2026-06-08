@@ -26,7 +26,7 @@ struct FanControlView: View {
                     }
                     .padding(.vertical, 10 * zoomScale)
                 }
-                .frame(maxHeight: prefs.preferences.panelMaxHeight - 140)
+                .frame(maxHeight: (prefs.preferences.panelMaxHeight - 140) * zoomScale)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -77,7 +77,7 @@ struct FanControlView: View {
 
                 VStack(alignment: .leading, spacing: 0) {
                     Text("Fan Control")
-                        .font(.system(.headline, design: .monospaced))
+                        .font(.system(size: 14 * zoomScale, weight: .semibold, design: .monospaced))
                         .foregroundStyle(.white)
 
                     Text("Avg: \(unit.formatted(viewModel.averageComputerTemp)) ・ CPU: \(unit.formatted(viewModel.averageCPUTemp)) ・ Fans: \(Int(viewModel.averageFanRPM)) RPM")
@@ -94,9 +94,9 @@ struct FanControlView: View {
                             viewModel.setFanMode(mode)
                         }) {
                             Text(mode.displayName)
-                                .font(.system(size: 10 * zoomScale, weight: .medium, design: .monospaced))
+                                .font(.system(size: 9 * zoomScale, weight: .medium, design: .monospaced))
                                 .foregroundStyle(viewModel.fanMode == mode ? .black : .white.opacity(0.7))
-                                .padding(.horizontal, 10 * zoomScale)
+                                .padding(.horizontal, 6 * zoomScale)
                                 .padding(.vertical, 4 * zoomScale)
                                 .background(
                                     viewModel.fanMode == mode
@@ -147,11 +147,35 @@ struct FanControlView: View {
             // Status bar
             HStack(spacing: 8) {
                 HStack(spacing: 4) {
+                    let statusColor: Color = {
+                        if viewModel.smcConnected && !viewModel.usingIORegistry {
+                            return Color.green
+                        } else if viewModel.smcConnected && viewModel.usingIORegistry {
+                            return Color.yellow
+                        } else if viewModel.usingIORegistry {
+                            return Color.yellow
+                        } else {
+                            return Color.red
+                        }
+                    }()
+                    
+                    let statusText: String = {
+                        if viewModel.smcConnected && !viewModel.usingIORegistry {
+                            return "SMC Connected"
+                        } else if viewModel.smcConnected && viewModel.usingIORegistry {
+                            return "SMC Connected (Limited)"
+                        } else if viewModel.usingIORegistry {
+                            return "IORegistry Fallback"
+                        } else {
+                            return "No Hardware Access"
+                        }
+                    }()
+                    
                     Circle()
-                        .fill(viewModel.smcConnected ? Color.green : (viewModel.usingIORegistry ? Color.yellow : Color.red))
+                        .fill(statusColor)
                         .frame(width: 6 * zoomScale, height: 6 * zoomScale)
 
-                    Text(viewModel.smcConnected ? "SMC Connected" : (viewModel.usingIORegistry ? "IORegistry Fallback" : "No Hardware Access"))
+                    Text(statusText)
                         .font(.system(size: 9 * zoomScale, design: .monospaced))
                         .foregroundStyle(.white.opacity(0.4))
                 }
@@ -304,6 +328,28 @@ struct FanControlView: View {
                     .foregroundStyle(.white)
 
                 Spacer()
+                
+                // Rescan button
+                Button(action: {
+                    SoundEffectManager.shared.playButtonClick()
+                    viewModel.rescanHardware()
+                }) {
+                    HStack(spacing: 3 * zoomScale) {
+                        Image(systemName: "arrow.clockwise")
+                            .font(.system(size: 8 * zoomScale))
+                        Text("Rescan")
+                            .font(.system(size: 9 * zoomScale, weight: .medium, design: .monospaced))
+                    }
+                    .foregroundStyle(.cyan.opacity(0.7))
+                    .padding(.horizontal, 6 * zoomScale)
+                    .padding(.vertical, 2 * zoomScale)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 4 * zoomScale)
+                            .stroke(Color.cyan.opacity(0.3), lineWidth: 1 * zoomScale)
+                            .allowsHitTesting(false)
+                    )
+                }
+                .buttonStyle(.plain)
 
                 if viewModel.fans.isEmpty {
                     Text("No fans detected")
@@ -313,15 +359,45 @@ struct FanControlView: View {
             }
             .padding(.horizontal)
 
-            // Active rules indicator
-            if viewModel.fanMode == .autoMax && !viewModel.activeRuleIDs.isEmpty {
+            // Fan access reason / permission hint
+            if viewModel.fans.isEmpty, let reason = viewModel.fanAccessReason {
+                HStack(spacing: 6 * zoomScale) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.system(size: 9 * zoomScale))
+                        .foregroundStyle(.yellow)
+                    
+                    Text(reason)
+                        .font(.system(size: 9 * zoomScale, design: .monospaced))
+                        .foregroundStyle(.white.opacity(0.5))
+                        .fixedSize(horizontal: false, vertical: true)
+                        .lineLimit(nil)
+                    
+                    Spacer()
+                }
+                .padding(.horizontal)
+                .padding(.vertical, 6 * zoomScale)
+                .background(Color.yellow.opacity(0.05))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 4 * zoomScale)
+                        .stroke(Color.yellow.opacity(0.15), lineWidth: 1 * zoomScale)
+                        .allowsHitTesting(false)
+                )
+                .padding(.horizontal)
+            }
+
+            // Active rules indicator (autoMax + custom)
+            if (viewModel.fanMode == .autoMax || viewModel.fanMode == .custom) && !viewModel.activeRuleIDs.isEmpty {
                 let activeRules = prefs.preferences.fanControlAutoMaxRules.filter { viewModel.activeRuleIDs.contains($0.id) }
+                let activeRulesText = activeRules.map { rule in
+                    let target = rule.targetMode == .rpm ? "\(Int(rule.targetRPM)) RPM" : "\(Int(rule.targetPercentage))%"
+                    return "\(rule.fanTarget.displayName) \(target)"
+                }.joined(separator: ", ")
                 HStack(spacing: 4 * zoomScale) {
                     Image(systemName: "bolt.fill")
                         .font(.system(size: 8 * zoomScale))
                         .foregroundStyle(.yellow)
 
-                    Text("Active: \(activeRules.map { "\($0.fanTarget.displayName) \(Int($0.targetPercentage))%" }.joined(separator: ", "))")
+                    Text("Active: \(activeRulesText)")
                         .font(.system(size: 9 * zoomScale, design: .monospaced))
                         .foregroundStyle(.yellow.opacity(0.8))
                         .lineLimit(1)
@@ -475,12 +551,24 @@ struct TemperatureRow: View {
                 .frame(width: 14 * zoomScale, alignment: .center)
 
             // Current value
-            Text(unit == .celsius
-                 ? String(format: "%.0f°C", displayValue)
-                 : String(format: "%.0f°F", displayValue))
-                .font(.system(size: 11 * zoomScale, weight: .semibold, design: .monospaced))
-                .foregroundStyle(.white)
+            if sensor.isEstimated {
+                HStack(spacing: 2 * zoomScale) {
+                    Text("--")
+                        .font(.system(size: 11 * zoomScale, weight: .semibold, design: .monospaced))
+                        .foregroundStyle(.white.opacity(0.35))
+                    Image(systemName: "questionmark.circle")
+                        .font(.system(size: 8 * zoomScale))
+                        .foregroundStyle(.white.opacity(0.25))
+                }
                 .frame(width: 42 * zoomScale, alignment: .trailing)
+            } else {
+                Text(unit == .celsius
+                     ? String(format: "%.0f°C", displayValue)
+                     : String(format: "%.0f°F", displayValue))
+                    .font(.system(size: 11 * zoomScale, weight: .semibold, design: .monospaced))
+                    .foregroundStyle(.white)
+                    .frame(width: 42 * zoomScale, alignment: .trailing)
+            }
 
             // Observed max
             if let max = observedMax, max > 0 {
@@ -661,10 +749,10 @@ struct FanRow: View {
                     .foregroundStyle(.white.opacity(0.3))
             }
 
-            // Manual RPM slider (shown in Auto Max mode for manual override)
-            if mode == .autoMax {
+            // Manual RPM slider (shown in Auto Max mode for override and Manual mode for direct control)
+            if mode == .autoMax || mode == .manual {
                 HStack(spacing: 8 * zoomScale) {
-                    Text("Manual")
+                    Text(mode == .manual ? "Set" : "Manual")
                         .font(.system(size: 9 * zoomScale, design: .monospaced))
                         .foregroundStyle(.white.opacity(0.4))
                         .frame(width: 45 * zoomScale, alignment: .leading)
