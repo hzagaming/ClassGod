@@ -25,7 +25,7 @@ struct ErrorDetailView: View {
             Color.black.ignoresSafeArea().allowsHitTesting(false)
             
             ScrollView(showsIndicators: false) {
-                VStack(spacing: 0) {
+                VStack(spacing: 0 * zoomScale) {
                     headerSection
                     Divider().background(Color.white.opacity(0.1))
                     descriptionSection
@@ -44,7 +44,7 @@ struct ErrorDetailView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .overlay(
-            RoundedRectangle(cornerRadius: prefs.preferences.panelCornerRadius)
+            RoundedRectangle(cornerRadius: prefs.preferences.panelCornerRadius * zoomScale)
                 .stroke(Color.white.opacity(0.12), lineWidth: 1 * zoomScale)
         
             .allowsHitTesting(false))
@@ -53,7 +53,7 @@ struct ErrorDetailView: View {
     // MARK: - Header
     private var headerSection: some View {
         VStack(spacing: 8 * zoomScale) {
-            HStack(spacing: 0) {
+            HStack(spacing: 0 * zoomScale) {
                 Button(action: {
                     SoundEffectManager.shared.playButtonClick()
                     onDismiss()

@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct AssessPrepHackView: View {
-    @StateObject private var viewModel = AssessPrepHackViewModel()
+    @StateObject private var viewModel = AssessPrepHackViewModel.shared
     @ObservedObject private var prefs = PreferencesManager.shared
     @State private var showAddSheet = false
     @State private var editingApp: PanicApp?
@@ -44,7 +44,7 @@ struct AssessPrepHackView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(
-            RoundedRectangle(cornerRadius: prefs.preferences.panelCornerRadius)
+            RoundedRectangle(cornerRadius: prefs.preferences.panelCornerRadius * zoomScale)
                 .fill(Color.black)
         )
         .overlay(
@@ -86,6 +86,9 @@ struct AssessPrepHackView: View {
         }
         .onDisappear {
             viewModel.stopDetectionTimer()
+            if viewModel.isBypassActive {
+                viewModel.stopAllBypasses()
+            }
         }
     }
     
@@ -107,13 +110,13 @@ struct AssessPrepHackView: View {
             .buttonStyle(.plain)
             
             Image(systemName: "bolt.shield.fill")
-                .font(.title2)
+                .font(.system(size: 22 * zoomScale))
                 .foregroundStyle(.red)
                 .symbolRenderingMode(.monochrome)
             
             VStack(alignment: .leading, spacing: 0) {
                 Text("AssessPrepHack")
-                    .font(.system(.headline, design: .monospaced))
+                    .font(.system(size: 16 * zoomScale, weight: .bold, design: .monospaced))
                     .foregroundStyle(.white)
                 
                 Text("Break free from proctoring")

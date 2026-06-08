@@ -11,6 +11,8 @@ import AppKit
 struct AddTabView: View {
     @Environment(\.dismiss) private var dismiss
     @ObservedObject var viewModel: TabListViewModel
+    @ObservedObject private var prefs = PreferencesManager.shared
+    private var zoomScale: CGFloat { CGFloat(prefs.preferences.windowZoomScale) }
 
     let tab: BrowserTab?
 
@@ -54,7 +56,7 @@ struct AddTabView: View {
     }
 
     var body: some View {
-        VStack(spacing: 14) {
+        VStack(spacing: 14 * zoomScale) {
             header
 
             formContent
@@ -66,11 +68,11 @@ struct AddTabView: View {
                 .opacity(formOpacity)
         }
         .padding()
-        .frame(width: 420, height: 400)
+        .frame(width: 420 * zoomScale, height: 400 * zoomScale)
         .background(Color.black)
         .overlay(
             Rectangle()
-                .stroke(Color.white.opacity(0.15), lineWidth: 1)
+                .stroke(Color.white.opacity(0.15), lineWidth: 1 * zoomScale)
         
             .allowsHitTesting(false))
         .alert(String(localized: "shortcut.conflict.title"), isPresented: $showConflictAlert) {
@@ -95,13 +97,12 @@ struct AddTabView: View {
     private var header: some View {
         HStack {
             Image(systemName: isEditing ? "pencil.circle.fill" : "plus.circle.fill")
-                .font(.title2)
+                .font(.system(size: 22 * zoomScale))
                 .foregroundStyle(.white)
                 .symbolRenderingMode(.monochrome)
 
             Text(isEditing ? String(localized: "edit_tab.title") : String(localized: "add_tab.title"))
-                .font(.system(.title3, design: .monospaced))
-                .fontWeight(.semibold)
+                .font(.system(size: 18 * zoomScale, weight: .semibold, design: .monospaced))
                 .foregroundStyle(.white)
 
             Spacer()
@@ -113,16 +114,16 @@ struct AddTabView: View {
             Section {
                 TextField(String(localized: "field.title"), text: $title)
                     .textFieldStyle(.plain)
-                    .padding(6)
+                    .padding(6 * zoomScale)
                     .background(Color(white: 0.1))
-                    .overlay(Rectangle().stroke(Color.white.opacity(0.15), lineWidth: 1))
+                    .overlay(Rectangle().stroke(Color.white.opacity(0.15), lineWidth: 1 * zoomScale))
                     .foregroundStyle(.white)
 
                 TextField(String(localized: "field.url"), text: $url)
                     .textFieldStyle(.plain)
-                    .padding(6)
+                    .padding(6 * zoomScale)
                     .background(Color(white: 0.1))
-                    .overlay(Rectangle().stroke(Color.white.opacity(0.15), lineWidth: 1))
+                    .overlay(Rectangle().stroke(Color.white.opacity(0.15), lineWidth: 1 * zoomScale))
                     .foregroundStyle(.white)
 
                 Picker(String(localized: "field.browser"), selection: $browser) {
@@ -141,14 +142,14 @@ struct AddTabView: View {
 
                 TextField("Tag (optional, e.g. work, dev)", text: $tag)
                     .textFieldStyle(.plain)
-                    .padding(6)
+                    .padding(6 * zoomScale)
                     .background(Color(white: 0.1))
-                    .overlay(Rectangle().stroke(Color.white.opacity(0.15), lineWidth: 1))
+                    .overlay(Rectangle().stroke(Color.white.opacity(0.15), lineWidth: 1 * zoomScale))
                     .foregroundStyle(.white)
-                    .font(.system(size: 12, design: .monospaced))
+                    .font(.system(size: 12 * zoomScale, design: .monospaced))
 
                 Toggle("Pin to top", isOn: $isPinned)
-                    .font(.system(size: 12, design: .monospaced))
+                    .font(.system(size: 12 * zoomScale, design: .monospaced))
                     .toggleStyle(.switch)
             }
 
@@ -161,17 +162,17 @@ struct AddTabView: View {
                 .shake(trigger: shakeTrigger, intensity: 5)
 
                 if hasConflict {
-                    HStack(spacing: 6) {
+                    HStack(spacing: 6 * zoomScale) {
                         Image(systemName: "exclamationmark.triangle.fill")
                             .foregroundStyle(.red)
                         Text(String(localized: "shortcut.conflict.warning"))
-                            .font(.system(.caption, design: .monospaced))
+                            .font(.system(size: 11 * zoomScale, design: .monospaced))
                             .foregroundStyle(.red)
                     }
-                    .padding(.vertical, 3)
-                    .padding(.horizontal, 8)
+                    .padding(.vertical, 3 * zoomScale)
+                    .padding(.horizontal, 8 * zoomScale)
                     .background(Color.red.opacity(0.08))
-                    .overlay(Rectangle().stroke(Color.red.opacity(0.3), lineWidth: 1))
+                    .overlay(Rectangle().stroke(Color.red.opacity(0.3), lineWidth: 1 * zoomScale))
                     .transition(.opacity)
                 }
             }

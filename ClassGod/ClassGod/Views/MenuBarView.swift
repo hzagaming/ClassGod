@@ -136,7 +136,7 @@ struct MenuBarView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .overlay(
-            RoundedRectangle(cornerRadius: prefs.preferences.panelCornerRadius)
+            RoundedRectangle(cornerRadius: prefs.preferences.panelCornerRadius * zoomScale)
                 .stroke(Color.white.opacity(0.12), lineWidth: 1 * zoomScale)
                 .allowsHitTesting(false)
         )
@@ -184,8 +184,8 @@ struct MenuBarView: View {
                 .background(Color.cyan.opacity(0.1))
                 .clipShape(RoundedRectangle(cornerRadius: 8 * zoomScale))
 
-            VStack(alignment: .leading, spacing: 2) {
-                HStack(spacing: 4) {
+            VStack(alignment: .leading, spacing: 2 * zoomScale) {
+                HStack(spacing: 4 * zoomScale) {
                     Image(systemName: "thermometer")
                         .font(.system(size: 9 * zoomScale))
                         .foregroundStyle(.white.opacity(0.5))
@@ -194,7 +194,7 @@ struct MenuBarView: View {
                         .foregroundStyle(.white)
                 }
 
-                HStack(spacing: 4) {
+                HStack(spacing: 4 * zoomScale) {
                     Image(systemName: "fanblades")
                         .font(.system(size: 9 * zoomScale))
                         .foregroundStyle(.white.opacity(0.5))
@@ -218,7 +218,7 @@ struct MenuBarView: View {
                     .background(Color.cyan.opacity(0.1))
                     .overlay(
                         RoundedRectangle(cornerRadius: 4 * zoomScale)
-                            .stroke(Color.cyan.opacity(0.3), lineWidth: 1)
+                            .stroke(Color.cyan.opacity(0.3), lineWidth: 1 * zoomScale)
                     )
             }
             .buttonStyle(.plain)
@@ -227,7 +227,7 @@ struct MenuBarView: View {
         .background(Color.white.opacity(0.02))
         .overlay(
             RoundedRectangle(cornerRadius: 8 * zoomScale)
-                .stroke(Color.white.opacity(0.08), lineWidth: 1)
+                .stroke(Color.white.opacity(0.08), lineWidth: 1 * zoomScale)
                 .allowsHitTesting(false)
         )
         .onAppear {

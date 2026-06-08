@@ -133,6 +133,14 @@ final class DesktopWidgetManager: ObservableObject {
             saveState()
         }
     }
+    
+    func toggleLock(id: UUID) {
+        if let index = widgets.firstIndex(where: { $0.id == id }) {
+            widgets[index].isLocked.toggle()
+            saveState()
+            windows[id]?.setLocked(widgets[index].isLocked)
+        }
+    }
 
     func resetToDefaults() {
         hideAllWidgets()
@@ -239,10 +247,15 @@ final class DesktopWidgetWindow: NSWindow {
     private var dragStartLocation: NSPoint?
     private var dragStartFrame: NSRect?
     private var editMode = false
+    private var isLocked = false
+    private var isTab = false
+    private let tabTitleBarHeight: CGFloat = 28
 
     init(widget: HackerWidgetItem, manager: DesktopWidgetManager) {
         self.widgetID = widget.id
         self.manager = manager
+        self.isLocked = widget.isLocked
+        self.isTab = widget.type.isDesktopTab
 
         let rect = NSRect(x: widget.x, y: widget.y, width: widget.width, height: widget.height)
         super.init(contentRect: rect, styleMask: [.borderless], backing: .buffered, defer: false)
@@ -262,12 +275,18 @@ final class DesktopWidgetWindow: NSWindow {
 
     func updateWidget(_ widget: HackerWidgetItem) {
         setFrame(NSRect(x: widget.x, y: widget.y, width: widget.width, height: widget.height), display: true)
+        self.isLocked = widget.isLocked
+        self.isTab = widget.type.isDesktopTab
         refreshContent()
     }
 
     func setEditMode(_ enabled: Bool) {
         editMode = enabled
         refreshContent()
+    }
+    
+    func setLocked(_ locked: Bool) {
+        isLocked = locked
     }
 
     func refreshContent() {
@@ -284,6 +303,10 @@ final class DesktopWidgetWindow: NSWindow {
             onDelete: { [weak self] in
                 guard let self else { return }
                 self.manager?.removeWidget(id: self.widgetID)
+            },
+            onToggleLock: { [weak self] in
+                guard let self else { return }
+                self.manager?.toggleLock(id: self.widgetID)
             }
         )
         .frame(width: widget.width, height: widget.height)
@@ -294,10 +317,23 @@ final class DesktopWidgetWindow: NSWindow {
         contentView = hostingView
     }
 
-    // MARK: - Mouse Dragging (entire window is draggable in edit mode)
+    // MARK: - Mouse Dragging
+
+    private func shouldStartDrag(at locationInWindow: NSPoint) -> Bool {
+        // Locked widgets cannot be dragged
+        guard !isLocked else { return false }
+        
+        // Standard widgets: drag anywhere when in edit mode
+        if !isTab { return editMode }
+        
+        // Desktop tabs: drag only from the title bar (top 28pt)
+        let titleBarFrame = NSRect(x: 0, y: frame.height - tabTitleBarHeight, width: frame.width, height: tabTitleBarHeight)
+        return titleBarFrame.contains(locationInWindow)
+    }
 
     override func mouseDown(with event: NSEvent) {
-        guard editMode else {
+        let location = event.locationInWindow
+        guard shouldStartDrag(at: location) else {
             super.mouseDown(with: event)
             return
         }
@@ -307,7 +343,7 @@ final class DesktopWidgetWindow: NSWindow {
     }
 
     override func mouseDragged(with event: NSEvent) {
-        guard editMode, isDragging,
+        guard isDragging,
               let startLoc = dragStartLocation,
               let startFrame = dragStartFrame else {
             super.mouseDragged(with: event)

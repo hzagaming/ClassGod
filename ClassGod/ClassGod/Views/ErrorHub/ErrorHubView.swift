@@ -70,7 +70,7 @@ struct ErrorHubView: View {
         ZStack {
             Color.black.ignoresSafeArea().allowsHitTesting(false)
             
-            VStack(spacing: 0) {
+            VStack(spacing: 0 * zoomScale) {
                 titleBar
                 searchBar
                 categoryBar
@@ -231,7 +231,7 @@ struct ErrorHubView: View {
     
     // MARK: - Tag Bar
     private var tagBar: some View {
-        VStack(spacing: 0) {
+        VStack(spacing: 0 * zoomScale) {
             if !availableTags.isEmpty {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 6 * zoomScale) {

@@ -309,7 +309,7 @@ struct HackerDesktopView: View {
                     .multilineTextAlignment(.center)
             }
             
-            VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: 10 * zoomScale) {
                 Text("Available Widgets")
                     .font(.system(size: 11 * zoomScale, weight: .bold, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.6))
@@ -322,11 +322,11 @@ struct HackerDesktopView: View {
                 ]
                 
                 ForEach(widgets, id: \.0) { category, list in
-                    HStack(alignment: .top, spacing: 8) {
+                    HStack(alignment: .top, spacing: 8 * zoomScale) {
                         Text("\(category):")
                             .font(.system(size: 10 * zoomScale, weight: .bold, design: .monospaced))
                             .foregroundStyle(.cyan.opacity(0.7))
-                            .frame(width: 50, alignment: .leading)
+                            .frame(width: 50 * zoomScale, alignment: .leading)
                         Text(list)
                             .font(.system(size: 10 * zoomScale, design: .monospaced))
                             .foregroundStyle(.white.opacity(0.5))
@@ -448,7 +448,7 @@ private struct ConfigSection<Content: View>: View {
     @ViewBuilder let content: Content
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 10 * zoomScale) {
             HStack(spacing: 6 * zoomScale) {
                 Image(systemName: icon)
                     .font(.system(size: 10 * zoomScale))

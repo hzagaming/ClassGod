@@ -104,13 +104,13 @@ struct BrowserBypasserView: View {
             .buttonStyle(.plain)
             
             Image(systemName: "lock.open.fill")
-                .font(.title2)
+                .font(.system(size: 22 * zoomScale))
                 .foregroundStyle(.green)
                 .symbolRenderingMode(.monochrome)
             
             VStack(alignment: .leading, spacing: 0) {
                 Text("BrowserBypasser")
-                    .font(.system(.headline, design: .monospaced))
+                    .font(.system(size: 16 * zoomScale, weight: .bold, design: .monospaced))
                     .foregroundStyle(.white)
                 
                 Text("Break free from lockdown pages")
@@ -225,7 +225,7 @@ struct BrowserBypasserView: View {
                 }
             }
         }
-        .frame(maxHeight: prefs.preferences.panelMaxHeight - 200)
+        .frame(maxHeight: (prefs.preferences.panelMaxHeight - 200) * zoomScale)
     }
     
     // MARK: - Empty State
@@ -244,11 +244,11 @@ struct BrowserBypasserView: View {
             }
             
             Text("No bypass rules")
-                .font(.system(.subheadline, design: .monospaced))
+                .font(.system(size: 14 * zoomScale, weight: .medium, design: .monospaced))
                 .foregroundStyle(.white.opacity(0.7))
             
             Text("Add rules to bypass browser lockdowns")
-                .font(.system(.caption, design: .monospaced))
+                .font(.system(size: 11 * zoomScale, design: .monospaced))
                 .foregroundStyle(.white.opacity(0.5))
                 .multilineTextAlignment(.center)
         }

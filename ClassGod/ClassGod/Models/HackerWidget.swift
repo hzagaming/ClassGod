@@ -17,6 +17,15 @@ enum WidgetType: String, Codable, CaseIterable, Identifiable {
     case tempSensors = "tempSensors"
     case systemInfo = "systemInfo"
     case finderFile = "finderFile"
+    case fanThermalList = "fanThermalList"
+    case fanControlDash = "fanControlDash"
+    case taskManager = "taskManager"
+    // Desktop tabs (fixed on Finder desktop with title bar)
+    case noteTab = "noteTab"
+    case todoTab = "todoTab"
+    case terminalTab = "terminalTab"
+    case cryptoTab = "cryptoTab"
+    case quoteTab = "quoteTab"
     
     var id: String { rawValue }
     
@@ -33,6 +42,14 @@ enum WidgetType: String, Codable, CaseIterable, Identifiable {
         case .tempSensors:   return "Temperature"
         case .systemInfo:    return "System Info"
         case .finderFile:    return "File"
+        case .fanThermalList:return "Fan / Thermal"
+        case .fanControlDash:return "Fan Dashboard"
+        case .taskManager:   return "Task Manager"
+        case .noteTab:       return "Note Tab"
+        case .todoTab:       return "Todo Tab"
+        case .terminalTab:   return "Terminal Tab"
+        case .cryptoTab:     return "Crypto Tab"
+        case .quoteTab:      return "Quote Tab"
         }
     }
     
@@ -49,6 +66,14 @@ enum WidgetType: String, Codable, CaseIterable, Identifiable {
         case .tempSensors:   return "thermometer.transmission"
         case .systemInfo:    return "info.circle"
         case .finderFile:    return "doc"
+        case .fanThermalList:return "fan.desk"
+        case .fanControlDash:return "gauge.with.dots.needle.67percent"
+        case .taskManager:   return "list.bullet.indent"
+        case .noteTab:       return "note.text"
+        case .todoTab:       return "checkmark.square"
+        case .terminalTab:   return "terminal"
+        case .cryptoTab:     return "bitcoinsign.circle"
+        case .quoteTab:      return "quote.bubble"
         }
     }
     
@@ -65,6 +90,14 @@ enum WidgetType: String, Codable, CaseIterable, Identifiable {
         case .tempSensors:   return CGSize(width: 180, height: 120)
         case .systemInfo:    return CGSize(width: 220, height: 160)
         case .finderFile:    return CGSize(width: 100, height: 120)
+        case .fanThermalList:return CGSize(width: 220, height: 280)
+        case .fanControlDash:return CGSize(width: 240, height: 180)
+        case .taskManager:   return CGSize(width: 300, height: 340)
+        case .noteTab:       return CGSize(width: 240, height: 180)
+        case .todoTab:       return CGSize(width: 240, height: 220)
+        case .terminalTab:   return CGSize(width: 320, height: 200)
+        case .cryptoTab:     return CGSize(width: 220, height: 100)
+        case .quoteTab:      return CGSize(width: 260, height: 120)
         }
     }
     
@@ -81,6 +114,23 @@ enum WidgetType: String, Codable, CaseIterable, Identifiable {
         case .tempSensors:   return CGSize(width: 140, height: 90)
         case .systemInfo:    return CGSize(width: 180, height: 120)
         case .finderFile:    return CGSize(width: 80, height: 100)
+        case .fanThermalList:return CGSize(width: 160, height: 180)
+        case .fanControlDash:return CGSize(width: 180, height: 140)
+        case .taskManager:   return CGSize(width: 220, height: 240)
+        case .noteTab:       return CGSize(width: 180, height: 120)
+        case .todoTab:       return CGSize(width: 180, height: 140)
+        case .terminalTab:   return CGSize(width: 240, height: 120)
+        case .cryptoTab:     return CGSize(width: 180, height: 80)
+        case .quoteTab:      return CGSize(width: 200, height: 80)
+        }
+    }
+    
+    var isDesktopTab: Bool {
+        switch self {
+        case .noteTab, .todoTab, .terminalTab, .cryptoTab, .quoteTab:
+            return true
+        default:
+            return false
         }
     }
 }

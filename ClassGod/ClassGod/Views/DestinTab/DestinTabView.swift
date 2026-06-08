@@ -146,7 +146,7 @@ struct DestinTabView: View {
     private var toastOverlay: some View {
         Group {
             if showToast, let message = toastMessage {
-                HStack(spacing: 6) {
+                HStack(spacing: 6 * zoomScale) {
                     Image(systemName: "checkmark.circle.fill")
                         .font(.system(size: 12 * zoomScale))
                         .foregroundStyle(.white)
@@ -157,7 +157,7 @@ struct DestinTabView: View {
                 .padding(.horizontal, 12 * zoomScale)
                 .padding(.vertical, 7 * zoomScale)
                 .background(Color(white: 0.12))
-                .overlay(Rectangle().stroke(Color.white.opacity(0.3), lineWidth: 1))
+                .overlay(Rectangle().stroke(Color.white.opacity(0.3), lineWidth: 1 * zoomScale))
                 .padding(.bottom, 10 * zoomScale)
                 .offset(y: toastOffset)
                 .transition(.opacity)
@@ -184,7 +184,7 @@ struct DestinTabView: View {
     // MARK: - Header
 
     private var header: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: 10 * zoomScale) {
             Button(action: {
                 SoundEffectManager.shared.playButtonClick()
                 onClose()
@@ -248,15 +248,15 @@ struct DestinTabView: View {
                 colors: [Color.clear, Color.white.opacity(0.15), Color.clear],
                 startPoint: .leading, endPoint: .trailing
             ))
-            .frame(height: 1)
+            .frame(height: 1 * zoomScale)
     }
 
     // MARK: - Search Bar
 
     private var searchBar: some View {
-        VStack(spacing: 6) {
-            HStack(spacing: 8) {
-                HStack(spacing: 6) {
+        VStack(spacing: 6 * zoomScale) {
+            HStack(spacing: 8 * zoomScale) {
+                HStack(spacing: 6 * zoomScale) {
                     Image(systemName: "magnifyingglass")
                         .font(.system(size: 11 * zoomScale))
                         .foregroundStyle(.white.opacity(0.4))
@@ -276,7 +276,7 @@ struct DestinTabView: View {
                 .padding(.horizontal, 8 * zoomScale)
                 .padding(.vertical, 5 * zoomScale)
                 .background(Color(white: 0.06))
-                .overlay(Rectangle().stroke(Color.white.opacity(0.1), lineWidth: 1))
+                .overlay(Rectangle().stroke(Color.white.opacity(0.1), lineWidth: 1 * zoomScale))
 
                 // Sort picker
                 Menu {
@@ -450,7 +450,7 @@ struct DestinTabView: View {
     // MARK: - Empty State
 
     private var emptyState: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: 10 * zoomScale) {
             ZStack {
                 Circle().fill(Color.white.opacity(0.1)).frame(width: 52 * zoomScale, height: 52 * zoomScale)
                 Image(systemName: "link.badge.plus")
@@ -499,12 +499,12 @@ struct DestinTabView: View {
                 colors: [Color(white: 0.06), Color(white: 0.1)],
                 startPoint: .top, endPoint: .bottom
             ))
-            .overlay(Rectangle().stroke(Color.white.opacity(0.12), lineWidth: 1))
+            .overlay(Rectangle().stroke(Color.white.opacity(0.12), lineWidth: 1 * zoomScale))
             .contentShape(Rectangle())
 
             Divider()
 
-            HStack(spacing: 14) {
+            HStack(spacing: 14 * zoomScale) {
                 footerButton(title: String(localized: "button.settings"), icon: "gear") {
                     SoundEffectManager.shared.playButtonClick()
                     NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
@@ -536,10 +536,10 @@ struct DestinTabView: View {
         Button(action: action) {
             HStack(spacing: 4) {
                 Image(systemName: icon)
-                    .font(.system(size: 10))
+                    .font(.system(size: 10 * zoomScale))
                     .symbolRenderingMode(.monochrome)
                 Text(title)
-                    .font(.system(size: 11, design: .monospaced))
+                    .font(.system(size: 11 * zoomScale, design: .monospaced))
             }
         }
         .buttonStyle(.plain)
@@ -572,8 +572,8 @@ struct DestinTabView: View {
         GeometryReader { geo in
             VStack(spacing: 2) {
                 ForEach(0..<Int(geo.size.height / 4), id: \.self) { _ in
-                    Rectangle().fill(Color.white.opacity(0.015)).frame(height: 1)
-                    Spacer().frame(height: 3)
+                    Rectangle().fill(Color.white.opacity(0.015)).frame(height: 1 * zoomScale)
+                    Spacer().frame(height: 3 * zoomScale)
                 }
             }
         }
@@ -623,7 +623,7 @@ struct TabRow: View {
             }
             onOpen()
         }) {
-            HStack(spacing: 8) {
+            HStack(spacing: 8 * zoomScale) {
                 // Bulk select checkbox
                 if viewModel.isBulkMode {
                     Image(systemName: isSelected ? "checkmark.square.fill" : "square")
@@ -737,7 +737,7 @@ struct TabRow: View {
             .frame(minHeight: prefs.preferences.rowHeight * zoomScale)
             .contentShape(Rectangle())
             .background(Rectangle().fill(backgroundColor))
-            .overlay(Rectangle().stroke(borderColor, lineWidth: 1))
+            .overlay(Rectangle().stroke(borderColor, lineWidth: 1 * zoomScale))
             .scaleEffect(isPressed ? 0.98 : 1.0)
         }
         .buttonStyle(.plain)

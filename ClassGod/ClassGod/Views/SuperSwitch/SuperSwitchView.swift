@@ -94,7 +94,7 @@ struct SuperSwitchView: View {
             
             VStack(alignment: .leading, spacing: 0) {
                 Text("SuperSwitch")
-                    .font(.system(.headline, design: .monospaced))
+                    .font(.system(size: 16 * zoomScale, weight: .bold, design: .monospaced))
                     .foregroundStyle(.white)
                 
                 Text("Quick app switcher")
@@ -144,7 +144,7 @@ struct SuperSwitchView: View {
                 }
             }
         }
-        .frame(maxHeight: prefs.preferences.panelMaxHeight - 120)
+        .frame(maxHeight: (prefs.preferences.panelMaxHeight - 120) * zoomScale)
     }
     
     // MARK: - Empty State
@@ -163,11 +163,11 @@ struct SuperSwitchView: View {
             }
             
             Text("No targets configured")
-                .font(.system(.subheadline, design: .monospaced))
+                .font(.system(size: 14 * zoomScale, weight: .medium, design: .monospaced))
                 .foregroundStyle(.white.opacity(0.7))
             
             Text("Add apps to switch between them instantly")
-                .font(.system(.caption, design: .monospaced))
+                .font(.system(size: 11 * zoomScale, design: .monospaced))
                 .foregroundStyle(.white.opacity(0.5))
                 .multilineTextAlignment(.center)
         }

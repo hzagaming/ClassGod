@@ -14,10 +14,21 @@ struct DesktopWidgetContainer: View {
     let widget: HackerWidgetItem
     let isEditMode: Bool
     let onDelete: () -> Void
+    let onToggleLock: () -> Void
 
     @ObservedObject private var monitor = SystemMonitor.shared
 
     var body: some View {
+        ZStack {
+            if widget.type.isDesktopTab {
+                tabContainer
+            } else {
+                standardContainer
+            }
+        }
+    }
+    
+    private var standardContainer: some View {
         ZStack {
             // Widget content
             widgetContent
@@ -39,6 +50,69 @@ struct DesktopWidgetContainer: View {
                 .overlay(
                     RoundedRectangle(cornerRadius: 14)
                         .stroke(isEditMode ? Color.cyan.opacity(0.6) : Color.white.opacity(0.08), lineWidth: isEditMode ? 2 : 1)
+                )
+                .shadow(color: .black.opacity(0.4), radius: 8, x: 0, y: 4)
+        )
+    }
+    
+    private var tabContainer: some View {
+        VStack(spacing: 0) {
+            // Title bar for desktop tabs
+            HStack(spacing: 6) {
+                Button(action: onDelete) {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 9, weight: .bold))
+                        .foregroundStyle(.white.opacity(0.6))
+                        .frame(width: 18, height: 18)
+                        .background(Color(white: 0.15))
+                        .clipShape(Circle())
+                }
+                .buttonStyle(.plain)
+                
+                Image(systemName: widget.type.iconName)
+                    .font(.system(size: 9))
+                    .foregroundStyle(.cyan)
+                
+                Text(widget.title)
+                    .font(.system(size: 10, weight: .semibold, design: .monospaced))
+                    .foregroundStyle(.white.opacity(0.85))
+                    .lineLimit(1)
+                
+                Spacer()
+                
+                Button(action: onToggleLock) {
+                    Image(systemName: widget.isLocked ? "lock.fill" : "lock.open")
+                        .font(.system(size: 9, weight: .bold))
+                        .foregroundStyle(widget.isLocked ? .orange : .white.opacity(0.6))
+                        .frame(width: 18, height: 18)
+                        .background(Color(white: 0.15))
+                        .clipShape(Circle())
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.horizontal, 8)
+            .frame(height: 28)
+            .background(Color(white: 0.08))
+            .overlay(
+                Rectangle()
+                    .stroke(Color.white.opacity(0.08), lineWidth: 1)
+            )
+            
+            // Content
+            widgetContent
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .padding(6)
+        }
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color(white: 0.05).opacity(0.92))
+                .background(
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(.ultraThinMaterial)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(isEditMode ? Color.cyan.opacity(0.5) : Color.white.opacity(0.1), lineWidth: isEditMode ? 1.5 : 1)
                 )
                 .shadow(color: .black.opacity(0.4), radius: 8, x: 0, y: 4)
         )
@@ -69,6 +143,22 @@ struct DesktopWidgetContainer: View {
             SystemInfoWidgetContent()
         case .finderFile:
             FileWidgetContent(filePath: widget.filePath)
+        case .fanThermalList:
+            FanThermalWidgetContent()
+        case .fanControlDash:
+            FanControlDashboardWidgetContent()
+        case .taskManager:
+            TaskManagerWidgetContent()
+        case .noteTab:
+            NoteTabContent()
+        case .todoTab:
+            TodoTabContent()
+        case .terminalTab:
+            TerminalTabContent()
+        case .cryptoTab:
+            CryptoTabContent()
+        case .quoteTab:
+            QuoteTabContent()
         }
     }
 
@@ -648,3 +738,166 @@ private func formatSpeed(_ kbs: Double) -> String {
         return String(format: "%.0f KB/s", kbs)
     }
 }
+
+// MARK: - Desktop Tab Contents
+
+struct NoteTabContent: View {
+    @State private var noteText: String = ""
+    private let store = WidgetDataStore.shared
+    private let timer = Timer.publish(every: 5, on: .main, in: .common).autoconnect()
+
+    var body: some View {
+        ScrollView(showsIndicators: false) {
+            Text(noteText.isEmpty ? "No note saved yet." : noteText)
+                .font(.system(size: 10, design: .monospaced))
+                .foregroundStyle(.white.opacity(noteText.isEmpty ? 0.4 : 0.85))
+                .frame(maxWidth: .infinity, alignment: .topLeading)
+        }
+        .onAppear(perform: load)
+        .onReceive(timer) { _ in load() }
+    }
+
+    private func load() {
+        noteText = store.string(forKey: .noteContent) ?? ""
+    }
+}
+
+struct TodoTabContent: View {
+    @State private var items: [TodoItem] = []
+    private let store = WidgetDataStore.shared
+    private let timer = Timer.publish(every: 5, on: .main, in: .common).autoconnect()
+
+    var body: some View {
+        ScrollView(showsIndicators: false) {
+            if items.isEmpty {
+                Text("No todos yet.")
+                    .font(.system(size: 10, design: .monospaced))
+                    .foregroundStyle(.white.opacity(0.4))
+                    .frame(maxWidth: .infinity, alignment: .center)
+            } else {
+                VStack(alignment: .leading, spacing: 4) {
+                    ForEach(items.prefix(8)) { item in
+                        HStack(spacing: 4) {
+                            Image(systemName: item.isDone ? "checkmark.square.fill" : "square")
+                                .font(.system(size: 9))
+                                .foregroundStyle(item.isDone ? .green : .white.opacity(0.4))
+                            Text(item.text)
+                                .font(.system(size: 10, design: .monospaced))
+                                .foregroundStyle(item.isDone ? .white.opacity(0.4) : .white.opacity(0.85))
+                                .strikethrough(item.isDone)
+                                .lineLimit(1)
+                            Spacer(minLength: 0)
+                        }
+                    }
+                }
+            }
+        }
+        .onAppear(perform: load)
+        .onReceive(timer) { _ in load() }
+    }
+
+    private func load() {
+        items = store.array(forKey: .todoItems, type: TodoItem.self)
+    }
+}
+
+struct TerminalTabContent: View {
+    @State private var logs: [String] = []
+    private let store = WidgetDataStore.shared
+    private let timer = Timer.publish(every: 5, on: .main, in: .common).autoconnect()
+
+    var body: some View {
+        ScrollView(showsIndicators: false) {
+            if logs.isEmpty {
+                Text("No terminal logs yet.")
+                    .font(.system(size: 10, design: .monospaced))
+                    .foregroundStyle(.white.opacity(0.4))
+                    .frame(maxWidth: .infinity, alignment: .center)
+            } else {
+                VStack(alignment: .leading, spacing: 2) {
+                    ForEach(logs.suffix(8).indices, id: \.self) { idx in
+                        Text(logs[idx])
+                            .font(.system(size: 9, design: .monospaced))
+                            .foregroundStyle(.green.opacity(0.8))
+                            .lineLimit(1)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .topLeading)
+            }
+        }
+        .onAppear(perform: load)
+        .onReceive(timer) { _ in load() }
+    }
+
+    private func load() {
+        logs = store.stringArray(forKey: .terminalLogs)
+    }
+}
+
+struct CryptoTabContent: View {
+    @State private var btc: String = ""
+    @State private var eth: String = ""
+    private let store = WidgetDataStore.shared
+    private let timer = Timer.publish(every: 5, on: .main, in: .common).autoconnect()
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            cryptoRow(symbol: "BTC", value: btc, color: .orange)
+            cryptoRow(symbol: "ETH", value: eth, color: .cyan)
+            Spacer(minLength: 0)
+        }
+        .onAppear(perform: load)
+        .onReceive(timer) { _ in load() }
+    }
+
+    private func cryptoRow(symbol: String, value: String, color: Color) -> some View {
+        HStack(spacing: 6) {
+            Text(symbol)
+                .font(.system(size: 10, weight: .bold, design: .monospaced))
+                .foregroundStyle(color)
+            Text(value.isEmpty ? "--" : value)
+                .font(.system(size: 11, weight: .semibold, design: .monospaced))
+                .foregroundStyle(.white)
+            Spacer(minLength: 0)
+        }
+    }
+
+    private func load() {
+        btc = store.string(forKey: .cryptoBTC) ?? ""
+        eth = store.string(forKey: .cryptoETH) ?? ""
+    }
+}
+
+struct QuoteTabContent: View {
+    @State private var text: String = ""
+    @State private var author: String = ""
+    private let store = WidgetDataStore.shared
+    private let timer = Timer.publish(every: 5, on: .main, in: .common).autoconnect()
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(text.isEmpty ? "No quote saved yet." : "\"\(text)\"")
+                .font(.system(size: 10, design: .monospaced))
+                .foregroundStyle(.white.opacity(text.isEmpty ? 0.4 : 0.85))
+                .italic(text.isEmpty == false)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            
+            if !author.isEmpty {
+                Text("— \(author)")
+                    .font(.system(size: 9, design: .monospaced))
+                    .foregroundStyle(.white.opacity(0.5))
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+            }
+            
+            Spacer(minLength: 0)
+        }
+        .onAppear(perform: load)
+        .onReceive(timer) { _ in load() }
+    }
+
+    private func load() {
+        text = store.string(forKey: .quoteText) ?? ""
+        author = store.string(forKey: .quoteAuthor) ?? ""
+    }
+}
+

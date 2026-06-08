@@ -91,26 +91,49 @@ struct DesktopWidgetEditor: View {
                     .buttonStyle(.plain)
                 }
 
-                // Widget grid
-                VStack(alignment: .leading, spacing: 8 * zoomScale) {
-                    Text("Active Widgets (\(manager.widgets.count))")
-                        .font(.system(size: 11 * zoomScale, weight: .bold, design: .monospaced))
-                        .foregroundStyle(.white.opacity(0.6))
-
+                // Active items grid
+                VStack(alignment: .leading, spacing: 12 * zoomScale) {
+                    let regularWidgets = manager.widgets.filter { !$0.type.isDesktopTab }
+                    let desktopTabs = manager.widgets.filter { $0.type.isDesktopTab }
+                    
+                    if !regularWidgets.isEmpty {
+                        VStack(alignment: .leading, spacing: 8 * zoomScale) {
+                            Text("Active Widgets (\(regularWidgets.count))")
+                                .font(.system(size: 11 * zoomScale, weight: .bold, design: .monospaced))
+                                .foregroundStyle(.white.opacity(0.6))
+                            
+                            LazyVGrid(columns: [GridItem(.adaptive(minimum: 120 * zoomScale))], spacing: 8 * zoomScale) {
+                                ForEach(regularWidgets) { widget in
+                                    WidgetListCard(widget: widget) {
+                                        manager.removeWidget(id: widget.id)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    
+                    if !desktopTabs.isEmpty {
+                        VStack(alignment: .leading, spacing: 8 * zoomScale) {
+                            Text("Desktop Tabs (\(desktopTabs.count))")
+                                .font(.system(size: 11 * zoomScale, weight: .bold, design: .monospaced))
+                                .foregroundStyle(.white.opacity(0.6))
+                            
+                            LazyVGrid(columns: [GridItem(.adaptive(minimum: 120 * zoomScale))], spacing: 8 * zoomScale) {
+                                ForEach(desktopTabs) { widget in
+                                    WidgetListCard(widget: widget) {
+                                        manager.removeWidget(id: widget.id)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    
                     if manager.widgets.isEmpty {
-                        Text("No widgets. Add one below.")
+                        Text("No widgets or tabs. Add one below.")
                             .font(.system(size: 10 * zoomScale, design: .monospaced))
                             .foregroundStyle(.white.opacity(0.3))
                             .frame(maxWidth: .infinity, alignment: .center)
                             .padding(.vertical, 20)
-                    } else {
-                        LazyVGrid(columns: [GridItem(.adaptive(minimum: 120 * zoomScale))], spacing: 8 * zoomScale) {
-                            ForEach(manager.widgets) { widget in
-                                WidgetListCard(widget: widget) {
-                                    manager.removeWidget(id: widget.id)
-                                }
-                            }
-                        }
                     }
                 }
                 .padding(12 * zoomScale)
@@ -128,7 +151,7 @@ struct DesktopWidgetEditor: View {
                         .foregroundStyle(.white.opacity(0.6))
 
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 90 * zoomScale))], spacing: 8 * zoomScale) {
-                        ForEach(WidgetType.allCases) { type in
+                        ForEach(WidgetType.allCases.filter { !$0.isDesktopTab }) { type in
                             AddWidgetButton(type: type) {
                                 if type == .finderFile {
                                     selectedFileType = type
@@ -136,6 +159,28 @@ struct DesktopWidgetEditor: View {
                                 } else {
                                     manager.addWidget(type)
                                 }
+                            }
+                        }
+                    }
+                }
+                .padding(12 * zoomScale)
+                .background(Color(white: 0.03))
+                .clipShape(RoundedRectangle(cornerRadius: 10 * zoomScale))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10 * zoomScale)
+                        .stroke(Color.white.opacity(0.06), lineWidth: 1 * zoomScale)
+                )
+                
+                // Add desktop tab section
+                VStack(alignment: .leading, spacing: 10 * zoomScale) {
+                    Text("Add Desktop Tab")
+                        .font(.system(size: 11 * zoomScale, weight: .bold, design: .monospaced))
+                        .foregroundStyle(.white.opacity(0.6))
+
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 90 * zoomScale))], spacing: 8 * zoomScale) {
+                        ForEach(WidgetType.allCases.filter(\.isDesktopTab)) { type in
+                            AddWidgetButton(type: type) {
+                                manager.addWidget(type)
                             }
                         }
                     }
@@ -204,6 +249,12 @@ private struct WidgetListCard: View {
             }
 
             Spacer()
+
+            if widget.type.isDesktopTab {
+                Image(systemName: widget.isLocked ? "lock.fill" : "lock.open")
+                    .font(.system(size: 10 * zoomScale))
+                    .foregroundStyle(widget.isLocked ? .orange : .white.opacity(0.3))
+            }
 
             Button(action: onDelete) {
                 Image(systemName: "trash")

@@ -38,6 +38,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var errorHubWindow: NSWindow?
     var fanControlWindow: NSWindow?
     var showPopoverCustomHotKeyID: UInt32?
+    var panicHotKeyID: UInt32?
 
     var splashWindow: NSWindow?
     private var clickOutsideMonitor: Any?
@@ -63,6 +64,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             self.closeSplashScreen()
             self.setupStatusItem()
             self.setupShowPopoverShortcut()
+            self.setupPanicShortcut()
             self.setupGlobalHotKeyHandler()
 
             PreferencesManager.shared.onPreferencesChanged = { [weak self] _ in
@@ -1381,7 +1383,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         DesktopWallpaperController.shared.hideWallpapers()
         DesktopWidgetManager.shared.setEnabled(false)
         
+        // Resume any suspended proctoring processes before quitting so the
+        // system is not left in a broken state.
+        AssessPrepHackViewModel.shared.stopAllBypasses()
+        
         if let id = showPopoverCustomHotKeyID {
+            ShortcutManager.shared.unregisterCustomHotKey(id: id)
+        }
+        if let id = panicHotKeyID {
             ShortcutManager.shared.unregisterCustomHotKey(id: id)
         }
         if let item = statusItem {
@@ -1535,6 +1544,45 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             cocoaModifiers: modifiers
         ) { [weak self] in
             self?.toggleMainWindow()
+        }
+    }
+    
+    // MARK: - Panic Shortcut
+    
+    private func setupPanicShortcut() {
+        if let id = panicHotKeyID {
+            ShortcutManager.shared.unregisterCustomHotKey(id: id)
+            panicHotKeyID = nil
+        }
+        
+        // Default panic hotkey: F6 (no modifiers)
+        panicHotKeyID = ShortcutManager.shared.registerCustomHotKey(
+            keyCode: 0x61, // F6
+            cocoaModifiers: 0
+        ) { [weak self] in
+            Task { @MainActor in
+                let viewModel = AssessPrepHackViewModel.shared
+                
+                // Step 1: try to suspend any active proctoring process first
+                if let suspendApp = viewModel.panicApps.first(where: { $0.isEnabled && $0.bypassTechnique == .processSuspend }) {
+                    viewModel.executeBypass(for: suspendApp)
+                } else {
+                    viewModel.performProcessSuspend()
+                }
+                
+                // Step 2: switch to a safe app
+                if let app = viewModel.panicApps.first(where: { $0.isEnabled && $0.bypassTechnique == .panicSwitch }) {
+                    viewModel.executeBypass(for: app)
+                } else {
+                    // No panic app configured; fall back to Safari
+                    let safari = PanicApp(name: "Safari", bundleIdentifier: "com.apple.Safari", iconName: "safari.fill", bypassTechnique: .panicSwitch)
+                    viewModel.executeBypass(for: safari)
+                }
+            }
+        }
+        
+        if panicHotKeyID == nil {
+            print("[AssessPrep] Warning: Failed to register panic hotkey (F6 may be in use)")
         }
     }
     
