@@ -153,22 +153,32 @@ final class SMCService {
         updateFanAccessReason()
     }
     
+    var isHelperAvailable: Bool {
+        SMCHelperClient.shared.isHelperAvailable
+    }
+
     private func updateFanAccessReason() {
+        if isHelperAvailable {
+            fanAccessReason = "Privileged helper tool is connected. Fan read/write should be available."
+            return
+        }
         if isConnected {
             if isAppleSiliconMac() {
-                fanAccessReason = "Apple Silicon Macs restrict fan access to system processes. Fans cannot be read without a privileged helper tool."
+                fanAccessReason = "Apple Silicon Macs restrict fan access to system processes. Run ClassGodHelper as root to enable fan control."
             } else {
                 fanAccessReason = "SMC connected but no fan data returned. This Mac may not have controllable fans."
             }
         } else {
             if isAppleSiliconMac() {
-                fanAccessReason = "Apple Silicon Macs restrict fan access to system processes. Fans cannot be read without a privileged helper tool."
+                fanAccessReason = "Apple Silicon Macs restrict fan access to system processes. Run ClassGodHelper as root to enable fan control."
             } else {
                 fanAccessReason = "Could not connect to SMC. Ensure ClassGod is not sandboxed and try rescanning."
             }
         }
     }
     
+    var isAppleSilicon: Bool { isAppleSiliconMac() }
+
     private func isAppleSiliconMac() -> Bool {
         var sysinfo = utsname()
         uname(&sysinfo)
@@ -336,6 +346,17 @@ final class SMCService {
 
         isUsingIORegistryFallback = false
 
+        // Helper-provided SMC temperatures (privileged root helper on Apple Silicon)
+        if let helperTemps = SMCHelperClient.shared.readTemps(), !helperTemps.isEmpty {
+            for dict in helperTemps {
+                guard let name = dict["name"] as? String,
+                      let key = dict["key"] as? String else { continue }
+                let value = dict["value"] as? Double ?? 0
+                let max = dict["maxValue"] as? Double ?? 100
+                results.append(TemperatureSensor(name: name, key: key, value: value, maxValue: max))
+            }
+        }
+
             // Fallback: IORegistry traversal for Apple Silicon / restricted access
         // Only scan once and cache results to avoid performance issues
         if !hasScannedIORegistry {
@@ -387,7 +408,24 @@ final class SMCService {
     func readFans() -> [FanInfo] {
         var fans: [FanInfo] = []
 
-        // Try SMC direct read first (Intel Macs)
+        // 1. Privileged helper (Apple Silicon root access)
+        if let helperFans = SMCHelperClient.shared.readFans(), !helperFans.isEmpty {
+            for dict in helperFans {
+                guard let id = dict["id"] as? Int else { continue }
+                var info = FanInfo(id: id, name: (dict["name"] as? String) ?? fanName(for: id))
+                if let v = dict["actualRPM"] as? Double { info.actualRPM = v }
+                if let v = dict["minimumRPM"] as? Double { info.minimumRPM = v }
+                if let v = dict["maximumRPM"] as? Double { info.maximumRPM = v }
+                if let v = dict["targetRPM"] as? Double { info.targetRPM = v }
+                fans.append(info)
+            }
+            if !fans.isEmpty {
+                fanAccessReason = nil
+                return fans
+            }
+        }
+
+        // 2. SMC direct read (Intel Macs)
         if isConnected, let numBytes = readSMCBytes(key: "FNum"), numBytes.count >= 1, numBytes[0] > 0 {
             let numFans = min(Int(numBytes[0]), 16)
 
@@ -554,6 +592,10 @@ final class SMCService {
     }
 
     func setFanMode(_ mode: FanControlMode, fanIndex: Int = 0) -> Bool {
+        let modeString = mode.rawValue
+        if SMCHelperClient.shared.isHelperAvailable {
+            return SMCHelperClient.shared.setFanMode(modeString, fanIndex: fanIndex)
+        }
         switch mode {
         case .system:
             return writeSMCBytes(key: "F\(fanIndex)Tg", bytes: [0, 0])
@@ -567,6 +609,9 @@ final class SMCService {
     }
 
     func setFanRPM(_ rpm: Double, fanIndex: Int = 0) -> Bool {
+        if SMCHelperClient.shared.isHelperAvailable {
+            return SMCHelperClient.shared.setFanRPM(rpm, fanIndex: fanIndex)
+        }
         let bytes = encodeFPE2(value: rpm)
         return writeSMCBytes(key: "F\(fanIndex)Tg", bytes: bytes)
     }

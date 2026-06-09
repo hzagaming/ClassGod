@@ -1,5 +1,29 @@
 # ClassGod 更新日志
 
+## v1.4.1 — 2026-06-09
+
+### 新增
+- **ClassGodHelper 特权辅助工具**：
+  - 独立的 Swift Package (`ClassGodHelper`)，作为 root 守护进程运行，通过 Unix domain socket 与主应用通信
+  - 支持在 Apple Silicon 上绕过用户空间 SMC 限制，读取真实风扇 RPM、温度传感器
+  - 支持 `setFanMode` / `setFanRPM` 写入风扇目标转速（System / Max / Manual / Auto Max / Custom）
+  - 使用 `getpeereid` 对连接客户端进行 UID 校验（默认读取 `SUDO_UID`）
+  - 自动嵌入到 `ClassGod.app/Contents/MacOS/ClassGodHelper`，通过 Xcode Run Script 阶段随主应用一起编译
+- Fan Control 诊断面板新增 **Privileged Helper** 状态行：
+  - 绿色：辅助工具已连接，完整 SMC 读写可用
+  - 黄色：Apple Silicon 需要 root 辅助工具才能解锁风扇控制
+  - 一键复制启动命令按钮：`sudo "/Applications/ClassGod.app/Contents/MacOS/ClassGodHelper"`
+
+### 优化
+- `SMCService` 优先通过 `SMCHelperClient` 访问 Helper；Helper 不可用时回退到原有直连 / IORegistry 兜底
+- `SMCService.updateFanAccessReason()` 在 Helper 可用时显示正向提示
+
+### 修复
+- 修复 `FanControlView` 中 `showToast(message:)` 为 internal，避免从 View 调用时编译错误
+- 版本号更新为 v1.4.1 (Build 15)
+
+---
+
 ## v1.4.0 — 2026-06-08
 
 ### 新增
