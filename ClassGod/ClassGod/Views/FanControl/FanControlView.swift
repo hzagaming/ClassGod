@@ -14,6 +14,26 @@ struct FanControlView: View {
     private var zoomScale: CGFloat { CGFloat(prefs.preferences.windowZoomScale) }
     private var unit: TemperatureUnit { prefs.preferences.fanControlTemperatureUnit }
 
+    private var helperStatusMessage: String {
+        if SMCService.shared.isHelperAvailable {
+            return "ClassGodHelper is running as root. Full SMC read/write enabled."
+        }
+        if SMCService.shared.isAppleSilicon {
+            return "Apple Silicon restricts SMC access. Run the helper as root to unlock fan control."
+        }
+        return "Privileged helper is optional on Intel Macs."
+    }
+
+    private func copyHelperCommand() {
+        let helperPath = Bundle.main.bundleURL
+            .appendingPathComponent("Contents/MacOS/ClassGodHelper")
+            .path
+        let command = "sudo \"\(helperPath)\""
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(command, forType: .string)
+        viewModel.showToast(message: "Helper command copied")
+    }
+
     var body: some View {
         ZStack {
             VStack(spacing: 0) {
@@ -459,6 +479,33 @@ struct FanControlView: View {
                     isGood: !viewModel.sensors.isEmpty,
                     zoomScale: zoomScale
                 )
+
+                // Privileged helper status
+                DiagnosticRow(
+                    icon: SMCService.shared.isHelperAvailable ? "checkmark.shield.fill" : "lock.shield.fill",
+                    title: "Privileged Helper",
+                    message: helperStatusMessage,
+                    isGood: SMCService.shared.isHelperAvailable,
+                    zoomScale: zoomScale
+                )
+
+                if !SMCService.shared.isHelperAvailable, SMCService.shared.isAppleSilicon {
+                    Button(action: {
+                        SoundEffectManager.shared.playButtonClick()
+                        copyHelperCommand()
+                    }) {
+                        HStack(spacing: 4 * zoomScale) {
+                            Image(systemName: "doc.on.doc")
+                                .font(.system(size: 9 * zoomScale))
+                            Text("Copy Helper Command")
+                                .font(.system(size: 10 * zoomScale, weight: .medium, design: .monospaced))
+                        }
+                        .foregroundStyle(.yellow.opacity(0.8))
+                        .padding(.horizontal, 8 * zoomScale)
+                        .padding(.vertical, 4 * zoomScale)
+                    }
+                    .buttonStyle(.plain)
+                }
 
                 if !viewModel.sensors.isEmpty {
                     Button(action: {

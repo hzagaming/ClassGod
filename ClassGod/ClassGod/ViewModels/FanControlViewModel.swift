@@ -635,7 +635,7 @@ final class FanControlViewModel: ObservableObject {
         menuBarDisplay = "\(tempStr) / \(rpmStr)"
     }
 
-    private func showToast(message: String) {
+    func showToast(message: String) {
         toastMessage = message
         showToast = true
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
