@@ -4,6 +4,17 @@
 
 ---
 
+## v1.4.6 — 2026-06-10
+
+### 修复
+- **Helper socket 权限修复**：创建 Unix socket 后执行 `chmod 666`，解决普通用户无法连接 root helper 的问题（之前 socket 只有 root 可写）
+- **Helper 启动时自动打印发现的传感器数量**：方便用户验证 helper 实际能读到多少传感器
+- **PMU 传感器命名去重**：给每个 `AppleARMPMUTempSensor` 加上 locationID 后缀，避免 50+ 个传感器显示同名
+- **Helper 返回空数据时的诊断提示**：`SMCService.readAll()` 当 helper socket 存在但返回空时，更新 `fanAccessReason` 提示用户重启 helper
+- 版本号更新为 v1.4.6 (Build 21)
+
+---
+
 ## v1.4.5 — 2026-06-10
 
 ### 新增

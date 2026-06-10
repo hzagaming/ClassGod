@@ -164,7 +164,7 @@ final class SMCService {
 
     private func updateFanAccessReason() {
         if isHelperAvailable {
-            fanAccessReason = "Privileged helper tool is connected. Fan read/write should be available."
+            fanAccessReason = "Privileged helper tool is present. If sensors/fans still show N/A, restart the helper with: sudo killall ClassGodHelper; sudo /path/to/ClassGodHelper"
             return
         }
         if isConnected {
@@ -407,10 +407,17 @@ final class SMCService {
         var usedHelper = false
 
         // 1. Privileged helper: one socket round-trip returns both fans and temps.
-        if isHelperAvailable, let all = SMCHelperClient.shared.readAll() {
-            fans = fansFromHelper(all.fans)
-            sensors = temperaturesFromHelper(all.temps)
-            usedHelper = !fans.isEmpty || !sensors.isEmpty
+        if isHelperAvailable {
+            if let all = SMCHelperClient.shared.readAll() {
+                fans = fansFromHelper(all.fans)
+                sensors = temperaturesFromHelper(all.temps)
+                usedHelper = !fans.isEmpty || !sensors.isEmpty
+            }
+            if !usedHelper {
+                // Helper socket exists but returned no usable data — likely an old helper
+                // running with a stale socket or permission mismatch.
+                fanAccessReason = "Helper socket found but returned no data. Restart the helper: sudo killall ClassGodHelper; sudo /Applications/ClassGod.app/Contents/MacOS/ClassGodHelper"
+            }
         }
 
         // 2. Direct SMC fallback (Intel Macs / unlocked Apple Silicon)
@@ -918,10 +925,10 @@ final class SMCService {
             }()
 
             if let value = realValue, value > -50 && value < 150 {
-                results.append(TemperatureSensor(name: product, key: key, value: value, maxValue: 100, isEstimated: false))
+                results.append(TemperatureSensor(name: "\(product) (loc \(locationID.uint32Value))", key: key, value: value, maxValue: 100, isEstimated: false))
             } else {
                 // Placeholder so the sensor appears in the discovered list.
-                results.append(TemperatureSensor(name: product, key: key, value: estimatedBase, maxValue: 100, isEstimated: true))
+                results.append(TemperatureSensor(name: "\(product) (loc \(locationID.uint32Value))", key: key, value: estimatedBase, maxValue: 100, isEstimated: true))
             }
         }
 

@@ -337,6 +337,9 @@ private func setupSocket() -> Int32 {
         return -1
     }
 
+    // Allow any user to connect to the socket (not just root)
+    chmod(path, 0o666)
+
     print("[Helper] Listening on \(path)")
     return fd
 }
@@ -437,6 +440,18 @@ if let sudoUIDString = getenv("SUDO_UID"),
     print("[Helper] Allowed peer UID (SUDO_UID): \(sudoUID)")
 } else {
     print("[Helper] No SUDO_UID; allowing any peer (not recommended for production)")
+}
+
+// Pre-flight sensor discovery so user can see what this machine exposes.
+let smc = SMCHelper.shared
+let discoveredTemps = smc.readTemps()
+let discoveredFans = smc.readFans()
+print("[Helper] Discovered \(discoveredTemps.count) temperature sensors, \(discoveredFans.count) fans")
+for t in discoveredTemps.prefix(10) {
+    print("[Helper]   Temp: \(t["name"] ?? "?") [\(t["key"] ?? "?")] = \(t["value"] ?? 0)")
+}
+if discoveredTemps.count > 10 {
+    print("[Helper]   ... and \(discoveredTemps.count - 10) more")
 }
 
 listen_fd = setupSocket()
