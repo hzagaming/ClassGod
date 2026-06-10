@@ -276,6 +276,37 @@ final class SMCService {
         }
         return nil
     }
+    
+    /// Enumerates all SMC keys and returns temperature keys (type sp78/sp79/sp7a/sp5a/si8c)
+    /// that are not already in the hardcoded list.
+    private func enumerateSMCTemperatureKeys() -> [(key: String, type: String)] {
+        guard isConnected else { return [] }
+        guard let keyCountBytes = readSMCBytes(key: "#KEY"), keyCountBytes.count >= 4 else { return [] }
+        let count = Int(UInt32(keyCountBytes[0]) << 24 | UInt32(keyCountBytes[1]) << 16 |
+                        UInt32(keyCountBytes[2]) << 8 | UInt32(keyCountBytes[3]))
+        guard count > 0 && count < 10000 else { return [] }
+        
+        var results: [(key: String, type: String)] = []
+        let validTypes = Set(["sp78", "sp79", "sp7a", "sp5a", "si8c"])
+        
+        for i in 0..<count {
+            var input = [UInt8](repeating: 0, count: 56)
+            var output = [UInt8](repeating: 0, count: 56)
+            input[0] = UInt8((i >> 24) & 0xFF)
+            input[1] = UInt8((i >> 16) & 0xFF)
+            input[2] = UInt8((i >> 8) & 0xFF)
+            input[3] = UInt8(i & 0xFF)
+            input[16] = 8 // READ_INDEX
+            let kr = smcCall(input: &input, output: &output)
+            guard kr == KERN_SUCCESS && output[14] == 0 else { continue }
+            let key4cc = String(bytes: output[0..<4].map { $0 }, encoding: .ascii) ?? ""
+            let type = String(bytes: output[4..<8].map { $0 }, encoding: .ascii) ?? ""
+            let typeLower = type.lowercased()
+            guard key4cc.hasPrefix("T"), validTypes.contains(typeLower) else { continue }
+            results.append((key: key4cc, type: typeLower))
+        }
+        return results
+    }
 
     private func writeSMCBytes(key: String, bytes: [UInt8]) -> Bool {
         guard isConnected, key.count == 4 else { return false }
@@ -384,11 +415,24 @@ final class SMCService {
 
         // 2. Direct SMC fallback (Intel Macs / unlocked Apple Silicon)
         if !usedHelper, isConnected {
+            var seenKeys = Set<String>()
             for (name, key, max) in sensorKeys {
                 if let bytes = readSMCBytes(key: key), bytes.count >= 2 {
                     let value = decodeSP78(bytes: bytes)
                     if value > -50 && value < 150 {
                         sensors.append(TemperatureSensor(name: name, key: key, value: value, maxValue: max))
+                        seenKeys.insert(key)
+                    }
+                }
+            }
+            
+            // Dynamic enumeration: scan all SMC keys for additional temperature sensors
+            let dynamicTemps = enumerateSMCTemperatureKeys()
+            for (key, _) in dynamicTemps where !seenKeys.contains(key) {
+                if let bytes = readSMCBytes(key: key), bytes.count >= 2 {
+                    let value = decodeSP78(bytes: bytes)
+                    if value > -50 && value < 150 {
+                        sensors.append(TemperatureSensor(name: key, key: key, value: value, maxValue: 100))
                     }
                 }
             }
@@ -670,12 +714,13 @@ final class SMCService {
             stateName = "Unknown"
         }
         
-        // Add CPU thermal state sensor
+        // Add CPU thermal state sensor — mark as estimated so Auto Max rules ignore it.
         results.append(TemperatureSensor(
             name: "CPU Thermal State (\(stateName))",
             key: "THCPU",
             value: baseTemp,
-            maxValue: 100
+            maxValue: 100,
+            isEstimated: true
         ))
         
         // Add GPU thermal state sensor (typically slightly higher)
@@ -683,7 +728,8 @@ final class SMCService {
             name: "GPU Thermal State (\(stateName))",
             key: "THGPU",
             value: baseTemp + 3.0,
-            maxValue: 100
+            maxValue: 100,
+            isEstimated: true
         ))
         
         return results
@@ -707,7 +753,9 @@ final class SMCService {
                     var propsRef: Unmanaged<CFMutableDictionary>?
                     let kr = IORegistryEntryCreateCFProperties(service, &propsRef, kCFAllocatorDefault, 0)
                     if kr == KERN_SUCCESS, let props = propsRef?.takeRetainedValue() as? [String: Any] {
-                        for (key, value) in props where key.hasPrefix("T") {
+                        // Scan known temperature key prefixes
+                        let tempPrefixes = ["T", "PMU", "ANE", "ISP"]
+                        for (key, value) in props where tempPrefixes.contains(where: { key.hasPrefix($0) }) {
                             if let num = value as? NSNumber {
                                 let temp = num.doubleValue
                                 if temp > 10 && temp < 150 {
@@ -719,6 +767,14 @@ final class SMCService {
                                 if temp > 10 && temp < 150 {
                                     results.append(TemperatureSensor(name: key, key: key, value: temp, maxValue: 100))
                                 }
+                            }
+                        }
+                        // Some devices expose temperature via location strings like "Txxx"
+                        if let location = props["location"] as? String, location.hasPrefix("T"),
+                           let num = props["value"] as? NSNumber ?? props["temperature"] as? NSNumber {
+                            let temp = num.doubleValue
+                            if temp > 10 && temp < 150 {
+                                results.append(TemperatureSensor(name: location, key: location, value: temp, maxValue: 100))
                             }
                         }
                     }

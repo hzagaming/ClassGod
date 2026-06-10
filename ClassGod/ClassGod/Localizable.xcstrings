@@ -25,9 +25,6 @@
     "*" : {
 
     },
-    "* Per-process network is estimated by CPU share" : {
-
-    },
     "/ %lld" : {
 
     },
@@ -2779,6 +2776,9 @@
     "Copy Fix" : {
 
     },
+    "Copy Helper Command" : {
+
+    },
     "Copy Sensor Data" : {
 
     },
@@ -4165,6 +4165,9 @@
         }
       }
     },
+    "Failed to load encyclopedia" : {
+
+    },
     "Fan Control" : {
 
     },
@@ -4919,6 +4922,9 @@
 
     },
     "Limited process visibility. To see all system processes, grant Full Disk Access to ClassGod in System Settings > Privacy & Security." : {
+
+    },
+    "Loading error encyclopedia..." : {
 
     },
     "Log line" : {
@@ -5901,6 +5907,9 @@
     "Quote" : {
 
     },
+    "Real-time per-process network via nettop" : {
+
+    },
     "Refresh Status" : {
 
     },
@@ -6043,6 +6052,9 @@
           }
         }
       }
+    },
+    "Retry" : {
+
     },
     "Right-click on desktop → Edit Widgets → Add ClassGod widgets" : {
 

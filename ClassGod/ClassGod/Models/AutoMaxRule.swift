@@ -35,6 +35,7 @@ enum RuleComparison: String, Codable, CaseIterable, Identifiable {
 
 enum RuleSensor: String, Codable, CaseIterable, Identifiable {
     case highestCPU = "highestCPU"
+    case averageCPU = "averageCPU"
     case highestGPU = "highestGPU"
     case anySensor = "anySensor"
 
@@ -42,6 +43,7 @@ enum RuleSensor: String, Codable, CaseIterable, Identifiable {
     var displayName: String {
         switch self {
         case .highestCPU: return "Highest CPU"
+        case .averageCPU: return "Average CPU"
         case .highestGPU: return "Highest GPU"
         case .anySensor: return "Any Sensor"
         }

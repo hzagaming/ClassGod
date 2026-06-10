@@ -425,8 +425,12 @@ final class FanControlViewModel: ObservableObject {
         let rules = prefs.preferences.fanControlAutoMaxRules.filter { $0.isEnabled }
         guard !rules.isEmpty else {
             activeRuleIDs.removeAll()
+            fanTargets.removeAll()
             return
         }
+        
+        // Clear stale targets before re-evaluating so deactivated rules don't leave residuals.
+        fanTargets.removeAll()
 
         // Clean up state for deleted rules
         let validRuleIDs = Set(rules.map(\.id))
@@ -518,8 +522,19 @@ final class FanControlViewModel: ObservableObject {
     }
 
     private func applyGradualRamp() {
-        guard fanMode == .autoMax || !fanTargets.isEmpty else { return }
+        guard fanMode == .autoMax || fanMode == .custom else { return }
         let gradualTime = max(1.0, prefs.preferences.fanControlGradualTime)
+        
+        // If no rules are active, release fans back to system control gradually.
+        if fanTargets.isEmpty {
+            for i in fans.indices {
+                guard fans[i].targetRPM != 0 else { continue }
+                // Only write once per fan to avoid spamming SMC
+                fans[i].targetRPM = 0
+                _ = SMCService.shared.setFanMode(.system, fanIndex: i)
+            }
+            return
+        }
 
         for (index, targetRPM) in fanTargets {
             guard index < fans.count else { continue }
@@ -639,6 +654,10 @@ final class FanControlViewModel: ObservableObject {
         switch sensor {
         case .highestCPU:
             return candidates.filter { $0.name.contains("CPU") || $0.name.contains("Cluster") }.map(\.value).max() ?? 0
+        case .averageCPU:
+            let cpuSensors = candidates.filter { $0.name.contains("CPU") || $0.name.contains("Cluster") }
+            guard !cpuSensors.isEmpty else { return 0 }
+            return cpuSensors.map(\.value).reduce(0, +) / Double(cpuSensors.count)
         case .highestGPU:
             return candidates.filter { $0.name.contains("GPU") }.map(\.value).max() ?? 0
         case .anySensor:

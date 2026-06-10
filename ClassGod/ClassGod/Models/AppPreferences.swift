@@ -484,11 +484,11 @@ struct AppPreferences: Codable, Equatable {
         fanControlUpdateInterval: 1,
         fanControlTemperatureUnit: .celsius,
         fanControlMode: .system,
-        fanControlAutoMaxThreshold: 70,
+        fanControlAutoMaxThreshold: 80,
         fanControlAutoMaxRules: [
-            AutoMaxRule(fanTarget: .allFans, sensor: .highestCPU, comparison: .above, threshold: 70, hysteresis: 5, durationSeconds: 3, isEnabled: true, targetMode: .percentage, targetPercentage: 100)
+            AutoMaxRule(fanTarget: .allFans, sensor: .averageCPU, comparison: .above, threshold: 80, hysteresis: 5, durationSeconds: 5, isEnabled: true, targetMode: .percentage, targetPercentage: 60)
         ],
-        fanControlGradualTime: 21,
+        fanControlGradualTime: 10,
         fanControlDisableOnSleep: true,
         fanControlEnableNotifications: false,
         fanControlNotificationThreshold: 85

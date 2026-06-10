@@ -4,6 +4,31 @@
 
 ---
 
+## v1.4.5 — 2026-06-10
+
+### 新增
+- **Auto Max 规则传感器新增 `Average CPU`**：替代 `Highest CPU` 作为默认选项，取所有 CPU/Cluster 传感器平均值，避免单核瞬时尖峰导致误触发
+
+### 优化
+- **传感器发现大幅增强**：
+  - `ClassGodHelper` 温度键列表从 18 个扩展到 34 个，与主 app 完全一致
+  - Helper 和主 app 均新增 **SMC 动态键枚举**：读取 `#KEY` 总键数，遍历所有键的 4CC 码和类型码，自动发现机器专属温度传感器（`T` 前缀 + `sp78`/`sp79`/`sp7a`/`sp5a`/`si8c` 类型）
+  - `AppleARMIODevice` IORegistry 扫描扩展：除 `"T"` 前缀外，新增扫描 `"PMU"`、`"ANE"`、`"ISP"` 相关属性以及 `"location"` 字符串指向温度通道的条目
+- **风扇控制策略 relaxed**：
+  - 默认规则阈值：70°C → **80°C**
+  - 默认目标转速：100% → **60%**
+  - 触发持续时长：3s → **5s**
+  - 渐进时间：21s → **10s**
+  - 默认传感器：`Highest CPU` → **`Average CPU`**
+
+### 修复
+- **规则停用后风扇不释放**：`evaluateAutoMaxRules()` 每次循环开头清空 `fanTargets`，规则消失后不再残留旧 target
+- **Auto Max 无规则激活时回 system**：`applyGradualRamp()` 当 `fanTargets.isEmpty` 时，对所有风扇调用 `setFanMode(.system)`，把控制权交还 macOS
+- **Thermal State 伪传感器污染**：`readThermalStateTemperatures()` 返回的 35/50/70/90°C 传感器统一标记 `isEstimated = true`，Auto Max 规则不再误把它们当作真实硬件读数参与 `highestCPU` 计算
+- 版本号更新为 v1.4.5 (Build 20)
+
+---
+
 ## v1.4.4 — 2026-06-10
 
 ### 优化

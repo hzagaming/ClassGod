@@ -138,23 +138,77 @@ final class SMCHelper {
 
     // MARK: - Higher-level API
 
+    // MARK: - SMC Key Enumeration
+    
+    /// Enumerates all available SMC keys by reading #KEY and iterating indices.
+    /// Returns a map of key 4CC -> type string for keys matching the given prefixes.
+    func enumerateSMCKeys(matchingPrefixes prefixes: [String] = ["T", "F"]) -> [(key: String, type: String)] {
+        var results: [(key: String, type: String)] = []
+        guard let keyCountBytes = readBytes(key: "#KEY"), keyCountBytes.count >= 2 else { return results }
+        let count = Int(UInt32(keyCountBytes[0]) << 24 | UInt32(keyCountBytes[1]) << 16 |
+                        UInt32(keyCountBytes[2]) << 8 | UInt32(keyCountBytes[3]))
+        guard count > 0 && count < 10000 else { return results }
+        
+        for i in 0..<count {
+            var input = [UInt8](repeating: 0, count: 56)
+            var output = [UInt8](repeating: 0, count: 56)
+            input[0] = UInt8((i >> 24) & 0xFF)
+            input[1] = UInt8((i >> 16) & 0xFF)
+            input[2] = UInt8((i >> 8) & 0xFF)
+            input[3] = UInt8(i & 0xFF)
+            input[16] = 8 // READ_INDEX command
+            let kr = smcCall(input: &input, output: &output)
+            guard kr == KERN_SUCCESS && output[14] == 0 else { continue }
+            let key4cc = String(bytes: output[0..<4].map { $0 }, encoding: .ascii) ?? ""
+            let type = String(bytes: output[4..<8].map { $0 }, encoding: .ascii) ?? ""
+            let typeLower = type.lowercased()
+            guard prefixes.contains(where: { key4cc.hasPrefix($0) }) else { continue }
+            // Only collect known temperature/fan types
+            let validTypes = ["sp78", "sp79", "sp7a", "sp5a", "si8c", "fpe2"]
+            guard validTypes.contains(typeLower) else { continue }
+            results.append((key: key4cc, type: typeLower))
+        }
+        return results
+    }
+
     func readFans() -> [[String: Any]] {
         var out: [[String: Any]] = []
-        guard let numBytes = readBytes(key: "FNum"), numBytes.count >= 1, numBytes[0] > 0 else { return out }
-        let count = min(Int(numBytes[0]), 16)
-        for i in 0..<count {
-            var dict: [String: Any] = ["id": i, "name": fanName(i)]
-            if let b = readBytes(key: "F\(i)Ac") { dict["actualRPM"] = decodeFPE2(b) }
-            if let b = readBytes(key: "F\(i)Mn") { dict["minimumRPM"] = decodeFPE2(b) }
-            if let b = readBytes(key: "F\(i)Mx") { dict["maximumRPM"] = decodeFPE2(b) }
-            if let b = readBytes(key: "F\(i)Tg") { dict["targetRPM"] = decodeFPE2(b) }
-            out.append(dict)
+        var seenKeys = Set<String>()
+        
+        // 1. Standard FNum path
+        if let numBytes = readBytes(key: "FNum"), numBytes.count >= 1, numBytes[0] > 0 {
+            let count = min(Int(numBytes[0]), 16)
+            for i in 0..<count {
+                var dict: [String: Any] = ["id": i, "name": fanName(i)]
+                if let b = readBytes(key: "F\(i)Ac") { dict["actualRPM"] = decodeFPE2(b) }
+                if let b = readBytes(key: "F\(i)Mn") { dict["minimumRPM"] = decodeFPE2(b) }
+                if let b = readBytes(key: "F\(i)Mx") { dict["maximumRPM"] = decodeFPE2(b) }
+                if let b = readBytes(key: "F\(i)Tg") { dict["targetRPM"] = decodeFPE2(b) }
+                out.append(dict)
+                seenKeys.insert("F\(i)Ac")
+            }
+        }
+        
+        // 2. Enumerate dynamic F* keys as supplement
+        let dynamicFans = enumerateSMCKeys(matchingPrefixes: ["F"])
+        for entry in dynamicFans {
+            let key = entry.key
+            guard key.count == 4, key.hasPrefix("F"), key != "FNum" else { continue }
+            guard !seenKeys.contains(key) else { continue }
+            if let b = readBytes(key: key) {
+                let idx = out.count
+                var dict: [String: Any] = ["id": idx, "name": key]
+                dict["actualRPM"] = decodeFPE2(b)
+                out.append(dict)
+                seenKeys.insert(key)
+            }
         }
         return out
     }
 
     func readTemps() -> [[String: Any]] {
         let keys: [(String, String, Double)] = [
+            // Intel & generic
             ("CPU Core", "TC0D", 100),
             ("CPU Proximity", "TC0P", 100),
             ("CPU Heatsink", "TC0H", 100),
@@ -165,21 +219,52 @@ final class SMCHelper {
             ("Airflow Left", "TA0P", 80),
             ("Airflow Right", "TA1P", 80),
             ("Battery", "TB0T", 60),
+            ("Battery 2", "TB1T", 60),
+            ("Battery 3", "TB2T", 60),
             ("Memory", "Tm0P", 80),
             ("Palm Rest", "Ts0P", 50),
             ("Trackpad", "Tp0P", 50),
+            // Apple Silicon CPU clusters
+            ("CPU Cluster 0", "Tp09", 100),
+            ("CPU Cluster 1", "Tp0T", 100),
+            ("CPU Cluster 2", "Tp01", 100),
+            ("CPU Cluster 3", "Tp05", 100),
+            ("CPU Cluster 4", "Tp0D", 100),
+            ("CPU Cluster 5", "Tp0X", 100),
+            ("CPU Cluster 6", "Tp0b", 100),
             ("CPU Performance", "Tp0C", 100),
             ("CPU Efficiency", "Tp0E", 100),
+            // Apple Silicon GPU
             ("GPU", "Tg05", 100),
+            ("GPU 2", "Tg0D", 100),
+            ("GPU 3", "Tg0F", 100),
+            ("GPU 4", "Tg0H", 100),
+            // Apple Silicon misc
             ("SOC", "Ts0S", 100),
+            ("Airflow Top", "TA2P", 80),
             ("SSD", "Ts2S", 80),
         ]
         var out: [[String: Any]] = []
+        var seenKeys = Set<String>()
         for (name, key, max) in keys {
             guard let b = readBytes(key: key), b.count >= 2 else { continue }
             let v = decodeSP78(b)
             if v > -50 && v < 150 {
                 out.append(["name": name, "key": key, "value": v, "maxValue": max])
+                seenKeys.insert(key)
+            }
+        }
+        
+        // Enumerate dynamic T* keys as supplement
+        let dynamicTemps = enumerateSMCKeys(matchingPrefixes: ["T"])
+        for entry in dynamicTemps {
+            let key = entry.key
+            guard key.count == 4, key.hasPrefix("T"), !seenKeys.contains(key) else { continue }
+            if let b = readBytes(key: key) {
+                let v = decodeSP78(b)
+                if v > -50 && v < 150 {
+                    out.append(["name": key, "key": key, "value": v, "maxValue": 100])
+                }
             }
         }
         return out
