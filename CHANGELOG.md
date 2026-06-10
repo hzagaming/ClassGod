@@ -4,6 +4,17 @@
 
 ---
 
+## v1.4.7 — 2026-06-11
+
+### 修复
+- **关闭风扇面板后风扇不回 system**：`FanControlViewModel.stopMonitoring()` 现在会在面板关闭时将所有风扇设回 `.system` 模式，避免风扇被卡在最后一次命令的 RPM
+- **修复 `isUsingIORegistryFallback` 被错误重置**：`readAll()` 中 `isUsingIORegistryFallback = false` 曾无条件覆盖之前的正确设置，导致 IORegistry fallback 状态显示不正确
+- **修复 `fanAccessReason` 被覆盖**：当 helper socket 存在但返回空数据时，具体的诊断提示不再被 `updateFanAccessReason()` 的通用消息覆盖
+- **清理无意义的 AppleSPU fan placeholder**：移除只检测但不创建风扇条目的死代码
+- 版本号更新为 v1.4.7 (Build 22)
+
+---
+
 ## v1.4.6 — 2026-06-10
 
 ### 修复

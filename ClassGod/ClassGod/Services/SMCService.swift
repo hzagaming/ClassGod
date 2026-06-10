@@ -479,12 +479,7 @@ final class SMCService {
                 hasScannedIORegistryFans = true
             }
             fans = cachedIORegistryFans
-            if !fans.isEmpty {
-                isUsingIORegistryFallback = true
-            }
         }
-
-        isUsingIORegistryFallback = false
 
         // 3. IORegistry temperature fallback (scan cached after first call)
         if !hasScannedIORegistry {
@@ -507,7 +502,6 @@ final class SMCService {
         let thermalStateTemps = readThermalStateTemperatures()
         if !thermalStateTemps.isEmpty {
             sensors.append(contentsOf: thermalStateTemps)
-            isUsingIORegistryFallback = true
         }
 
         // 5. Deduplicate by key across helper/direct/IORegistry/thermal sources
@@ -532,7 +526,8 @@ final class SMCService {
 
         if !fans.isEmpty {
             fanAccessReason = nil
-        } else {
+        } else if fanAccessReason == nil || fanAccessReason?.contains("Helper socket found") == false {
+            // Only update the generic reason if we haven't already set a specific diagnostic.
             updateFanAccessReason()
         }
 
@@ -617,40 +612,6 @@ final class SMCService {
                                 }
                                 fans.append(info)
                                 fanIndex += 1
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        
-        // Try AppleSPU for thermal/fan related reports
-        if fans.isEmpty {
-            if let matching = IOServiceMatching("AppleSPU") {
-                var iter = io_iterator_t()
-                if IOServiceGetMatchingServices(kIOMainPortDefault, matching, &iter) == KERN_SUCCESS {
-                    defer { IOObjectRelease(iter) }
-                    while true {
-                        let service = IOIteratorNext(iter)
-                        guard service != 0 else { break }
-                        defer { IOObjectRelease(service) }
-
-                        var propsRef: Unmanaged<CFMutableDictionary>?
-                        let kr = IORegistryEntryCreateCFProperties(service, &propsRef, kCFAllocatorDefault, 0)
-                        if kr == KERN_SUCCESS, let props = propsRef?.takeRetainedValue() as? [String: Any] {
-                            // Some SPU reports may contain fan-related channels
-                            if let reports = props["IOReportLegend"] as? [[String: Any]] {
-                                for report in reports {
-                                    if let group = report["IOReportGroupName"] as? String,
-                                       group.lowercased().contains("fan") {
-                                        // We found fan-related report group but cannot extract live values here
-                                        // Mark that we detected fan hardware at least
-                                        if fans.isEmpty {
-                                            // Create a placeholder indicating hardware detected but not readable
-                                            // This is better than showing nothing
-                                        }
-                                    }
-                                }
                             }
                         }
                     }

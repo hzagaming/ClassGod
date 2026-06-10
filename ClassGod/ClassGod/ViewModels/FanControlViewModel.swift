@@ -198,6 +198,21 @@ final class FanControlViewModel: ObservableObject {
         gradualTimer = nil
         boostTimer?.invalidate()
         boostTimer = nil
+        
+        // When the panel closes, release fans back to system control so they
+        // don't stay stuck at the last commanded RPM.
+        if fanMode != .system {
+            for i in fans.indices {
+                _ = SMCService.shared.setFanMode(.system, fanIndex: i)
+            }
+            fans = fans.map {
+                var f = $0
+                f.targetRPM = 0
+                return f
+            }
+            fanTargets.removeAll()
+        }
+        
         // Restore pre-boost mode if window hides during boost
         if isBoostActive, let mode = preBoostFanMode {
             setFanMode(mode)
