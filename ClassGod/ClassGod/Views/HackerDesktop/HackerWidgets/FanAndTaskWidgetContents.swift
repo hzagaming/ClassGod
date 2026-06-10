@@ -88,7 +88,7 @@ struct FanThermalWidgetContent: View {
 
     private func startPolling() {
         refresh()
-        let interval = max(1.0, prefs.preferences.fanControlUpdateInterval)
+        let interval = max(0.5, prefs.preferences.fanControlUpdateInterval)
         timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { _ in
             refresh()
         }
@@ -100,10 +100,14 @@ struct FanThermalWidgetContent: View {
     }
 
     private func refresh() {
-        let newSensors = SMCService.shared.readTemperatures()
-        sensors = newSensors.sorted { $0.value > $1.value }
-        fanAccessReason = SMCService.shared.fanAccessReason
-        isLoading = false
+        Task.detached(priority: .userInitiated) {
+            let newSensors = SMCService.shared.readTemperatures()
+            await MainActor.run {
+                sensors = newSensors.sorted { $0.value > $1.value }
+                fanAccessReason = SMCService.shared.fanAccessReason
+                isLoading = false
+            }
+        }
     }
 }
 
@@ -253,7 +257,7 @@ struct FanControlDashboardWidgetContent: View {
 
     private func startPolling() {
         refresh()
-        timer = Timer.scheduledTimer(withTimeInterval: max(1.0, prefs.preferences.fanControlUpdateInterval), repeats: true) { _ in
+        timer = Timer.scheduledTimer(withTimeInterval: max(0.5, prefs.preferences.fanControlUpdateInterval), repeats: true) { _ in
             refresh()
         }
     }
@@ -264,8 +268,13 @@ struct FanControlDashboardWidgetContent: View {
     }
 
     private func refresh() {
-        fans = SMCService.shared.readFans()
-        fanAccessReason = SMCService.shared.fanAccessReason
+        Task.detached(priority: .userInitiated) {
+            let newFans = SMCService.shared.readFans()
+            await MainActor.run {
+                fans = newFans
+                fanAccessReason = SMCService.shared.fanAccessReason
+            }
+        }
     }
 }
 
@@ -342,9 +351,7 @@ struct TaskManagerWidgetContent: View {
             SystemMonitor.shared.start(interval: 2.0)
         }
         .onDisappear {
-            if !DesktopWidgetManager.shared.isEnabled {
-                SystemMonitor.shared.stop()
-            }
+            SystemMonitor.shared.stop()
         }
     }
 

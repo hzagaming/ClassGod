@@ -2,7 +2,10 @@
 //  SMCHelperClient.swift
 //  ClassGod
 //
-//  Synchronous client for the privileged ClassGodHelper tool (Unix domain socket).
+//  Client for the privileged ClassGodHelper tool (Unix domain socket).
+//  Keeps a persistent connection to avoid connect/teardown overhead on
+//  every read/write and supports a single "readAll" call that returns
+//  both fan and temperature data in one round-trip.
 //
 
 import Foundation
@@ -14,6 +17,9 @@ final class SMCHelperClient {
     var isHelperAvailable: Bool {
         FileManager.default.fileExists(atPath: Self.socketPath)
     }
+
+    private var fd: Int32 = -1
+    private let lock = NSLock()
 
     private init() {}
 
@@ -31,6 +37,15 @@ final class SMCHelperClient {
         return res?["data"] as? [[String: Any]]
     }
 
+    /// Combined read: returns both fans and temps from a single helper round-trip.
+    func readAll() -> (fans: [[String: Any]], temps: [[String: Any]])? {
+        guard isHelperAvailable else { return nil }
+        guard let res = sendCommand(["cmd": "readAll"]) else { return nil }
+        let fans = res["fans"] as? [[String: Any]] ?? []
+        let temps = res["temps"] as? [[String: Any]] ?? []
+        return (fans: fans, temps: temps)
+    }
+
     func setFanMode(_ mode: String, fanIndex: Int) -> Bool {
         guard isHelperAvailable else { return false }
         let res = sendCommand(["cmd": "setFanMode", "mode": mode, "fanIndex": fanIndex])
@@ -43,14 +58,24 @@ final class SMCHelperClient {
         return res?["success"] as? Bool == true
     }
 
+    func disconnect() {
+        lock.lock()
+        defer { lock.unlock() }
+        if fd >= 0 {
+            close(fd)
+            fd = -1
+        }
+    }
+
     // MARK: - Transport
 
     private func sendCommand(_ cmd: [String: Any]) -> [String: Any]? {
-        guard let request = try? JSONSerialization.data(withJSONObject: cmd) else { return nil }
+        lock.lock()
+        defer { lock.unlock() }
 
-        let fd = openSocket()
-        guard fd >= 0 else { return nil }
-        defer { close(fd) }
+        guard ensureConnected() else { return nil }
+
+        guard let request = try? JSONSerialization.data(withJSONObject: cmd) else { return nil }
 
         var header = UInt32(request.count).bigEndian
         var payload = Data()
@@ -60,41 +85,63 @@ final class SMCHelperClient {
         let sent = payload.withUnsafeBytes { ptr in
             send(fd, ptr.baseAddress, payload.count, 0)
         }
-        guard sent == payload.count else { return nil }
+        guard sent == payload.count else {
+            disconnectLocked()
+            return nil
+        }
 
-        guard let respHeader = readN(fd: fd, n: 4), respHeader.count == 4 else { return nil }
+        guard let respHeader = readN(fd: fd, n: 4), respHeader.count == 4 else {
+            disconnectLocked()
+            return nil
+        }
         let length = respHeader.withUnsafeBytes { $0.load(as: UInt32.self).bigEndian }
         guard length > 0, length < 1024 * 1024,
               let respBody = readN(fd: fd, n: Int(length)),
               respBody.count == Int(length),
               let json = try? JSONSerialization.jsonObject(with: respBody),
               let dict = json as? [String: Any] else {
+            disconnectLocked()
             return nil
         }
         return dict
     }
 
-    private func openSocket() -> Int32 {
+    private func ensureConnected() -> Bool {
+        if fd >= 0 { return true }
+
         var addr = sockaddr_un()
         addr.sun_family = sa_family_t(AF_UNIX)
         let path = SMCHelperClient.socketPath
         strncpy(&addr.sun_path.0, path, MemoryLayout.size(ofValue: addr.sun_path) - 1)
-        let fd = socket(AF_UNIX, SOCK_STREAM, 0)
-        guard fd >= 0 else { return -1 }
+
+        let newFd = socket(AF_UNIX, SOCK_STREAM, 0)
+        guard newFd >= 0 else { return false }
+
         let size = socklen_t(MemoryLayout<sockaddr_un>.stride)
         let result = withUnsafePointer(to: &addr) {
             $0.withMemoryRebound(to: sockaddr.self, capacity: 1) {
-                connect(fd, $0, size)
+                connect(newFd, $0, size)
             }
         }
         guard result == 0 else {
-            close(fd)
-            return -1
+            close(newFd)
+            return false
         }
-        var tv = timeval(tv_sec: 3, tv_usec: 0)
-        setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &tv, socklen_t(MemoryLayout<timeval>.size))
-        setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, &tv, socklen_t(MemoryLayout<timeval>.size))
-        return fd
+
+        // Short timeout so a dead helper fails fast instead of blocking the UI.
+        var tv = timeval(tv_sec: 1, tv_usec: 0)
+        setsockopt(newFd, SOL_SOCKET, SO_RCVTIMEO, &tv, socklen_t(MemoryLayout<timeval>.size))
+        setsockopt(newFd, SOL_SOCKET, SO_SNDTIMEO, &tv, socklen_t(MemoryLayout<timeval>.size))
+
+        fd = newFd
+        return true
+    }
+
+    private func disconnectLocked() {
+        if fd >= 0 {
+            close(fd)
+            fd = -1
+        }
     }
 
     private func readN(fd: Int32, n: Int) -> Data? {

@@ -14,20 +14,23 @@ struct ErrorHubView: View {
     
     @ObservedObject private var prefs = PreferencesManager.shared
     @ObservedObject private var navState = ErrorHubNavigationState.shared
+    @ObservedObject private var knowledgeBase = ErrorKnowledgeBase.shared
     @State private var searchQuery = ""
     @State private var selectedCategory: ErrorCategory = .all
     @State private var selectedSeverity: ErrorSeverity? = nil
     @State private var selectedTag: String? = nil
     @State private var selectedEntry: ErrorEntry? = nil
     @State private var searchResults: [ErrorSearchResult] = []
+    @State private var pendingNavID: UUID? = nil
+    @State private var searchTask: Task<Void, Never>? = nil
     
     private var zoomScale: CGFloat { CGFloat(prefs.preferences.windowZoomScale) }
     
     // Base entries after category/severity/tag filtering (excluding search)
     private var baseEntries: [ErrorEntry] {
         let catFiltered = selectedCategory == .all
-            ? ErrorKnowledgeBase.shared.allEntries
-            : ErrorKnowledgeBase.shared.entries(for: selectedCategory)
+            ? knowledgeBase.allEntries
+            : knowledgeBase.entries(for: selectedCategory)
         let sevFiltered: [ErrorEntry]
         if let severity = selectedSeverity {
             sevFiltered = catFiltered.filter { $0.severity == severity }
@@ -90,25 +93,41 @@ struct ErrorHubView: View {
             ErrorDetailView(entry: entry, onDismiss: { selectedEntry = nil })
                 .frame(minWidth: 500 * zoomScale, minHeight: 400 * zoomScale)
         }
+        .onAppear {
+            knowledgeBase.ensureLoaded()
+        }
         .onChange(of: navState.targetEntryID, initial: true) { _, newID in
             guard let id = newID else { return }
-            if let entry = ErrorKnowledgeBase.shared.allEntries.first(where: { $0.id == id }) {
+            if let entry = knowledgeBase.entry(withID: id) {
                 selectedCategory = .all
                 searchQuery = ""
                 selectedTag = nil
                 selectedSeverity = nil
                 selectedEntry = entry
+                pendingNavID = nil
+            } else {
+                pendingNavID = id
             }
             navState.clearTarget()
         }
+        .onChange(of: knowledgeBase.allEntries) { _, _ in
+            if let id = pendingNavID, let entry = knowledgeBase.entry(withID: id) {
+                selectedCategory = .all
+                searchQuery = ""
+                selectedTag = nil
+                selectedSeverity = nil
+                selectedEntry = entry
+                pendingNavID = nil
+            }
+        }
         .onChange(of: selectedCategory) { _, _ in
-            if !searchQuery.isEmpty { performSearch(query: searchQuery) }
+            if !searchQuery.isEmpty { debouncedSearch(query: searchQuery) }
         }
         .onChange(of: selectedSeverity) { _, _ in
-            if !searchQuery.isEmpty { performSearch(query: searchQuery) }
+            if !searchQuery.isEmpty { debouncedSearch(query: searchQuery) }
         }
         .onChange(of: selectedTag) { _, _ in
-            if !searchQuery.isEmpty { performSearch(query: searchQuery) }
+            if !searchQuery.isEmpty { debouncedSearch(query: searchQuery) }
         }
     }
     
@@ -135,7 +154,7 @@ struct ErrorHubView: View {
                 Text("Error Encyclopedia")
                     .font(.system(size: 13 * zoomScale, weight: .bold, design: .monospaced))
                     .foregroundStyle(.white)
-                Text("\(ErrorKnowledgeBase.shared.allEntries.count) errors documented")
+                Text("\(knowledgeBase.allEntries.count) errors documented")
                     .font(.system(size: 8 * zoomScale, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.3))
             }
@@ -160,7 +179,7 @@ struct ErrorHubView: View {
                 .foregroundStyle(.white)
                 .textFieldStyle(.plain)
                 .onChange(of: searchQuery) { _, newValue in
-                    performSearch(query: newValue)
+                    debouncedSearch(query: newValue)
                 }
             
             if !searchQuery.isEmpty {
@@ -188,21 +207,45 @@ struct ErrorHubView: View {
         .padding(.vertical, 8 * zoomScale)
     }
     
-    private func performSearch(query: String) {
+    private func debouncedSearch(query: String) {
+        searchTask?.cancel()
         if query.isEmpty {
             searchResults = []
             return
         }
-        var results = ErrorKnowledgeBase.shared.search(
-            query: query,
-            category: selectedCategory == .all ? nil : selectedCategory
-        )
-        if let severity = selectedSeverity {
-            results = results.filter { $0.entry.severity == severity }
+        let kb = knowledgeBase
+        searchTask = Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 150_000_000) // 150 ms debounce
+            guard !Task.isCancelled else { return }
+            await performSearch(query: query, knowledgeBase: kb)
         }
-        if let tag = selectedTag {
-            results = results.filter { $0.entry.tags.contains(tag) }
+    }
+    
+    @MainActor
+    private func performSearch(query: String, knowledgeBase: ErrorKnowledgeBase) async {
+        if query.isEmpty {
+            searchResults = []
+            return
         }
+        let category = selectedCategory
+        let severity = selectedSeverity
+        let tag = selectedTag
+        
+        let results = await Task.detached(priority: .userInitiated) {
+            var results = knowledgeBase.search(
+                query: query,
+                category: category == .all ? nil : category
+            )
+            if let severity = severity {
+                results = results.filter { $0.entry.severity == severity }
+            }
+            if let tag = tag {
+                results = results.filter { $0.entry.tags.contains(tag) }
+            }
+            return results
+        }.value
+        
+        guard searchQuery == query else { return }
         searchResults = results
     }
     
@@ -215,8 +258,8 @@ struct ErrorHubView: View {
                         category: category,
                         isSelected: selectedCategory == category,
                         count: category == .all
-                            ? ErrorKnowledgeBase.shared.allEntries.count
-                            : ErrorKnowledgeBase.shared.entries(for: category).count,
+                            ? knowledgeBase.allEntries.count
+                            : knowledgeBase.entries(for: category).count,
                         zoomScale: zoomScale
                     ) {
                         SoundEffectManager.shared.playButtonClick()
@@ -347,38 +390,87 @@ struct ErrorHubView: View {
     
     // MARK: - Content Area
     private var contentArea: some View {
-        ScrollView(showsIndicators: false) {
-            if let groups = groupedEntries {
-                LazyVStack(spacing: 16 * zoomScale) {
-                    ForEach(groups, id: \.category) { group in
-                        VStack(alignment: .leading, spacing: 8 * zoomScale) {
-                            sectionHeader(for: group.category)
-                            LazyVStack(spacing: 6 * zoomScale) {
-                                ForEach(group.entries) { entry in
-                                    ErrorRowView(entry: entry, zoomScale: zoomScale) {
-                                        SoundEffectManager.shared.playButtonClick()
-                                        selectedEntry = entry
+        ZStack {
+            ScrollView(showsIndicators: false) {
+                if let groups = groupedEntries {
+                    LazyVStack(spacing: 16 * zoomScale) {
+                        ForEach(groups, id: \.category) { group in
+                            VStack(alignment: .leading, spacing: 8 * zoomScale) {
+                                sectionHeader(for: group.category)
+                                LazyVStack(spacing: 6 * zoomScale) {
+                                    ForEach(group.entries) { entry in
+                                        ErrorRowView(entry: entry, zoomScale: zoomScale) {
+                                            SoundEffectManager.shared.playButtonClick()
+                                            selectedEntry = entry
+                                        }
                                     }
                                 }
                             }
                         }
                     }
-                }
-                .padding(.horizontal, 12 * zoomScale)
-                .padding(.vertical, 4 * zoomScale)
-            } else {
-                LazyVStack(spacing: 6 * zoomScale) {
-                    ForEach(displayedEntries) { entry in
-                        ErrorRowView(entry: entry, zoomScale: zoomScale) {
-                            SoundEffectManager.shared.playButtonClick()
-                            selectedEntry = entry
+                    .padding(.horizontal, 12 * zoomScale)
+                    .padding(.vertical, 4 * zoomScale)
+                } else {
+                    LazyVStack(spacing: 6 * zoomScale) {
+                        ForEach(displayedEntries) { entry in
+                            ErrorRowView(entry: entry, zoomScale: zoomScale) {
+                                SoundEffectManager.shared.playButtonClick()
+                                selectedEntry = entry
+                            }
                         }
                     }
+                    .padding(.horizontal, 12 * zoomScale)
+                    .padding(.vertical, 4 * zoomScale)
                 }
-                .padding(.horizontal, 12 * zoomScale)
-                .padding(.vertical, 4 * zoomScale)
+            }
+            
+            if knowledgeBase.isLoading && knowledgeBase.allEntries.isEmpty {
+                loadingOverlay
+            } else if let error = knowledgeBase.loadingError {
+                errorOverlay(message: error)
             }
         }
+    }
+    
+    private var loadingOverlay: some View {
+        VStack(spacing: 10 * zoomScale) {
+            ProgressView()
+                .scaleEffect(0.8 * zoomScale)
+                .tint(.white.opacity(0.6))
+            Text("Loading error encyclopedia...")
+                .font(.system(size: 10 * zoomScale, design: .monospaced))
+                .foregroundStyle(.white.opacity(0.5))
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.black.opacity(0.7))
+    }
+    
+    private func errorOverlay(message: String) -> some View {
+        VStack(spacing: 10 * zoomScale) {
+            Image(systemName: "exclamationmark.triangle")
+                .font(.system(size: 20 * zoomScale))
+                .foregroundStyle(.orange)
+            Text("Failed to load encyclopedia")
+                .font(.system(size: 11 * zoomScale, weight: .bold, design: .monospaced))
+                .foregroundStyle(.white)
+            Text(message)
+                .font(.system(size: 9 * zoomScale, design: .monospaced))
+                .foregroundStyle(.white.opacity(0.5))
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 20 * zoomScale)
+            Button("Retry") {
+                knowledgeBase.ensureLoaded()
+            }
+            .font(.system(size: 10 * zoomScale, design: .monospaced))
+            .padding(.horizontal, 14 * zoomScale)
+            .padding(.vertical, 5 * zoomScale)
+            .background(Color.white.opacity(0.1))
+            .cornerRadius(4 * zoomScale)
+            .buttonStyle(.plain)
+            .foregroundStyle(.white)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.black.opacity(0.85))
     }
     
     private func sectionHeader(for category: ErrorCategory) -> some View {
@@ -389,7 +481,7 @@ struct ErrorHubView: View {
             Text(category.rawValue)
                 .font(.system(size: 11 * zoomScale, weight: .bold, design: .monospaced))
                 .foregroundStyle(.white.opacity(0.8))
-            Text("\(ErrorKnowledgeBase.shared.entries(for: category).count)")
+            Text("\(knowledgeBase.entries(for: category).count)")
                 .font(.system(size: 9 * zoomScale, weight: .bold, design: .monospaced))
                 .foregroundStyle(.white.opacity(0.3))
                 .padding(.horizontal, 5 * zoomScale)

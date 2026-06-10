@@ -481,7 +481,7 @@ struct AppPreferences: Codable, Equatable {
         autoBackupIntervalHours: 24,
         enableFanControl: true,
         fanControlShowInMenuBar: false,
-        fanControlUpdateInterval: 2,
+        fanControlUpdateInterval: 1,
         fanControlTemperatureUnit: .celsius,
         fanControlMode: .system,
         fanControlAutoMaxThreshold: 70,

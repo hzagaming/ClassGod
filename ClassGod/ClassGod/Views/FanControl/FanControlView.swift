@@ -441,7 +441,7 @@ struct FanControlView: View {
                         zoomScale: zoomScale,
                         history: viewModel.historyForFan(index: index),
                         onRPMChange: { newRPM in
-                            viewModel.setFanRPM(newRPM, fanIndex: index)
+                            viewModel.setFanRPM(newRPM, fanIndex: index, debounce: true)
                         }
                     )
                 }

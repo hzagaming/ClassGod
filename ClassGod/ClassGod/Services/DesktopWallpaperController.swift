@@ -99,7 +99,7 @@ final class DesktopWallpaperController {
             } else {
                 let window = DesktopWallpaperWindow(screen: screen)
                 windows[screen] = window
-                window.orderBack(nil)
+                window.orderFront(nil)
             }
         }
     }
@@ -138,12 +138,20 @@ private final class DesktopWallpaperWindow: NSWindow {
             defer: false
         )
         
-        // Desktop-level window — sits at the very bottom of the window stack
-        self.level = NSWindow.Level(rawValue: Int(CGWindowLevelForKey(.desktopWindow)))
+        // On macOS Sonoma+, Finder draws the desktop surface and icons in the same
+        // window at desktopIconWindow level. To make the wallpaper actually visible
+        // we place it one level above Finder; ignoresMouseEvents keeps clicks passing
+        // through to the desktop icons below.
+        self.level = NSWindow.Level(rawValue: Int(CGWindowLevelForKey(.desktopIconWindow)) + 1)
         self.backgroundColor = .clear
         self.isOpaque = false
         self.hasShadow = false
         self.isReleasedWhenClosed = false
+        self.isMovable = false
+        self.isMovableByWindowBackground = false
+        
+        // Appear on all spaces and stay stationary when switching spaces
+        self.collectionBehavior = [.canJoinAllSpaces, .stationary]
         
         // Critical: mouse events pass through to Finder icons below
         self.ignoresMouseEvents = true
@@ -165,6 +173,8 @@ private final class DesktopWallpaperWindow: NSWindow {
         let hostingView = NSHostingView(rootView: playerView)
         hostingView.frame = contentView?.bounds ?? .zero
         hostingView.autoresizingMask = [.width, .height]
+        hostingView.wantsLayer = true
+        hostingView.layer?.backgroundColor = NSColor.clear.cgColor
         
         contentView = hostingView
         self.hostingView = hostingView
@@ -184,6 +194,8 @@ private final class DesktopWallpaperWindow: NSWindow {
         let hostingView = NSHostingView(rootView: playerView)
         hostingView.frame = contentView?.bounds ?? frame
         hostingView.autoresizingMask = [.width, .height]
+        hostingView.wantsLayer = true
+        hostingView.layer?.backgroundColor = NSColor.clear.cgColor
         
         contentView = hostingView
         self.hostingView = hostingView

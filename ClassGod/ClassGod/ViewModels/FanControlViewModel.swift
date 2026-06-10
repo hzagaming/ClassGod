@@ -43,6 +43,7 @@ final class FanControlViewModel: ObservableObject {
     private var fanTargets: [Int: Double] = [:]
     private var ruleTriggerStartTimes: [UUID: Date] = [:]
     private var ruleActiveStates: [UUID: Bool] = [:]
+    private var pendingSetRPMWorkItem: DispatchWorkItem?
 
     var highestTemperature: Double {
         sensors.filter { !$0.isEstimated }.map(\.value).max() ?? 0
@@ -141,7 +142,7 @@ final class FanControlViewModel: ObservableObject {
         }
 
         // Start periodic refresh timer
-        let interval = max(1.0, prefs.preferences.fanControlUpdateInterval)
+        let interval = max(0.5, prefs.preferences.fanControlUpdateInterval)
         timer?.invalidate()
         timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
             Task { @MainActor [weak self] in
@@ -168,7 +169,7 @@ final class FanControlViewModel: ObservableObject {
         showToast(message: "Hardware rescan complete")
 
         // Restart periodic refresh timer
-        let interval = max(1.0, prefs.preferences.fanControlUpdateInterval)
+        let interval = max(0.5, prefs.preferences.fanControlUpdateInterval)
         timer?.invalidate()
         timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
             Task { @MainActor [weak self] in
@@ -206,43 +207,51 @@ final class FanControlViewModel: ObservableObject {
     }
 
     func refresh() {
-        // Save previous values for trend detection
-        previousSensorValues = Dictionary(uniqueKeysWithValues: sensors.map { ($0.key, $0.value) })
+        // Save previous values for trend detection while still on MainActor
+        let previous = Dictionary(uniqueKeysWithValues: sensors.map { ($0.key, $0.value) })
 
-        sensors = SMCService.shared.readTemperatures()
-        fans = SMCService.shared.readFans()
-        smcConnected = SMCService.shared.isConnected
-        usingIORegistry = SMCService.shared.isUsingIORegistryFallback
-        fanAccessReason = SMCService.shared.fanAccessReason
+        // Move the SMC / helper I/O off the main thread so the UI stays fluid.
+        Task.detached(priority: .userInitiated) { [weak self] in
+            guard let self else { return }
+            let all = SMCService.shared.readAll()
+            await MainActor.run {
+                self.previousSensorValues = previous
+                self.sensors = all.sensors
+                self.fans = all.fans
+                self.smcConnected = SMCService.shared.isConnected
+                self.usingIORegistry = SMCService.shared.isUsingIORegistryFallback
+                self.fanAccessReason = SMCService.shared.fanAccessReason
 
-        // Track max temperatures and history (skip estimated placeholders)
-        for sensor in sensors {
-            if !sensor.isEstimated {
-                let currentMax = maxTemps[sensor.key] ?? 0
-                if sensor.value > currentMax {
-                    maxTemps[sensor.key] = sensor.value
+                // Track max temperatures and history (skip estimated placeholders)
+                for sensor in self.sensors {
+                    if !sensor.isEstimated {
+                        let currentMax = self.maxTemps[sensor.key] ?? 0
+                        if sensor.value > currentMax {
+                            self.maxTemps[sensor.key] = sensor.value
+                        }
+                    }
+                    var history = self.sensorHistory[sensor.key] ?? []
+                    history.append(sensor.value)
+                    if history.count > self.maxHistoryPoints {
+                        history.removeFirst(history.count - self.maxHistoryPoints)
+                    }
+                    self.sensorHistory[sensor.key] = history
                 }
-            }
-            var history = sensorHistory[sensor.key] ?? []
-            history.append(sensor.value)
-            if history.count > maxHistoryPoints {
-                history.removeFirst(history.count - maxHistoryPoints)
-            }
-            sensorHistory[sensor.key] = history
-        }
 
-        // Track fan RPM history
-        for (index, fan) in fans.enumerated() {
-            var history = fanHistory[index] ?? []
-            history.append(fan.actualRPM)
-            if history.count > maxHistoryPoints {
-                history.removeFirst(history.count - maxHistoryPoints)
-            }
-            fanHistory[index] = history
-        }
+                // Track fan RPM history
+                for (index, fan) in self.fans.enumerated() {
+                    var history = self.fanHistory[index] ?? []
+                    history.append(fan.actualRPM)
+                    if history.count > self.maxHistoryPoints {
+                        history.removeFirst(history.count - self.maxHistoryPoints)
+                    }
+                    self.fanHistory[index] = history
+                }
 
-        updateMenuBarDisplay()
-        checkTemperatureNotification()
+                self.updateMenuBarDisplay()
+                self.checkTemperatureNotification()
+            }
+        }
     }
 
     func setFanMode(_ mode: FanControlMode) {
@@ -291,8 +300,21 @@ final class FanControlViewModel: ObservableObject {
         }
     }
 
-    func setFanRPM(_ rpm: Double, fanIndex: Int) {
+    func setFanRPM(_ rpm: Double, fanIndex: Int, debounce: Bool = false) {
         guard fanIndex < fans.count else { return }
+        if debounce {
+            pendingSetRPMWorkItem?.cancel()
+            let work = DispatchWorkItem { [weak self] in
+                self?._applySetFanRPM(rpm, fanIndex: fanIndex)
+            }
+            pendingSetRPMWorkItem = work
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15, execute: work)
+        } else {
+            _applySetFanRPM(rpm, fanIndex: fanIndex)
+        }
+    }
+
+    private func _applySetFanRPM(_ rpm: Double, fanIndex: Int) {
         let success = SMCService.shared.setFanRPM(rpm, fanIndex: fanIndex)
         // In manual mode always update the local target so the UI reflects the slider.
         // In autoMax/custom only update if the SMC actually accepted the write.
@@ -388,7 +410,8 @@ final class FanControlViewModel: ObservableObject {
 
     private func startAutoMax() {
         autoMaxTimer?.invalidate()
-        autoMaxTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { [weak self] _ in
+        let interval = max(0.5, prefs.preferences.fanControlUpdateInterval)
+        autoMaxTimer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
             Task { @MainActor [weak self] in
                 self?.evaluateAutoMaxRules()
             }
@@ -586,7 +609,7 @@ final class FanControlViewModel: ObservableObject {
         isSleeping = false
         // Resume monitoring
         if isMonitoring {
-            let interval = max(1.0, prefs.preferences.fanControlUpdateInterval)
+            let interval = max(0.5, prefs.preferences.fanControlUpdateInterval)
             timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
                 Task { @MainActor [weak self] in
                     self?.refresh()

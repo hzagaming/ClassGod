@@ -185,6 +185,10 @@ final class SMCHelper {
         return out
     }
 
+    func readAll() -> [String: Any] {
+        return ["fans": readFans(), "temps": readTemps()]
+    }
+
     func setFanMode(_ mode: String, fanIndex: Int) -> Bool {
         switch mode {
         case "system":
@@ -308,6 +312,9 @@ private func handleClient(fd: Int32) {
             sendJSON(fd: fd, ["success": true, "data": smc.readFans()])
         case "readTemps":
             sendJSON(fd: fd, ["success": true, "data": smc.readTemps()])
+        case "readAll":
+            let all = smc.readAll()
+            sendJSON(fd: fd, ["success": true, "fans": all["fans"] ?? [], "temps": all["temps"] ?? []])
         case "setFanMode":
             let mode = req["mode"] as? String ?? ""
             let idx = req["fanIndex"] as? Int ?? 0

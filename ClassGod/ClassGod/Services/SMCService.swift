@@ -89,6 +89,11 @@ final class SMCService {
     private var cachedIORegistryFans: [FanInfo] = []
     private var hasScannedIORegistryFans = false
 
+    // Short-term cache shared across readTemperatures/readFans consumers
+    private var lastReadAll: (fans: [FanInfo], sensors: [TemperatureSensor])?
+    private var lastReadAllTime: Date?
+    private let readAllLock = NSLock()
+
     // Known sensor key mappings
     private let sensorKeys: [(name: String, key: String, max: Double)] = [
         // Intel & generic
@@ -329,41 +334,112 @@ final class SMCService {
 
     // MARK: - Public API
 
-    func readTemperatures() -> [TemperatureSensor] {
-        var results: [TemperatureSensor] = []
+    // MARK: - Public API
 
-        // Try SMC direct (works on Intel and some Apple Silicon with proper permissions)
-        if isConnected {
+    private func temperaturesFromHelper(_ dicts: [[String: Any]]) -> [TemperatureSensor] {
+        dicts.compactMap { dict in
+            guard let name = dict["name"] as? String,
+                  let key = dict["key"] as? String else { return nil }
+            let value = dict["value"] as? Double ?? 0
+            let max = dict["maxValue"] as? Double ?? 100
+            return TemperatureSensor(name: name, key: key, value: value, maxValue: max)
+        }
+    }
+
+    private func fansFromHelper(_ dicts: [[String: Any]]) -> [FanInfo] {
+        dicts.compactMap { dict in
+            guard let id = dict["id"] as? Int else { return nil }
+            var info = FanInfo(id: id, name: (dict["name"] as? String) ?? fanName(for: id))
+            if let v = dict["actualRPM"] as? Double { info.actualRPM = v }
+            if let v = dict["minimumRPM"] as? Double { info.minimumRPM = v }
+            if let v = dict["maximumRPM"] as? Double { info.maximumRPM = v }
+            if let v = dict["targetRPM"] as? Double { info.targetRPM = v }
+            return info
+        }
+    }
+
+    /// Reads both fans and temperatures in a single shot, with a 250 ms TTL cache
+    /// so multiple UI surfaces can share the same snapshot without re-hitting SMC.
+    func readAll() -> (fans: [FanInfo], sensors: [TemperatureSensor]) {
+        readAllLock.lock()
+        defer { readAllLock.unlock() }
+
+        let now = Date()
+        if let cached = lastReadAll,
+           let cachedTime = lastReadAllTime,
+           now.timeIntervalSince(cachedTime) < 0.25 {
+            return cached
+        }
+
+        var sensors: [TemperatureSensor] = []
+        var fans: [FanInfo] = []
+        var usedHelper = false
+
+        // 1. Privileged helper: one socket round-trip returns both fans and temps.
+        if isHelperAvailable, let all = SMCHelperClient.shared.readAll() {
+            fans = fansFromHelper(all.fans)
+            sensors = temperaturesFromHelper(all.temps)
+            usedHelper = !fans.isEmpty || !sensors.isEmpty
+        }
+
+        // 2. Direct SMC fallback (Intel Macs / unlocked Apple Silicon)
+        if !usedHelper, isConnected {
             for (name, key, max) in sensorKeys {
                 if let bytes = readSMCBytes(key: key), bytes.count >= 2 {
                     let value = decodeSP78(bytes: bytes)
                     if value > -50 && value < 150 {
-                        results.append(TemperatureSensor(name: name, key: key, value: value, maxValue: max))
+                        sensors.append(TemperatureSensor(name: name, key: key, value: value, maxValue: max))
                     }
                 }
+            }
+
+            if let numBytes = readSMCBytes(key: "FNum"), numBytes.count >= 1, numBytes[0] > 0 {
+                let numFans = min(Int(numBytes[0]), 16)
+                for i in 0..<numFans {
+                    let actualKey = "F\(i)Ac"
+                    let minKey = "F\(i)Mn"
+                    let maxKey = "F\(i)Mx"
+                    let targetKey = "F\(i)Tg"
+
+                    var info = FanInfo(id: i, name: fanName(for: i))
+
+                    if let bytes = readSMCBytes(key: actualKey) {
+                        info.actualRPM = decodeFPE2(bytes: bytes)
+                    }
+                    if let bytes = readSMCBytes(key: minKey) {
+                        info.minimumRPM = decodeFPE2(bytes: bytes)
+                    }
+                    if let bytes = readSMCBytes(key: maxKey) {
+                        info.maximumRPM = decodeFPE2(bytes: bytes)
+                    }
+                    if let bytes = readSMCBytes(key: targetKey) {
+                        info.targetRPM = decodeFPE2(bytes: bytes)
+                    }
+
+                    fans.append(info)
+                }
+            }
+        }
+
+        // IORegistry fan fallback when neither helper nor direct SMC produced fans
+        if fans.isEmpty {
+            if !hasScannedIORegistryFans {
+                cachedIORegistryFans = readIORegistryFans()
+                hasScannedIORegistryFans = true
+            }
+            fans = cachedIORegistryFans
+            if !fans.isEmpty {
+                isUsingIORegistryFallback = true
             }
         }
 
         isUsingIORegistryFallback = false
 
-        // Helper-provided SMC temperatures (privileged root helper on Apple Silicon)
-        if let helperTemps = SMCHelperClient.shared.readTemps(), !helperTemps.isEmpty {
-            for dict in helperTemps {
-                guard let name = dict["name"] as? String,
-                      let key = dict["key"] as? String else { continue }
-                let value = dict["value"] as? Double ?? 0
-                let max = dict["maxValue"] as? Double ?? 100
-                results.append(TemperatureSensor(name: name, key: key, value: value, maxValue: max))
-            }
-        }
-
-            // Fallback: IORegistry traversal for Apple Silicon / restricted access
-        // Only scan once and cache results to avoid performance issues
+        // 3. IORegistry temperature fallback (scan cached after first call)
         if !hasScannedIORegistry {
             cachedIORegistryTemps = readIORegistryTemperatures()
             hasScannedIORegistry = true
         }
-        // Refresh estimated placeholder values so they track the current thermal state.
         let currentThermalBase = thermalStateBaseTemp()
         let refreshedIORegistry = cachedIORegistryTemps.map { sensor -> TemperatureSensor in
             guard sensor.isEstimated else { return sensor }
@@ -371,105 +447,56 @@ final class SMCService {
             updated.value = currentThermalBase
             return updated
         }
-        results.append(contentsOf: refreshedIORegistry)
+        sensors.append(contentsOf: refreshedIORegistry)
         if !cachedIORegistryTemps.isEmpty {
             isUsingIORegistryFallback = true
         }
 
-        // Fallback: ProcessInfo thermal state (official API, always available)
+        // 4. ProcessInfo thermal state (official API, always available)
         let thermalStateTemps = readThermalStateTemperatures()
         if !thermalStateTemps.isEmpty {
-            results.append(contentsOf: thermalStateTemps)
+            sensors.append(contentsOf: thermalStateTemps)
             isUsingIORegistryFallback = true
         }
 
-        // Deduplicate by key to avoid duplicates from overlapping scan sources
+        // 5. Deduplicate by key across helper/direct/IORegistry/thermal sources
         var seenKeys = Set<String>()
-        results = results.filter { sensor in
+        sensors = sensors.filter { sensor in
             let key = sensor.key
             if seenKeys.contains(key) { return false }
             seenKeys.insert(key)
             return true
         }
-        // Final fallback: SystemMonitor estimates based on CPU load
-        if results.isEmpty {
+
+        // 6. Final fallback: SystemMonitor estimates based on CPU load
+        if sensors.isEmpty {
             let thermal = SystemMonitor.shared.thermal
             if thermal.cpuTemp > 0 {
-                results.append(TemperatureSensor(name: "CPU Estimated", key: "CPU", value: thermal.cpuTemp, maxValue: 100, isEstimated: true))
+                sensors.append(TemperatureSensor(name: "CPU Estimated", key: "CPU", value: thermal.cpuTemp, maxValue: 100, isEstimated: true))
             }
             if thermal.gpuTemp > 0 {
-                results.append(TemperatureSensor(name: "GPU Estimated", key: "GPU", value: thermal.gpuTemp, maxValue: 100, isEstimated: true))
+                sensors.append(TemperatureSensor(name: "GPU Estimated", key: "GPU", value: thermal.gpuTemp, maxValue: 100, isEstimated: true))
             }
         }
 
-        return results.sorted { $0.name < $1.name }
+        if !fans.isEmpty {
+            fanAccessReason = nil
+        } else {
+            updateFanAccessReason()
+        }
+
+        let result = (fans: fans, sensors: sensors.sorted { $0.name < $1.name })
+        lastReadAll = result
+        lastReadAllTime = now
+        return result
+    }
+
+    func readTemperatures() -> [TemperatureSensor] {
+        return readAll().sensors
     }
 
     func readFans() -> [FanInfo] {
-        var fans: [FanInfo] = []
-
-        // 1. Privileged helper (Apple Silicon root access)
-        if let helperFans = SMCHelperClient.shared.readFans(), !helperFans.isEmpty {
-            for dict in helperFans {
-                guard let id = dict["id"] as? Int else { continue }
-                var info = FanInfo(id: id, name: (dict["name"] as? String) ?? fanName(for: id))
-                if let v = dict["actualRPM"] as? Double { info.actualRPM = v }
-                if let v = dict["minimumRPM"] as? Double { info.minimumRPM = v }
-                if let v = dict["maximumRPM"] as? Double { info.maximumRPM = v }
-                if let v = dict["targetRPM"] as? Double { info.targetRPM = v }
-                fans.append(info)
-            }
-            if !fans.isEmpty {
-                fanAccessReason = nil
-                return fans
-            }
-        }
-
-        // 2. SMC direct read (Intel Macs)
-        if isConnected, let numBytes = readSMCBytes(key: "FNum"), numBytes.count >= 1, numBytes[0] > 0 {
-            let numFans = min(Int(numBytes[0]), 16)
-
-            for i in 0..<numFans {
-                let actualKey = "F\(i)Ac"
-                let minKey = "F\(i)Mn"
-                let maxKey = "F\(i)Mx"
-                let targetKey = "F\(i)Tg"
-
-                var info = FanInfo(id: i, name: fanName(for: i))
-
-                if let bytes = readSMCBytes(key: actualKey) {
-                    info.actualRPM = decodeFPE2(bytes: bytes)
-                }
-                if let bytes = readSMCBytes(key: minKey) {
-                    info.minimumRPM = decodeFPE2(bytes: bytes)
-                }
-                if let bytes = readSMCBytes(key: maxKey) {
-                    info.maximumRPM = decodeFPE2(bytes: bytes)
-                }
-                if let bytes = readSMCBytes(key: targetKey) {
-                    info.targetRPM = decodeFPE2(bytes: bytes)
-                }
-
-                fans.append(info)
-            }
-            if !fans.isEmpty {
-                fanAccessReason = nil
-                return fans
-            }
-        }
-
-        // Apple Silicon / fallback: try to read from IORegistry (cached)
-        if !hasScannedIORegistryFans {
-            cachedIORegistryFans = readIORegistryFans()
-            hasScannedIORegistryFans = true
-        }
-        fans = cachedIORegistryFans
-        if !fans.isEmpty {
-            isUsingIORegistryFallback = true
-            fanAccessReason = nil
-        }
-
-        return fans
+        return readAll().fans
     }
     
     private func readIORegistryFans() -> [FanInfo] {

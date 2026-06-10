@@ -106,10 +106,7 @@ struct HackerDesktopView: View {
             }
         }
         .onDisappear {
-            // Only stop SystemMonitor if desktop widgets are not active
-            if !DesktopWidgetManager.shared.isEnabled {
-                SystemMonitor.shared.stop()
-            }
+            SystemMonitor.shared.stop()
             saveTimer?.invalidate()
             saveTimer = nil
         }

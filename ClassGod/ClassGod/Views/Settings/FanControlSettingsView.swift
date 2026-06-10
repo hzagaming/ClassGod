@@ -34,8 +34,8 @@ struct FanControlSettingsView: View {
                     SettingsSliderRow(
                         label: "Update Interval",
                         value: $prefs.preferences.fanControlUpdateInterval,
-                        range: 1...10,
-                        step: 1,
+                        range: 0.5...10,
+                        step: 0.5,
                         suffix: "s"
                     )
                 }
@@ -349,7 +349,12 @@ struct AutoMaxRuleRow: View {
                 .allowsHitTesting(false)
         )
         .onAppear {
-            availableSensors = SMCService.shared.readTemperatures().filter { !$0.isEstimated }
+            Task.detached(priority: .userInitiated) {
+                let sensors = SMCService.shared.readTemperatures().filter { !$0.isEstimated }
+                await MainActor.run {
+                    availableSensors = sensors
+                }
+            }
         }
     }
 }

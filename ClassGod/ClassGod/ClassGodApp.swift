@@ -1690,7 +1690,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let prefs = PreferencesManager.shared.preferences
         guard prefs.enableFanControl, prefs.fanControlShowInMenuBar else { return }
 
-        let interval = max(2.0, prefs.fanControlUpdateInterval)
+        let interval = max(0.5, prefs.fanControlUpdateInterval)
         statusItemTimer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
             self?.updateStatusItemIcon()
         }
@@ -1726,21 +1726,26 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         statusItem?.button?.image = baseImage
         statusItem?.button?.imagePosition = .imageLeading
 
-        var title = ""
         if prefs.enableFanControl, prefs.fanControlShowInMenuBar {
-            let sensors = SMCService.shared.readTemperatures()
-            let fans = SMCService.shared.readFans()
-            let highestTemp = sensors.map(\.value).max() ?? 0
-            let avgRPM = fans.isEmpty ? 0 : fans.map(\.actualRPM).reduce(0, +) / Double(fans.count)
-            let unit = prefs.fanControlTemperatureUnit
-            let tempStr = unit.formatted(highestTemp)
-            let rpmStr = "\(Int(avgRPM)) RPM"
-            title = " \(tempStr) / \(rpmStr)"
+            // Read fan/temp data off the main thread so the menu bar stays responsive.
+            Task.detached(priority: .userInitiated) { [weak self] in
+                guard let self else { return }
+                let all = SMCService.shared.readAll()
+                let highestTemp = all.sensors.map(\.value).max() ?? 0
+                let avgRPM = all.fans.isEmpty ? 0 : all.fans.map(\.actualRPM).reduce(0, +) / Double(all.fans.count)
+                let unit = prefs.fanControlTemperatureUnit
+                let tempStr = unit.formatted(highestTemp)
+                let rpmStr = "\(Int(avgRPM)) RPM"
+                let title = " \(tempStr) / \(rpmStr)"
+                await MainActor.run {
+                    self.statusItem?.button?.title = title
+                }
+            }
+        } else if showBadge && count > 0 {
+            statusItem?.button?.title = " \(badgeText)"
+        } else {
+            statusItem?.button?.title = ""
         }
-        if showBadge && count > 0 && title.isEmpty {
-            title = " \(badgeText)"
-        }
-        statusItem?.button?.title = title
         statusItem?.button?.toolTip = "ClassGod"
     }
 

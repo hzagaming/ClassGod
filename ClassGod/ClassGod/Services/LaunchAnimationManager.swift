@@ -145,7 +145,7 @@ final class LaunchAnimationManager {
             }
         }
         
-        // Safety timeout: force cleanup after 10s regardless of state
+        // Safety timeout: force cleanup after 15s regardless of state
         DispatchQueue.main.asyncAfter(deadline: .now() + 15.0) { [weak self] in
             guard let self = self, self.isAnimating else { return }
             self.finish()

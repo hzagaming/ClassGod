@@ -212,14 +212,14 @@ struct ActivityMonitorView: View {
                 sortableHeader("Memory", key: .memory, width: 80)
                 sortableHeader("CPU %", key: .cpu, width: 70)
             case .energy:
-                sortableHeader("Energy", key: .energy, width: 90)
+                sortableHeader("Power", key: .energy, width: 90)
                 sortableHeader("CPU %", key: .cpu, width: 70)
             case .disk:
-                sortableHeader("Read", key: .diskRead, width: 80)
-                sortableHeader("Write", key: .diskWrite, width: 80)
+                sortableHeader("Read/s", key: .diskRead, width: 80)
+                sortableHeader("Write/s", key: .diskWrite, width: 80)
             case .network:
-                sortableHeader("Recv", key: .netRecv, width: 80)
-                sortableHeader("Sent", key: .netSent, width: 80)
+                sortableHeader("Recv/s", key: .netRecv, width: 80)
+                sortableHeader("Sent/s", key: .netSent, width: 80)
             }
             
             Spacer(minLength: 0)
@@ -279,7 +279,7 @@ struct ActivityMonitorView: View {
                     .frame(width: 70 * zoomScale, alignment: .trailing)
                     .foregroundStyle(cpuColor(proc.cpuPercent))
             case .energy:
-                Text(viewModel.formatEnergy(proc.energyNanojoules))
+                Text(viewModel.formatEnergyRate(proc.energyNanojoulesPerSecond))
                     .frame(width: 90 * zoomScale, alignment: .trailing)
                     .foregroundStyle(.yellow)
                 Text(String(format: "%.1f%%", proc.cpuPercent))
@@ -290,7 +290,7 @@ struct ActivityMonitorView: View {
                     Image(systemName: "arrow.down")
                         .font(.system(size: 7 * zoomScale))
                         .foregroundStyle(.cyan)
-                    Text(viewModel.formatBytes(proc.diskReadBytes))
+                    Text(viewModel.formatSpeed(proc.diskReadBytesPerSecond))
                 }
                 .frame(width: 80 * zoomScale, alignment: .trailing)
                 
@@ -298,7 +298,7 @@ struct ActivityMonitorView: View {
                     Image(systemName: "arrow.up")
                         .font(.system(size: 7 * zoomScale))
                         .foregroundStyle(.orange)
-                    Text(viewModel.formatBytes(proc.diskWriteBytes))
+                    Text(viewModel.formatSpeed(proc.diskWriteBytesPerSecond))
                 }
                 .frame(width: 80 * zoomScale, alignment: .trailing)
             case .network:
@@ -306,7 +306,7 @@ struct ActivityMonitorView: View {
                     Image(systemName: "arrow.down")
                         .font(.system(size: 7 * zoomScale))
                         .foregroundStyle(.green)
-                    Text(viewModel.formatBytes(proc.networkRecvBytes))
+                    Text(viewModel.formatSpeed(proc.networkRecvBytesPerSecond))
                     if proc.isEstimatedNetwork {
                         Text("*")
                             .font(.system(size: 7 * zoomScale))
@@ -319,7 +319,7 @@ struct ActivityMonitorView: View {
                     Image(systemName: "arrow.up")
                         .font(.system(size: 7 * zoomScale))
                         .foregroundStyle(.cyan)
-                    Text(viewModel.formatBytes(proc.networkSentBytes))
+                    Text(viewModel.formatSpeed(proc.networkSentBytesPerSecond))
                     if proc.isEstimatedNetwork {
                         Text("*")
                             .font(.system(size: 7 * zoomScale))
@@ -466,10 +466,10 @@ struct ActivityMonitorView: View {
     
     private var diskSummary: some View {
         HStack(spacing: 16 * zoomScale) {
-            let totalRead = monitor.processes.reduce(0) { $0 + $1.diskReadBytes }
-            let totalWrite = monitor.processes.reduce(0) { $0 + $1.diskWriteBytes }
-            summaryItem("Total Read", value: viewModel.formatBytes(totalRead) + "/s", color: .cyan)
-            summaryItem("Total Write", value: viewModel.formatBytes(totalWrite) + "/s", color: .orange)
+            let totalRead = monitor.processes.reduce(0) { $0 + $1.diskReadBytesPerSecond }
+            let totalWrite = monitor.processes.reduce(0) { $0 + $1.diskWriteBytesPerSecond }
+            summaryItem("Total Read", value: viewModel.formatSpeed(totalRead), color: .cyan)
+            summaryItem("Total Write", value: viewModel.formatSpeed(totalWrite), color: .orange)
             Spacer()
             if let disk = monitor.disks.first {
                 summaryItem("Disk Free", value: viewModel.formatBytes(UInt64(max(0, disk.free))), color: .green)
@@ -485,7 +485,7 @@ struct ActivityMonitorView: View {
             summaryItem("Total In", value: viewModel.formatBytes(monitor.network.bytesIn), color: .white.opacity(0.7))
             summaryItem("Total Out", value: viewModel.formatBytes(monitor.network.bytesOut), color: .white.opacity(0.7))
             Spacer()
-            Text("* Per-process network is estimated by CPU share")
+            Text("Real-time per-process network via nettop")
                 .font(.system(size: 8 * zoomScale, design: .monospaced))
                 .foregroundStyle(.white.opacity(0.3))
         }

@@ -70,40 +70,40 @@ final class ActivityMonitorViewModel: ObservableObject {
         case .user:
             list.sort { sortAscending ? userName($0.uid) < userName($1.uid) : userName($0.uid) > userName($1.uid) }
         case .energy:
-            list.sort { sortAscending ? $0.energyNanojoules < $1.energyNanojoules : $0.energyNanojoules > $1.energyNanojoules }
+            list.sort { sortAscending ? $0.energyNanojoulesPerSecond < $1.energyNanojoulesPerSecond : $0.energyNanojoulesPerSecond > $1.energyNanojoulesPerSecond }
         case .diskRead:
-            list.sort { sortAscending ? $0.diskReadBytes < $1.diskReadBytes : $0.diskReadBytes > $1.diskReadBytes }
+            list.sort { sortAscending ? $0.diskReadBytesPerSecond < $1.diskReadBytesPerSecond : $0.diskReadBytesPerSecond > $1.diskReadBytesPerSecond }
         case .diskWrite:
-            list.sort { sortAscending ? $0.diskWriteBytes < $1.diskWriteBytes : $0.diskWriteBytes > $1.diskWriteBytes }
+            list.sort { sortAscending ? $0.diskWriteBytesPerSecond < $1.diskWriteBytesPerSecond : $0.diskWriteBytesPerSecond > $1.diskWriteBytesPerSecond }
         case .netRecv:
-            list.sort { sortAscending ? $0.networkRecvBytes < $1.networkRecvBytes : $0.networkRecvBytes > $1.networkRecvBytes }
+            list.sort { sortAscending ? $0.networkRecvBytesPerSecond < $1.networkRecvBytesPerSecond : $0.networkRecvBytesPerSecond > $1.networkRecvBytesPerSecond }
         case .netSent:
-            list.sort { sortAscending ? $0.networkSentBytes < $1.networkSentBytes : $0.networkSentBytes > $1.networkSentBytes }
+            list.sort { sortAscending ? $0.networkSentBytesPerSecond < $1.networkSentBytesPerSecond : $0.networkSentBytesPerSecond > $1.networkSentBytesPerSecond }
         }
         
         return list
     }
     
     var sortedProcessesForTab: [ProcessMonitorInfo] {
-        // Default sorting optimized per tab
+        // Default sorting optimized per tab using real-time rates
         switch selectedTab {
         case .cpu:
             return monitor.processes.sorted { $0.cpuPercent > $1.cpuPercent }
         case .memory:
             return monitor.processes.sorted { $0.memoryMB > $1.memoryMB }
         case .energy:
-            return monitor.processes.sorted { $0.energyNanojoules > $1.energyNanojoules }
+            return monitor.processes.sorted { $0.energyNanojoulesPerSecond > $1.energyNanojoulesPerSecond }
         case .disk:
-            return monitor.processes.sorted { ($0.diskReadBytes + $0.diskWriteBytes) > ($1.diskReadBytes + $1.diskWriteBytes) }
+            return monitor.processes.sorted { ($0.diskReadBytesPerSecond + $0.diskWriteBytesPerSecond) > ($1.diskReadBytesPerSecond + $1.diskWriteBytesPerSecond) }
         case .network:
-            return monitor.processes.sorted { ($0.networkRecvBytes + $0.networkSentBytes) > ($1.networkRecvBytes + $1.networkSentBytes) }
+            return monitor.processes.sorted { ($0.networkRecvBytesPerSecond + $0.networkSentBytesPerSecond) > ($1.networkRecvBytesPerSecond + $1.networkSentBytesPerSecond) }
         }
     }
     
     func startMonitoring() {
-        monitor.start(interval: 2.0)
+        monitor.start(interval: 1.0)
         updateEnergyHistory()
-        timer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { [weak self] _ in
+        timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
             Task { @MainActor [weak self] in
                 self?.updateEnergyHistory()
             }
@@ -134,7 +134,7 @@ final class ActivityMonitorViewModel: ObservableObject {
         return "\(bytes) B"
     }
     
-    func formatSpeed(_ bytesPerInterval: UInt64, interval: TimeInterval = 2.0) -> String {
+    func formatSpeed(_ bytesPerInterval: UInt64, interval: TimeInterval = 1.0) -> String {
         let bps = Double(bytesPerInterval) / max(interval, 0.1)
         let kbps = bps / 1024.0
         let mbps = kbps / 1024.0
@@ -154,6 +154,14 @@ final class ActivityMonitorViewModel: ObservableObject {
         return String(format: "%.1f J", joules)
     }
     
+    func formatEnergyRate(_ nanojoulesPerSecond: UInt64) -> String {
+        let watts = Double(nanojoulesPerSecond) / 1_000_000_000.0
+        if watts >= 1000 {
+            return String(format: "%.1f kW", watts / 1000)
+        }
+        return String(format: "%.1f W", watts)
+    }
+    
     func userName(_ uid: UInt32) -> String {
         let pw = getpwuid(uid)
         if let pw, let name = pw.pointee.pw_name {
@@ -163,11 +171,14 @@ final class ActivityMonitorViewModel: ObservableObject {
     }
     
     private func updateEnergyHistory() {
+        // Rebuild accumulator only from currently-live processes to prevent
+        // unbounded growth from exited PIDs.
+        var fresh: [Int32: UInt64] = [:]
         for proc in monitor.processes {
-            let current = energyAccumulator[proc.pid] ?? 0
-            energyAccumulator[proc.pid] = current + proc.energyNanojoules
+            fresh[proc.pid] = proc.energyNanojoulesPerSecond
         }
-        energyHistory = energyAccumulator
+        energyAccumulator = fresh
+        energyHistory = fresh
     }
     
     // MARK: - Process Control

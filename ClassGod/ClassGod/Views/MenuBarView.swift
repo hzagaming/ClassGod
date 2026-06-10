@@ -260,10 +260,15 @@ struct MenuBarView: View {
     }
 
     private func updateFanSummary() {
-        let sensors = SMCService.shared.readTemperatures()
-        let fans = SMCService.shared.readFans()
-        fanSummaryTemp = sensors.map(\.value).max() ?? 0
-        fanSummaryRPM = fans.isEmpty ? 0 : fans.map(\.actualRPM).reduce(0, +) / Double(fans.count)
+        Task.detached(priority: .userInitiated) {
+            let all = SMCService.shared.readAll()
+            let temp = all.sensors.map(\.value).max() ?? 0
+            let rpm = all.fans.isEmpty ? 0 : all.fans.map(\.actualRPM).reduce(0, +) / Double(all.fans.count)
+            await MainActor.run {
+                self.fanSummaryTemp = temp
+                self.fanSummaryRPM = rpm
+            }
+        }
     }
 
     // MARK: - Title Bar with Close Button

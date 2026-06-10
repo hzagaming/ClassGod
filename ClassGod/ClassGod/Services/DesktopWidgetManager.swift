@@ -77,7 +77,7 @@ final class DesktopWidgetManager: ObservableObject {
             showAllWidgets()
         } else {
             hideAllWidgets()
-            // Only stop SystemMonitor if no other consumers need it
+            SystemMonitor.shared.stop()
         }
     }
 

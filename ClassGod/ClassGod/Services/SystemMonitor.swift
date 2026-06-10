@@ -54,19 +54,26 @@ struct NetworkStats: Equatable {
 }
 
 struct ProcessMonitorInfo: Equatable, Identifiable {
-    let id = UUID()
+    var id: Int32 { pid }
     var pid: Int32
     var name: String
+    var commandLine: String?
+    var executablePath: String?
     var cpuPercent: Double
     var memoryMB: Double
     var uid: UInt32 = 0
     var threads: Int32 = 0
     var diskReadBytes: UInt64 = 0
     var diskWriteBytes: UInt64 = 0
+    var diskReadBytesPerSecond: UInt64 = 0
+    var diskWriteBytesPerSecond: UInt64 = 0
     var energyNanojoules: UInt64 = 0
+    var energyNanojoulesPerSecond: UInt64 = 0
     var isEstimatedNetwork: Bool = false
     var networkRecvBytes: UInt64 = 0
     var networkSentBytes: UInt64 = 0
+    var networkRecvBytesPerSecond: UInt64 = 0
+    var networkSentBytesPerSecond: UInt64 = 0
 }
 
 struct BatteryInfo: Equatable {
@@ -107,12 +114,15 @@ final class SystemMonitor: ObservableObject, @unchecked Sendable {
     @Published var system = SystemInfo()
     
     private var timer: Timer?
+    private var updateInterval: TimeInterval = 1.0
     private var previousCPUInfo: host_cpu_load_info?
     private var previousNetworkBytesIn: UInt64 = 0
     private var previousNetworkBytesOut: UInt64 = 0
+    private var startCount = 0
     
-    // Per-process IO history for delta calculation (Activity Monitor)
-    private var previousProcessIO: [Int32: (diskRead: UInt64, diskWrite: UInt64)] = [:]
+    // Per-process IO / energy / CPU time history for delta calculation
+    private var previousProcessRUsage: [Int32: (diskRead: UInt64, diskWrite: UInt64, energy: UInt64)] = [:]
+    private var previousProcessTaskTimes: [Int32: (user: UInt64, system: UInt64)] = [:]
     
     private init() {
         loadStaticSystemInfo()
@@ -120,6 +130,9 @@ final class SystemMonitor: ObservableObject, @unchecked Sendable {
     
     @MainActor
     func start(interval: TimeInterval = 1.0) {
+        startCount += 1
+        updateInterval = interval
+        NettopMonitor.shared.start()
         timer?.invalidate()
         updateAll()
         timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
@@ -131,8 +144,11 @@ final class SystemMonitor: ObservableObject, @unchecked Sendable {
     
     @MainActor
     func stop() {
+        startCount = max(0, startCount - 1)
+        guard startCount == 0 else { return }
         timer?.invalidate()
         timer = nil
+        NettopMonitor.shared.stop()
     }
     
     private func updateAll() {
@@ -276,6 +292,13 @@ final class SystemMonitor: ObservableObject, @unchecked Sendable {
     
     // MARK: - Processes
     
+    private struct ProcessSample {
+        let pid: Int32
+        let info: ProcessMonitorInfo
+        let rusage: (diskRead: UInt64, diskWrite: UInt64, energy: UInt64)
+        let taskTimes: (user: UInt64, system: UInt64)
+    }
+    
     private func readProcesses() {
         var mib: [Int32] = [CTL_KERN, KERN_PROC, KERN_PROC_ALL, 0]
         var size = 0
@@ -286,96 +309,164 @@ final class SystemMonitor: ObservableObject, @unchecked Sendable {
         let result = sysctl(&mib, u_int(mib.count), &procs, &size, nil, 0)
         guard result == 0 else { return }
         
-        var infos: [ProcessMonitorInfo] = []
-        var currentIO: [Int32: (diskRead: UInt64, diskWrite: UInt64)] = [:]
+        let nettop = NettopMonitor.shared.currentDeltas()
+        let interval = max(updateInterval, 0.1)
+        let processorCount = max(1, ProcessInfo.processInfo.processorCount)
         
-        // Gather per-process rusage (disk + energy) where accessible.
-        for proc in procs {
-            let pid = proc.kp_proc.p_pid
+        // Snapshot previous history locally so concurrent workers can read safely.
+        let prevRUsage = previousProcessRUsage
+        let prevTaskTimes = previousProcessTaskTimes
+        
+        // Offload the heavy per-process work to a background queue so the
+        // main thread never blocks on group.wait().
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            guard let self else { return }
             
-            // Try to get a nicer process name than the 16-char p_comm
-            let comm: String = {
-                var path = [CChar](repeating: 0, count: Int(MAXPATHLEN))
-                if proc_pidpath(pid, &path, UInt32(MAXPATHLEN)) > 0 {
-                    let full = String(cString: path)
-                    let name = (full as NSString).lastPathComponent
-                    if !name.isEmpty { return name }
+            let queue = DispatchQueue(label: "com.classgod.sysmon.procs", qos: .userInitiated, attributes: .concurrent)
+            let group = DispatchGroup()
+            let lock = NSLock()
+            var samples: [ProcessSample] = []
+            
+            for proc in procs {
+                let pid = proc.kp_proc.p_pid
+                guard pid > 0 else { continue }
+                
+                group.enter()
+                queue.async {
+                    defer { group.leave() }
+                    
+                    // Process name / path
+                    var exePath = ""
+                    var pathBuffer = [CChar](repeating: 0, count: Int(MAXPATHLEN))
+                    if proc_pidpath(pid, &pathBuffer, UInt32(MAXPATHLEN)) > 0 {
+                        exePath = String(cString: pathBuffer)
+                    }
+                    
+                    let comm: String = {
+                        if !exePath.isEmpty {
+                            let name = (exePath as NSString).lastPathComponent
+                            if !name.isEmpty { return name }
+                        }
+                        return withUnsafeBytes(of: proc.kp_proc.p_comm) { ptr -> String in
+                            let buffer = ptr.bindMemory(to: CChar.self)
+                            guard let addr = buffer.baseAddress else { return "?" }
+                            return String(cString: addr)
+                        }
+                    }()
+                    
+                    // Detailed task info (resident memory, thread count, CPU time)
+                    var taskinfo = proc_taskinfo()
+                    let taskInfoSize = Int32(MemoryLayout<proc_taskinfo>.size)
+                    var residentBytes: UInt64 = 0
+                    var threads: Int32 = 0
+                    var userTime: UInt64 = 0
+                    var systemTime: UInt64 = 0
+                    let taskRet = withUnsafeMutablePointer(to: &taskinfo) {
+                        proc_pidinfo(pid, PROC_PIDTASKINFO, 0, $0, taskInfoSize)
+                    }
+                    if taskRet == taskInfoSize {
+                        residentBytes = taskinfo.pti_resident_size
+                        threads = taskinfo.pti_threadnum
+                        userTime = taskinfo.pti_total_user
+                        systemTime = taskinfo.pti_total_system
+                    }
+                    
+                    // CPU % from task time delta (much more accurate than p_pctcpu)
+                    let cpu: Double
+                    if let prev = prevTaskTimes[pid] {
+                        let userDelta = userTime >= prev.user ? userTime - prev.user : 0
+                        let sysDelta  = systemTime >= prev.system ? systemTime - prev.system : 0
+                        let totalDeltaNs = Double(userDelta + sysDelta)
+                        // Normalize to percentage across all cores.
+                        cpu = (totalDeltaNs / (interval * 1_000_000_000.0)) * 100.0 / Double(processorCount)
+                    } else {
+                        cpu = Double(proc.kp_proc.p_pctcpu) / 1000.0
+                    }
+                    
+                    // Rusage (disk + energy)
+                    var rusage = rusage_info_v6()
+                    var diskRead: UInt64 = 0
+                    var diskWrite: UInt64 = 0
+                    var energy: UInt64 = 0
+                    let rusageRet = withUnsafeMutablePointer(to: &rusage) { ptr -> Int32 in
+                        proc_pid_rusage(pid, RUSAGE_INFO_V6, UnsafeMutableRawPointer(ptr).assumingMemoryBound(to: rusage_info_t?.self))
+                    }
+                    if rusageRet == 0 {
+                        diskRead = rusage.ri_diskio_bytesread
+                        diskWrite = rusage.ri_diskio_byteswritten
+                        energy = rusage.ri_energy_nj
+                    }
+                    
+                    let prevR = prevRUsage[pid]
+                    let diskDeltaRead = prevR.map { diskRead >= $0.diskRead ? diskRead - $0.diskRead : 0 } ?? 0
+                    let diskDeltaWrite = prevR.map { diskWrite >= $0.diskWrite ? diskWrite - $0.diskWrite : 0 } ?? 0
+                    let energyDelta = prevR.map { energy >= $0.energy ? energy - $0.energy : 0 } ?? 0
+                    
+                    let uid = proc.kp_eproc.e_ucred.cr_uid
+                    let net = nettop[pid]
+                    let netRecv = net?.deltaIn ?? 0
+                    let netSent = net?.deltaOut ?? 0
+                    
+                    // Clamp large deltas to avoid UInt64 overflow when converting from Double.
+                    let safeBps: (UInt64) -> UInt64 = { delta in
+                        let scaled = Double(delta) / interval
+                        guard scaled < Double(UInt64.max) else { return UInt64.max }
+                        return UInt64(scaled)
+                    }
+                    
+                    let info = ProcessMonitorInfo(
+                        pid: pid,
+                        name: comm,
+                        executablePath: exePath.isEmpty ? nil : exePath,
+                        cpuPercent: cpu,
+                        memoryMB: Double(residentBytes) / 1024.0 / 1024.0,
+                        uid: uid,
+                        threads: threads,
+                        diskReadBytes: diskDeltaRead,
+                        diskWriteBytes: diskDeltaWrite,
+                        diskReadBytesPerSecond: safeBps(diskDeltaRead),
+                        diskWriteBytesPerSecond: safeBps(diskDeltaWrite),
+                        energyNanojoules: energy,
+                        energyNanojoulesPerSecond: safeBps(energyDelta),
+                        isEstimatedNetwork: net == nil,
+                        networkRecvBytes: netRecv,
+                        networkSentBytes: netSent,
+                        networkRecvBytesPerSecond: netRecv,
+                        networkSentBytesPerSecond: netSent
+                    )
+                    
+                    let sample = ProcessSample(
+                        pid: pid,
+                        info: info,
+                        rusage: (diskRead: diskRead, diskWrite: diskWrite, energy: energy),
+                        taskTimes: (user: userTime, system: systemTime)
+                    )
+                    
+                    lock.lock()
+                    samples.append(sample)
+                    lock.unlock()
                 }
-                return withUnsafeBytes(of: proc.kp_proc.p_comm) { ptr -> String in
-                    let buffer = ptr.bindMemory(to: CChar.self)
-                    return String(cString: buffer.baseAddress!)
-                }
-            }()
-            
-            let cpu = Double(proc.kp_proc.p_pctcpu) / 1000.0
-            let mem = Double(proc.kp_eproc.e_xrssize) * Double(vm_kernel_page_size) / 1024.0 / 1024.0
-            let uid = proc.kp_eproc.e_ucred.cr_uid
-            
-            // Thread count via proc_pidinfo
-            var taskinfo = proc_taskinfo()
-            var threads: Int32 = 0
-            let taskInfoSize = Int32(MemoryLayout<proc_taskinfo>.size)
-            let taskRet = withUnsafeMutablePointer(to: &taskinfo) {
-                proc_pidinfo(pid, PROC_PIDTASKINFO, 0, $0, taskInfoSize)
-            }
-            if taskRet == taskInfoSize {
-                threads = taskinfo.pti_threadnum
             }
             
-            // Disk IO and energy via proc_pid_rusage
-            var rusage = rusage_info_v6()
-            var diskRead: UInt64 = 0
-            var diskWrite: UInt64 = 0
-            var energy: UInt64 = 0
-            let rusageRet = withUnsafeMutablePointer(to: &rusage) { ptr -> Int32 in
-                proc_pid_rusage(pid, RUSAGE_INFO_V6, UnsafeMutableRawPointer(ptr).assumingMemoryBound(to: rusage_info_t?.self))
-            }
-            if rusageRet == 0 {
-                diskRead = rusage.ri_diskio_bytesread
-                diskWrite = rusage.ri_diskio_byteswritten
-                energy = rusage.ri_energy_nj
-            }
-            currentIO[pid] = (diskRead: diskRead, diskWrite: diskWrite)
+            group.wait()
             
-            // Calculate disk deltas using previous snapshot
-            var diskDeltaRead: UInt64 = 0
-            var diskDeltaWrite: UInt64 = 0
-            if let prev = previousProcessIO[pid] {
-                diskDeltaRead = diskRead >= prev.diskRead ? diskRead - prev.diskRead : 0
-                diskDeltaWrite = diskWrite >= prev.diskWrite ? diskWrite - prev.diskWrite : 0
+            var currentRUsage: [Int32: (diskRead: UInt64, diskWrite: UInt64, energy: UInt64)] = [:]
+            var currentTaskTimes: [Int32: (user: UInt64, system: UInt64)] = [:]
+            var infos: [ProcessMonitorInfo] = []
+            infos.reserveCapacity(samples.count)
+            for sample in samples {
+                currentRUsage[sample.pid] = sample.rusage
+                currentTaskTimes[sample.pid] = sample.taskTimes
+                infos.append(sample.info)
             }
             
-            infos.append(ProcessMonitorInfo(
-                pid: pid,
-                name: comm,
-                cpuPercent: cpu,
-                memoryMB: mem,
-                uid: uid,
-                threads: threads,
-                diskReadBytes: diskDeltaRead,
-                diskWriteBytes: diskDeltaWrite,
-                energyNanojoules: energy,
-                isEstimatedNetwork: true,
-                networkRecvBytes: 0,
-                networkSentBytes: 0
-            ))
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                self.previousProcessRUsage = currentRUsage
+                self.previousProcessTaskTimes = currentTaskTimes
+                self.processes = infos.sorted { $0.cpuPercent > $1.cpuPercent }
+            }
         }
-        
-        previousProcessIO = currentIO
-        
-        // Estimate per-process network share based on CPU weighting among top consumers.
-        // Real per-process network bytes require root / kernel task access; this is a
-        // best-effort proxy so the Network tab still shows relative activity.
-        let totalNetworkDelta = max(1, network.deltaIn + network.deltaOut)
-        let topProcs = infos.sorted { $0.cpuPercent > $1.cpuPercent }.prefix(30)
-        let totalCPU = max(1.0, topProcs.map(\.cpuPercent).reduce(0, +))
-        for i in infos.indices where infos[i].cpuPercent > 0.05 {
-            let share = infos[i].cpuPercent / totalCPU
-            infos[i].networkRecvBytes = UInt64(Double(totalNetworkDelta) * share * 0.5)
-            infos[i].networkSentBytes = UInt64(Double(totalNetworkDelta) * share * 0.5)
-        }
-        
-        self.processes = infos.sorted { $0.cpuPercent > $1.cpuPercent }
     }
     
     // MARK: - Battery

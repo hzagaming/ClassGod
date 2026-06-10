@@ -60,11 +60,30 @@ final class ErrorToastManager: ObservableObject {
         let title = nsError.localizedDescription
         let message = "Domain: \(nsError.domain) | Code: \(nsError.code)"
         
-        // Try to find matching entry
-        let matching = ErrorKnowledgeBase.shared.search(query: "\(nsError.domain) \(nsError.code)")
-        let entry = matching.first?.entry
+        // Present toast immediately, then enrich with knowledge-base match on background
+        show(title: title, message: message, severity: .high, entry: nil)
         
-        show(title: title, message: message, severity: .high, entry: entry)
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            ErrorKnowledgeBase.shared.ensureLoaded()
+            let matching = ErrorKnowledgeBase.shared.search(query: "\(nsError.domain) \(nsError.code)")
+            guard let entry = matching.first?.entry else { return }
+            DispatchQueue.main.async {
+                self?.enrichLatestToast(with: entry)
+            }
+        }
+    }
+    
+    private func enrichLatestToast(with entry: ErrorEntry) {
+        guard let lastIndex = toasts.indices.last else { return }
+        let last = toasts[lastIndex]
+        guard last.entry == nil else { return }
+        toasts[lastIndex] = ErrorToastItem(
+            title: last.title,
+            message: last.message,
+            severity: last.severity,
+            entry: entry,
+            timestamp: last.timestamp
+        )
     }
     
     // MARK: - Dismiss
@@ -88,7 +107,7 @@ final class ErrorToastManager: ObservableObject {
     func dismissAll() {
         DispatchQueue.main.async { [weak self] in
             guard let self = self else { return }
-            for (id, window) in self.windows {
+            for (_, window) in self.windows {
                 NSAnimationContext.runAnimationGroup { ctx in
                     ctx.duration = 0.2
                     window.animator().alphaValue = 0

@@ -70,9 +70,16 @@ final class WallpaperEngine: ObservableObject {
             return
         }
         
+        let filePath: String
+        if let copiedURL = copyWallpaperToAppSupport(original: url) {
+            filePath = copiedURL.path
+        } else {
+            filePath = url.path
+        }
+        
         let item = WallpaperItem(
             name: url.deletingPathExtension().lastPathComponent,
-            filePath: url.path,
+            filePath: filePath,
             type: type
         )
         playlist.append(item)
@@ -85,6 +92,7 @@ final class WallpaperEngine: ObservableObject {
     
     func removeWallpaper(_ item: WallpaperItem) {
         playlist.removeAll { $0.id == item.id }
+        deleteWallpaperFileIfManaged(path: item.filePath)
         if currentWallpaper?.id == item.id {
             currentWallpaper = playlist.first
             if let next = currentWallpaper {
@@ -92,6 +100,33 @@ final class WallpaperEngine: ObservableObject {
             }
         }
         savePlaylist()
+    }
+    
+    private func wallpapersDirectory() -> URL? {
+        guard let supportDir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else { return nil }
+        let dir = supportDir.appendingPathComponent("com.hanazar.classgod/Wallpapers", isDirectory: true)
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true, attributes: nil)
+        return dir
+    }
+    
+    private func copyWallpaperToAppSupport(original: URL) -> URL? {
+        guard let dir = wallpapersDirectory() else { return nil }
+        let uniqueName = "\(UUID().uuidString)_\(original.lastPathComponent)"
+        let dest = dir.appendingPathComponent(uniqueName)
+        do {
+            try FileManager.default.copyItem(at: original, to: dest)
+            return dest
+        } catch {
+            print("[WallpaperEngine] Failed to copy wallpaper to app support: \(error)")
+            return nil
+        }
+    }
+    
+    private func deleteWallpaperFileIfManaged(path: String) {
+        guard let dir = wallpapersDirectory()?.path else { return }
+        if path.hasPrefix(dir) {
+            try? FileManager.default.removeItem(atPath: path)
+        }
     }
     
     func selectWallpaper(_ item: WallpaperItem) {
@@ -126,6 +161,14 @@ final class WallpaperEngine: ObservableObject {
     
     func toggleShowOnDesktop() {
         showOnDesktop.toggle()
+        if showOnDesktop && !isEnabled {
+            isEnabled = true
+            if let current = currentWallpaper {
+                selectWallpaper(current)
+            } else if let first = playlist.first {
+                selectWallpaper(first)
+            }
+        }
         saveSettings()
     }
     

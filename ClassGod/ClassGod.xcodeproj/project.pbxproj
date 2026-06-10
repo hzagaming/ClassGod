@@ -256,6 +256,29 @@
 		};
 /* End PBXResourcesBuildPhase section */
 
+/* Begin PBXShellScriptBuildPhase section */
+		AA1234567890ABCDEF123456 /* Build ClassGodHelper */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Build ClassGodHelper";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(BUILT_PRODUCTS_DIR)/$(EXECUTABLE_FOLDER_PATH)/ClassGodHelper",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "cd \"$SRCROOT/../ClassGodHelper\"\nswift build --disable-sandbox -c release\ncp -f \".build/release/ClassGodHelper\" \"$BUILT_PRODUCTS_DIR/$EXECUTABLE_FOLDER_PATH/ClassGodHelper\"\nchmod +x \"$BUILT_PRODUCTS_DIR/$EXECUTABLE_FOLDER_PATH/ClassGodHelper\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		F2BB6B4F2FC08AFC0059D551 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
@@ -463,7 +486,7 @@
 				CODE_SIGN_ENTITLEMENTS = ClassGod/ClassGod.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 15;
+				CURRENT_PROJECT_VERSION = 19;
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
@@ -484,7 +507,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.4.1;
+				MARKETING_VERSION = 1.4.4;
 				PRODUCT_BUNDLE_IDENTIFIER = "Hanazar-Software.ClassGod";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
@@ -505,7 +528,7 @@
 				CODE_SIGN_ENTITLEMENTS = ClassGod/ClassGod.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 15;
+				CURRENT_PROJECT_VERSION = 19;
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
@@ -526,7 +549,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.4.1;
+				MARKETING_VERSION = 1.4.4;
 				PRODUCT_BUNDLE_IDENTIFIER = "Hanazar-Software.ClassGod";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
@@ -569,29 +592,6 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-/* Begin PBXShellScriptBuildPhase section */
-		AA1234567890ABCDEF123456 /* Build ClassGodHelper */ = {
-			isa = PBXShellScriptBuildPhase;
-			alwaysOutOfDate = 1;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-			);
-			name = "Build ClassGodHelper";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-				"$(BUILT_PRODUCTS_DIR)/$(EXECUTABLE_FOLDER_PATH)/ClassGodHelper",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "cd \"$SRCROOT/../ClassGodHelper\"\nswift build --disable-sandbox -c release\ncp -f \".build/release/ClassGodHelper\" \"$BUILT_PRODUCTS_DIR/$EXECUTABLE_FOLDER_PATH/ClassGodHelper\"\nchmod +x \"$BUILT_PRODUCTS_DIR/$EXECUTABLE_FOLDER_PATH/ClassGodHelper\"\n";
-		};
-/* End PBXShellScriptBuildPhase section */
-
 /* End XCConfigurationList section */
 	};
 	rootObject = F2BB6B4B2FC08AFC0059D551 /* Project object */;
