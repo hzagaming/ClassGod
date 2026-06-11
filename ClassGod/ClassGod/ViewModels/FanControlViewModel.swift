@@ -692,6 +692,34 @@ final class FanControlViewModel: ObservableObject {
         menuBarDisplay = "\(tempStr) / \(rpmStr)"
     }
 
+    func launchPrivilegedHelper() {
+        let helperPath = Bundle.main.bundleURL
+            .appendingPathComponent("Contents/MacOS/ClassGodHelper")
+            .path
+        let script = "do shell script \"sudo '\(helperPath)' > /tmp/classgod_helper.log 2>&1 &\" with administrator privileges"
+        
+        Task.detached {
+            let task = Process()
+            task.executableURL = URL(fileURLWithPath: "/usr/bin/osascript")
+            task.arguments = ["-e", script]
+            do {
+                try task.run()
+                task.waitUntilExit()
+                await MainActor.run {
+                    if task.terminationStatus == 0 {
+                        self.showToast(message: "Helper launched. Wait a few seconds and rescan.")
+                    } else {
+                        self.showError(message: "Helper launch cancelled or failed (exit \(task.terminationStatus)).")
+                    }
+                }
+            } catch {
+                await MainActor.run {
+                    self.showError(message: "Failed to launch helper: \(error.localizedDescription)")
+                }
+            }
+        }
+    }
+
     func showToast(message: String) {
         toastMessage = message
         showToast = true

@@ -4,6 +4,24 @@
 
 ---
 
+## v1.4.8 — 2026-06-11
+
+### 新增
+- **一键启动 Privileged Helper**：风扇控制面板新增绿色 "Start Helper" 按钮，点击后通过 `osascript` 弹出系统管理员认证对话框并自动启动 `ClassGodHelper`，无需手动打开终端
+
+### 优化
+- **无真实传感器时提供更动态的 CPU 估计**：`SMCService.readAll()` 现在只要没有真实的 CPU/GPU 传感器，就会注入 `CPU Estimated` / `GPU Estimated`（基于 `SystemMonitor` 的 CPU 负载 + thermal state 混合模型），而不是只显示粗糙的 thermal-state 阶梯值
+- **默认 Auto Max 规则进一步 relaxed**：
+  - threshold: 80°C → **85°C**
+  - target: 60% → **50%**
+  - duration: 5s → **10s**
+  - gradual time: 10s → **15s**
+
+### 修复
+- 版本号更新为 v1.4.8 (Build 23)
+
+---
+
 ## v1.4.7 — 2026-06-11
 
 ### 修复

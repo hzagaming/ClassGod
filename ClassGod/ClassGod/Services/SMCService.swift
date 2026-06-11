@@ -513,15 +513,17 @@ final class SMCService {
             return true
         }
 
-        // 6. Final fallback: SystemMonitor estimates based on CPU load
-        if sensors.isEmpty {
-            let thermal = SystemMonitor.shared.thermal
-            if thermal.cpuTemp > 0 {
-                sensors.append(TemperatureSensor(name: "CPU Estimated", key: "CPU", value: thermal.cpuTemp, maxValue: 100, isEstimated: true))
-            }
-            if thermal.gpuTemp > 0 {
-                sensors.append(TemperatureSensor(name: "GPU Estimated", key: "GPU", value: thermal.gpuTemp, maxValue: 100, isEstimated: true))
-            }
+        // 6. Final fallback: SystemMonitor estimates based on CPU load.
+        // Always provide a CPU/GPU estimate if we don't have any real hardware readings
+        // for those categories, so the UI isn't left with only coarse thermal-state sensors.
+        let hasRealCPU = sensors.contains { !$0.isEstimated && ($0.name.contains("CPU") || $0.name.contains("Cluster")) }
+        let hasRealGPU = sensors.contains { !$0.isEstimated && $0.name.contains("GPU") }
+        let thermal = SystemMonitor.shared.thermal
+        if !hasRealCPU, thermal.cpuTemp > 0 {
+            sensors.append(TemperatureSensor(name: "CPU Estimated", key: "CPU", value: thermal.cpuTemp, maxValue: 100, isEstimated: true))
+        }
+        if !hasRealGPU, thermal.gpuTemp > 0 {
+            sensors.append(TemperatureSensor(name: "GPU Estimated", key: "GPU", value: thermal.gpuTemp, maxValue: 100, isEstimated: true))
         }
 
         if !fans.isEmpty {

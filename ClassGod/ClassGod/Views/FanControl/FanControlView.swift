@@ -490,21 +490,39 @@ struct FanControlView: View {
                 )
 
                 if !SMCService.shared.isHelperAvailable, SMCService.shared.isAppleSilicon {
-                    Button(action: {
-                        SoundEffectManager.shared.playButtonClick()
-                        copyHelperCommand()
-                    }) {
-                        HStack(spacing: 4 * zoomScale) {
-                            Image(systemName: "doc.on.doc")
-                                .font(.system(size: 9 * zoomScale))
-                            Text("Copy Helper Command")
-                                .font(.system(size: 10 * zoomScale, weight: .medium, design: .monospaced))
+                    HStack(spacing: 8 * zoomScale) {
+                        Button(action: {
+                            SoundEffectManager.shared.playButtonClick()
+                            viewModel.launchPrivilegedHelper()
+                        }) {
+                            HStack(spacing: 4 * zoomScale) {
+                                Image(systemName: "play.fill")
+                                    .font(.system(size: 9 * zoomScale))
+                                Text("Start Helper")
+                                    .font(.system(size: 10 * zoomScale, weight: .medium, design: .monospaced))
+                            }
+                            .foregroundStyle(.green.opacity(0.9))
+                            .padding(.horizontal, 8 * zoomScale)
+                            .padding(.vertical, 4 * zoomScale)
                         }
-                        .foregroundStyle(.yellow.opacity(0.8))
-                        .padding(.horizontal, 8 * zoomScale)
-                        .padding(.vertical, 4 * zoomScale)
+                        .buttonStyle(.plain)
+                        
+                        Button(action: {
+                            SoundEffectManager.shared.playButtonClick()
+                            copyHelperCommand()
+                        }) {
+                            HStack(spacing: 4 * zoomScale) {
+                                Image(systemName: "doc.on.doc")
+                                    .font(.system(size: 9 * zoomScale))
+                                Text("Copy Command")
+                                    .font(.system(size: 10 * zoomScale, weight: .medium, design: .monospaced))
+                            }
+                            .foregroundStyle(.yellow.opacity(0.8))
+                            .padding(.horizontal, 8 * zoomScale)
+                            .padding(.vertical, 4 * zoomScale)
+                        }
+                        .buttonStyle(.plain)
                     }
-                    .buttonStyle(.plain)
                 }
 
                 if !viewModel.sensors.isEmpty {
