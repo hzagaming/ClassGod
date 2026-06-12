@@ -703,7 +703,8 @@ final class FanControlViewModel: ObservableObject {
         let helperPath = Bundle.main.bundleURL
             .appendingPathComponent("Contents/MacOS/ClassGodHelper")
             .path
-        let script = "do shell script \"sudo '\(helperPath)' > /tmp/classgod_helper.log 2>&1 &\" with administrator privileges"
+        let logPath = "/tmp/classgod_helper.log"
+        let script = "do shell script \"sudo '\(helperPath)' > '\(logPath)' 2>&1 &\" with administrator privileges"
         
         Task.detached {
             let task = Process()
@@ -714,7 +715,13 @@ final class FanControlViewModel: ObservableObject {
                 task.waitUntilExit()
                 await MainActor.run {
                     if task.terminationStatus == 0 {
-                        self.showToast(message: "Helper launched. Wait a few seconds and rescan.")
+                        self.showToast(message: "Helper launched. Rescanning in 3s...")
+                        // Drop any stale connection and rescan once the helper is up.
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                            SMCHelperClient.shared.disconnect()
+                            SMCService.shared.rescan()
+                            self.refresh()
+                        }
                     } else {
                         self.showError(message: "Helper launch cancelled or failed (exit \(task.terminationStatus)).")
                     }

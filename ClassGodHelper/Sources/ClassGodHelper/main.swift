@@ -144,10 +144,18 @@ final class SMCHelper {
     /// Returns a map of key 4CC -> type string for keys matching the given prefixes.
     func enumerateSMCKeys(matchingPrefixes prefixes: [String] = ["T", "F"]) -> [(key: String, type: String)] {
         var results: [(key: String, type: String)] = []
-        guard let keyCountBytes = readBytes(key: "#KEY"), keyCountBytes.count >= 2 else { return results }
+        let keyCountBytes = readBytes(key: "#KEY")
+        guard let keyCountBytes, keyCountBytes.count >= 4 else {
+            print("[Helper] enumerateSMCKeys: #KEY read failed or too short (count=\(keyCountBytes?.count ?? 0))")
+            return results
+        }
         let count = Int(UInt32(keyCountBytes[0]) << 24 | UInt32(keyCountBytes[1]) << 16 |
                         UInt32(keyCountBytes[2]) << 8 | UInt32(keyCountBytes[3]))
-        guard count > 0 && count < 10000 else { return results }
+        print("[Helper] enumerateSMCKeys: #KEY reports \(count) total keys")
+        guard count > 0 && count < 10000 else {
+            print("[Helper] enumerateSMCKeys: invalid key count \(count)")
+            return results
+        }
         
         for i in 0..<count {
             var input = [UInt8](repeating: 0, count: 56)
@@ -163,9 +171,9 @@ final class SMCHelper {
             let type = String(bytes: output[4..<8].map { $0 }, encoding: .ascii) ?? ""
             let typeLower = type.lowercased()
             guard prefixes.contains(where: { key4cc.hasPrefix($0) }) else { continue }
-            // Only collect known temperature/fan types
-            let validTypes = ["sp78", "sp79", "sp7a", "sp5a", "si8c", "fpe2"]
-            guard validTypes.contains(typeLower) else { continue }
+            // Collect both standard sensor types and any T/F key
+            let validTypes = Set(["sp78", "sp79", "sp7a", "sp5a", "si8c", "fpe2", "ui8 ", "ui16", "ui32", "flag"])
+            guard validTypes.contains(typeLower) || key4cc.hasPrefix("T") || key4cc.hasPrefix("F") else { continue }
             results.append((key: key4cc, type: typeLower))
         }
         return results
@@ -246,17 +254,21 @@ final class SMCHelper {
         ]
         var out: [[String: Any]] = []
         var seenKeys = Set<String>()
+        var hardcodedSuccess = 0
         for (name, key, max) in keys {
             guard let b = readBytes(key: key), b.count >= 2 else { continue }
             let v = decodeSP78(b)
             if v > -50 && v < 150 {
                 out.append(["name": name, "key": key, "value": v, "maxValue": max])
                 seenKeys.insert(key)
+                hardcodedSuccess += 1
             }
         }
+        print("[Helper] readTemps: \(hardcodedSuccess)/\(keys.count) hardcoded keys succeeded")
         
         // Enumerate dynamic T* keys as supplement
         let dynamicTemps = enumerateSMCKeys(matchingPrefixes: ["T"])
+        print("[Helper] readTemps: \(dynamicTemps.count) dynamic T-keys discovered")
         for entry in dynamicTemps {
             let key = entry.key
             guard key.count == 4, key.hasPrefix("T"), !seenKeys.contains(key) else { continue }
