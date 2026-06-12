@@ -2773,10 +2773,10 @@
     "Copied!" : {
 
     },
-    "Copy Fix" : {
+    "Copy Command" : {
 
     },
-    "Copy Helper Command" : {
+    "Copy Fix" : {
 
     },
     "Copy Sensor Data" : {
@@ -9832,6 +9832,9 @@
           }
         }
       }
+    },
+    "Start Helper" : {
+
     },
     "Step %lld of %lld" : {
       "localizations" : {

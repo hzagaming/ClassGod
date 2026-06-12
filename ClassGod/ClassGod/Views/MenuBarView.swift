@@ -262,7 +262,10 @@ struct MenuBarView: View {
     private func updateFanSummary() {
         Task.detached(priority: .userInitiated) {
             let all = SMCService.shared.readAll()
-            let temp = all.sensors.map(\.value).max() ?? 0
+            // Use only non-estimated sensors for menu-bar highest temp to avoid
+            // PMU/thermal-state placeholders inflating the display.
+            let realSensors = all.sensors.filter { !$0.isEstimated }
+            let temp = realSensors.map(\.value).max() ?? 0
             let rpm = all.fans.isEmpty ? 0 : all.fans.map(\.actualRPM).reduce(0, +) / Double(all.fans.count)
             await MainActor.run {
                 self.fanSummaryTemp = temp

@@ -4,6 +4,16 @@
 
 ---
 
+## v1.4.9 — 2026-06-12
+
+### 修复
+- **`FanControlViewModel` 启动时自动启动 `SystemMonitor`**：之前 `CPU Estimated` 传感器依赖 `SystemMonitor.shared.thermal`，但风扇控制面板自己没启动 `SystemMonitor`，导致动态 CPU 温度估计值为 0
+- **`FanControlViewModel.stopMonitoring()` 停止 `SystemMonitor`**：平衡 `startMonitoring()` 中的计数
+- **`MenuBarView` 温度摘要过滤估计传感器**：菜单栏最高温度不再把 PMU/thermal-state placeholder 当作真实读数
+- 版本号更新为 v1.4.9 (Build 24)
+
+---
+
 ## v1.4.8 — 2026-06-11
 
 ### 新增

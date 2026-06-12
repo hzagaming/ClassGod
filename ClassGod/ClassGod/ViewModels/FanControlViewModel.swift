@@ -132,6 +132,10 @@ final class FanControlViewModel: ObservableObject {
         guard !isMonitoring else { return }
         isMonitoring = true
 
+        // Ensure SystemMonitor is running so CPU-estimated temperature fallback
+        // has live CPU load data instead of defaulting to zero.
+        SystemMonitor.shared.start(interval: 1.0)
+
         // First refresh to discover fans/sensors
         refresh()
 
@@ -198,6 +202,9 @@ final class FanControlViewModel: ObservableObject {
         gradualTimer = nil
         boostTimer?.invalidate()
         boostTimer = nil
+        
+        // Balance the SystemMonitor start call from startMonitoring().
+        SystemMonitor.shared.stop()
         
         // When the panel closes, release fans back to system control so they
         // don't stay stuck at the last commanded RPM.
