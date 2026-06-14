@@ -58,7 +58,7 @@ struct WallpaperBrowserView: View {
         ) { result in
             handleImport(result: result)
         }
-        .alert("Delete Wallpaper?", isPresented: $showDeleteConfirmation, presenting: itemToDelete) { item in
+        .alert(String(localized: "wallpaper.delete_title"), isPresented: $showDeleteConfirmation, presenting: itemToDelete) { item in
             Button("Cancel", role: .cancel) {}
             Button("Delete", role: .destructive) {
                 withAnimation(.easeInOut(duration: 0.2)) {
@@ -67,7 +67,7 @@ struct WallpaperBrowserView: View {
                 SoundEffectManager.shared.playWallpaperDeleted()
             }
         } message: { item in
-            Text("Remove '\(item.name)' from your wallpaper library?")
+            Text(String(format: String(localized: "wallpaper.delete_message"), item.name))
         }
     }
     
@@ -119,7 +119,7 @@ struct WallpaperBrowserView: View {
                 .frame(width: 56 * zoomScale, height: 56 * zoomScale)
                 
                 VStack(alignment: .leading, spacing: 4 * zoomScale) {
-                    Text(engine.currentWallpaper?.name ?? "No wallpaper selected")
+                    Text(engine.currentWallpaper?.name ?? String(localized: "wallpaper.none_selected"))
                         .font(.system(size: 13 * zoomScale, weight: .semibold, design: .monospaced))
                         .foregroundStyle(engine.currentWallpaper != nil ? .white : .white.opacity(0.35))
                         .lineLimit(1)
@@ -309,10 +309,10 @@ struct WallpaperBrowserView: View {
     }
     
     private var statusText: String {
-        guard engine.currentWallpaper != nil else { return "IDLE" }
-        if engine.isEnabled && engine.isPlaying { return "LIVE" }
-        if engine.isEnabled { return "PAUSED" }
-        return "OFF"
+        guard engine.currentWallpaper != nil else { return String(localized: "wallpaper.status.idle") }
+        if engine.isEnabled && engine.isPlaying { return String(localized: "wallpaper.status.live") }
+        if engine.isEnabled { return String(localized: "wallpaper.status.paused") }
+        return String(localized: "wallpaper.status.off")
     }
     
     // MARK: - Playlist
@@ -320,14 +320,14 @@ struct WallpaperBrowserView: View {
     private var playlistSection: some View {
         VStack(alignment: .leading, spacing: 10 * zoomScale) {
             HStack(spacing: 0) {
-                Text("LIBRARY")
+                Text(String(localized: "wallpaper.library"))
                     .font(.system(size: 10 * zoomScale, weight: .bold, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.4))
                     .tracking(2)
                 
                 Spacer()
                 
-                Text("\(engine.playlist.count) item\(engine.playlist.count == 1 ? "" : "s")")
+                Text(String(format: String(localized: "wallpaper.item_count"), engine.playlist.count))
                     .font(.system(size: 10 * zoomScale, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.3))
                 
@@ -338,7 +338,7 @@ struct WallpaperBrowserView: View {
                     HStack(spacing: 4 * zoomScale) {
                         Image(systemName: "plus")
                             .font(.system(size: 10 * zoomScale, weight: .bold))
-                        Text("Import")
+                        Text(String(localized: "button.import"))
                             .font(.system(size: 11 * zoomScale, weight: .bold, design: .monospaced))
                     }
                     .padding(.horizontal, 10 * zoomScale)

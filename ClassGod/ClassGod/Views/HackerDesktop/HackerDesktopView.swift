@@ -171,6 +171,8 @@ struct HackerDesktopView: View {
                                 .font(.system(size: 12 * zoomScale))
                                 .foregroundStyle(item.isDone ? .green : .white.opacity(0.4))
                                 .onTapGesture {
+                                    SoundEffectManager.shared.playButtonClick()
+                                    HapticManager.shared.generic()
                                     item.isDone.toggle()
                                     saveData()
                                 }
@@ -194,6 +196,8 @@ struct HackerDesktopView: View {
                 }
                 
                 Button(action: {
+                    SoundEffectManager.shared.playButtonClick()
+                    HapticManager.shared.generic()
                     todoItems.append(TodoItem(id: UUID(), text: "", isDone: false))
                 }) {
                     HStack(spacing: 4 * zoomScale) {
@@ -410,13 +414,17 @@ struct HackerDesktopView: View {
 private struct TabButton: View {
     @ObservedObject private var prefs = PreferencesManager.shared
     private var zoomScale: CGFloat { CGFloat(prefs.preferences.windowZoomScale) }
-    let title: String
+    let title: LocalizedStringKey
     let icon: String
     let isSelected: Bool
     let action: () -> Void
     
     var body: some View {
-        Button(action: action) {
+        Button(action: {
+            SoundEffectManager.shared.playButtonClick()
+            HapticManager.shared.generic()
+            action()
+        }) {
             HStack(spacing: 4 * zoomScale) {
                 Image(systemName: icon)
                     .font(.system(size: 10 * zoomScale))
@@ -440,7 +448,7 @@ private struct TabButton: View {
 private struct ConfigSection<Content: View>: View {
     @ObservedObject private var prefs = PreferencesManager.shared
     private var zoomScale: CGFloat { CGFloat(prefs.preferences.windowZoomScale) }
-    let title: String
+    let title: LocalizedStringKey
     let icon: String
     @ViewBuilder let content: Content
     
@@ -470,7 +478,7 @@ private struct ConfigSection<Content: View>: View {
 private struct StatBadge: View {
     @ObservedObject private var prefs = PreferencesManager.shared
     private var zoomScale: CGFloat { CGFloat(prefs.preferences.windowZoomScale) }
-    let label: String
+    let label: LocalizedStringKey
     let value: String
     let color: Color
     

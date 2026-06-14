@@ -16,22 +16,24 @@ struct FanControlView: View {
 
     private var helperStatusMessage: String {
         if SMCService.shared.isHelperAvailable {
-            return "ClassGodHelper is running as root. Full SMC read/write enabled."
+            return String(localized: "helper.status.running")
         }
         if SMCService.shared.isAppleSilicon {
-            return "Apple Silicon restricts SMC access. Run the helper as root to unlock fan control."
+            return String(localized: "helper.status.restricted")
         }
-        return "Privileged helper is optional on Intel Macs."
+        return String(localized: "helper.status.optional")
     }
 
     private func copyHelperCommand() {
         let helperPath = Bundle.main.bundleURL
             .appendingPathComponent("Contents/MacOS/ClassGodHelper")
             .path
-        let command = "sudo \"\(helperPath)\""
+        // Shell-safe single-quote wrapping: close quote, insert escaped quote, reopen.
+        let escaped = helperPath.replacingOccurrences(of: "'", with: "'\\''")
+        let command = "sudo '\(escaped)'"
         NSPasteboard.general.clearContents()
         NSPasteboard.general.setString(command, forType: .string)
-        viewModel.showToast(message: "Helper command copied")
+        viewModel.showToast(message: String(localized: "fan.toast.helper_copied"))
     }
 
     var body: some View {
@@ -51,11 +53,11 @@ struct FanControlView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(
-            RoundedRectangle(cornerRadius: prefs.preferences.panelCornerRadius)
+            RoundedRectangle(cornerRadius: prefs.preferences.panelCornerRadius * zoomScale)
                 .fill(Color.black)
         )
         .overlay(
-            RoundedRectangle(cornerRadius: prefs.preferences.panelCornerRadius)
+            RoundedRectangle(cornerRadius: prefs.preferences.panelCornerRadius * zoomScale)
                 .stroke(Color.white.opacity(0.15), lineWidth: 1 * zoomScale)
                 .allowsHitTesting(false)
         )
@@ -65,10 +67,10 @@ struct FanControlView: View {
         .onDisappear {
             viewModel.stopMonitoring()
         }
-        .alert("Error", isPresented: $viewModel.showError) {
-            Button("OK", role: .cancel) {}
+        .alert(String(localized: "alert.error"), isPresented: $viewModel.showError) {
+            Button(String(localized: "button.ok"), role: .cancel) {}
         } message: {
-            Text(viewModel.errorMessage ?? "Unknown error")
+            Text(viewModel.errorMessage ?? String(localized: "error.unknown"))
         }
         .overlay(
             toastOverlay
@@ -84,6 +86,7 @@ struct FanControlView: View {
             HStack(spacing: 10 * zoomScale) {
                 Button(action: {
                     SoundEffectManager.shared.playButtonClick()
+                        HapticManager.shared.generic()
                     onClose()
                 }) {
                     Image(systemName: "xmark")
@@ -100,7 +103,7 @@ struct FanControlView: View {
                         .font(.system(size: 14 * zoomScale, weight: .semibold, design: .monospaced))
                         .foregroundStyle(.white)
 
-                    Text("Avg: \(unit.formatted(viewModel.averageComputerTemp)) ・ CPU: \(unit.formatted(viewModel.averageCPUTemp)) ・ Fans: \(Int(viewModel.averageFanRPM)) RPM")
+                    Text(String(format: String(localized: "fan.header.summary"), unit.formatted(viewModel.averageComputerTemp), unit.formatted(viewModel.averageCPUTemp), Int(viewModel.averageFanRPM)))
                         .font(.system(size: 9 * zoomScale, design: .monospaced))
                         .foregroundStyle(.white.opacity(0.4))
                 }
@@ -111,6 +114,7 @@ struct FanControlView: View {
                     ForEach(FanControlMode.allCases) { mode in
                         Button(action: {
                             SoundEffectManager.shared.playButtonClick()
+                        HapticManager.shared.generic()
                             viewModel.setFanMode(mode)
                         }) {
                             Text(mode.displayName)
@@ -133,6 +137,7 @@ struct FanControlView: View {
                 // Boost button
                 Button(action: {
                     SoundEffectManager.shared.playButtonClick()
+                        HapticManager.shared.generic()
                     if viewModel.isBoostActive {
                         viewModel.cancelBoost()
                     } else {
@@ -142,9 +147,10 @@ struct FanControlView: View {
                     HStack(spacing: 3 * zoomScale) {
                         Image(systemName: viewModel.isBoostActive ? "bolt.fill" : "bolt")
                             .font(.system(size: 9 * zoomScale, weight: .bold))
-                        Text(viewModel.isBoostActive ? "Boosting" : "Boost")
+                        Text(viewModel.isBoostActive ? String(localized: "fan.boosting") : String(localized: "fan.boost"))
                             .font(.system(size: 9 * zoomScale, weight: .bold, design: .monospaced))
                     }
+                    .opacity(viewModel.fans.isEmpty ? 0.4 : 1.0)
                     .foregroundStyle(viewModel.isBoostActive ? .black : .yellow.opacity(0.8))
                     .padding(.horizontal, 8 * zoomScale)
                     .padding(.vertical, 4 * zoomScale)
@@ -160,6 +166,7 @@ struct FanControlView: View {
                     )
                 }
                 .buttonStyle(.plain)
+                .disabled(viewModel.fans.isEmpty)
             }
             .padding(.horizontal)
             .padding(.vertical, 10 * zoomScale)
@@ -181,13 +188,13 @@ struct FanControlView: View {
                     
                     let statusText: String = {
                         if viewModel.smcConnected && !viewModel.usingIORegistry {
-                            return "SMC Connected"
+                            return String(localized: "status.smc_connected")
                         } else if viewModel.smcConnected && viewModel.usingIORegistry {
-                            return "SMC Connected (Limited)"
+                            return String(localized: "status.smc_limited")
                         } else if viewModel.usingIORegistry {
-                            return "IORegistry Fallback"
+                            return String(localized: "status.ioregistry")
                         } else {
-                            return "No Hardware Access"
+                            return String(localized: "status.no_hardware")
                         }
                     }()
                     
@@ -202,7 +209,7 @@ struct FanControlView: View {
 
                 Spacer()
 
-                Text("\(viewModel.sensors.count) sensors ・ \(viewModel.fans.count) fans")
+                Text(String(format: String(localized: "fan.sensor_fan_count"), viewModel.sensors.count, viewModel.fans.count))
                     .font(.system(size: 9 * zoomScale, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.3))
             }
@@ -219,19 +226,20 @@ struct FanControlView: View {
     private var temperatureSection: some View {
         VStack(alignment: .leading, spacing: 8 * zoomScale) {
             HStack {
-                Label("Temperatures", systemImage: "thermometer")
+                Label(String(localized: "fan.temperatures"), systemImage: "thermometer")
                     .font(.system(size: 12 * zoomScale, weight: .bold, design: .monospaced))
                     .foregroundStyle(.white)
 
                 Spacer()
 
                 HStack(spacing: 8) {
-                    Text("Highest: \(unit.formatted(viewModel.highestTemperature))")
+                    Text(String(format: String(localized: "fan.highest_temp"), unit.formatted(viewModel.highestTemperature)))
                         .font(.system(size: 10 * zoomScale, design: .monospaced))
                         .foregroundStyle(.white.opacity(0.5))
 
                     Button(action: {
                         SoundEffectManager.shared.playButtonClick()
+                        HapticManager.shared.generic()
                         prefs.preferences.fanControlTemperatureUnit = (prefs.preferences.fanControlTemperatureUnit == .celsius) ? .fahrenheit : .celsius
                     }) {
                         Text(unit == .celsius ? "°C" : "°F")
@@ -242,6 +250,7 @@ struct FanControlView: View {
 
                     Button(action: {
                         SoundEffectManager.shared.playButtonClick()
+                        HapticManager.shared.generic()
                         viewModel.resetMaxTemperatures()
                     }) {
                         Text("Reset")
@@ -259,6 +268,7 @@ struct FanControlView: View {
                     ForEach(SensorFilter.allCases) { filter in
                         Button(action: {
                             SoundEffectManager.shared.playButtonClick()
+                        HapticManager.shared.generic()
                             viewModel.sensorFilter = filter
                         }) {
                             Text(filter.rawValue)
@@ -291,6 +301,7 @@ struct FanControlView: View {
                     if !viewModel.sensorSearchText.isEmpty {
                         Button(action: {
                             SoundEffectManager.shared.playButtonClick()
+                        HapticManager.shared.generic()
                             viewModel.sensorSearchText = ""
                         }) {
                             Image(systemName: "xmark.circle.fill")
@@ -352,6 +363,7 @@ struct FanControlView: View {
                 // Rescan button
                 Button(action: {
                     SoundEffectManager.shared.playButtonClick()
+                        HapticManager.shared.generic()
                     viewModel.rescanHardware()
                 }) {
                     HStack(spacing: 3 * zoomScale) {
@@ -417,7 +429,7 @@ struct FanControlView: View {
                         .font(.system(size: 8 * zoomScale))
                         .foregroundStyle(.yellow)
 
-                    Text("Active: \(activeRulesText)")
+                    Text(String(format: String(localized: "fan.active_rules"), activeRulesText))
                         .font(.system(size: 9 * zoomScale, design: .monospaced))
                         .foregroundStyle(.yellow.opacity(0.8))
                         .lineLimit(1)
@@ -455,7 +467,7 @@ struct FanControlView: View {
     private var diagnosticsSection: some View {
         VStack(alignment: .leading, spacing: 6 * zoomScale) {
             HStack {
-                Label("Diagnostics", systemImage: "stethoscope")
+                Label(String(localized: "fan.diagnostics"), systemImage: "stethoscope")
                     .font(.system(size: 12 * zoomScale, weight: .bold, design: .monospaced))
                     .foregroundStyle(.white)
 
@@ -466,16 +478,16 @@ struct FanControlView: View {
             VStack(spacing: 4 * zoomScale) {
                 DiagnosticRow(
                     icon: "checkmark.circle.fill",
-                    title: "Fans",
-                    message: viewModel.fans.isEmpty ? "No fan data available" : "Fans appear to be working properly.",
+                    title: "fan.diagnostic.fans",
+                    message: viewModel.fans.isEmpty ? String(localized: "fan.diagnostic.no_fan_data") : String(localized: "fan.diagnostic.fans_ok"),
                     isGood: !viewModel.fans.isEmpty,
                     zoomScale: zoomScale
                 )
 
                 DiagnosticRow(
                     icon: "checkmark.circle.fill",
-                    title: "Temperature Sensors",
-                    message: viewModel.sensors.isEmpty ? "No sensor data available" : "\(viewModel.sensors.count) sensors active.",
+                    title: "fan.diagnostic.sensors",
+                    message: viewModel.sensors.isEmpty ? String(localized: "fan.diagnostic.no_sensor_data") : String(format: String(localized: "fan.diagnostic.sensors_active"), viewModel.sensors.count),
                     isGood: !viewModel.sensors.isEmpty,
                     zoomScale: zoomScale
                 )
@@ -483,7 +495,7 @@ struct FanControlView: View {
                 // Privileged helper status
                 DiagnosticRow(
                     icon: SMCService.shared.isHelperAvailable ? "checkmark.shield.fill" : "lock.shield.fill",
-                    title: "Privileged Helper",
+                    title: "fan.diagnostic.helper",
                     message: helperStatusMessage,
                     isGood: SMCService.shared.isHelperAvailable,
                     zoomScale: zoomScale
@@ -493,12 +505,13 @@ struct FanControlView: View {
                     HStack(spacing: 8 * zoomScale) {
                         Button(action: {
                             SoundEffectManager.shared.playButtonClick()
+                        HapticManager.shared.generic()
                             viewModel.launchPrivilegedHelper()
                         }) {
                             HStack(spacing: 4 * zoomScale) {
                                 Image(systemName: "play.fill")
                                     .font(.system(size: 9 * zoomScale))
-                                Text("Start Helper")
+                                Text(String(localized: "fan.start_helper"))
                                     .font(.system(size: 10 * zoomScale, weight: .medium, design: .monospaced))
                             }
                             .foregroundStyle(.green.opacity(0.9))
@@ -509,12 +522,13 @@ struct FanControlView: View {
                         
                         Button(action: {
                             SoundEffectManager.shared.playButtonClick()
+                        HapticManager.shared.generic()
                             copyHelperCommand()
                         }) {
                             HStack(spacing: 4 * zoomScale) {
                                 Image(systemName: "doc.on.doc")
                                     .font(.system(size: 9 * zoomScale))
-                                Text("Copy Command")
+                                Text(String(localized: "fan.copy_command"))
                                     .font(.system(size: 10 * zoomScale, weight: .medium, design: .monospaced))
                             }
                             .foregroundStyle(.yellow.opacity(0.8))
@@ -528,6 +542,7 @@ struct FanControlView: View {
                 if !viewModel.sensors.isEmpty {
                     Button(action: {
                         SoundEffectManager.shared.playButtonClick()
+                        HapticManager.shared.generic()
                         viewModel.copySensorDataToClipboard()
                     }) {
                         HStack(spacing: 4 * zoomScale) {
@@ -610,10 +625,14 @@ struct TemperatureRow: View {
                 .lineLimit(1)
 
             // Trend arrow
-            Text(trend.rawValue)
-                .font(.system(size: 9 * zoomScale, weight: .bold, design: .monospaced))
-                .foregroundStyle(trend.color)
-                .frame(width: 14 * zoomScale, alignment: .center)
+            if !sensor.isEstimated {
+                Text(trend.rawValue)
+                    .font(.system(size: 9 * zoomScale, weight: .bold, design: .monospaced))
+                    .foregroundStyle(trend.color)
+                    .frame(width: 14 * zoomScale, alignment: .center)
+            } else {
+                Color.clear.frame(width: 14 * zoomScale)
+            }
 
             // Current value
             if sensor.isEstimated {
@@ -636,7 +655,7 @@ struct TemperatureRow: View {
             }
 
             // Observed max
-            if let max = observedMax, max > 0 {
+            if !sensor.isEstimated, let max = observedMax, max > 0 {
                 let displayMax = unit.convert(max)
                 Text(unit == .celsius
                      ? String(format: "→ %.0f°C", displayMax)
@@ -646,40 +665,44 @@ struct TemperatureRow: View {
                     .frame(width: 44 * zoomScale, alignment: .trailing)
             }
 
-            VStack(spacing: 2 * zoomScale) {
-                GeometryReader { geo in
-                    ZStack(alignment: .leading) {
-                        RoundedRectangle(cornerRadius: 2 * zoomScale)
-                            .fill(Color.white.opacity(0.08))
-                            .frame(height: 6 * zoomScale)
+            if sensor.isEstimated {
+                Spacer()
+            } else {
+                VStack(spacing: 2 * zoomScale) {
+                    GeometryReader { geo in
+                        ZStack(alignment: .leading) {
+                            RoundedRectangle(cornerRadius: 2 * zoomScale)
+                                .fill(Color.white.opacity(0.08))
+                                .frame(height: 6 * zoomScale)
 
-                        RoundedRectangle(cornerRadius: 2 * zoomScale)
-                            .fill(barColor)
-                            .frame(width: max(0, geo.size.width * CGFloat(progress)), height: 6 * zoomScale)
+                            RoundedRectangle(cornerRadius: 2 * zoomScale)
+                                .fill(barColor)
+                                .frame(width: max(0, geo.size.width * CGFloat(progress)), height: 6 * zoomScale)
+                        }
                     }
-                }
-                .frame(height: 6 * zoomScale)
+                    .frame(height: 6 * zoomScale)
 
-                if history.count >= 3 {
-                    TemperatureSparkline(
-                        values: history,
-                        zoomScale: zoomScale,
-                        color: barColor
-                    )
-                    .frame(height: 10 * zoomScale)
+                    if history.count >= 3 {
+                        TemperatureSparkline(
+                            values: history,
+                            zoomScale: zoomScale,
+                            color: barColor
+                        )
+                        .frame(height: 10 * zoomScale)
+                    }
                 }
             }
         }
         .padding(.vertical, 3 * zoomScale)
         .background(
-            sensor.value >= 85
+            (!sensor.isEstimated && sensor.value >= 85)
                 ? Color.red.opacity(0.08)
                 : Color.clear
         )
         .overlay(
             RoundedRectangle(cornerRadius: 3 * zoomScale)
                 .stroke(
-                    sensor.value >= 85 ? Color.red.opacity(0.25) : Color.clear,
+                    (!sensor.isEstimated && sensor.value >= 85) ? Color.red.opacity(0.25) : Color.clear,
                     lineWidth: 1 * zoomScale
                 )
                 .allowsHitTesting(false)
@@ -736,7 +759,6 @@ struct FanRow: View {
     var history: [Double] = []
     var onRPMChange: ((Double) -> Void)?
 
-    @State private var sliderValue: Double = 0
 
     private var progress: Double {
         guard fan.maximumRPM > fan.minimumRPM else { return 0 }
@@ -825,13 +847,10 @@ struct FanRow: View {
                     Slider(
                         value: Binding(
                             get: {
-                                if fan.maximumRPM > fan.minimumRPM {
-                                    return (fan.targetRPM - fan.minimumRPM) / (fan.maximumRPM - fan.minimumRPM)
-                                }
-                                return sliderValue
+                                guard fan.maximumRPM > fan.minimumRPM else { return 0 }
+                                return (fan.targetRPM - fan.minimumRPM) / (fan.maximumRPM - fan.minimumRPM)
                             },
                             set: { newValue in
-                                sliderValue = newValue
                                 let rpm = fan.minimumRPM + (fan.maximumRPM - fan.minimumRPM) * newValue
                                 onRPMChange?(rpm)
                             }
@@ -840,7 +859,7 @@ struct FanRow: View {
                     )
                     .frame(height: 14 * zoomScale)
 
-                    Text("\(Int(fan.minimumRPM + (fan.maximumRPM - fan.minimumRPM) * sliderValue))")
+                    Text("\(Int(fan.targetRPM))")
                         .font(.system(size: 9 * zoomScale, design: .monospaced))
                         .foregroundStyle(.white.opacity(0.5))
                         .frame(width: 40 * zoomScale, alignment: .trailing)
@@ -856,7 +875,7 @@ struct FanRow: View {
 
 struct DiagnosticRow: View {
     let icon: String
-    let title: String
+    let title: LocalizedStringKey
     let message: String
     let isGood: Bool
     let zoomScale: CGFloat

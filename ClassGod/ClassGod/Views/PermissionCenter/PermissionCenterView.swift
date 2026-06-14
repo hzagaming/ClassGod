@@ -156,9 +156,9 @@ struct PermissionCenterView: View {
     private var categoryFilterBar: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 6 * zoomScale) {
-                categoryButton(nil, label: "All", icon: "square.grid.2x2")
+                categoryButton(nil, label: String(localized: "permission.category.all"), icon: "square.grid.2x2")
                 ForEach(PermissionCategory.allCases) { cat in
-                    categoryButton(cat, label: cat.rawValue, icon: cat.iconName)
+                    categoryButton(cat, label: cat.displayName, icon: cat.iconName)
                 }
             }
             .padding(.horizontal, 12 * zoomScale)
@@ -171,6 +171,7 @@ struct PermissionCenterView: View {
         let selected = selectedCategory == category
         return Button(action: {
             SoundEffectManager.shared.playButtonClick()
+            HapticManager.shared.generic()
             selectedCategory = category
         }) {
             HStack(spacing: 4 * zoomScale) {
@@ -215,7 +216,7 @@ struct PermissionCenterView: View {
                 Image(systemName: group.category.iconName)
                     .font(.system(size: 10 * zoomScale))
                     .foregroundStyle(.cyan)
-                Text(group.category.rawValue)
+                Text(group.category.displayName)
                     .font(.system(size: 10 * zoomScale, weight: .bold, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.8))
                 Spacer()
@@ -255,7 +256,7 @@ struct PermissionCenterView: View {
                     .lineLimit(2)
                 
                 HStack(spacing: 4 * zoomScale) {
-                    Text("Used by:")
+                    Text(String(localized: "permission.used_by"))
                         .font(.system(size: 7 * zoomScale, design: .monospaced))
                         .foregroundStyle(.white.opacity(0.35))
                     Text(item.features.joined(separator: ", "))
@@ -272,13 +273,14 @@ struct PermissionCenterView: View {
                     Circle()
                         .fill(granted ? Color.green : Color.orange)
                         .frame(width: 6 * zoomScale, height: 6 * zoomScale)
-                    Text(granted ? "Granted" : "Required")
+                    Text(granted ? String(localized: "permission.granted") : String(localized: "permission.required"))
                         .font(.system(size: 9 * zoomScale, weight: .bold, design: .monospaced))
                         .foregroundStyle(granted ? .green : .orange)
                 }
                 
                 Button(action: {
                     SoundEffectManager.shared.playButtonClick()
+                    HapticManager.shared.generic()
                     service.requestPermission(item.type)
                 }) {
                     Text(buttonTitle(for: item, granted: granted))
@@ -304,9 +306,9 @@ struct PermissionCenterView: View {
     
     private func buttonTitle(for item: PermissionItemInfo, granted: Bool) -> String {
         if granted {
-            return item.canPrompt ? "Re-check" : "Open Settings"
+            return item.canPrompt ? String(localized: "permission.recheck") : String(localized: "permission.open_settings")
         }
-        return item.canPrompt ? "Allow" : "Open Settings"
+        return item.canPrompt ? String(localized: "permission.allow") : String(localized: "permission.open_settings")
     }
     
     // MARK: - Bottom Bar
@@ -320,7 +322,7 @@ struct PermissionCenterView: View {
                 HStack(spacing: 4 * zoomScale) {
                     Image(systemName: "arrow.clockwise")
                         .font(.system(size: 9 * zoomScale))
-                    Text("Refresh Status")
+                    Text(String(localized: "permission.refresh_status"))
                         .font(.system(size: 9 * zoomScale, weight: .medium, design: .monospaced))
                 }
                 .foregroundStyle(.white.opacity(0.8))
@@ -334,7 +336,7 @@ struct PermissionCenterView: View {
             
             Spacer()
             
-            Text(service.isChecking ? "Checking permissions..." : "Last checked: \(formatTime(service.statuses.values.first?.lastChecked))")
+            Text(service.isChecking ? String(localized: "permission.checking") : String(format: String(localized: "permission.last_checked"), formatTime(service.statuses.values.first?.lastChecked)))
                 .font(.system(size: 8 * zoomScale, design: .monospaced))
                 .foregroundStyle(.white.opacity(0.35))
         }
@@ -349,7 +351,7 @@ struct PermissionCenterView: View {
     }
     
     private func formatTime(_ date: Date?) -> String {
-        guard let date else { return "never" }
+        guard let date else { return String(localized: "permission.never") }
         let formatter = DateFormatter()
         formatter.dateStyle = .none
         formatter.timeStyle = .short
@@ -378,7 +380,11 @@ struct PermissionOnboardingView: View {
             VStack(spacing: 16 * zoomScale) {
                 HStack {
                     Spacer()
-                    Button(action: onComplete) {
+                    Button(action: {
+                        SoundEffectManager.shared.playButtonClick()
+                        HapticManager.shared.generic()
+                        onComplete()
+                    }) {
                         Image(systemName: "xmark")
                             .font(.system(size: 10 * zoomScale, weight: .bold))
                             .foregroundStyle(.white.opacity(0.6))
@@ -401,8 +407,12 @@ struct PermissionOnboardingView: View {
                 
                 HStack(spacing: 10 * zoomScale) {
                     if step > 0 && step < pendingPermissions.count {
-                        Button(action: { step -= 1 }) {
-                            Text("Back")
+                        Button(action: {
+                            SoundEffectManager.shared.playButtonClick()
+                            HapticManager.shared.generic()
+                            step -= 1
+                        }) {
+                            Text(String(localized: "button.back"))
                                 .font(.system(size: 10 * zoomScale, weight: .medium, design: .monospaced))
                                 .foregroundStyle(.white.opacity(0.7))
                                 .padding(.horizontal, 14 * zoomScale)
@@ -418,13 +428,15 @@ struct PermissionOnboardingView: View {
                     if step < pendingPermissions.count {
                         let item = pendingPermissions[step]
                         Button(action: {
+                            SoundEffectManager.shared.playButtonClick()
+                            HapticManager.shared.generic()
                             service.requestPermission(item.type)
                             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                                 service.refreshAll()
                                 step += 1
                             }
                         }) {
-                            Text(item.canPrompt ? "Allow & Continue" : "Open Settings & Continue")
+                            Text(item.canPrompt ? String(localized: "permission.allow_and_continue") : String(localized: "permission.open_settings_and_continue"))
                                 .font(.system(size: 10 * zoomScale, weight: .bold, design: .monospaced))
                                 .foregroundStyle(.black)
                                 .padding(.horizontal, 16 * zoomScale)
@@ -434,8 +446,12 @@ struct PermissionOnboardingView: View {
                         }
                         .buttonStyle(.plain)
                         
-                        Button(action: { step += 1 }) {
-                            Text("Skip")
+                        Button(action: {
+                            SoundEffectManager.shared.playButtonClick()
+                            HapticManager.shared.generic()
+                            step += 1
+                        }) {
+                            Text(String(localized: "button.skip"))
                                 .font(.system(size: 10 * zoomScale, weight: .medium, design: .monospaced))
                                 .foregroundStyle(.white.opacity(0.5))
                                 .padding(.horizontal, 14 * zoomScale)
@@ -443,8 +459,12 @@ struct PermissionOnboardingView: View {
                         }
                         .buttonStyle(.plain)
                     } else {
-                        Button(action: onComplete) {
-                            Text("Done")
+                        Button(action: {
+                            SoundEffectManager.shared.playButtonClick()
+                            HapticManager.shared.generic()
+                            onComplete()
+                        }) {
+                            Text(String(localized: "button.done"))
                                 .font(.system(size: 10 * zoomScale, weight: .bold, design: .monospaced))
                                 .foregroundStyle(.black)
                                 .padding(.horizontal, 20 * zoomScale)
@@ -463,7 +483,7 @@ struct PermissionOnboardingView: View {
     
     private func onboardingStep(_ item: PermissionItemInfo, index: Int, total: Int) -> some View {
         VStack(spacing: 14 * zoomScale) {
-            Text("Step \(index + 1) of \(total)")
+            Text(String(format: String(localized: "permission.step_format"), index + 1, total))
                 .font(.system(size: 9 * zoomScale, design: .monospaced))
                 .foregroundStyle(.white.opacity(0.4))
             
@@ -487,7 +507,7 @@ struct PermissionOnboardingView: View {
                 .frame(maxWidth: 360 * zoomScale)
             
             VStack(alignment: .leading, spacing: 4 * zoomScale) {
-                Text("Required for:")
+                Text(String(localized: "permission.required_for"))
                     .font(.system(size: 8 * zoomScale, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.4))
                 HStack(spacing: 6 * zoomScale) {
@@ -504,7 +524,7 @@ struct PermissionOnboardingView: View {
             }
             
             if !item.canPrompt {
-                Text("macOS will open System Settings so you can enable this permission manually.")
+                Text(String(localized: "permission.manual_settings"))
                     .font(.system(size: 8 * zoomScale, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.4))
                     .multilineTextAlignment(.center)
@@ -525,11 +545,11 @@ struct PermissionOnboardingView: View {
                     .foregroundStyle(.green)
             }
             
-            Text("All Set")
+            Text(String(localized: "permission.all_set"))
                 .font(.system(size: 16 * zoomScale, weight: .bold, design: .monospaced))
                 .foregroundStyle(.white)
             
-            Text("All requested permissions have been reviewed. You can change these anytime in Permission Center.")
+            Text(String(localized: "permission.all_set_message"))
                 .font(.system(size: 10 * zoomScale, design: .monospaced))
                 .foregroundStyle(.white.opacity(0.6))
                 .multilineTextAlignment(.center)

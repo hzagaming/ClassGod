@@ -48,7 +48,7 @@ struct AssessPrepHackView: View {
                 .fill(Color.black)
         )
         .overlay(
-            RoundedRectangle(cornerRadius: prefs.preferences.panelCornerRadius)
+            RoundedRectangle(cornerRadius: prefs.preferences.panelCornerRadius * zoomScale)
                 .stroke(Color.white.opacity(0.15), lineWidth: 1 * zoomScale)
         
             .allowsHitTesting(false))
@@ -58,12 +58,12 @@ struct AssessPrepHackView: View {
         .sheet(item: $editingApp) { app in
             AddPanicAppView(viewModel: viewModel, app: app)
         }
-        .alert("Error", isPresented: $viewModel.showError) {
-            Button("OK", role: .cancel) {}
+        .alert(String(localized: "alert.error"), isPresented: $viewModel.showError) {
+            Button(String(localized: "button.ok"), role: .cancel) {}
         } message: {
-            Text(viewModel.errorMessage ?? "Unknown error")
+            Text(viewModel.errorMessage ?? String(localized: "error.unknown"))
         }
-        .alert("Delete app?", isPresented: .init(
+        .alert(String(localized: "panic.delete_title"), isPresented: .init(
             get: { appToDelete != nil },
             set: { if !$0 { appToDelete = nil } }
         )) {
@@ -75,7 +75,7 @@ struct AssessPrepHackView: View {
                 appToDelete = nil
             }
         } message: {
-            Text("Remove panic app \"\(appToDelete?.name ?? "")\"?")
+            Text(String(format: String(localized: "panic.delete_message"), appToDelete?.name ?? ""))
         }
         .overlay(
             toastOverlay,

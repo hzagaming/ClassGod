@@ -47,14 +47,14 @@ final class SuperSwitchViewModel: ObservableObject {
     func addTarget(_ target: SwitchTarget) {
         targets.append(target)
         saveTargets()
-        showToast(message: "Added \(target.name)")
+        showToast(message: String(format: String(localized: "toast.added"), target.name))
     }
     
     func updateTarget(_ target: SwitchTarget) {
         if let index = targets.firstIndex(where: { $0.id == target.id }) {
             targets[index] = target
             saveTargets()
-            showToast(message: "Updated \(target.name)")
+            showToast(message: String(format: String(localized: "toast.updated"), target.name))
         }
     }
     
@@ -73,7 +73,7 @@ final class SuperSwitchViewModel: ObservableObject {
         let runningApps = NSWorkspace.shared.runningApplications
         if let app = runningApps.first(where: { $0.bundleIdentifier == target.bundleIdentifier }) {
             app.activate(options: [.activateAllWindows])
-            showToast(message: "Switched to \(target.name)")
+            showToast(message: String(format: String(localized: "toast.switched_to"), target.name))
             return
         }
         
@@ -84,17 +84,17 @@ final class SuperSwitchViewModel: ObservableObject {
             NSWorkspace.shared.openApplication(at: url, configuration: config) { [weak self] app, error in
                 if let error = error {
                     DispatchQueue.main.async { [weak self] in
-                        self?.errorMessage = "Failed to launch \(target.name): \(error.localizedDescription)"
+                        self?.errorMessage = String(format: String(localized: "error.launch_failed"), target.name, error.localizedDescription)
                         self?.showError = true
                     }
                 } else {
                     DispatchQueue.main.async { [weak self] in
-                        self?.showToast(message: "Launched \(target.name)")
+                        self?.showToast(message: String(format: String(localized: "toast.launched"), target.name))
                     }
                 }
             }
         } else {
-            errorMessage = "Application not found: \(target.bundleIdentifier)"
+            errorMessage = String(format: String(localized: "error.app_not_found"), target.bundleIdentifier)
             showError = true
         }
     }

@@ -14,9 +14,9 @@ enum WallpaperPlaybackMode: String, Codable, CaseIterable, Identifiable {
     
     var displayName: String {
         switch self {
-        case .singleLoop: return "Single Loop"
-        case .listLoop: return "Playlist Loop"
-        case .random: return "Shuffle"
+        case .singleLoop: return String(localized: "wallpaper.mode.single_loop")
+        case .listLoop: return String(localized: "wallpaper.mode.playlist_loop")
+        case .random: return String(localized: "wallpaper.mode.shuffle")
         }
     }
     

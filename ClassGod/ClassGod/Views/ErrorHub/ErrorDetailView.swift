@@ -150,17 +150,17 @@ struct ErrorDetailView: View {
                 HStack(spacing: 4 * zoomScale) {
                     Image(systemName: "book.fill")
                         .font(.system(size: 8 * zoomScale))
-                    Text("Open in Encyclopedia")
+                    Text(String(localized: "error.open_in_encyclopedia"))
                         .font(.system(size: 8 * zoomScale, weight: .bold, design: .monospaced))
                 }
-                .foregroundStyle(Color(hex: "#007AFF"))
+                .foregroundStyle(.cyan)
                 .padding(.horizontal, 8 * zoomScale)
                 .padding(.vertical, 3 * zoomScale)
-                .background(Color(hex: "#007AFF").opacity(0.1))
+                .background(.cyan.opacity(0.1))
                 .cornerRadius(4 * zoomScale)
                 .overlay(
                     RoundedRectangle(cornerRadius: 4 * zoomScale)
-                        .stroke(Color(hex: "#007AFF").opacity(0.3), lineWidth: 1 * zoomScale)
+                        .stroke(.cyan.opacity(0.3), lineWidth: 1 * zoomScale)
                         .allowsHitTesting(false)
                 )
             }
@@ -173,7 +173,7 @@ struct ErrorDetailView: View {
     // MARK: - Description Section
     private var descriptionSection: some View {
         VStack(alignment: .leading, spacing: 8 * zoomScale) {
-            SectionHeader(icon: "doc.text.fill", title: "Description", zoomScale: zoomScale)
+            SectionHeader(icon: "doc.text.fill", title: String(localized: "error.description"), zoomScale: zoomScale)
             
             Text(entry.description)
                 .font(.system(size: 11 * zoomScale, design: .monospaced))
@@ -187,7 +187,7 @@ struct ErrorDetailView: View {
     // MARK: - Cause Section
     private var causeSection: some View {
         VStack(alignment: .leading, spacing: 8 * zoomScale) {
-            SectionHeader(icon: "questionmark.circle.fill", title: "Root Cause", zoomScale: zoomScale)
+            SectionHeader(icon: "questionmark.circle.fill", title: String(localized: "error.root_cause"), zoomScale: zoomScale)
             
             let causes = entry.cause.components(separatedBy: "\n").filter { !$0.isEmpty }
             VStack(alignment: .leading, spacing: 4 * zoomScale) {
@@ -195,7 +195,7 @@ struct ErrorDetailView: View {
                     HStack(alignment: .top, spacing: 6 * zoomScale) {
                         Text("\(index + 1).")
                             .font(.system(size: 10 * zoomScale, weight: .bold, design: .monospaced))
-                            .foregroundStyle(Color(hex: "#FF9500"))
+                            .foregroundStyle(.orange)
                         
                         Text(cause.trimmingCharacters(in: .whitespaces))
                             .font(.system(size: 10 * zoomScale, design: .monospaced))
@@ -211,14 +211,14 @@ struct ErrorDetailView: View {
     // MARK: - Solutions Section
     private var solutionsSection: some View {
         VStack(alignment: .leading, spacing: 8 * zoomScale) {
-            SectionHeader(icon: "checkmark.seal.fill", title: "Solutions (\(entry.solutions.count))", zoomScale: zoomScale)
+            SectionHeader(icon: "checkmark.seal.fill", title: String(format: String(localized: "error.solutions_count"), entry.solutions.count), zoomScale: zoomScale)
             
             VStack(alignment: .leading, spacing: 6 * zoomScale) {
                 ForEach(Array(entry.solutions.enumerated()), id: \.offset) { index, solution in
                     HStack(alignment: .top, spacing: 6 * zoomScale) {
                         Image(systemName: "checkmark.circle.fill")
                             .font(.system(size: 10 * zoomScale))
-                            .foregroundStyle(Color(hex: "#34C759"))
+                            .foregroundStyle(.green)
                         
                         Text(solution)
                             .font(.system(size: 10 * zoomScale, design: .monospaced))
@@ -229,7 +229,7 @@ struct ErrorDetailView: View {
                     .cornerRadius(6 * zoomScale)
                     .overlay(
                         RoundedRectangle(cornerRadius: 6 * zoomScale)
-                            .stroke(Color(hex: "#34C759").opacity(0.15), lineWidth: 1 * zoomScale)
+                            .stroke(.green.opacity(0.15), lineWidth: 1 * zoomScale)
                     
                         .allowsHitTesting(false))
                 }
@@ -242,7 +242,7 @@ struct ErrorDetailView: View {
     // MARK: - Code Examples Section
     private var codeExamplesSection: some View {
         VStack(alignment: .leading, spacing: 8 * zoomScale) {
-            SectionHeader(icon: "curlybraces", title: "Code Examples", zoomScale: zoomScale)
+            SectionHeader(icon: "curlybraces", title: String(localized: "error.code_examples"), zoomScale: zoomScale)
             
             ForEach(entry.codeExamples) { example in
                 VStack(alignment: .leading, spacing: 6 * zoomScale) {
@@ -265,10 +265,10 @@ struct ErrorDetailView: View {
                             HStack(spacing: 3 * zoomScale) {
                                 Image(systemName: copiedCode ? "checkmark" : "doc.on.doc")
                                     .font(.system(size: 8 * zoomScale))
-                                Text(copiedCode ? "Copied!" : "Copy Fix")
+                                Text(copiedCode ? String(localized: "error.copied") : String(localized: "error.copy_fix"))
                                     .font(.system(size: 8 * zoomScale, design: .monospaced))
                             }
-                            .foregroundStyle(copiedCode ? Color(hex: "#34C759") : .white.opacity(0.5))
+                            .foregroundStyle(copiedCode ? .green : .white.opacity(0.5))
                         }
                         .buttonStyle(.plain)
                     }
@@ -278,22 +278,22 @@ struct ErrorDetailView: View {
                         HStack {
                             Image(systemName: "xmark.octagon.fill")
                                 .font(.system(size: 8 * zoomScale))
-                                .foregroundStyle(Color(hex: "#FF3B30"))
-                            Text("Problematic Code")
+                                .foregroundStyle(.red)
+                            Text(String(localized: "error.problematic_code"))
                                 .font(.system(size: 8 * zoomScale, weight: .bold, design: .monospaced))
-                                .foregroundStyle(Color(hex: "#FF3B30"))
+                                .foregroundStyle(.red)
                         }
                         
                         Text(example.badCode)
                             .font(.system(size: 9 * zoomScale, design: .monospaced))
-                            .foregroundStyle(Color(hex: "#FF3B30").opacity(0.8))
+                            .foregroundStyle(.red.opacity(0.8))
                             .padding(8 * zoomScale)
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(Color(hex: "#FF3B30").opacity(0.05))
+                            .background(.red.opacity(0.05))
                             .cornerRadius(4 * zoomScale)
                             .overlay(
                                 RoundedRectangle(cornerRadius: 4 * zoomScale)
-                                    .stroke(Color(hex: "#FF3B30").opacity(0.2), lineWidth: 1 * zoomScale)
+                                    .stroke(.red.opacity(0.2), lineWidth: 1 * zoomScale)
                             
                                 .allowsHitTesting(false))
                     }
@@ -303,22 +303,22 @@ struct ErrorDetailView: View {
                         HStack {
                             Image(systemName: "checkmark.seal.fill")
                                 .font(.system(size: 8 * zoomScale))
-                                .foregroundStyle(Color(hex: "#34C759"))
-                            Text("Fixed Code")
+                                .foregroundStyle(.green)
+                            Text(String(localized: "error.fixed_code"))
                                 .font(.system(size: 8 * zoomScale, weight: .bold, design: .monospaced))
-                                .foregroundStyle(Color(hex: "#34C759"))
+                                .foregroundStyle(.green)
                         }
                         
                         Text(example.goodCode)
                             .font(.system(size: 9 * zoomScale, design: .monospaced))
-                            .foregroundStyle(Color(hex: "#34C759").opacity(0.9))
+                            .foregroundStyle(.green.opacity(0.9))
                             .padding(8 * zoomScale)
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(Color(hex: "#34C759").opacity(0.05))
+                            .background(.green.opacity(0.05))
                             .cornerRadius(4 * zoomScale)
                             .overlay(
                                 RoundedRectangle(cornerRadius: 4 * zoomScale)
-                                    .stroke(Color(hex: "#34C759").opacity(0.2), lineWidth: 1 * zoomScale)
+                                    .stroke(.green.opacity(0.2), lineWidth: 1 * zoomScale)
                             
                                 .allowsHitTesting(false))
                     }
@@ -346,12 +346,12 @@ struct ErrorDetailView: View {
     // MARK: - Related Errors Section
     private var relatedErrorsSection: some View {
         VStack(alignment: .leading, spacing: 8 * zoomScale) {
-            SectionHeader(icon: "link", title: "Related Errors", zoomScale: zoomScale)
+            SectionHeader(icon: "link", title: String(localized: "error.related_errors"), zoomScale: zoomScale)
             
             let related = ErrorKnowledgeBase.shared.findRelated(to: entry)
             
             if related.isEmpty {
-                Text("No related errors documented.")
+                Text(String(localized: "error.no_related"))
                     .font(.system(size: 10 * zoomScale, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.3))
             } else {
@@ -375,7 +375,7 @@ struct ErrorDetailView: View {
             
             if !entry.relatedErrors.isEmpty {
                 VStack(alignment: .leading, spacing: 4 * zoomScale) {
-                    Text("Also known as:")
+                    Text(String(localized: "error.also_known_as"))
                         .font(.system(size: 9 * zoomScale, weight: .bold, design: .monospaced))
                         .foregroundStyle(.white.opacity(0.4))
                     
@@ -394,7 +394,7 @@ struct ErrorDetailView: View {
     // MARK: - Meta Section
     private var metaSection: some View {
         VStack(alignment: .leading, spacing: 8 * zoomScale) {
-            SectionHeader(icon: "info.circle.fill", title: "Additional Info", zoomScale: zoomScale)
+            SectionHeader(icon: "info.circle.fill", title: String(localized: "error.additional_info"), zoomScale: zoomScale)
             
             VStack(alignment: .leading, spacing: 6 * zoomScale) {
                 if let url = entry.appleDocURL {
@@ -402,7 +402,7 @@ struct ErrorDetailView: View {
                         Image(systemName: "globe")
                             .font(.system(size: 9 * zoomScale))
                             .foregroundStyle(.white.opacity(0.4))
-                        Text("Apple Documentation:")
+                        Text(String(localized: "error.apple_documentation"))
                             .font(.system(size: 9 * zoomScale, weight: .bold, design: .monospaced))
                             .foregroundStyle(.white.opacity(0.5))
                         
@@ -414,7 +414,7 @@ struct ErrorDetailView: View {
                         }) {
                             Text("Open")
                                 .font(.system(size: 9 * zoomScale, weight: .bold, design: .monospaced))
-                                .foregroundStyle(Color(hex: "#007AFF"))
+                                .foregroundStyle(.cyan)
                         }
                         .buttonStyle(.plain)
                     }

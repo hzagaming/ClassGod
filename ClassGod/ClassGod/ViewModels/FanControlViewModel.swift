@@ -123,13 +123,25 @@ final class FanControlViewModel: ObservableObject {
         autoMaxTimer?.invalidate()
         gradualTimer?.invalidate()
         boostTimer?.invalidate()
+        pendingSetRPMWorkItem?.cancel()
         NSWorkspace.shared.notificationCenter.removeObserver(self, name: NSWorkspace.willSleepNotification, object: nil)
         NSWorkspace.shared.notificationCenter.removeObserver(self, name: NSWorkspace.didWakeNotification, object: nil)
         NotificationCenter.default.removeObserver(self, name: Notification.Name("fanControlWindowWillHide"), object: nil)
     }
 
     func startMonitoring() {
-        guard !isMonitoring else { return }
+        if isMonitoring {
+            // Already running: just re-sync the timer interval and mode timers
+            // so preference changes take effect immediately.
+            restartRefreshTimer()
+            if fanMode == .autoMax || fanMode == .custom {
+                startAutoMax()
+            } else {
+                autoMaxTimer?.invalidate()
+                autoMaxTimer = nil
+            }
+            return
+        }
         isMonitoring = true
 
         // Ensure SystemMonitor is running so CPU-estimated temperature fallback
@@ -143,9 +155,16 @@ final class FanControlViewModel: ObservableObject {
         applyFanModeToSMC(fanMode)
         if fanMode == .autoMax || fanMode == .custom {
             startAutoMax()
+            evaluateAutoMaxRules()
+            applyGradualRamp()
         }
 
         // Start periodic refresh timer
+        restartRefreshTimer()
+        startGradualTimer()
+    }
+
+    private func restartRefreshTimer() {
         let interval = max(0.5, prefs.preferences.fanControlUpdateInterval)
         timer?.invalidate()
         timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
@@ -153,8 +172,6 @@ final class FanControlViewModel: ObservableObject {
                 self?.refresh()
             }
         }
-
-        startGradualTimer()
     }
     
     func rescanHardware() {
@@ -170,7 +187,7 @@ final class FanControlViewModel: ObservableObject {
         smcConnected = SMCService.shared.isConnected
         usingIORegistry = SMCService.shared.isUsingIORegistryFallback
         fanAccessReason = SMCService.shared.fanAccessReason
-        showToast(message: "Hardware rescan complete")
+        showToast(message: String(localized: "fan.toast.rescan_complete"))
 
         // Restart periodic refresh timer
         let interval = max(0.5, prefs.preferences.fanControlUpdateInterval)
@@ -202,12 +219,16 @@ final class FanControlViewModel: ObservableObject {
         gradualTimer = nil
         boostTimer?.invalidate()
         boostTimer = nil
+        pendingSetRPMWorkItem?.cancel()
+        pendingSetRPMWorkItem = nil
         
         // Balance the SystemMonitor start call from startMonitoring().
         SystemMonitor.shared.stop()
         
         // When the panel closes, release fans back to system control so they
-        // don't stay stuck at the last commanded RPM.
+        // don't stay stuck at the last commanded RPM. Update the local mode to
+        // reflect the real SMC state; the saved preference is left untouched so
+        // the panel can restore the user's chosen mode on next open.
         if fanMode != .system {
             for i in fans.indices {
                 _ = SMCService.shared.setFanMode(.system, fanIndex: i)
@@ -218,6 +239,10 @@ final class FanControlViewModel: ObservableObject {
                 return f
             }
             fanTargets.removeAll()
+            activeRuleIDs.removeAll()
+            ruleActiveStates.removeAll()
+            ruleTriggerStartTimes.removeAll()
+            fanMode = .system
         }
         
         // Restore pre-boost mode if window hides during boost
@@ -306,6 +331,10 @@ final class FanControlViewModel: ObservableObject {
 
         if mode == .autoMax || mode == .custom {
             startAutoMax()
+            // Apply rules immediately so the UI and fans react right away
+            // instead of waiting for the next timer tick.
+            evaluateAutoMaxRules()
+            applyGradualRamp()
         }
 
         // Refresh to show updated target RPMs
@@ -313,7 +342,7 @@ final class FanControlViewModel: ObservableObject {
 
         if requiresSMC {
             if smcSuccess {
-                showToast(message: "Fan mode set to \(mode.displayName)")
+                showToast(message: String(format: String(localized: "fan.toast.mode_set"), mode.displayName))
             } else {
                 showError(message: "Failed to set fan mode. May require elevated privileges.")
             }
@@ -349,7 +378,7 @@ final class FanControlViewModel: ObservableObject {
 
     func resetMaxTemperatures() {
         maxTemps.removeAll()
-        showToast(message: "Max temperatures reset")
+        showToast(message: String(localized: "fan.toast.max_temps_reset"))
     }
 
     func copySensorDataToClipboard() {
@@ -381,7 +410,7 @@ final class FanControlViewModel: ObservableObject {
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
         pasteboard.setString(lines.joined(separator: "\n"), forType: .string)
-        showToast(message: "Sensor data copied to clipboard")
+        showToast(message: String(localized: "fan.toast.sensor_data_copied"))
     }
 
     // MARK: - Boost
@@ -403,7 +432,7 @@ final class FanControlViewModel: ObservableObject {
         }
         fans = SMCService.shared.readFans()
 
-        showToast(message: "Boost active for \(Int(duration))s")
+        showToast(message: String(format: String(localized: "fan.toast.boost_active"), Int(duration)))
 
         boostTimer?.invalidate()
         boostTimer = Timer.scheduledTimer(withTimeInterval: duration, repeats: false) { [weak self] _ in
@@ -413,7 +442,7 @@ final class FanControlViewModel: ObservableObject {
                 // Restore previous mode
                 self.setFanMode(previousMode)
                 self.preBoostFanMode = nil
-                self.showToast(message: "Boost ended — restored \(previousMode.displayName)")
+                self.showToast(message: String(format: String(localized: "fan.toast.boost_ended"), previousMode.displayName))
             }
         }
     }
@@ -585,6 +614,9 @@ final class FanControlViewModel: ObservableObject {
 
     private func checkTemperatureNotification() {
         guard prefs.preferences.fanControlEnableNotifications else { return }
+        // Re-request authorization if the user toggled notifications on after
+        // the initial permission prompt was dismissed.
+        requestNotificationPermission()
         let threshold = prefs.preferences.fanControlNotificationThreshold
         let temp = highestTemperature
 
@@ -625,6 +657,10 @@ final class FanControlViewModel: ObservableObject {
 
     @objc private func systemWillSleep() {
         isSleeping = true
+        // If boost is active, restore the real pre-boost mode before saving sleep state.
+        if isBoostActive {
+            cancelBoost()
+        }
         preSleepFanMode = fanMode
         if prefs.preferences.fanControlDisableOnSleep {
             for i in fans.indices {
@@ -657,10 +693,17 @@ final class FanControlViewModel: ObservableObject {
                 startAutoMax()
             }
         }
-        // Restore pre-sleep fan mode if sleep-disable is enabled
+        // Restore pre-sleep fan mode if sleep-disable is enabled.
+        // For system/max we command the SMC directly; for autoMax/custom we also
+        // restart the rule engine so the fans resume control immediately.
         if prefs.preferences.fanControlDisableOnSleep, let mode = preSleepFanMode {
             applyFanModeToSMC(mode)
             fanMode = mode
+            if mode == .autoMax || mode == .custom {
+                startAutoMax()
+                evaluateAutoMaxRules()
+                applyGradualRamp()
+            }
         }
         preSleepFanMode = nil
     }
@@ -668,7 +711,10 @@ final class FanControlViewModel: ObservableObject {
     // MARK: - Helpers
 
     private func valueForSensor(_ sensor: RuleSensor, specificKey: String? = nil) -> Double {
-        if let key = specificKey, let matched = sensors.first(where: { $0.key == key }) {
+        if let key = specificKey {
+            // A specific sensor was selected: if it is missing, the rule should not fire
+            // rather than silently falling back to an aggregate.
+            guard let matched = sensors.first(where: { $0.key == key }) else { return 0 }
             return matched.value
         }
         // Aggregate rules should ignore estimated placeholders so they only react to real readings.
@@ -704,8 +750,20 @@ final class FanControlViewModel: ObservableObject {
             .appendingPathComponent("Contents/MacOS/ClassGodHelper")
             .path
         let logPath = "/tmp/classgod_helper.log"
-        let script = "do shell script \"sudo '\(helperPath)' > '\(logPath)' 2>&1 &\" with administrator privileges"
-        
+
+        // Escape backslashes and double quotes so helperPath/logPath can safely appear
+        // inside the AppleScript string literal. AppleScript's `quoted form of` then
+        // takes care of shell-safe quoting.
+        func appleScriptLiteral(_ s: String) -> String {
+            s.replacingOccurrences(of: "\\", with: "\\\\")
+             .replacingOccurrences(of: "\"", with: "\\\"")
+        }
+        let escapedHelper = appleScriptLiteral(helperPath)
+        let escapedLog = appleScriptLiteral(logPath)
+        let script = """
+        do shell script "killall ClassGodHelper 2>/dev/null; sleep 1; " & quoted form of "\(escapedHelper)" & " > " & quoted form of "\(escapedLog)" & " 2>&1 &" with administrator privileges
+        """
+
         Task.detached {
             let task = Process()
             task.executableURL = URL(fileURLWithPath: "/usr/bin/osascript")
@@ -715,7 +773,7 @@ final class FanControlViewModel: ObservableObject {
                 task.waitUntilExit()
                 await MainActor.run {
                     if task.terminationStatus == 0 {
-                        self.showToast(message: "Helper launched. Rescanning in 3s...")
+                        self.showToast(message: String(localized: "fan.toast.helper_launched"))
                         // Drop any stale connection and rescan once the helper is up.
                         DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
                             SMCHelperClient.shared.disconnect()

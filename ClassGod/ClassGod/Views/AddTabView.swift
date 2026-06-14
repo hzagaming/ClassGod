@@ -92,6 +92,14 @@ struct AddTabView: View {
                 formOpacity = 1
             }
         }
+        .onChange(of: isPinned) { _, _ in
+            SoundEffectManager.shared.playButtonClick()
+            HapticManager.shared.generic()
+        }
+        .onChange(of: browser) { _, _ in
+            SoundEffectManager.shared.playButtonClick()
+            HapticManager.shared.generic()
+        }
     }
 
     private var header: some View {
@@ -140,7 +148,7 @@ struct AddTabView: View {
                 .pickerStyle(.segmented)
                 .colorMultiply(.white)
 
-                TextField("Tag (optional, e.g. work, dev)", text: $tag)
+                TextField(String(localized: "field.tag"), text: $tag)
                     .textFieldStyle(.plain)
                     .padding(6 * zoomScale)
                     .background(Color(white: 0.1))
@@ -148,7 +156,7 @@ struct AddTabView: View {
                     .foregroundStyle(.white)
                     .font(.system(size: 12 * zoomScale, design: .monospaced))
 
-                Toggle("Pin to top", isOn: $isPinned)
+                Toggle(String(localized: "toggle.pin_to_top"), isOn: $isPinned)
                     .font(.system(size: 12 * zoomScale, design: .monospaced))
                     .toggleStyle(.switch)
             }

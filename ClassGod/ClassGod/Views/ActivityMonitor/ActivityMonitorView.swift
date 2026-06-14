@@ -76,7 +76,7 @@ struct ActivityMonitorView: View {
                 Image(systemName: "magnifyingglass")
                     .font(.system(size: 9 * zoomScale))
                     .foregroundStyle(.white.opacity(0.4))
-                TextField("Search", text: $viewModel.searchText)
+                TextField(String(localized: "activity.search"), text: $viewModel.searchText)
                     .font(.system(size: 10 * zoomScale, design: .monospaced))
                     .foregroundStyle(.white)
                     .textFieldStyle(.plain)
@@ -106,7 +106,7 @@ struct ActivityMonitorView: View {
             Image(systemName: "exclamationmark.triangle.fill")
                 .font(.system(size: 10 * zoomScale))
                 .foregroundStyle(.orange)
-            Text("Limited process visibility. To see all system processes, grant Full Disk Access to ClassGod in System Settings > Privacy & Security.")
+            Text(String(localized: "activity.permission_banner"))
                 .font(.system(size: 9 * zoomScale, design: .monospaced))
                 .foregroundStyle(.white.opacity(0.7))
                 .lineLimit(2)
@@ -231,7 +231,7 @@ struct ActivityMonitorView: View {
         .foregroundStyle(.white.opacity(0.5))
     }
     
-    private func sortableHeader(_ title: String, key: ActivitySortKey, width: CGFloat) -> some View {
+    private func sortableHeader(_ title: LocalizedStringKey, key: ActivitySortKey, width: CGFloat) -> some View {
         Button(action: { viewModel.toggleSort(key) }) {
             HStack(spacing: 2 * zoomScale) {
                 Text(title)
@@ -346,15 +346,15 @@ struct ActivityMonitorView: View {
                 Button(role: .destructive) {
                     _ = viewModel.terminateProcess(proc, force: false)
                 } label: {
-                    Label("Quit", systemImage: "xmark.circle")
+                    Label(String(localized: "activity.quit"), systemImage: "xmark.circle")
                 }
                 Button(role: .destructive) {
                     _ = viewModel.terminateProcess(proc, force: true)
                 } label: {
-                    Label("Force Quit", systemImage: "xmark.octagon")
+                    Label(String(localized: "activity.force_quit"), systemImage: "xmark.octagon")
                 }
             } else {
-                Text("System process – cannot terminate")
+                Text(String(localized: "activity.system_process"))
                     .font(.system(size: 10 * zoomScale))
                     .foregroundStyle(.white.opacity(0.5))
             }
@@ -428,7 +428,7 @@ struct ActivityMonitorView: View {
             summaryItem("Idle", value: String(format: "%.1f%%", monitor.cpu.idle), color: .green)
             summaryItem("Total", value: String(format: "%.1f%%", monitor.cpu.total), color: .cyan)
             Spacer()
-            Text("\(monitor.processes.count) processes")
+            Text(String(format: String(localized: "activity.process_count"), monitor.processes.count))
                 .font(.system(size: 9 * zoomScale, design: .monospaced))
                 .foregroundStyle(.white.opacity(0.4))
         }
@@ -449,15 +449,15 @@ struct ActivityMonitorView: View {
     private var energySummary: some View {
         HStack(spacing: 16 * zoomScale) {
             summaryItem("Battery", value: String(format: "%.0f%%", monitor.battery.level * 100), color: monitor.battery.isCharging ? .green : .cyan)
-            summaryItem("State", value: monitor.battery.isCharging ? "Charging" : "Discharging", color: monitor.battery.isCharging ? .green : .white.opacity(0.7))
+            summaryItem("State", value: monitor.battery.isCharging ? String(localized: "battery.charging") : String(localized: "battery.discharging"), color: monitor.battery.isCharging ? .green : .white.opacity(0.7))
             summaryItem("Cycles", value: "\(monitor.battery.cycleCount)", color: .yellow)
             Spacer()
             if monitor.battery.isPresent {
-                Text("Energy values shown in nanojoules from proc_pid_rusage")
+                Text(String(localized: "activity.energy_note"))
                     .font(.system(size: 8 * zoomScale, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.3))
             } else {
-                Text("No battery detected")
+                Text(String(localized: "activity.no_battery"))
                     .font(.system(size: 8 * zoomScale, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.3))
             }
@@ -485,13 +485,13 @@ struct ActivityMonitorView: View {
             summaryItem("Total In", value: viewModel.formatBytes(monitor.network.bytesIn), color: .white.opacity(0.7))
             summaryItem("Total Out", value: viewModel.formatBytes(monitor.network.bytesOut), color: .white.opacity(0.7))
             Spacer()
-            Text("Real-time per-process network via nettop")
+            Text(String(localized: "activity.network_note"))
                 .font(.system(size: 8 * zoomScale, design: .monospaced))
                 .foregroundStyle(.white.opacity(0.3))
         }
     }
     
-    private func summaryItem(_ title: String, value: String, color: Color) -> some View {
+    private func summaryItem(_ title: LocalizedStringKey, value: String, color: Color) -> some View {
         VStack(alignment: .leading, spacing: 1 * zoomScale) {
             Text(title)
                 .font(.system(size: 7 * zoomScale, design: .monospaced))
@@ -504,7 +504,7 @@ struct ActivityMonitorView: View {
     
     private var memoryPressureBar: some View {
         VStack(alignment: .trailing, spacing: 2 * zoomScale) {
-            Text("Memory Pressure")
+            Text(String(localized: "activity.memory_pressure"))
                 .font(.system(size: 7 * zoomScale, design: .monospaced))
                 .foregroundStyle(.white.opacity(0.35))
             GeometryReader { geo in

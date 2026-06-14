@@ -13,9 +13,9 @@ enum FanRuleTarget: String, Codable, CaseIterable, Identifiable {
     var id: String { rawValue }
     var displayName: String {
         switch self {
-        case .allFans: return "All Fans"
-        case .leftFan: return "Left Side"
-        case .rightFan: return "Right Side"
+        case .allFans: return String(localized: "rule.target.all_fans")
+        case .leftFan: return String(localized: "rule.target.left_side")
+        case .rightFan: return String(localized: "rule.target.right_side")
         }
     }
 }
@@ -27,8 +27,8 @@ enum RuleComparison: String, Codable, CaseIterable, Identifiable {
     var id: String { rawValue }
     var displayName: String {
         switch self {
-        case .above: return "is above"
-        case .below: return "is below"
+        case .above: return String(localized: "rule.comparison.above")
+        case .below: return String(localized: "rule.comparison.below")
         }
     }
 }
@@ -42,10 +42,10 @@ enum RuleSensor: String, Codable, CaseIterable, Identifiable {
     var id: String { rawValue }
     var displayName: String {
         switch self {
-        case .highestCPU: return "Highest CPU"
-        case .averageCPU: return "Average CPU"
-        case .highestGPU: return "Highest GPU"
-        case .anySensor: return "Any Sensor"
+        case .highestCPU: return String(localized: "rule.sensor.highest_cpu")
+        case .averageCPU: return String(localized: "rule.sensor.average_cpu")
+        case .highestGPU: return String(localized: "rule.sensor.highest_gpu")
+        case .anySensor: return String(localized: "rule.sensor.any_sensor")
         }
     }
 }

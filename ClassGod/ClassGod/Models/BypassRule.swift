@@ -15,10 +15,10 @@ enum BypassType: String, Codable, CaseIterable {
     
     var displayName: String {
         switch self {
-        case .exitFullscreen: return "Exit Fullscreen"
-        case .preventFocusLoss: return "Prevent Focus Loss"
-        case .allowShortcuts: return "Allow Shortcuts"
-        case .injectScript: return "Inject Bypass Script"
+        case .exitFullscreen: return String(localized: "bypass.type.exit_fullscreen")
+        case .preventFocusLoss: return String(localized: "bypass.type.prevent_focus_loss")
+        case .allowShortcuts: return String(localized: "bypass.type.allow_shortcuts")
+        case .injectScript: return String(localized: "bypass.type.inject_script")
         }
     }
     
@@ -33,10 +33,10 @@ enum BypassType: String, Codable, CaseIterable {
     
     var description: String {
         switch self {
-        case .exitFullscreen: return "Force browser to exit fullscreen/kiosk mode"
-        case .preventFocusLoss: return "Block page from detecting window blur/focus loss"
-        case .allowShortcuts: return "Allow ⌘+Tab and other system shortcuts"
-        case .injectScript: return "Inject JavaScript to disable lockdown checks"
+        case .exitFullscreen: return String(localized: "bypass.type.exit_fullscreen.description")
+        case .preventFocusLoss: return String(localized: "bypass.type.prevent_focus_loss.description")
+        case .allowShortcuts: return String(localized: "bypass.type.allow_shortcuts.description")
+        case .injectScript: return String(localized: "bypass.type.inject_script.description")
         }
     }
 }

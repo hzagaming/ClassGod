@@ -31,25 +31,25 @@ enum WidgetType: String, Codable, CaseIterable, Identifiable {
     
     var displayName: String {
         switch self {
-        case .cpuGauge:      return "CPU Gauge"
-        case .memoryBar:     return "Memory"
-        case .diskGrid:      return "Disk Usage"
-        case .networkSpeed:  return "Network"
-        case .processList:   return "Process List"
-        case .uptime:        return "Uptime"
-        case .clock:         return "Clock"
-        case .battery:       return "Battery"
-        case .tempSensors:   return "Temperature"
-        case .systemInfo:    return "System Info"
-        case .finderFile:    return "File"
-        case .fanThermalList:return "Fan / Thermal"
-        case .fanControlDash:return "Fan Dashboard"
-        case .taskManager:   return "Task Manager"
-        case .noteTab:       return "Note Tab"
-        case .todoTab:       return "Todo Tab"
-        case .terminalTab:   return "Terminal Tab"
-        case .cryptoTab:     return "Crypto Tab"
-        case .quoteTab:      return "Quote Tab"
+        case .cpuGauge:      return String(localized: "widget.cpu_gauge")
+        case .memoryBar:     return String(localized: "widget.memory")
+        case .diskGrid:      return String(localized: "widget.disk_usage")
+        case .networkSpeed:  return String(localized: "widget.network")
+        case .processList:   return String(localized: "widget.process_list")
+        case .uptime:        return String(localized: "widget.uptime")
+        case .clock:         return String(localized: "widget.clock")
+        case .battery:       return String(localized: "widget.battery")
+        case .tempSensors:   return String(localized: "widget.temperature")
+        case .systemInfo:    return String(localized: "widget.system_info")
+        case .finderFile:    return String(localized: "widget.file")
+        case .fanThermalList:return String(localized: "widget.fan_thermal")
+        case .fanControlDash:return String(localized: "widget.fan_dashboard")
+        case .taskManager:   return String(localized: "widget.task_manager")
+        case .noteTab:       return String(localized: "widget.note_tab")
+        case .todoTab:       return String(localized: "widget.todo_tab")
+        case .terminalTab:   return String(localized: "widget.terminal_tab")
+        case .cryptoTab:     return String(localized: "widget.crypto_tab")
+        case .quoteTab:      return String(localized: "widget.quote_tab")
         }
     }
     

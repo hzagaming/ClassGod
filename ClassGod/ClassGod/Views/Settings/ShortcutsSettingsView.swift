@@ -9,6 +9,7 @@ import Carbon
 
 struct ShortcutsSettingsView: View {
     @ObservedObject var prefs = PreferencesManager.shared
+    private var zoomScale: CGFloat { CGFloat(prefs.preferences.windowZoomScale) }
     @State private var isRecordingPopoverShortcut = false
     @State private var pulseScale: CGFloat = 1.0
     @State private var pulseOpacity: Double = 1.0
@@ -32,7 +33,7 @@ struct ShortcutsSettingsView: View {
         ScrollView {
             VStack(spacing: 10) {
                 StatefulCollapsibleSection(
-                    title: String(localized: "section.global_shortcut"),
+                    title: "section.global_shortcut",
                     icon: "keyboard",
                     defaultExpanded: true,
                     accentColor: .cyan
@@ -45,19 +46,19 @@ struct ShortcutsSettingsView: View {
                         Spacer()
 
                         ZStack {
-                            RoundedRectangle(cornerRadius: 8)
+                            RoundedRectangle(cornerRadius: 8 * zoomScale)
                                 .fill(isRecordingPopoverShortcut ? Color.white.opacity(0.12) : Color(white: 0.12))
-                                .frame(width: 120, height: 36)
+                                .frame(width: 120 * zoomScale, height: 36 * zoomScale)
 
                             if isRecordingPopoverShortcut {
-                                RoundedRectangle(cornerRadius: 8)
-                                    .stroke(Color.white.opacity(pulseOpacity), lineWidth: 1)
-                                    .frame(width: 120, height: 36)
+                                RoundedRectangle(cornerRadius: 8 * zoomScale)
+                                    .stroke(Color.white.opacity(pulseOpacity), lineWidth: 1 * zoomScale)
+                                    .frame(width: 120 * zoomScale, height: 36 * zoomScale)
                                     .scaleEffect(pulseScale)
                             }
 
                             Text(isRecordingPopoverShortcut ? String(localized: "shortcut.press_keys") : displayShortcut)
-                                .font(.system(size: 14, weight: .medium, design: .monospaced))
+                                .font(.system(size: 14 * zoomScale, weight: .medium, design: .monospaced))
                                 .foregroundStyle(isRecordingPopoverShortcut ? .white : .white.opacity(0.8))
                                 .lineLimit(1)
                                 .minimumScaleFactor(0.7)
@@ -97,7 +98,7 @@ struct ShortcutsSettingsView: View {
                 }
 
                 StatefulCollapsibleSection(
-                    title: String(localized: "section.tips"),
+                    title: "section.tips",
                     icon: "lightbulb",
                     defaultExpanded: false,
                     accentColor: .yellow

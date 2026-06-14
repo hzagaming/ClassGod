@@ -19,13 +19,13 @@ enum AppIconStyle: String, Codable, CaseIterable, Identifiable {
     
     var displayName: String {
         switch self {
-        case .default: return "ClassGod"
-        case .safari: return "Safari"
-        case .finder: return "Finder"
-        case .terminal: return "Terminal"
-        case .notes: return "Notes"
-        case .calculator: return "Calculator"
-        case .hidden: return "Hidden (No Icon)"
+        case .default: return String(localized: "app_icon.classgod")
+        case .safari: return String(localized: "app_icon.safari")
+        case .finder: return String(localized: "app_icon.finder")
+        case .terminal: return String(localized: "app_icon.terminal")
+        case .notes: return String(localized: "app_icon.notes")
+        case .calculator: return String(localized: "app_icon.calculator")
+        case .hidden: return String(localized: "app_icon.hidden")
         }
     }
     

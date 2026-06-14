@@ -113,7 +113,7 @@ struct DestinTabView: View {
         ) { result in
             if case .success = result {
                 SoundEffectManager.shared.playButtonClick()
-                showToast(message: "Exported tabs to JSON")
+                showToast(message: String(localized: "toast.exported"))
             }
         }
         .onAppear {
@@ -260,12 +260,16 @@ struct DestinTabView: View {
                     Image(systemName: "magnifyingglass")
                         .font(.system(size: 11 * zoomScale))
                         .foregroundStyle(.white.opacity(0.4))
-                    TextField("Search tabs...", text: $viewModel.searchQuery)
+                    TextField("destintab.search_placeholder", text: $viewModel.searchQuery)
                         .textFieldStyle(.plain)
                         .font(.system(size: 12 * zoomScale, design: .monospaced))
                         .foregroundStyle(.white)
                     if !viewModel.searchQuery.isEmpty {
-                        Button(action: { viewModel.searchQuery = "" }) {
+                        Button(action: {
+                            SoundEffectManager.shared.playButtonClick()
+                            HapticManager.shared.generic()
+                            viewModel.searchQuery = ""
+                        }) {
                             Image(systemName: "xmark.circle.fill")
                                 .font(.system(size: 12 * zoomScale))
                                 .foregroundStyle(.white.opacity(0.4))
@@ -283,6 +287,7 @@ struct DestinTabView: View {
                     ForEach(TabSortMode.allCases) { mode in
                         Button(action: {
                             SoundEffectManager.shared.playButtonClick()
+                            HapticManager.shared.generic()
                             viewModel.sortMode = mode
                         }) {
                             HStack {
@@ -304,11 +309,12 @@ struct DestinTabView: View {
                 }
                 .menuStyle(.borderlessButton)
                 .frame(width: 28 * zoomScale, height: 28 * zoomScale)
-                .help("Sort: \(viewModel.sortMode.displayName)")
+                .help(String(format: String(localized: "destintab.sort_help"), viewModel.sortMode.displayName))
 
                 // Bulk mode toggle
                 Button(action: {
                     SoundEffectManager.shared.playButtonClick()
+                    HapticManager.shared.generic()
                     viewModel.isBulkMode.toggle()
                     if !viewModel.isBulkMode {
                         viewModel.deselectAll()
@@ -322,7 +328,7 @@ struct DestinTabView: View {
                         .overlay(Rectangle().stroke(viewModel.isBulkMode ? Color.cyan.opacity(0.3) : Color.white.opacity(0.1), lineWidth: 1 * zoomScale))
                 }
                 .buttonStyle(.plain)
-                .help(viewModel.isBulkMode ? "Exit bulk mode" : "Bulk select")
+                .help(viewModel.isBulkMode ? String(localized: "destintab.exit_bulk_mode") : String(localized: "destintab.bulk_select"))
             }
 
             // Bulk action bar
@@ -334,16 +340,18 @@ struct DestinTabView: View {
 
                     Spacer()
 
-                    Button("All") {
+                    Button("destintab.all") {
                         SoundEffectManager.shared.playButtonClick()
+                        HapticManager.shared.generic()
                         viewModel.selectAllVisible()
                     }
                     .font(.system(size: 10 * zoomScale, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.5))
                     .buttonStyle(.plain)
 
-                    Button("None") {
+                    Button("destintab.none") {
                         SoundEffectManager.shared.playButtonClick()
+                        HapticManager.shared.generic()
                         viewModel.deselectAll()
                     }
                     .font(.system(size: 10 * zoomScale, design: .monospaced))
@@ -352,6 +360,7 @@ struct DestinTabView: View {
 
                     Button(action: {
                         SoundEffectManager.shared.playTabDeleted()
+                        HapticManager.shared.warning()
                         viewModel.bulkDeleteSelected()
                     }) {
                         Image(systemName: "trash")
@@ -383,7 +392,7 @@ struct DestinTabView: View {
                             Image(systemName: "pin.fill")
                                 .font(.system(size: 8 * zoomScale))
                                 .foregroundStyle(.cyan.opacity(0.6))
-                            Text("PINNED")
+                            Text("destintab.pinned")
                                 .font(.system(size: 8 * zoomScale, weight: .bold, design: .monospaced))
                                 .foregroundStyle(.cyan.opacity(0.6))
                             Spacer()
@@ -417,19 +426,30 @@ struct DestinTabView: View {
                             viewModel.toggleSelection(tab.id)
                         }
                         .contextMenu {
-                            Button("Open") { viewModel.switchToTab(tab) }
-                            Button("Edit") { editingTab = tab }
-                            Button(tab.isPinned ? "Unpin" : "Pin") {
+                            Button("destintab.open") {
+                                SoundEffectManager.shared.playButtonClick()
+                                HapticManager.shared.generic()
+                                viewModel.switchToTab(tab)
+                            }
+                            Button("destintab.edit") {
+                                SoundEffectManager.shared.playButtonClick()
+                                HapticManager.shared.generic()
+                                editingTab = tab
+                            }
+                            Button(tab.isPinned ? "destintab.unpin" : "destintab.pin") {
+                                SoundEffectManager.shared.playButtonClick()
+                                HapticManager.shared.generic()
                                 viewModel.togglePin(tab)
                             }
                             Divider()
-                            Button("Delete", role: .destructive) {
+                            Button("destintab.delete", role: .destructive) {
+                                SoundEffectManager.shared.playButtonClick()
+                                HapticManager.shared.warning()
                                 if prefs.preferences.confirmBeforeDelete {
                                     tabToDelete = tab
                                 } else {
                                     Anim.with { viewModel.deleteTab(tab) }
                                     SoundEffectManager.shared.playTabDeleted()
-                                    HapticManager.shared.warning()
                                 }
                             }
                         }
@@ -460,11 +480,11 @@ struct DestinTabView: View {
             }
             .bounce(intensity: 1.03)
 
-            Text(viewModel.searchQuery.isEmpty ? String(localized: "empty.title") : "No matches")
+            Text(viewModel.searchQuery.isEmpty ? String(localized: "empty.title") : String(localized: "destintab.no_matches"))
                 .font(.system(.subheadline, design: .monospaced))
                 .foregroundStyle(.white.opacity(0.7))
 
-            Text(viewModel.searchQuery.isEmpty ? String(localized: "empty.subtitle") : "Try a different search term")
+            Text(viewModel.searchQuery.isEmpty ? String(localized: "empty.subtitle") : String(localized: "destintab.try_different_search"))
                 .font(.system(.caption, design: .monospaced))
                 .foregroundStyle(.white.opacity(0.5))
                 .multilineTextAlignment(.center)
@@ -505,22 +525,22 @@ struct DestinTabView: View {
             Divider()
 
             HStack(spacing: 14 * zoomScale) {
-                footerButton(title: String(localized: "button.settings"), icon: "gear") {
+                footerButton(title: "button.settings", icon: "gear") {
                     SoundEffectManager.shared.playButtonClick()
                     NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
                 }
 
-                footerButton(title: "Import", icon: "square.and.arrow.down") {
+                footerButton(title: "button.import", icon: "square.and.arrow.down") {
                     SoundEffectManager.shared.playButtonClick()
                     showImportPanel = true
                 }
 
-                footerButton(title: "Export", icon: "square.and.arrow.up") {
+                footerButton(title: "button.export", icon: "square.and.arrow.up") {
                     SoundEffectManager.shared.playButtonClick()
                     showExportPanel = true
                 }
 
-                footerButton(title: String(localized: "button.automation"), icon: "lock.shield") {
+                footerButton(title: "button.automation", icon: "lock.shield") {
                     SoundEffectManager.shared.playButtonClick()
                     openAutomationSettings()
                 }
@@ -532,7 +552,7 @@ struct DestinTabView: View {
         }
     }
 
-    private func footerButton(title: String, icon: String, action: @escaping () -> Void) -> some View {
+    private func footerButton(title: LocalizedStringKey, icon: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             HStack(spacing: 4) {
                 Image(systemName: icon)
@@ -559,7 +579,7 @@ struct DestinTabView: View {
                     HapticManager.shared.success()
                 }
             } catch {
-                showToast(message: "Import failed: \(error.localizedDescription)")
+                showToast(message: String(format: String(localized: "toast.import_failed"), error.localizedDescription))
             }
         case .failure(let error):
             showToast(message: "Import failed: \(error.localizedDescription)")

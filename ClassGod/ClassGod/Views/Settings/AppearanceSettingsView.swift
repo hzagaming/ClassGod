@@ -12,13 +12,13 @@ struct AppearanceSettingsView: View {
         ScrollView {
             VStack(spacing: 10) {
                 StatefulCollapsibleSection(
-                    title: String(localized: "section.panel"),
+                    title: "section.panel",
                     icon: "rectangle.split.3x3",
                     defaultExpanded: true,
                     accentColor: .blue
                 ) {
                     SettingsSliderRow(
-                        label: String(localized: "setting.width"),
+                        label: "setting.width",
                         value: $prefs.preferences.panelWidth,
                         range: 240...600,
                         step: 10,
@@ -26,7 +26,7 @@ struct AppearanceSettingsView: View {
                     )
 
                     SettingsSliderRow(
-                        label: String(localized: "setting.max_height"),
+                        label: "setting.max_height",
                         value: $prefs.preferences.panelMaxHeight,
                         range: 200...900,
                         step: 20,
@@ -34,7 +34,7 @@ struct AppearanceSettingsView: View {
                     )
 
                     SettingsSliderRow(
-                        label: String(localized: "setting.row_height"),
+                        label: "setting.row_height",
                         value: $prefs.preferences.rowHeight,
                         range: 32...72,
                         step: 4,
@@ -42,7 +42,7 @@ struct AppearanceSettingsView: View {
                     )
 
                     SettingsSliderRow(
-                        label: String(localized: "setting.max_tabs"),
+                        label: "setting.max_tabs",
                         value: .init(
                             get: { Double(prefs.preferences.maxTabsInPopover) },
                             set: { prefs.preferences.maxTabsInPopover = Int($0) }
@@ -53,7 +53,7 @@ struct AppearanceSettingsView: View {
                     )
 
                     SettingsSliderRow(
-                        label: String(localized: "setting.corner_radius"),
+                        label: "setting.corner_radius",
                         value: $prefs.preferences.panelCornerRadius,
                         range: 0...32,
                         step: 1,
@@ -61,7 +61,7 @@ struct AppearanceSettingsView: View {
                     )
 
                     SettingsSliderRow(
-                        label: "Window Zoom",
+                        label: "setting.window_zoom",
                         value: $prefs.preferences.windowZoomScale,
                         range: 0.5...2.0,
                         step: 0.1,
@@ -75,13 +75,13 @@ struct AppearanceSettingsView: View {
                 }
 
                 StatefulCollapsibleSection(
-                    title: String(localized: "section.theme"),
+                    title: "section.theme",
                     icon: "paintbrush",
                     defaultExpanded: true,
                     accentColor: .purple
                 ) {
                     SettingsPickerRow(
-                        label: String(localized: "setting.appearance"),
+                        label: "setting.appearance",
                         selection: $prefs.preferences.theme,
                         options: AppTheme.allCases,
                         displayName: \.displayName,
@@ -89,7 +89,7 @@ struct AppearanceSettingsView: View {
                     )
 
                     SettingsSliderRow(
-                        label: "Window Opacity",
+                        label: "setting.window_opacity",
                         value: $prefs.preferences.windowOpacity,
                         range: 0.5...1.0,
                         step: 0.05,
@@ -100,55 +100,55 @@ struct AppearanceSettingsView: View {
                 }
 
                 StatefulCollapsibleSection(
-                    title: String(localized: "section.display"),
+                    title: "section.display",
                     icon: "eye",
                     defaultExpanded: true,
                     accentColor: .cyan
                 ) {
                     SettingsToggleRow(
                         icon: "globe",
-                        title: String(localized: "setting.show_browser_icon"),
-                        subtitle: "Show browser icon in tab list",
+                        title: "setting.show_browser_icon",
+                        subtitle: "setting.show_browser_icon.subtitle",
                         isOn: $prefs.preferences.showBrowserIcon
                     )
 
                     SettingsToggleRow(
                         icon: "command",
-                        title: String(localized: "setting.show_shortcut_badge"),
-                        subtitle: "Display shortcut key on items",
+                        title: "setting.show_shortcut_badge",
+                        subtitle: "setting.show_shortcut_badge.subtitle",
                         isOn: $prefs.preferences.showShortcutBadge
                     )
 
                     SettingsToggleRow(
                         icon: "link",
-                        title: String(localized: "setting.show_url_preview"),
-                        subtitle: "Show URL tooltip on hover",
+                        title: "setting.show_url_preview",
+                        subtitle: "setting.show_url_preview.subtitle",
                         isOn: $prefs.preferences.showURLPreview
                     )
 
                     SettingsToggleRow(
                         icon: "rectangle.compress.vertical",
-                        title: String(localized: "setting.compact_mode"),
-                        subtitle: "Reduce padding and spacing",
+                        title: "setting.compact_mode",
+                        subtitle: "setting.compact_mode.subtitle",
                         isOn: $prefs.preferences.useCompactMode
                     )
 
                     SettingsToggleRow(
                         icon: "number",
-                        title: String(localized: "setting.show_tab_count"),
-                        subtitle: "Show tab count on menu bar icon",
+                        title: "setting.show_tab_count",
+                        subtitle: "setting.show_tab_count.subtitle",
                         isOn: $prefs.preferences.showTabCountBadge
                     )
                 }
 
                 StatefulCollapsibleSection(
-                    title: String(localized: "section.menu_bar_icon"),
+                    title: "section.menu_bar_icon",
                     icon: "menubar.rectangle",
                     defaultExpanded: false,
                     accentColor: .green
                 ) {
                     SettingsPickerRow(
-                        label: String(localized: "setting.icon_style"),
+                        label: "setting.icon_style",
                         selection: $prefs.preferences.menuBarIconStyle,
                         options: MenuBarIconStyle.allCases,
                         displayName: \.displayName,
@@ -157,13 +157,13 @@ struct AppearanceSettingsView: View {
                 }
 
                 StatefulCollapsibleSection(
-                    title: "Stealth",
+                    title: "section.stealth",
                     icon: "eye.slash",
                     defaultExpanded: false,
                     accentColor: .red
                 ) {
                     SettingsPickerRow(
-                        label: "App Icon",
+                        label: "setting.app_icon",
                         selection: $prefs.preferences.appIconStyle,
                         options: AppIconStyle.allCases,
                         displayName: \.displayName,
@@ -173,7 +173,7 @@ struct AppearanceSettingsView: View {
                         AppIconManager.shared.applyStyle(newStyle)
                     }
 
-                    Text("Disguise ClassGod as another app in the Dock. The icon change takes effect immediately.")
+                    Text("setting.app_icon.caption")
                         .font(.system(size: 11, design: .monospaced))
                         .foregroundStyle(.secondary)
                         .padding(.horizontal, 10)

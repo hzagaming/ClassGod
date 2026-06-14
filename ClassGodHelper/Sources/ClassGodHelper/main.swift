@@ -24,6 +24,7 @@ final class SMCHelper {
     static let shared = SMCHelper()
     private var conn: io_connect_t = 0
     private var isConnected = false
+    private let lock = NSLock()
 
     private init() {
         connect()
@@ -72,6 +73,8 @@ final class SMCHelper {
     }
 
     func readBytes(key: String) -> [UInt8]? {
+        lock.lock()
+        defer { lock.unlock() }
         guard isConnected, key.count == 4 else { return nil }
         let code = fourCC(key)
         var input = [UInt8](repeating: 0, count: 56)
@@ -91,6 +94,8 @@ final class SMCHelper {
     }
 
     func writeBytes(key: String, bytes: [UInt8]) -> Bool {
+        lock.lock()
+        defer { lock.unlock() }
         guard isConnected, key.count == 4 else { return false }
         let code = fourCC(key)
         var input = [UInt8](repeating: 0, count: 56)
@@ -283,7 +288,26 @@ final class SMCHelper {
     }
 
     func readAll() -> [String: Any] {
-        return ["fans": readFans(), "temps": readTemps()]
+        let fans = readFans()
+        let temps = readTemps()
+        if !fans.isEmpty || !temps.isEmpty {
+            return ["fans": fans, "temps": temps, "source": "smc"]
+        }
+
+        // Modern Apple Silicon (e.g. M5) may not expose live SMC keys to user space.
+        // Try powermetrics first, then the IOHIDEventSystem PMU/NVMe temperature sensors.
+        let pmTemps = PowerMetricsSampler.shared.temps
+        let pmFans = PowerMetricsSampler.shared.fans
+        if !pmTemps.isEmpty || !pmFans.isEmpty {
+            return ["fans": pmFans, "temps": pmTemps, "source": "powermetrics"]
+        }
+
+        let hidTemps = HIDTemperatureReader.shared.readTemperatures()
+        if !hidTemps.isEmpty {
+            return ["fans": [], "temps": hidTemps, "source": "hid"]
+        }
+
+        return ["fans": [], "temps": [], "source": "none"]
     }
 
     func setFanMode(_ mode: String, fanIndex: Int) -> Bool {
@@ -313,7 +337,318 @@ final class SMCHelper {
     }
 }
 
+// MARK: - powermetrics fallback
+
+/// Periodically samples `powermetrics --samplers smc` so that machines whose
+/// SMC user-client no longer exposes live keys (e.g. Apple Silicon M5) can
+/// still report die temperatures and fan RPM.
+final class PowerMetricsSampler {
+    static let shared = PowerMetricsSampler()
+    private let queue = DispatchQueue(label: "com.hanazar.classgod.powermetrics", qos: .utility)
+    private var timer: DispatchSourceTimer?
+    private var _latest: (temps: [[String: Any]], fans: [[String: Any]], error: String?) = ([], [], nil)
+    private let accessQueue = DispatchQueue(label: "com.hanazar.classgod.powermetrics.access")
+    private var isSamplerUnsupported = false
+
+    private init() {}
+
+    var temps: [[String: Any]] {
+        var value: [[String: Any]] = []
+        accessQueue.sync { value = _latest.temps }
+        return value
+    }
+    var fans: [[String: Any]] {
+        var value: [[String: Any]] = []
+        accessQueue.sync { value = _latest.fans }
+        return value
+    }
+    var error: String? {
+        var value: String?
+        accessQueue.sync { value = _latest.error }
+        return value
+    }
+
+    func start(interval: TimeInterval = 3.0) {
+        stop()
+        guard !isSamplerUnsupported else {
+            print("[Helper] PowerMetricsSampler skipped: SMC sampler is unsupported on this machine")
+            return
+        }
+        let timer = DispatchSource.makeTimerSource(queue: queue)
+        timer.schedule(deadline: .now(), repeating: .milliseconds(Int(interval * 1000)))
+        timer.setEventHandler { [weak self] in
+            self?.sample()
+        }
+        timer.resume()
+        self.timer = timer
+        print("[Helper] PowerMetricsSampler started (interval \(interval)s)")
+    }
+
+    func stop() {
+        timer?.cancel()
+        timer = nil
+    }
+
+    private func sample() {
+        let result = Self.runOnce()
+        if let error = result.error,
+           error.lowercased().contains("unrecognized sampler") {
+            print("[Helper] PowerMetricsSampler: SMC sampler unsupported, stopping")
+            self.isSamplerUnsupported = true
+            self.stop()
+        }
+        accessQueue.async {
+            self._latest = result
+        }
+    }
+
+    private static func runOnce() -> (temps: [[String: Any]], fans: [[String: Any]], error: String?) {
+        let task = Process()
+        task.launchPath = "/usr/bin/powermetrics"
+        // -n 1: one sample; -i 1000: 1s interval; --samplers smc: SMC section only
+        task.arguments = ["-n", "1", "-i", "1000", "--samplers", "smc"]
+        let pipe = Pipe()
+        task.standardOutput = pipe
+        task.standardError = pipe  // powermetrics writes errors to stderr
+
+        do {
+            try task.run()
+        } catch {
+            return ([], [], "powermetrics launch failed: \(error.localizedDescription)")
+        }
+
+        let data = pipe.fileHandleForReading.readDataToEndOfFile()
+        task.waitUntilExit()
+
+        guard task.terminationStatus == 0 else {
+            let err = String(data: data, encoding: .utf8) ?? ""
+            return ([], [], "powermetrics exited \(task.terminationStatus): \(err.prefix(200))")
+        }
+
+        guard let output = String(data: data, encoding: .utf8), !output.isEmpty else {
+            return ([], [], "powermetrics produced no output")
+        }
+
+        if output.lowercased().contains("unrecognized sampler") {
+            return ([], [], "powermetrics SMC sampler unavailable on this machine")
+        }
+
+        var temps: [[String: Any]] = []
+        var fans: [[String: Any]] = []
+
+        // CPU die temperature
+        if let cpu = matchDouble(in: output, pattern: #"CPU die temperature:\s*([\d.]+)\s*C"#) {
+            temps.append(["name": "CPU Die", "key": "PMCPU", "value": cpu, "maxValue": 100])
+        }
+        // GPU die temperature
+        if let gpu = matchDouble(in: output, pattern: #"GPU die temperature:\s*([\d.]+)\s*C"#) {
+            temps.append(["name": "GPU Die", "key": "PMGPU", "value": gpu, "maxValue": 100])
+        }
+        // IO die temperature (present on some Apple Silicon machines)
+        if let io = matchDouble(in: output, pattern: #"IO die temperature:\s*([\d.]+)\s*C"#) {
+            temps.append(["name": "IO Die", "key": "PMIO", "value": io, "maxValue": 100])
+        }
+
+        // Fans: there may be multiple "Fan: <rpm> rpm" lines
+        let fanRegex = try? NSRegularExpression(pattern: #"Fan:\s*([\d.]+)\s*rpm"#, options: .caseInsensitive)
+        let nsRange = NSRange(output.startIndex..., in: output)
+        let matches = fanRegex?.matches(in: output, options: [], range: nsRange) ?? []
+        for (idx, match) in matches.enumerated() {
+            guard let range = Range(match.range(at: 1), in: output) else { continue }
+            if let rpm = Double(output[range]) {
+                fans.append(["id": idx, "name": "Fan \(idx + 1)", "actualRPM": rpm, "minimumRPM": 0, "maximumRPM": 8000])
+            }
+        }
+
+        if temps.isEmpty && fans.isEmpty {
+            return ([], [], "powermetrics output contained no parseable SMC data")
+        }
+
+        return (temps, fans, nil)
+    }
+
+    private static func matchDouble(in text: String, pattern: String) -> Double? {
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive) else { return nil }
+        let range = NSRange(text.startIndex..., in: text)
+        guard let match = regex.firstMatch(in: text, options: [], range: range),
+              let r = Range(match.range(at: 1), in: text),
+              let v = Double(text[r]) else { return nil }
+        return v
+    }
+
+    private static func matchInt(in text: String, pattern: String) -> Int? {
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive) else { return nil }
+        let range = NSRange(text.startIndex..., in: text)
+        guard let match = regex.firstMatch(in: text, options: [], range: range),
+              let r = Range(match.range(at: 1), in: text),
+              let v = Int(text[r]) else { return nil }
+        return v
+    }
+}
+
+// MARK: - HID temperature reader (Apple Silicon PMU sensors)
+
+/// Reads live temperature events from AppleARMPMUTempSensor / AppleEmbeddedNVMeTemperatureSensor
+/// services via the private IOHIDEventSystemClient API. This is the most reliable way to get
+/// real die temperatures on modern Apple Silicon (M3/M4/M5) where SMC keys are no longer exposed.
+final class HIDTemperatureReader {
+    static let shared = HIDTemperatureReader()
+
+    private typealias ClientRef = OpaquePointer
+    private typealias ServiceRef = OpaquePointer
+    private typealias EventRef = OpaquePointer
+
+    private typealias CreateFunc = @convention(c) (CFAllocator?) -> ClientRef?
+    private typealias SetMatchingFunc = @convention(c) (ClientRef?, CFDictionary?) -> Void
+    private typealias CopyServicesFunc = @convention(c) (ClientRef?) -> Unmanaged<CFArray>?
+    private typealias CopyPropertyFunc = @convention(c) (ServiceRef?, CFString?) -> CFTypeRef?
+    private typealias CopyEventFunc = @convention(c) (ServiceRef?, Int64, Int32, Int64) -> EventRef?
+    private typealias GetFloatValueFunc = @convention(c) (EventRef?, UInt32) -> Double
+
+    private let handle: UnsafeMutableRawPointer?
+    private let client: ClientRef?
+    private let copyServices: CopyServicesFunc?
+    private let copyProperty: CopyPropertyFunc?
+    private let copyEvent: CopyEventFunc?
+    private let getFloatValue: GetFloatValueFunc?
+
+    private let temperatureEventType: Int64 = 15
+    private let temperatureField: UInt32 = 0xF0000
+
+    private init() {
+        guard let handle = dlopen("/System/Library/Frameworks/IOKit.framework/IOKit", RTLD_NOW) else {
+            print("[HID] dlopen IOKit failed")
+            self.handle = nil
+            self.client = nil
+            self.copyServices = nil
+            self.copyProperty = nil
+            self.copyEvent = nil
+            self.getFloatValue = nil
+            return
+        }
+        self.handle = handle
+
+        guard let createSym = dlsym(handle, "IOHIDEventSystemClientCreate"),
+              let setMatchingSym = dlsym(handle, "IOHIDEventSystemClientSetMatching"),
+              let copyServicesSym = dlsym(handle, "IOHIDEventSystemClientCopyServices"),
+              let copyPropertySym = dlsym(handle, "IOHIDServiceClientCopyProperty"),
+              let copyEventSym = dlsym(handle, "IOHIDServiceClientCopyEvent"),
+              let getFloatValueSym = dlsym(handle, "IOHIDEventGetFloatValue") else {
+            print("[HID] dlsym failed")
+            self.client = nil
+            self.copyServices = nil
+            self.copyProperty = nil
+            self.copyEvent = nil
+            self.getFloatValue = nil
+            return
+        }
+
+        let create = unsafeBitCast(createSym, to: CreateFunc.self)
+        let setMatching = unsafeBitCast(setMatchingSym, to: SetMatchingFunc.self)
+        self.copyServices = unsafeBitCast(copyServicesSym, to: CopyServicesFunc.self)
+        self.copyProperty = unsafeBitCast(copyPropertySym, to: CopyPropertyFunc.self)
+        self.copyEvent = unsafeBitCast(copyEventSym, to: CopyEventFunc.self)
+        self.getFloatValue = unsafeBitCast(getFloatValueSym, to: GetFloatValueFunc.self)
+
+        guard let client = create(kCFAllocatorDefault) else {
+            print("[HID] Could not create IOHIDEventSystemClient")
+            self.client = nil
+            return
+        }
+
+        let matching = [
+            "PrimaryUsage": 5,
+            "PrimaryUsagePage": 65280
+        ] as CFDictionary
+        setMatching(client, matching)
+        self.client = client
+        print("[HID] IOHIDEventSystemClient initialized")
+    }
+
+    deinit {
+        // Swift manages Core Foundation objects via ARC; we only need to close the dlopen handle.
+        if let handle = handle {
+            dlclose(handle)
+        }
+    }
+
+    func readTemperatures() -> [[String: Any]] {
+        guard let client = client,
+              let copyServices = copyServices,
+              let copyProperty = copyProperty,
+              let copyEvent = copyEvent,
+              let getFloatValue = getFloatValue else { return [] }
+
+        guard let servicesCF = copyServices(client) else { return [] }
+        let cfarray = servicesCF.takeRetainedValue()
+        let count = CFArrayGetCount(cfarray)
+
+        // Group values by product name; some products have multiple instances.
+        var grouped: [String: [Double]] = [:]
+
+        for i in 0..<count {
+            let raw = CFArrayGetValueAtIndex(cfarray, i)
+            let service = unsafeBitCast(raw, to: ServiceRef.self)
+
+            guard let productRef = copyProperty(service, "Product" as CFString),
+                  CFGetTypeID(productRef) == CFStringGetTypeID() else { continue }
+            let product = (productRef as! CFString) as String
+
+            let event = copyEvent(service, temperatureEventType, 0, 0)
+            guard let event = event else { continue }
+            let value = getFloatValue(event, temperatureField)
+            // tdev* sensors often return invalid negative placeholders (~-9200).
+            guard value > -50 && value < 150 else { continue }
+
+            grouped[product, default: []].append(value)
+        }
+
+        var results: [[String: Any]] = []
+        for (product, values) in grouped.sorted(by: { $0.key < $1.key }) {
+            let avg = values.reduce(0, +) / Double(values.count)
+            let key = "HID_" + product.replacingOccurrences(of: " ", with: "_")
+            results.append([
+                "name": product,
+                "key": key,
+                "value": avg,
+                "maxValue": 100
+            ])
+        }
+        return results
+    }
+}
+
 // MARK: - Socket server
+
+/// Kill any other ClassGodHelper processes so a freshly-built helper can take
+/// over the socket even if an older instance is still running.
+private func cleanupStaleHelpers() {
+    let myPID = getpid()
+    let task = Process()
+    task.launchPath = "/bin/ps"
+    task.arguments = ["-eo", "pid,comm"]
+    let pipe = Pipe()
+    task.standardOutput = pipe
+    do {
+        try task.run()
+        let data = pipe.fileHandleForReading.readDataToEndOfFile()
+        task.waitUntilExit()
+        guard let output = String(data: data, encoding: .utf8) else { return }
+        for line in output.split(separator: "\n") {
+            let parts = line.split(separator: " ", omittingEmptySubsequences: true)
+            guard parts.count >= 2 else { continue }
+            let command = String(parts[1])
+            guard command == "ClassGodHelper" || command.hasSuffix("/ClassGodHelper") else { continue }
+            guard let pid = pid_t(parts[0]), pid != myPID else { continue }
+            print("[Helper] Terminating stale helper pid=\(pid)")
+            kill(pid, SIGTERM)
+        }
+        // Give the old helper a moment to release the socket.
+        Thread.sleep(forTimeInterval: 0.5)
+    } catch {
+        print("[Helper] cleanupStaleHelpers failed: \(error)")
+    }
+}
 
 private func setupSocket() -> Int32 {
     var addr = sockaddr_un()
@@ -382,14 +717,17 @@ private func sendJSON(fd: Int32, _ obj: [String: Any]) {
 private func handleClient(fd: Int32) {
     defer { close(fd) }
 
-    // Authenticate peer
+    // Authenticate peer — fail closed if credentials cannot be retrieved.
     var peerUID: uid_t = 0, peerGID: gid_t = 0
-    if getpeereid(fd, &peerUID, &peerGID) == 0 {
-        if let allowed = allowedPeerUID, peerUID != allowed {
-            print("[Helper] Rejected peer uid=\(peerUID), allowed=\(allowed)")
-            sendJSON(fd: fd, ["success": false, "error": "unauthorized peer uid"])
-            return
-        }
+    guard getpeereid(fd, &peerUID, &peerGID) == 0 else {
+        print("[Helper] getpeereid failed; rejecting connection")
+        sendJSON(fd: fd, ["success": false, "error": "peer authentication failed"])
+        return
+    }
+    if let allowed = allowedPeerUID, peerUID != allowed {
+        print("[Helper] Rejected peer uid=\(peerUID), allowed=\(allowed)")
+        sendJSON(fd: fd, ["success": false, "error": "unauthorized peer uid"])
+        return
     }
 
     while true {
@@ -454,17 +792,35 @@ if let sudoUIDString = getenv("SUDO_UID"),
     print("[Helper] No SUDO_UID; allowing any peer (not recommended for production)")
 }
 
+// Clean up stale helpers first, before doing any expensive work, so we can
+// take over the socket as soon as possible.
+cleanupStaleHelpers()
+
 // Pre-flight sensor discovery so user can see what this machine exposes.
 let smc = SMCHelper.shared
 let discoveredTemps = smc.readTemps()
 let discoveredFans = smc.readFans()
-print("[Helper] Discovered \(discoveredTemps.count) temperature sensors, \(discoveredFans.count) fans")
+print("[Helper] Discovered \(discoveredTemps.count) SMC temperature sensors, \(discoveredFans.count) fans")
 for t in discoveredTemps.prefix(10) {
-    print("[Helper]   Temp: \(t["name"] ?? "?") [\(t["key"] ?? "?")] = \(t["value"] ?? 0)")
+    print("[Helper]   SMC Temp: \(t["name"] ?? "?") [\(t["key"] ?? "?")] = \(t["value"] ?? 0)")
 }
 if discoveredTemps.count > 10 {
     print("[Helper]   ... and \(discoveredTemps.count - 10) more")
 }
+
+// Probe HID temperature sensors (Apple Silicon PMU/NVMe).
+let hidTemps = HIDTemperatureReader.shared.readTemperatures()
+print("[Helper] Discovered \(hidTemps.count) HID temperature sensors")
+for t in hidTemps.prefix(15) {
+    print("[Helper]   HID Temp: \(t["name"] ?? "?") = \(t["value"] ?? 0)")
+}
+if hidTemps.count > 15 {
+    print("[Helper]   ... and \(hidTemps.count - 15) more")
+}
+
+// Start powermetrics sampler in parallel. It runs independent of SMC reads
+// and provides a fallback data path on modern Apple Silicon.
+PowerMetricsSampler.shared.start(interval: 3.0)
 
 listen_fd = setupSocket()
 guard listen_fd >= 0 else {

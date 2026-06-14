@@ -13,21 +13,25 @@ struct ShortcutPicker: View {
     @Binding var modifiers: UInt
     @Binding var isRecording: Bool
 
+    @ObservedObject private var prefs = PreferencesManager.shared
+    private var zoomScale: CGFloat { CGFloat(prefs.preferences.windowZoomScale) }
     @State private var localMonitor: Any?
 
     var body: some View {
         HStack {
             Text(displayString)
-                .font(.system(size: 14, weight: .medium, design: .monospaced))
+                .font(.system(size: 14 * zoomScale, weight: .medium, design: .monospaced))
                 .foregroundStyle(.white)
-                .frame(maxWidth: .infinity, minHeight: 28, alignment: .center)
+                .frame(maxWidth: .infinity, minHeight: 28 * zoomScale, alignment: .center)
                 .background(isRecording ? Color.white.opacity(0.15) : Color(white: 0.1))
                 .overlay(
                     Rectangle()
-                        .stroke(isRecording ? Color.white : Color.white.opacity(0.15), lineWidth: 1)
+                        .stroke(isRecording ? Color.white : Color.white.opacity(0.15), lineWidth: 1 * zoomScale)
                 
                     .allowsHitTesting(false))
                 .onTapGesture {
+                    SoundEffectManager.shared.playButtonClick()
+                    HapticManager.shared.generic()
                     if isRecording {
                         stopRecording()
                     } else {
@@ -40,6 +44,7 @@ struct ShortcutPicker: View {
 
             Button(action: {
                 SoundEffectManager.shared.playButtonClick()
+                HapticManager.shared.generic()
                 key = ""
                 modifiers = 0
             }) {
@@ -113,6 +118,8 @@ struct ShortcutPicker: View {
 
                 self.key = keyName
                 self.modifiers = flags.rawValue
+                SoundEffectManager.shared.playShortcutRecorded()
+                HapticManager.shared.success()
                 self.stopRecording()
                 return nil
             }

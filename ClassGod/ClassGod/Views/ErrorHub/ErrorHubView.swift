@@ -85,7 +85,7 @@ struct ErrorHubView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .overlay(
-            RoundedRectangle(cornerRadius: prefs.preferences.panelCornerRadius)
+            RoundedRectangle(cornerRadius: prefs.preferences.panelCornerRadius * zoomScale)
                 .stroke(Color.white.opacity(0.12), lineWidth: 1 * zoomScale)
                 .allowsHitTesting(false)
         )
@@ -543,11 +543,11 @@ struct TagPill: View {
                 .foregroundStyle(isSelected ? .white : .white.opacity(0.5))
                 .padding(.horizontal, 8 * zoomScale)
                 .padding(.vertical, 3 * zoomScale)
-                .background(isSelected ? Color(hex: "#007AFF").opacity(0.2) : Color(white: 0.05))
+                .background(isSelected ? .cyan.opacity(0.2) : Color(white: 0.05))
                 .cornerRadius(4 * zoomScale)
                 .overlay(
                     RoundedRectangle(cornerRadius: 4 * zoomScale)
-                        .stroke(isSelected ? Color(hex: "#007AFF").opacity(0.5) : Color.white.opacity(0.05), lineWidth: 1 * zoomScale)
+                        .stroke(isSelected ? .cyan.opacity(0.5) : Color.white.opacity(0.05), lineWidth: 1 * zoomScale)
                         .allowsHitTesting(false)
                 )
         }

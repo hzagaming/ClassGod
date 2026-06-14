@@ -25,6 +25,16 @@ enum PermissionCategory: String, CaseIterable, Identifiable, Equatable {
     
     var id: String { rawValue }
     
+    var displayName: String {
+        switch self {
+        case .core: return String(localized: "permission.category.core")
+        case .browser: return String(localized: "permission.category.browser")
+        case .system: return String(localized: "permission.category.system")
+        case .hardware: return String(localized: "permission.category.hardware")
+        case .optional: return String(localized: "permission.category.optional")
+        }
+    }
+    
     var iconName: String {
         switch self {
         case .core: return "lock.shield"
@@ -81,76 +91,93 @@ enum PermissionType: String, CaseIterable, Identifiable, Equatable {
     
     var title: String {
         switch self {
-        case .accessibility: return "Accessibility"
-        case .appleEvents: return "Automation (AppleEvents)"
-        case .screenRecording: return "Screen Recording"
-        case .fullDiskAccess: return "Full Disk Access"
-        case .microphone: return "Microphone"
-        case .camera: return "Camera"
-        case .location: return "Location Services"
-        case .notifications: return "Notifications"
-        case .contacts: return "Contacts"
-        case .reminders: return "Reminders"
-        case .calendar: return "Calendar"
-        case .bluetooth: return "Bluetooth"
+        case .accessibility: return String(localized: "permission.type.accessibility.title")
+        case .appleEvents: return String(localized: "permission.type.appleEvents.title")
+        case .screenRecording: return String(localized: "permission.type.screenRecording.title")
+        case .fullDiskAccess: return String(localized: "permission.type.fullDiskAccess.title")
+        case .microphone: return String(localized: "permission.type.microphone.title")
+        case .camera: return String(localized: "permission.type.camera.title")
+        case .location: return String(localized: "permission.type.location.title")
+        case .notifications: return String(localized: "permission.type.notifications.title")
+        case .contacts: return String(localized: "permission.type.contacts.title")
+        case .reminders: return String(localized: "permission.type.reminders.title")
+        case .calendar: return String(localized: "permission.type.calendar.title")
+        case .bluetooth: return String(localized: "permission.type.bluetooth.title")
         }
     }
     
     var description: String {
         switch self {
         case .accessibility:
-            return "Needed to query the frontmost app, simulate key events, and interact with windows for AssessPrepHack and browser switching."
+            return String(localized: "permission.type.accessibility.description")
         case .appleEvents:
-            return "Needed to control Safari, Chrome, Edge and other browsers via AppleScript."
+            return String(localized: "permission.type.appleEvents.description")
         case .screenRecording:
-            return "Needed for browser detection, window capture and screen-sharing features."
+            return String(localized: "permission.type.screenRecording.description")
         case .fullDiskAccess:
-            return "Allows reading complete process info for Activity Monitor and accessing protected files."
+            return String(localized: "permission.type.fullDiskAccess.description")
         case .microphone:
-            return "Used by audio-related features such as sound detection or mute controls."
+            return String(localized: "permission.type.microphone.description")
         case .camera:
-            return "Used by video-related features if enabled in future updates."
+            return String(localized: "permission.type.camera.description")
         case .location:
-            return "Optional. May be used for geo-aware features in future updates."
+            return String(localized: "permission.type.location.description")
         case .notifications:
-            return "Optional. Used to send status alerts and permission reminders."
+            return String(localized: "permission.type.notifications.description")
         case .contacts:
-            return "Optional. May be used by future features that integrate with your contacts."
+            return String(localized: "permission.type.contacts.description")
         case .reminders:
-            return "Optional. May be used by future task or reminder integrations."
+            return String(localized: "permission.type.reminders.description")
         case .calendar:
-            return "Optional. May be used by future class schedule integrations."
+            return String(localized: "permission.type.calendar.description")
         case .bluetooth:
-            return "Optional. May be used by future peripheral detection features."
+            return String(localized: "permission.type.bluetooth.description")
         }
     }
     
     var features: [String] {
         switch self {
         case .accessibility:
-            return ["AssessPrepHack", "Browser Tab Switching", "Focus Guard"]
+            return [
+                String(localized: "permission.feature.assessPrepHack"),
+                String(localized: "permission.feature.browserTabSwitching"),
+                String(localized: "permission.feature.focusGuard")
+            ]
         case .appleEvents:
-            return ["Safari/Chrome/Edge Control", "Process Actions", "System Events"]
+            return [
+                String(localized: "permission.feature.browserControl"),
+                String(localized: "permission.feature.processActions"),
+                String(localized: "permission.feature.systemEvents")
+            ]
         case .screenRecording:
-            return ["Browser Detection", "Window Capture"]
+            return [
+                String(localized: "permission.feature.browserDetection"),
+                String(localized: "permission.feature.windowCapture")
+            ]
         case .fullDiskAccess:
-            return ["Activity Monitor", "System Files"]
+            return [
+                String(localized: "permission.feature.activityMonitor"),
+                String(localized: "permission.feature.systemFiles")
+            ]
         case .microphone:
-            return ["Audio Features"]
+            return [String(localized: "permission.feature.audioFeatures")]
         case .camera:
-            return ["Video Features"]
+            return [String(localized: "permission.feature.videoFeatures")]
         case .location:
-            return ["Geo Features"]
+            return [String(localized: "permission.feature.geoFeatures")]
         case .notifications:
-            return ["Alerts", "Status Updates"]
+            return [
+                String(localized: "permission.feature.alerts"),
+                String(localized: "permission.feature.statusUpdates")
+            ]
         case .contacts:
-            return ["Future Integrations"]
+            return [String(localized: "permission.feature.futureIntegrations")]
         case .reminders:
-            return ["Task Integrations"]
+            return [String(localized: "permission.feature.taskIntegrations")]
         case .calendar:
-            return ["Schedule Integrations"]
+            return [String(localized: "permission.feature.scheduleIntegrations")]
         case .bluetooth:
-            return ["Peripherals"]
+            return [String(localized: "permission.feature.peripherals")]
         }
     }
     

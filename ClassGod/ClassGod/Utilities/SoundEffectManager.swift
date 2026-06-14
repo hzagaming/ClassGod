@@ -186,6 +186,14 @@ final class SoundEffectManager {
             AudioServicesPlaySystemSound(1257)  // Funk — edgy open
         case "hackerdesktop":
             AudioServicesPlaySystemSound(1328)  // Sosumi — tech dashboard open
+        case "fancontrol":
+            AudioServicesPlaySystemSound(1104)  // Ping — cool/tech open
+        case "activitymonitor":
+            AudioServicesPlaySystemSound(1106)  // Tock — system open
+        case "permissioncenter":
+            AudioServicesPlaySystemSound(1262)  // Glass — security open
+        case "errorhub":
+            AudioServicesPlaySystemSound(1053)  // Error — error encyclopedia open
         default:
             playPopoverOpen()
         }
@@ -194,7 +202,8 @@ final class SoundEffectManager {
     func playWindowClose(feature: String = "") {
         guard isEnabled else { return }
         switch feature {
-        case "destintab", "superswitch", "browserbypasser", "assessprephack", "hackerdesktop":
+        case "destintab", "superswitch", "browserbypasser", "assessprephack", "hackerdesktop",
+             "fancontrol", "activitymonitor", "permissioncenter", "errorhub":
             AudioServicesPlaySystemSound(1107)  // Tock — tight close
         default:
             playPopoverClose()

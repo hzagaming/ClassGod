@@ -199,7 +199,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         
         // Apply corner radius to the window itself
         window.contentView?.wantsLayer = true
-        window.contentView?.layer?.cornerRadius = prefs.panelCornerRadius
+        window.contentView?.layer?.cornerRadius = prefs.panelCornerRadius * zoom
         window.contentView?.layer?.masksToBounds = true
         window.alphaValue = targetWindowAlpha
 
@@ -281,7 +281,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         window.isOpaque = false
         
         window.contentView?.wantsLayer = true
-        window.contentView?.layer?.cornerRadius = prefs.panelCornerRadius
+        window.contentView?.layer?.cornerRadius = prefs.panelCornerRadius * zoom
         window.contentView?.layer?.masksToBounds = true
 
         // Position slightly offset from main window
@@ -383,7 +383,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         window.isOpaque = false
         
         window.contentView?.wantsLayer = true
-        window.contentView?.layer?.cornerRadius = prefs.panelCornerRadius
+        window.contentView?.layer?.cornerRadius = prefs.panelCornerRadius * zoom
         window.contentView?.layer?.masksToBounds = true
 
         if let main = mainWindow {
@@ -484,7 +484,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         window.isOpaque = false
         
         window.contentView?.wantsLayer = true
-        window.contentView?.layer?.cornerRadius = prefs.panelCornerRadius
+        window.contentView?.layer?.cornerRadius = prefs.panelCornerRadius * zoom
         window.contentView?.layer?.masksToBounds = true
 
         if let main = mainWindow {
@@ -585,7 +585,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         window.isOpaque = false
         
         window.contentView?.wantsLayer = true
-        window.contentView?.layer?.cornerRadius = prefs.panelCornerRadius
+        window.contentView?.layer?.cornerRadius = prefs.panelCornerRadius * zoom
         window.contentView?.layer?.masksToBounds = true
 
         if let main = mainWindow {
@@ -683,7 +683,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         window.isOpaque = false
         
         window.contentView?.wantsLayer = true
-        window.contentView?.layer?.cornerRadius = 12
+        window.contentView?.layer?.cornerRadius = prefs.panelCornerRadius * zoom
         window.contentView?.layer?.masksToBounds = true
 
         if let main = mainWindow {
@@ -780,7 +780,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         window.isOpaque = false
 
         window.contentView?.wantsLayer = true
-        window.contentView?.layer?.cornerRadius = 12
+        window.contentView?.layer?.cornerRadius = prefs.panelCornerRadius * zoom
         window.contentView?.layer?.masksToBounds = true
 
         if let main = mainWindow {
@@ -879,7 +879,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         window.isOpaque = false
 
         window.contentView?.wantsLayer = true
-        window.contentView?.layer?.cornerRadius = 12
+        window.contentView?.layer?.cornerRadius = prefs.panelCornerRadius * zoom
         window.contentView?.layer?.masksToBounds = true
 
         let x = screenFrame.midX - size.width / 2
@@ -972,7 +972,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         window.isOpaque = false
 
         window.contentView?.wantsLayer = true
-        window.contentView?.layer?.cornerRadius = 12
+        window.contentView?.layer?.cornerRadius = prefs.panelCornerRadius * zoom
         window.contentView?.layer?.masksToBounds = true
 
         if let main = mainWindow {
@@ -1076,7 +1076,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         window.isOpaque = false
 
         window.contentView?.wantsLayer = true
-        window.contentView?.layer?.cornerRadius = prefs.panelCornerRadius
+        window.contentView?.layer?.cornerRadius = prefs.panelCornerRadius * zoom
         window.contentView?.layer?.masksToBounds = true
 
         if let main = mainWindow {
@@ -1180,7 +1180,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         window.isOpaque = false
 
         window.contentView?.wantsLayer = true
-        window.contentView?.layer?.cornerRadius = prefs.panelCornerRadius
+        window.contentView?.layer?.cornerRadius = prefs.panelCornerRadius * zoom
         window.contentView?.layer?.masksToBounds = true
 
         let x = screenFrame.midX - size.width / 2
@@ -1277,7 +1277,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         window.isOpaque = false
 
         window.contentView?.wantsLayer = true
-        window.contentView?.layer?.cornerRadius = prefs.panelCornerRadius
+        window.contentView?.layer?.cornerRadius = prefs.panelCornerRadius * zoom
         window.contentView?.layer?.masksToBounds = true
 
         let x = screenFrame.midX - size.width / 2
@@ -1670,6 +1670,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     // MARK: - Status Item
     private var statusItemTimer: Timer?
+    private var statusItemUpdateTask: Task<Void, Never>?
 
     private func setupStatusItem() {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
@@ -1728,10 +1729,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         if prefs.enableFanControl, prefs.fanControlShowInMenuBar {
             // Read fan/temp data off the main thread so the menu bar stays responsive.
-            Task.detached(priority: .userInitiated) { [weak self] in
+            // Cancel any previous update to avoid pile-up when the interval is very short.
+            statusItemUpdateTask?.cancel()
+            statusItemUpdateTask = Task.detached(priority: .userInitiated) { [weak self] in
                 guard let self else { return }
                 let all = SMCService.shared.readAll()
-                let highestTemp = all.sensors.map(\.value).max() ?? 0
+                // Only use real hardware sensors for the menu-bar summary; estimates would be misleading.
+                let realTemps = all.sensors.filter { !$0.isEstimated }
+                let highestTemp = realTemps.map(\.value).max() ?? 0
                 let avgRPM = all.fans.isEmpty ? 0 : all.fans.map(\.actualRPM).reduce(0, +) / Double(all.fans.count)
                 let unit = prefs.fanControlTemperatureUnit
                 let tempStr = unit.formatted(highestTemp)
@@ -1916,6 +1921,8 @@ struct SettingsContainerView: View {
     @ObservedObject private var prefs = PreferencesManager.shared
     var onClose: () -> Void
 
+    private var zoomScale: CGFloat { CGFloat(prefs.preferences.windowZoomScale) }
+
     var body: some View {
         VStack(spacing: 0) {
             // Hacker title bar
@@ -1991,8 +1998,8 @@ struct SettingsContainerView: View {
         }
         .background(Color.black)
         .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(Color.white.opacity(0.12), lineWidth: 1)
+            RoundedRectangle(cornerRadius: 12 * zoomScale)
+                .stroke(Color.white.opacity(0.12), lineWidth: 1 * zoomScale)
         )
     }
 }

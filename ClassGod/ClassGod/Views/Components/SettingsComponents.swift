@@ -9,10 +9,13 @@ import SwiftUI
 
 struct SettingsToggleRow: View {
     let icon: String?
-    let title: String
-    var subtitle: String? = nil
+    let title: LocalizedStringKey
+    var subtitle: LocalizedStringKey? = nil
     @Binding var isOn: Bool
     @State private var isHovered = false
+    @ObservedObject private var prefs = PreferencesManager.shared
+
+    private var zoomScale: CGFloat { CGFloat(prefs.preferences.windowZoomScale) }
 
     var body: some View {
         HStack(spacing: 10) {
@@ -45,7 +48,7 @@ struct SettingsToggleRow: View {
         .padding(.horizontal, 10)
         .padding(.vertical, 8)
         .background(
-            RoundedRectangle(cornerRadius: 6)
+            RoundedRectangle(cornerRadius: 6 * zoomScale)
                 .fill(isHovered ? Color.white.opacity(0.04) : Color.clear)
         )
         .onHover { isHovered = $0 }
@@ -60,16 +63,19 @@ struct SettingsToggleRow: View {
 // MARK: - Slider Row
 
 struct SettingsSliderRow: View {
-    let label: String
+    let label: LocalizedStringKey
     @Binding var value: Double
     let range: ClosedRange<Double>
     let step: Double
     @State private var isHovered = false
+    @ObservedObject private var prefs = PreferencesManager.shared
+
+    private var zoomScale: CGFloat { CGFloat(prefs.preferences.windowZoomScale) }
 
     private let displayFormatter: (Double) -> String
 
     init(
-        label: String,
+        label: LocalizedStringKey,
         value: Binding<Double>,
         range: ClosedRange<Double>,
         step: Double,
@@ -83,7 +89,7 @@ struct SettingsSliderRow: View {
     }
 
     init(
-        label: String,
+        label: LocalizedStringKey,
         value: Binding<Double>,
         range: ClosedRange<Double>,
         step: Double,
@@ -97,7 +103,7 @@ struct SettingsSliderRow: View {
     }
 
     init(
-        label: String,
+        label: LocalizedStringKey,
         value: Binding<Double>,
         range: ClosedRange<Double>,
         step: Double,
@@ -129,23 +135,30 @@ struct SettingsSliderRow: View {
         .padding(.horizontal, 10)
         .padding(.vertical, 6)
         .background(
-            RoundedRectangle(cornerRadius: 6)
+            RoundedRectangle(cornerRadius: 6 * zoomScale)
                 .fill(isHovered ? Color.white.opacity(0.03) : Color.clear)
         )
         .onHover { isHovered = $0 }
         .animation(.easeInOut(duration: 0.15), value: isHovered)
+        .onChange(of: value) { _, _ in
+            SoundEffectManager.shared.playButtonClick()
+            HapticManager.shared.generic()
+        }
     }
 }
 
 // MARK: - Picker Row
 
 struct SettingsPickerRow<T: Hashable & Identifiable>: View {
-    let label: String
+    let label: LocalizedStringKey
     @Binding var selection: T
     let options: [T]
     let displayName: (T) -> String
     let style: PickerStyleType
     @State private var isHovered = false
+    @ObservedObject private var prefs = PreferencesManager.shared
+
+    private var zoomScale: CGFloat { CGFloat(prefs.preferences.windowZoomScale) }
 
     enum PickerStyleType {
         case segmented
@@ -191,7 +204,7 @@ struct SettingsPickerRow<T: Hashable & Identifiable>: View {
         .padding(.horizontal, 10)
         .padding(.vertical, 8)
         .background(
-            RoundedRectangle(cornerRadius: 6)
+            RoundedRectangle(cornerRadius: 6 * zoomScale)
                 .fill(isHovered ? Color.white.opacity(0.03) : Color.clear)
         )
         .onHover { isHovered = $0 }
@@ -207,11 +220,14 @@ struct SettingsPickerRow<T: Hashable & Identifiable>: View {
 
 struct SettingsActionRow: View {
     let icon: String?
-    let title: String
-    var subtitle: String? = nil
+    let title: LocalizedStringKey
+    var subtitle: LocalizedStringKey? = nil
     let action: () -> Void
     var isDestructive: Bool = false
     @State private var isHovered = false
+    @ObservedObject private var prefs = PreferencesManager.shared
+
+    private var zoomScale: CGFloat { CGFloat(prefs.preferences.windowZoomScale) }
 
     var body: some View {
         Button(action: {
@@ -249,11 +265,11 @@ struct SettingsActionRow: View {
             .padding(.horizontal, 10)
             .padding(.vertical, 8)
             .background(
-                RoundedRectangle(cornerRadius: 6)
+                RoundedRectangle(cornerRadius: 6 * zoomScale)
                     .fill(isHovered ? Color.white.opacity(0.06) : Color.white.opacity(0.02))
                     .overlay(
-                        RoundedRectangle(cornerRadius: 6)
-                            .stroke(Color.white.opacity(isHovered ? 0.1 : 0.04), lineWidth: 1)
+                        RoundedRectangle(cornerRadius: 6 * zoomScale)
+                            .stroke(Color.white.opacity(isHovered ? 0.1 : 0.04), lineWidth: 1 * zoomScale)
                     
                         .allowsHitTesting(false))
             )
@@ -271,7 +287,11 @@ struct SectionResetButton: View {
     @State private var isHovered = false
 
     var body: some View {
-        Button(action: action) {
+        Button(action: {
+            SoundEffectManager.shared.playButtonClick()
+            HapticManager.shared.generic()
+            action()
+        }) {
             HStack(spacing: 4) {
                 Image(systemName: "arrow.counterclockwise")
                     .font(.system(size: 8, weight: .bold))

@@ -12,27 +12,27 @@ struct FanControlSettingsView: View {
         ScrollView {
             VStack(spacing: 10) {
                 StatefulCollapsibleSection(
-                    title: "General",
+                    title: "section.fan_general",
                     icon: "fanblades",
                     defaultExpanded: true,
                     accentColor: .cyan
                 ) {
                     SettingsToggleRow(
                         icon: "power",
-                        title: "Enable Fan Control",
-                        subtitle: "Monitor temperatures and control fans",
+                        title: "setting.enable_fan_control",
+                        subtitle: "setting.enable_fan_control.subtitle",
                         isOn: $prefs.preferences.enableFanControl
                     )
 
                     SettingsToggleRow(
                         icon: "menubar.rectangle",
-                        title: "Show in Menu Bar",
-                        subtitle: "Display highest temp and fan RPM in status bar",
+                        title: "setting.show_fan_in_menu_bar",
+                        subtitle: "setting.show_fan_in_menu_bar.subtitle",
                         isOn: $prefs.preferences.fanControlShowInMenuBar
                     )
 
                     SettingsSliderRow(
-                        label: "Update Interval",
+                        label: "setting.update_interval",
                         value: $prefs.preferences.fanControlUpdateInterval,
                         range: 0.5...10,
                         step: 0.5,
@@ -41,13 +41,13 @@ struct FanControlSettingsView: View {
                 }
 
                 StatefulCollapsibleSection(
-                    title: "Temperature",
+                    title: "section.temperature",
                     icon: "thermometer",
                     defaultExpanded: true,
                     accentColor: .orange
                 ) {
                     SettingsPickerRow(
-                        label: "Temperature Unit",
+                        label: "setting.temperature_unit",
                         selection: $prefs.preferences.fanControlTemperatureUnit,
                         options: TemperatureUnit.allCases,
                         displayName: \.displayName,
@@ -56,21 +56,21 @@ struct FanControlSettingsView: View {
                 }
 
                 StatefulCollapsibleSection(
-                    title: "Notifications",
+                    title: "section.notifications",
                     icon: "bell.badge",
                     defaultExpanded: false,
                     accentColor: .red
                 ) {
                     SettingsToggleRow(
                         icon: "bell.badge.fill",
-                        title: "Enable Temperature Alerts",
-                        subtitle: "Show system notification when overheating",
+                        title: "setting.enable_temp_alerts",
+                        subtitle: "setting.enable_temp_alerts.subtitle",
                         isOn: $prefs.preferences.fanControlEnableNotifications
                     )
 
                     if prefs.preferences.fanControlEnableNotifications {
                         SettingsSliderRow(
-                            label: "Alert Threshold",
+                            label: "setting.alert_threshold",
                             value: $prefs.preferences.fanControlNotificationThreshold,
                             range: 60...105,
                             step: 1,
@@ -79,20 +79,20 @@ struct FanControlSettingsView: View {
                         .transition(.opacity)
                     }
 
-                    Text("Limit: notifications will not be duplicated for at least 10 minutes.")
+                    Text("setting.temp_alert_limit")
                         .font(.system(size: 10))
                         .foregroundStyle(.white.opacity(0.3))
                         .padding(.horizontal, 10)
                 }
 
                 StatefulCollapsibleSection(
-                    title: "Fan Mode",
+                    title: "section.fan_mode",
                     icon: "fanblades.fill",
                     defaultExpanded: true,
                     accentColor: .green
                 ) {
                     SettingsPickerRow(
-                        label: "Default Mode",
+                        label: "setting.default_fan_mode",
                         selection: $prefs.preferences.fanControlMode,
                         options: FanControlMode.allCases,
                         displayName: \.displayName,
@@ -101,13 +101,13 @@ struct FanControlSettingsView: View {
                 }
 
                 StatefulCollapsibleSection(
-                    title: "Auto Max Rules",
+                    title: "section.auto_max_rules",
                     icon: "bolt.fill",
                     defaultExpanded: false,
                     accentColor: .yellow
                 ) {
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("Define rules to automatically adjust fan speeds based on temperature.")
+                        Text("section.auto_max_rules.caption")
                             .font(.system(size: 11))
                             .foregroundStyle(.white.opacity(0.5))
                             .padding(.horizontal, 10)
@@ -117,7 +117,7 @@ struct FanControlSettingsView: View {
                         }
 
                         SettingsSliderRow(
-                            label: "Gradual Time",
+                            label: "setting.gradual_time",
                             value: $prefs.preferences.fanControlGradualTime,
                             range: 1...120,
                             step: 1,
@@ -127,12 +127,13 @@ struct FanControlSettingsView: View {
 
                         Button(action: {
                             SoundEffectManager.shared.playButtonClick()
+                            HapticManager.shared.generic()
                             prefs.preferences.fanControlAutoMaxRules.append(AutoMaxRule())
                         }) {
                             HStack(spacing: 4) {
                                 Image(systemName: "plus.circle.fill")
                                     .font(.system(size: 10))
-                                Text("Add Rule")
+                                Text("button.add_rule")
                                     .font(.system(size: 11, weight: .medium, design: .monospaced))
                             }
                             .foregroundStyle(.cyan)
@@ -151,12 +152,12 @@ struct FanControlSettingsView: View {
                 ) {
                     SettingsToggleRow(
                         icon: "moon.fill",
-                        title: "Disable on Sleep",
-                        subtitle: "Return fans to System control when Mac sleeps",
+                        title: "setting.disable_on_sleep",
+                        subtitle: "setting.disable_on_sleep.subtitle",
                         isOn: $prefs.preferences.fanControlDisableOnSleep
                     )
 
-                    Text("Note: On newer Macs, fans will always turn off soon after sleep.")
+                    Text("setting.disable_on_sleep.note")
                         .font(.system(size: 10))
                         .foregroundStyle(.white.opacity(0.3))
                         .padding(.horizontal, 10)
@@ -169,15 +170,15 @@ struct FanControlSettingsView: View {
                     accentColor: .gray
                 ) {
                     VStack(alignment: .leading, spacing: 6) {
-                        Text("Fan Control reads hardware sensors via the System Management Controller (SMC).")
+                        Text("fan.about.smc")
                             .font(.system(size: 11))
                             .foregroundStyle(.white.opacity(0.6))
 
-                        Text("On some Macs, especially Apple Silicon models, direct fan control may require elevated privileges and may not be available.")
+                        Text("fan.about.elevated")
                             .font(.system(size: 11))
                             .foregroundStyle(.white.opacity(0.4))
 
-                        Text("If sensors show N/A, SMC access may be restricted on your device.")
+                        Text("fan.about.restricted")
                             .font(.system(size: 11))
                             .foregroundStyle(.white.opacity(0.4))
                     }
@@ -198,6 +199,8 @@ struct AutoMaxRuleRow: View {
     @ObservedObject private var prefs = PreferencesManager.shared
     @State private var availableSensors: [TemperatureSensor] = []
 
+    private var zoomScale: CGFloat { CGFloat(prefs.preferences.windowZoomScale) }
+
     var body: some View {
         HStack(spacing: 8) {
             Toggle("", isOn: $rule.isEnabled)
@@ -216,7 +219,7 @@ struct AutoMaxRuleRow: View {
                     .labelsHidden()
                     .frame(width: 100)
 
-                    Text("to")
+                    Text("rule.to")
                         .font(.system(size: 10))
                         .foregroundStyle(.white.opacity(0.4))
 
@@ -242,14 +245,14 @@ struct AutoMaxRuleRow: View {
                             .textFieldStyle(.roundedBorder)
                             .frame(width: 55)
 
-                        Text("RPM")
+                        Text("unit.rpm")
                             .font(.system(size: 10))
                             .foregroundStyle(.white.opacity(0.4))
                     }
                 }
 
                 HStack(spacing: 4) {
-                    Text("when")
+                    Text("rule.when")
                         .font(.system(size: 10))
                         .foregroundStyle(.white.opacity(0.4))
 
@@ -265,14 +268,14 @@ struct AutoMaxRuleRow: View {
                     // Specific sensor override (only shown when sensors are available)
                     if !availableSensors.isEmpty {
                         Picker("", selection: $rule.specificSensorKey) {
-                            Text("Any matched").tag(nil as String?)
+                            Text("rule.any_matched").tag(nil as String?)
                             ForEach(availableSensors) { sensor in
                                 Text(sensor.name).tag(sensor.key as String?)
                             }
                             // Preserve a rule that references a sensor not currently discovered.
                             if let key = rule.specificSensorKey,
                                !availableSensors.contains(where: { $0.key == key }) {
-                                Text("\(key) (missing)").tag(key as String?)
+                                Text(String(format: String(localized: "rule.sensor_missing"), key)).tag(key as String?)
                             }
                         }
                         .pickerStyle(.menu)
@@ -299,7 +302,7 @@ struct AutoMaxRuleRow: View {
                 }
 
                 HStack(spacing: 4) {
-                    Text("hyst")
+                    Text("rule.hysteresis")
                         .font(.system(size: 9))
                         .foregroundStyle(.white.opacity(0.3))
 
@@ -311,7 +314,7 @@ struct AutoMaxRuleRow: View {
                         .font(.system(size: 9))
                         .foregroundStyle(.white.opacity(0.3))
 
-                    Text("hold")
+                    Text("rule.hold")
                         .font(.system(size: 9))
                         .foregroundStyle(.white.opacity(0.3))
                         .padding(.leading, 6)
@@ -330,6 +333,7 @@ struct AutoMaxRuleRow: View {
 
             Button(action: {
                 SoundEffectManager.shared.playButtonClick()
+                HapticManager.shared.generic()
                 if let index = prefs.preferences.fanControlAutoMaxRules.firstIndex(where: { $0.id == rule.id }) {
                     prefs.preferences.fanControlAutoMaxRules.remove(at: index)
                 }
@@ -344,8 +348,8 @@ struct AutoMaxRuleRow: View {
         .padding(.vertical, 6)
         .background(Color.white.opacity(0.02))
         .overlay(
-            RoundedRectangle(cornerRadius: 6)
-                .stroke(Color.white.opacity(0.06), lineWidth: 1)
+            RoundedRectangle(cornerRadius: 6 * zoomScale)
+                .stroke(Color.white.opacity(0.06), lineWidth: 1 * zoomScale)
                 .allowsHitTesting(false)
         )
         .onAppear {

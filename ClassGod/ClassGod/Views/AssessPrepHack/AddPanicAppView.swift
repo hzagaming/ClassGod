@@ -47,14 +47,14 @@ struct AddPanicAppView: View {
                 
                 Spacer()
                 
-                Text(isEditing ? "Edit Panic App" : "Add Panic App")
+                Text(isEditing ? String(localized: "panic.edit_title") : String(localized: "panic.add_title"))
                     .font(.system(size: 16 * zoomScale, weight: .bold, design: .monospaced))
                     .foregroundStyle(.white)
                 
                 Spacer()
                 
                 Button(action: save) {
-                    Text(isEditing ? "Save" : "Add")
+                    Text(isEditing ? String(localized: "button.save") : String(localized: "button.add"))
                         .font(.system(size: 12 * zoomScale, weight: .bold, design: .monospaced))
                         .foregroundStyle(isValid ? .white : .white.opacity(0.3))
                         .padding(.horizontal, 12 * zoomScale)
@@ -110,6 +110,8 @@ struct AddPanicAppView: View {
                         VStack(spacing: 4 * zoomScale) {
                             ForEach(AssessPrepBypassTechnique.allCases) { technique in
                                 Button(action: {
+                                    SoundEffectManager.shared.playButtonClick()
+                                    HapticManager.shared.generic()
                                     selectedTechnique = technique
                                 }) {
                                     HStack(spacing: 8 * zoomScale) {
@@ -157,6 +159,8 @@ struct AddPanicAppView: View {
                         LazyVGrid(columns: [GridItem(.adaptive(minimum: 36 * zoomScale))], spacing: 8 * zoomScale) {
                             ForEach(icons, id: \.self) { icon in
                                 Button(action: {
+                                    SoundEffectManager.shared.playButtonClick()
+                                    HapticManager.shared.generic()
                                     selectedIcon = icon
                                 }) {
                                     Image(systemName: icon)
@@ -180,7 +184,7 @@ struct AddPanicAppView: View {
                     
                     // Enabled toggle
                     HStack {
-                        Text("Enabled")
+                        Text(String(localized: "panic.enabled"))
                             .font(.system(size: 11 * zoomScale, design: .monospaced))
                             .foregroundStyle(.white.opacity(0.6))
                         
@@ -206,7 +210,7 @@ struct AddPanicAppView: View {
         }
     }
     
-    private func formField<Content: View>(title: String, @ViewBuilder content: () -> Content) -> some View {
+    private func formField<Content: View>(title: LocalizedStringKey, @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 6 * zoomScale) {
             Text(title)
                 .font(.system(size: 10 * zoomScale, weight: .medium, design: .monospaced))

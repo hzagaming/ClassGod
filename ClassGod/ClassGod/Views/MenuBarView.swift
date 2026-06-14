@@ -157,6 +157,9 @@ struct MenuBarView: View {
                 .allowsHitTesting(false)
         )
         .onAppear {
+            // Register sleep/wake observers only here. The actual fan-summary
+            // polling timer is owned by fanSummaryCard so it starts and stops
+            // together with the card's lifecycle.
             let willSleep = NSWorkspace.shared.notificationCenter.addObserver(
                 forName: NSWorkspace.willSleepNotification,
                 object: nil,
@@ -320,8 +323,8 @@ struct FeatureButton: View {
     @ObservedObject private var prefs = PreferencesManager.shared
     private var zoomScale: CGFloat { CGFloat(prefs.preferences.windowZoomScale) }
     let icon: String
-    let title: String
-    let description: String
+    let title: LocalizedStringKey
+    let description: LocalizedStringKey
     let action: () -> Void
     var isEnabled: Bool = true
     

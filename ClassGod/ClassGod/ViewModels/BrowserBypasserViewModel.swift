@@ -58,14 +58,14 @@ final class BrowserBypasserViewModel: ObservableObject {
     func addRule(_ rule: BypassRule) {
         rules.append(rule)
         saveRules()
-        showToast(message: "Added bypass rule: \(rule.name)")
+        showToast(message: String(format: String(localized: "bypass.toast.added"), rule.name))
     }
     
     func updateRule(_ rule: BypassRule) {
         if let index = rules.firstIndex(where: { $0.id == rule.id }) {
             rules[index] = rule
             saveRules()
-            showToast(message: "Updated rule: \(rule.name)")
+            showToast(message: String(format: String(localized: "bypass.toast.updated"), rule.name))
         }
     }
     
@@ -162,7 +162,7 @@ final class BrowserBypasserViewModel: ObservableObject {
         
         activeBypasses.append(type)
         isBypassActive = true
-        showToast(message: "\(type.displayName) activated")
+        showToast(message: String(format: String(localized: "bypass.toast.activated"), type.displayName))
     }
     
     func stopAllBypasses() {
@@ -170,7 +170,7 @@ final class BrowserBypasserViewModel: ObservableObject {
         bypassTimer = nil
         activeBypasses.removeAll()
         isBypassActive = false
-        showToast(message: "All bypasses stopped")
+        showToast(message: String(localized: "bypass.toast.all_stopped"))
     }
     
     private func exitFullscreen() {
@@ -224,7 +224,7 @@ final class BrowserBypasserViewModel: ObservableObject {
     private func allowShortcuts() {
         // System-level shortcut interception is handled by the app's existing hotkey system
         // This mainly ensures our hotkeys continue to work
-        showToast(message: "System shortcuts enabled")
+        showToast(message: String(localized: "bypass.toast.shortcuts_enabled"))
     }
     
     private func injectBypassScript() {

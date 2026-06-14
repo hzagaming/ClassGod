@@ -119,14 +119,14 @@ final class AssessPrepHackViewModel: ObservableObject {
     func addApp(_ app: PanicApp) {
         panicApps.append(app)
         saveApps()
-        showToast(message: "Added panic app: \(app.name)")
+        showToast(message: String(format: String(localized: "panic.toast.added"), app.name))
     }
     
     func updateApp(_ app: PanicApp) {
         if let index = panicApps.firstIndex(where: { $0.id == app.id }) {
             panicApps[index] = app
             saveApps()
-            showToast(message: "Updated app: \(app.name)")
+            showToast(message: String(format: String(localized: "panic.toast.updated"), app.name))
         }
     }
     
@@ -271,7 +271,7 @@ final class AssessPrepHackViewModel: ObservableObject {
                 activeTechniques.append(app.bypassTechnique)
             }
             isBypassActive = true
-            showToast(message: "\(app.bypassTechnique.displayName) activated")
+            showToast(message: String(format: String(localized: "panic.toast.technique_activated"), app.bypassTechnique.displayName))
         } else {
             SoundEffectManager.shared.play(.shortcutConflict)
             showError(message: "\(app.bypassTechnique.displayName) failed")
@@ -288,7 +288,7 @@ final class AssessPrepHackViewModel: ObservableObject {
         
         activeTechniques.removeAll()
         isBypassActive = false
-        showToast(message: "All bypasses stopped")
+        showToast(message: String(localized: "panic.toast.all_stopped"))
     }
     
     private func checkAccessibilityPermission(prompt: Bool = false) -> Bool {

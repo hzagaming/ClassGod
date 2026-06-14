@@ -21,7 +21,7 @@ struct AdvancedSettingsView: View {
         ScrollView {
             VStack(spacing: 10) {
                 StatefulCollapsibleSection(
-                    title: String(localized: "section.data_management"),
+                    title: "section.data_management",
                     icon: "externaldrive",
                     defaultExpanded: true,
                     accentColor: .blue
@@ -29,27 +29,27 @@ struct AdvancedSettingsView: View {
                     HStack(spacing: 10) {
                         SettingsActionRow(
                             icon: "square.and.arrow.up",
-                            title: String(localized: "button.export"),
+                            title: "button.export",
                             action: { exportPreferences() }
                         )
 
                         SettingsActionRow(
                             icon: "square.and.arrow.down",
-                            title: String(localized: "button.import"),
+                            title: "button.import",
                             action: { importPreferences() }
                         )
                     }
 
                     SettingsActionRow(
                         icon: "arrow.counterclockwise",
-                        title: String(localized: "button.reset_all"),
+                        title: "button.reset_all",
                         action: { showResetConfirmation = true },
                         isDestructive: true
                     )
 
                     SettingsActionRow(
                         icon: "trash",
-                        title: String(localized: "button.clear_all"),
+                        title: "button.clear_all",
                         action: {
                             if prefs.preferences.confirmBeforeClear {
                                 showClearConfirmation = true
@@ -62,13 +62,13 @@ struct AdvancedSettingsView: View {
                 }
 
                 StatefulCollapsibleSection(
-                    title: "Chaos Animation",
+                    title: "section.chaos_animation",
                     icon: "flame",
                     defaultExpanded: false,
                     accentColor: .orange
                 ) {
                     SettingsSliderRow(
-                        label: "Particle Count",
+                        label: "setting.particle_count",
                         value: .init(
                             get: { Double(prefs.preferences.chaosParticleCount) },
                             set: { prefs.preferences.chaosParticleCount = Int($0) }
@@ -78,22 +78,22 @@ struct AdvancedSettingsView: View {
                         suffix: ""
                     )
 
-                    Text("Number of glitch windows spawned during the boot chaos animation. Higher values are more dramatic but use more memory.")
+                    Text("setting.particle_count.caption")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .padding(.horizontal, 10)
                 }
 
                 StatefulCollapsibleSection(
-                    title: "Debug",
+                    title: "section.debug",
                     icon: "ant",
                     defaultExpanded: false,
                     accentColor: .purple
                 ) {
                     SettingsActionRow(
                         icon: "terminal",
-                        title: String(localized: "button.open_console"),
-                        subtitle: "Open Console.app to view logs",
+                        title: "button.open_console",
+                        subtitle: "button.open_console.subtitle",
                         action: {
                             NSWorkspace.shared.openApplication(
                                 at: URL(fileURLWithPath: "/System/Applications/Utilities/Console.app"),
@@ -104,7 +104,7 @@ struct AdvancedSettingsView: View {
                 }
 
                 StatefulCollapsibleSection(
-                    title: String(localized: "section.about"),
+                    title: "section.about",
                     icon: "info.circle",
                     defaultExpanded: false,
                     accentColor: .cyan
@@ -121,26 +121,26 @@ struct AdvancedSettingsView: View {
                     HStack {
                         Text(String(localized: "about.developer"))
                         Spacer()
-                        Text("Hanazar Software")
+                        Text(String(localized: "about.developer_name"))
                             .foregroundStyle(.secondary)
                     }
                     .padding(.horizontal, 10)
                     .padding(.vertical, 4)
 
                     safeLinkButton(
-                        label: String(localized: "about.release_notes"),
+                        label: "about.release_notes",
                         icon: "doc.text",
                         urlString: "https://github.com/hzagaming/ClassGod/releases"
                     )
 
                     safeLinkButton(
-                        label: String(localized: "about.github_repo"),
+                        label: "about.github_repo",
                         icon: "link",
                         urlString: "https://github.com/hzagaming/ClassGod"
                     )
 
                     safeLinkButton(
-                        label: String(localized: "about.github_profile"),
+                        label: "about.github_profile",
                         icon: "person.circle",
                         urlString: "https://github.com/hzagaming"
                     )
@@ -208,13 +208,37 @@ struct AdvancedSettingsView: View {
         NotificationCenter.default.post(name: .classGodTabsDidChange, object: nil)
     }
 
-    private func safeLinkButton(label: String, icon: String, urlString: String) -> some View {
+    private func safeLinkButton(label: LocalizedStringKey, icon: String, urlString: String) -> some View {
         Button(action: {
+            SoundEffectManager.shared.playButtonClick()
+            HapticManager.shared.generic()
             guard let url = URL(string: urlString) else { return }
             NSWorkspace.shared.open(url)
         }) {
-            Label(label, systemImage: icon)
+            HStack(spacing: 8) {
+                Image(systemName: icon)
+                    .font(.system(size: 11))
+                    .foregroundStyle(.cyan.opacity(0.8))
+                Text(label)
+                    .font(.system(size: 11, weight: .medium, design: .monospaced))
+                    .foregroundStyle(.white.opacity(0.7))
+                Spacer()
+                Image(systemName: "arrow.up.right")
+                    .font(.system(size: 9))
+                    .foregroundStyle(.white.opacity(0.3))
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 8)
+            .background(
+                RoundedRectangle(cornerRadius: 6)
+                    .fill(Color.white.opacity(0.02))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 6)
+                            .stroke(Color.white.opacity(0.06), lineWidth: 1)
+                    )
+            )
         }
+        .buttonStyle(.plain)
     }
 }
 

@@ -6,13 +6,16 @@
 import SwiftUI
 
 struct CollapsibleSection<Content: View>: View {
-    let title: String
+    let title: LocalizedStringKey
     let icon: String
     @Binding var isExpanded: Bool
     let accentColor: Color
     @ViewBuilder let content: Content
 
     @State private var hover = false
+    @ObservedObject private var prefs = PreferencesManager.shared
+
+    private var zoomScale: CGFloat { CGFloat(prefs.preferences.windowZoomScale) }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -43,11 +46,11 @@ struct CollapsibleSection<Content: View>: View {
                 .padding(.horizontal, 12)
                 .padding(.vertical, 10)
                 .background(
-                    RoundedRectangle(cornerRadius: 8)
+                    RoundedRectangle(cornerRadius: 8 * zoomScale)
                         .fill(Color(white: 0.06))
                         .overlay(
-                            RoundedRectangle(cornerRadius: 8)
-                                .stroke(Color.white.opacity(hover ? 0.1 : 0.04), lineWidth: 1)
+                            RoundedRectangle(cornerRadius: 8 * zoomScale)
+                                .stroke(Color.white.opacity(hover ? 0.1 : 0.04), lineWidth: 1 * zoomScale)
                         
                             .allowsHitTesting(false))
                 )
@@ -63,11 +66,11 @@ struct CollapsibleSection<Content: View>: View {
                 .padding(.horizontal, 12)
                 .padding(.vertical, 12)
                 .background(
-                    RoundedRectangle(cornerRadius: 8)
+                    RoundedRectangle(cornerRadius: 8 * zoomScale)
                         .fill(Color(white: 0.03))
                         .overlay(
-                            RoundedRectangle(cornerRadius: 8)
-                                .stroke(Color.white.opacity(0.04), lineWidth: 1)
+                            RoundedRectangle(cornerRadius: 8 * zoomScale)
+                                .stroke(Color.white.opacity(0.04), lineWidth: 1 * zoomScale)
                         
                             .allowsHitTesting(false))
                 )
@@ -83,7 +86,7 @@ struct CollapsibleSection<Content: View>: View {
 // MARK: - Static (non-Binding) variant with internal state
 
 struct StatefulCollapsibleSection<Content: View>: View {
-    let title: String
+    let title: LocalizedStringKey
     let icon: String
     let defaultExpanded: Bool
     let accentColor: Color
@@ -92,7 +95,7 @@ struct StatefulCollapsibleSection<Content: View>: View {
     @State private var isExpanded: Bool
 
     init(
-        title: String,
+        title: LocalizedStringKey,
         icon: String,
         defaultExpanded: Bool = false,
         accentColor: Color = .white,

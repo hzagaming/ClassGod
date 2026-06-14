@@ -18,11 +18,11 @@ enum AssessPrepBypassTechnique: String, Codable, CaseIterable, Identifiable {
     
     var displayName: String {
         switch self {
-        case .panicSwitch: return "Panic Switch"
-        case .focusGuard: return "Focus Guard"
-        case .screenSpoof: return "Screen Spoof"
-        case .keyboardUnlock: return "Keyboard Unlock"
-        case .processSuspend: return "Process Suspend"
+        case .panicSwitch: return String(localized: "panic.technique.panic_switch")
+        case .focusGuard: return String(localized: "panic.technique.focus_guard")
+        case .screenSpoof: return String(localized: "panic.technique.screen_spoof")
+        case .keyboardUnlock: return String(localized: "panic.technique.keyboard_unlock")
+        case .processSuspend: return String(localized: "panic.technique.process_suspend")
         }
     }
     
@@ -38,11 +38,11 @@ enum AssessPrepBypassTechnique: String, Codable, CaseIterable, Identifiable {
     
     var description: String {
         switch self {
-        case .panicSwitch: return "Instantly switch to a safe app"
-        case .focusGuard: return "Prevent AssessPrep from stealing focus"
-        case .screenSpoof: return "Spoof screen visibility state"
-        case .keyboardUnlock: return "Restore system keyboard shortcuts"
-        case .processSuspend: return "Temporarily freeze AssessPrep process"
+        case .panicSwitch: return String(localized: "panic.technique.panic_switch.description")
+        case .focusGuard: return String(localized: "panic.technique.focus_guard.description")
+        case .screenSpoof: return String(localized: "panic.technique.screen_spoof.description")
+        case .keyboardUnlock: return String(localized: "panic.technique.keyboard_unlock.description")
+        case .processSuspend: return String(localized: "panic.technique.process_suspend.description")
         }
     }
 }

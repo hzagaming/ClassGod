@@ -36,11 +36,11 @@ enum FanControlMode: String, Codable, CaseIterable, Identifiable {
     var id: String { rawValue }
     var displayName: String {
         switch self {
-        case .system: return "System"
-        case .max: return "Max"
-        case .autoMax: return "Auto Max"
-        case .manual: return "Manual"
-        case .custom: return "Custom"
+        case .system: return String(localized: "fan.mode.system")
+        case .max: return String(localized: "fan.mode.max")
+        case .autoMax: return String(localized: "fan.mode.auto_max")
+        case .manual: return String(localized: "fan.mode.manual")
+        case .custom: return String(localized: "fan.mode.custom")
         }
     }
 }
@@ -84,10 +84,9 @@ final class SMCService {
     private(set) var isConnected = false
     private(set) var isUsingIORegistryFallback = false
     private(set) var fanAccessReason: String?
-    private var cachedIORegistryTemps: [TemperatureSensor] = []
-    private var hasScannedIORegistry = false
     private var cachedIORegistryFans: [FanInfo] = []
     private var hasScannedIORegistryFans = false
+    private var previousCPUInfo: host_cpu_load_info? = nil
 
     // Short-term cache shared across readTemperatures/readFans consumers
     private var lastReadAll: (fans: [FanInfo], sensors: [TemperatureSensor])?
@@ -140,6 +139,9 @@ final class SMCService {
     
     /// Re-scan hardware connections and clear caches. Call this when user wants to re-detect sensors/fans.
     func rescan() {
+        readAllLock.lock()
+        defer { readAllLock.unlock() }
+
         // Close existing connection
         if conn != 0 {
             IOServiceClose(conn)
@@ -148,8 +150,6 @@ final class SMCService {
         isConnected = false
         isUsingIORegistryFallback = false
         fanAccessReason = nil
-        cachedIORegistryTemps.removeAll()
-        hasScannedIORegistry = false
         cachedIORegistryFans.removeAll()
         hasScannedIORegistryFans = false
         
@@ -168,13 +168,13 @@ final class SMCService {
             return
         }
         if isConnected {
-            if isAppleSiliconMac() {
+            if isAppleSilicon {
                 fanAccessReason = "Apple Silicon Macs restrict fan access to system processes. Run ClassGodHelper as root to enable fan control."
             } else {
                 fanAccessReason = "SMC connected but no fan data returned. This Mac may not have controllable fans."
             }
         } else {
-            if isAppleSiliconMac() {
+            if isAppleSilicon {
                 fanAccessReason = "Apple Silicon Macs restrict fan access to system processes. Run ClassGodHelper as root to enable fan control."
             } else {
                 fanAccessReason = "Could not connect to SMC. Ensure ClassGod is not sandboxed and try rescanning."
@@ -182,16 +182,14 @@ final class SMCService {
         }
     }
     
-    var isAppleSilicon: Bool { isAppleSiliconMac() }
-
-    private func isAppleSiliconMac() -> Bool {
+    private(set) lazy var isAppleSilicon: Bool = {
         var sysinfo = utsname()
         uname(&sysinfo)
         let machine = withUnsafePointer(to: &sysinfo.machine) {
             $0.withMemoryRebound(to: CChar.self, capacity: 256) { String(cString: $0) }
         }
         return machine == "arm64" || machine.hasPrefix("Apple")
-    }
+    }()
 
     deinit {
         if conn != 0 {
@@ -221,6 +219,7 @@ final class SMCService {
         var result = IOServiceOpen(service, mach_task_self_, 0, &conn)
         if result != KERN_SUCCESS {
             // Some Apple Silicon systems may use a different connection type
+            conn = 0
             result = IOServiceOpen(service, mach_task_self_, 1, &conn)
         }
         
@@ -481,24 +480,38 @@ final class SMCService {
             fans = cachedIORegistryFans
         }
 
-        // 3. IORegistry temperature fallback (scan cached after first call)
-        if !hasScannedIORegistry {
-            cachedIORegistryTemps = readIORegistryTemperatures()
-            hasScannedIORegistry = true
-        }
+        // 3. IORegistry temperature fallback (re-read each call so live values stay current)
+        let ioRegistryTemps = readIORegistryTemperatures()
         let currentThermalBase = thermalStateBaseTemp()
-        let refreshedIORegistry = cachedIORegistryTemps.map { sensor -> TemperatureSensor in
+        let refreshedIORegistry = ioRegistryTemps.map { sensor -> TemperatureSensor in
             guard sensor.isEstimated else { return sensor }
             var updated = sensor
             updated.value = currentThermalBase
             return updated
         }
         sensors.append(contentsOf: refreshedIORegistry)
-        if !cachedIORegistryTemps.isEmpty {
-            isUsingIORegistryFallback = true
+        // Only report that we are in IORegistry fallback if no real hardware sensors
+        // have been produced by helper/direct SMC/HID so far.
+        let hasRealSensors = sensors.contains { !$0.isEstimated }
+        isUsingIORegistryFallback = !hasRealSensors && !ioRegistryTemps.isEmpty
+
+        // 4. HID temperature fallback (Apple Silicon PMU/NVMe sensors).
+        // Uses the private IOHIDEventSystemClient API to read live temperature events
+        // from AppleARMPMUTempSensor and AppleEmbeddedNVMeTemperatureSensor services.
+        let hidTemps = hidReader.readTemperatures()
+        if !hidTemps.isEmpty {
+            // Drop only estimated PMU/NVMe placeholders for which HID now provides a
+            // real value. This keeps placeholders visible if HID failed to discover
+            // a specific sensor (e.g. NAND on some configs).
+            sensors.removeAll { sensor in
+                guard sensor.isEstimated else { return false }
+                guard sensor.name.hasPrefix("PMU") || sensor.name.hasPrefix("NAND") || sensor.name.contains("gas gauge") else { return false }
+                return hidTemps.contains { sensor.name.hasPrefix($0.name) || sensor.key == $0.key }
+            }
+            sensors.append(contentsOf: hidTemps)
         }
 
-        // 4. ProcessInfo thermal state (official API, always available)
+        // 5. ProcessInfo thermal state (official API, always available)
         let thermalStateTemps = readThermalStateTemperatures()
         if !thermalStateTemps.isEmpty {
             sensors.append(contentsOf: thermalStateTemps)
@@ -518,12 +531,12 @@ final class SMCService {
         // for those categories, so the UI isn't left with only coarse thermal-state sensors.
         let hasRealCPU = sensors.contains { !$0.isEstimated && ($0.name.contains("CPU") || $0.name.contains("Cluster")) }
         let hasRealGPU = sensors.contains { !$0.isEstimated && $0.name.contains("GPU") }
-        let thermal = SystemMonitor.shared.thermal
-        if !hasRealCPU, thermal.cpuTemp > 0 {
-            sensors.append(TemperatureSensor(name: "CPU Estimated", key: "CPU", value: thermal.cpuTemp, maxValue: 100, isEstimated: true))
+        let est = estimatedTemperatures()
+        if !hasRealCPU, est.cpu > 0 {
+            sensors.append(TemperatureSensor(name: "CPU Estimated", key: "CPU", value: est.cpu, maxValue: 100, isEstimated: true))
         }
-        if !hasRealGPU, thermal.gpuTemp > 0 {
-            sensors.append(TemperatureSensor(name: "GPU Estimated", key: "GPU", value: thermal.gpuTemp, maxValue: 100, isEstimated: true))
+        if !hasRealGPU, est.gpu > 0 {
+            sensors.append(TemperatureSensor(name: "GPU Estimated", key: "GPU", value: est.gpu, maxValue: 100, isEstimated: true))
         }
 
         if !fans.isEmpty {
@@ -637,6 +650,8 @@ final class SMCService {
         if SMCHelperClient.shared.isHelperAvailable {
             return SMCHelperClient.shared.setFanMode(modeString, fanIndex: fanIndex)
         }
+        readAllLock.lock()
+        defer { readAllLock.unlock() }
         switch mode {
         case .system:
             return writeSMCBytes(key: "F\(fanIndex)Tg", bytes: [0, 0])
@@ -653,6 +668,8 @@ final class SMCService {
         if SMCHelperClient.shared.isHelperAvailable {
             return SMCHelperClient.shared.setFanRPM(rpm, fanIndex: fanIndex)
         }
+        readAllLock.lock()
+        defer { readAllLock.unlock() }
         let bytes = encodeFPE2(value: rpm)
         return writeSMCBytes(key: "F\(fanIndex)Tg", bytes: bytes)
     }
@@ -939,6 +956,149 @@ final class SMCService {
         }
 
         return results
+    }
+
+    /// Reads current CPU load directly so SMCService can provide a dynamic
+    /// temperature estimate even when SystemMonitor hasn't been started.
+    private func currentCPULoad() -> Double {
+        var cpuInfo = host_cpu_load_info()
+        var count = mach_msg_type_number_t(MemoryLayout<host_cpu_load_info>.size / MemoryLayout<integer_t>.size)
+        let result = withUnsafeMutablePointer(to: &cpuInfo) {
+            $0.withMemoryRebound(to: integer_t.self, capacity: Int(count)) {
+                host_statistics(mach_host_self(), HOST_CPU_LOAD_INFO, $0, &count)
+            }
+        }
+        guard result == KERN_SUCCESS else { return 0 }
+        
+        let total = Double(cpuInfo.cpu_ticks.0 + cpuInfo.cpu_ticks.1 + cpuInfo.cpu_ticks.2 + cpuInfo.cpu_ticks.3)
+        guard let prev = previousCPUInfo else {
+            previousCPUInfo = cpuInfo
+            return 0
+        }
+        let prevTotal = Double(prev.cpu_ticks.0 + prev.cpu_ticks.1 + prev.cpu_ticks.2 + prev.cpu_ticks.3)
+        let totalDelta = total - prevTotal
+        guard totalDelta > 0 else { return 0 }
+        let idleDelta = Double(cpuInfo.cpu_ticks.2 - prev.cpu_ticks.2)
+        previousCPUInfo = cpuInfo
+        return max(0, min(100, 100.0 * (1.0 - idleDelta / totalDelta)))
+    }
+
+    /// Returns CPU/GPU temperature estimates based on thermal state and current CPU load.
+    private func estimatedTemperatures() -> (cpu: Double, gpu: Double) {
+        let baseTemp = thermalStateBaseTemp()
+        let load = currentCPULoad()
+        let cpuTemp = baseTemp + (load * 0.25)
+        return (cpu: cpuTemp, gpu: cpuTemp + 3.0)
+    }
+
+    private lazy var hidReader = HIDTemperatureReader()
+
+    /// Reads live temperature events from Apple Silicon PMU/NVMe HID services.
+    /// Uses the private IOHIDEventSystemClient API (same path as iStat/TG Pro).
+    private final class HIDTemperatureReader {
+        typealias ClientRef = OpaquePointer
+        typealias ServiceRef = OpaquePointer
+        typealias EventRef = OpaquePointer
+
+        typealias CreateFunc = @convention(c) (CFAllocator?) -> ClientRef?
+        typealias SetMatchingFunc = @convention(c) (ClientRef?, CFDictionary?) -> Void
+        typealias CopyServicesFunc = @convention(c) (ClientRef?) -> Unmanaged<CFArray>?
+        typealias CopyPropertyFunc = @convention(c) (ServiceRef?, CFString?) -> CFTypeRef?
+        typealias CopyEventFunc = @convention(c) (ServiceRef?, Int64, Int32, Int64) -> EventRef?
+        typealias GetFloatValueFunc = @convention(c) (EventRef?, UInt32) -> Double
+
+        private let handle: UnsafeMutableRawPointer?
+        private let client: ClientRef?
+        private let copyServices: CopyServicesFunc?
+        private let copyProperty: CopyPropertyFunc?
+        private let copyEvent: CopyEventFunc?
+        private let getFloatValue: GetFloatValueFunc?
+
+        init() {
+            guard let handle = dlopen("/System/Library/Frameworks/IOKit.framework/IOKit", RTLD_NOW) else {
+                self.handle = nil
+                self.client = nil
+                self.copyServices = nil
+                self.copyProperty = nil
+                self.copyEvent = nil
+                self.getFloatValue = nil
+                return
+            }
+            self.handle = handle
+
+            guard let createSym = dlsym(handle, "IOHIDEventSystemClientCreate"),
+                  let setMatchingSym = dlsym(handle, "IOHIDEventSystemClientSetMatching"),
+                  let copyServicesSym = dlsym(handle, "IOHIDEventSystemClientCopyServices"),
+                  let copyPropertySym = dlsym(handle, "IOHIDServiceClientCopyProperty"),
+                  let copyEventSym = dlsym(handle, "IOHIDServiceClientCopyEvent"),
+                  let getFloatValueSym = dlsym(handle, "IOHIDEventGetFloatValue") else {
+                self.client = nil
+                self.copyServices = nil
+                self.copyProperty = nil
+                self.copyEvent = nil
+                self.getFloatValue = nil
+                return
+            }
+
+            let create = unsafeBitCast(createSym, to: CreateFunc.self)
+            let setMatching = unsafeBitCast(setMatchingSym, to: SetMatchingFunc.self)
+            self.copyServices = unsafeBitCast(copyServicesSym, to: CopyServicesFunc.self)
+            self.copyProperty = unsafeBitCast(copyPropertySym, to: CopyPropertyFunc.self)
+            self.copyEvent = unsafeBitCast(copyEventSym, to: CopyEventFunc.self)
+            self.getFloatValue = unsafeBitCast(getFloatValueSym, to: GetFloatValueFunc.self)
+
+            guard let client = create(kCFAllocatorDefault) else {
+                self.client = nil
+                return
+            }
+            let matching = ["PrimaryUsage": 5, "PrimaryUsagePage": 65280] as CFDictionary
+            setMatching(client, matching)
+            self.client = client
+        }
+
+        deinit {
+            // Swift manages Core Foundation objects via ARC; we only need to close the dlopen handle.
+            if let handle = handle {
+                dlclose(handle)
+            }
+        }
+
+        func readTemperatures() -> [TemperatureSensor] {
+            guard let client = client,
+                  let copyServices = copyServices,
+                  let copyProperty = copyProperty,
+                  let copyEvent = copyEvent,
+                  let getFloatValue = getFloatValue else { return [] }
+
+            guard let servicesCF = copyServices(client) else { return [] }
+            let cfarray = servicesCF.takeRetainedValue()
+            let count = CFArrayGetCount(cfarray)
+
+            // Group by product name and average multiple instances.
+            var grouped: [String: [Double]] = [:]
+            for i in 0..<count {
+                let raw = CFArrayGetValueAtIndex(cfarray, i)
+                let service = unsafeBitCast(raw, to: ServiceRef.self)
+
+                guard let productRef = copyProperty(service, "Product" as CFString),
+                      CFGetTypeID(productRef) == CFStringGetTypeID() else { continue }
+                let product = (productRef as! CFString) as String
+
+                let event = copyEvent(service, 15, 0, 0)
+                guard let event = event else { continue }
+                let value = getFloatValue(event, 0xF0000)
+                // tdev* often returns invalid placeholders around -9200 °C.
+                guard value > -50 && value < 150 else { continue }
+
+                grouped[product, default: []].append(value)
+            }
+
+            return grouped.sorted { $0.key < $1.key }.map { (product, values) in
+                let avg = values.reduce(0, +) / Double(values.count)
+                let key = "HID_" + product.replacingOccurrences(of: " ", with: "_")
+                return TemperatureSensor(name: product, key: key, value: avg, maxValue: 100, isEstimated: false)
+            }
+        }
     }
 
     private func thermalStateBaseTemp() -> Double {

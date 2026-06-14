@@ -7,6 +7,3766 @@
     "--" : {
 
     },
+    "About" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "关于"
+          }
+        }
+      }
+    },
+    "Bypass Technique" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "绕过技术"
+          }
+        }
+      }
+    },
+    "CPU %" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "CPU %"
+          }
+        }
+      }
+    },
+    "Clock & Weather" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "时钟与天气"
+          }
+        }
+      }
+    },
+    "Compressed" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "压缩"
+          }
+        }
+      }
+    },
+    "Crypto Prices" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "加密货币价格"
+          }
+        }
+      }
+    },
+    "Custom wallpapers & live video" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "自定义壁纸与动态视频"
+          }
+        }
+      }
+    },
+    "Cycles" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "循环"
+          }
+        }
+      }
+    },
+    "Data" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "数据"
+          }
+        }
+      }
+    },
+    "Disk Free" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "磁盘可用"
+          }
+        }
+      }
+    },
+    "Disk Used" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "磁盘已用"
+          }
+        }
+      }
+    },
+    "Download" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "下载"
+          }
+        }
+      }
+    },
+    "Free" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "可用"
+          }
+        }
+      }
+    },
+    "Fun" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "娱乐"
+          }
+        }
+      }
+    },
+    "Grant & manage system permissions" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "授予并管理系统权限"
+          }
+        }
+      }
+    },
+    "Hacker Quote" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "黑客名言"
+          }
+        }
+      }
+    },
+    "HackerDesktop" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "黑客桌面"
+          }
+        }
+      }
+    },
+    "Idle" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "空闲"
+          }
+        }
+      }
+    },
+    "Monitor temps & control fan speeds" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "监控温度并控制风扇转速"
+          }
+        }
+      }
+    },
+    "PID" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "PID"
+          }
+        }
+      }
+    },
+    "Physical" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "物理"
+          }
+        }
+      }
+    },
+    "Power" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "功耗"
+          }
+        }
+      }
+    },
+    "Process Name" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "进程名"
+          }
+        }
+      }
+    },
+    "Quick Note" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "快速便签"
+          }
+        }
+      }
+    },
+    "Quick app switcher with shortcuts" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "带快捷键的快速应用切换器"
+          }
+        }
+      }
+    },
+    "RAM" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "内存"
+          }
+        }
+      }
+    },
+    "Read/s" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "读取/s"
+          }
+        }
+      }
+    },
+    "Recv/s" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "接收/s"
+          }
+        }
+      }
+    },
+    "Search & solve all Swift/macOS errors" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "搜索并解决所有 Swift/macOS 错误"
+          }
+        }
+      }
+    },
+    "Sent/s" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "发送/s"
+          }
+        }
+      }
+    },
+    "State" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "状态"
+          }
+        }
+      }
+    },
+    "System Monitor" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "系统监控"
+          }
+        }
+      }
+    },
+    "System monitor widgets dashboard" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "系统监控小组件仪表盘"
+          }
+        }
+      }
+    },
+    "Terminal Logs" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "终端日志"
+          }
+        }
+      }
+    },
+    "Threads" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "线程"
+          }
+        }
+      }
+    },
+    "Todo List" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "待办清单"
+          }
+        }
+      }
+    },
+    "Tools" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "工具"
+          }
+        }
+      }
+    },
+    "Total" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "总计"
+          }
+        }
+      }
+    },
+    "Total In" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "总入站"
+          }
+        }
+      }
+    },
+    "Total Out" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "总出站"
+          }
+        }
+      }
+    },
+    "Total Read" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "总读取"
+          }
+        }
+      }
+    },
+    "Total Write" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "总写入"
+          }
+        }
+      }
+    },
+    "Upload" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "上传"
+          }
+        }
+      }
+    },
+    "Used" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "已用"
+          }
+        }
+      }
+    },
+    "User" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "用户"
+          }
+        }
+      }
+    },
+    "Widgets" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "小组件"
+          }
+        }
+      }
+    },
+    "Wired" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "联动"
+          }
+        }
+      }
+    },
+    "Write/s" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "写入/s"
+          }
+        }
+      }
+    },
+    "about.developer_name" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Hanazar Software"
+          }
+        }
+      }
+    },
+    "activity.energy_note" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "能耗值以 proc_pid_rusage 返回的纳焦耳为单位显示"
+          }
+        }
+      }
+    },
+    "activity.force_quit" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "强制退出"
+          }
+        }
+      }
+    },
+    "activity.memory_pressure" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "内存压力"
+          }
+        }
+      }
+    },
+    "activity.network_note" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "通过 nettop 实时获取的每进程网络数据"
+          }
+        }
+      }
+    },
+    "activity.no_battery" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "未检测到电池"
+          }
+        }
+      }
+    },
+    "activity.permission_banner" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "进程可见性受限。要查看所有系统进程，请在 系统设置 > 隐私与安全性 中为 ClassGod 授予完全磁盘访问权限。"
+          }
+        }
+      }
+    },
+    "activity.process_count" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld 个进程"
+          }
+        }
+      }
+    },
+    "activity.quit" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "退出"
+          }
+        }
+      }
+    },
+    "activity.search" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "搜索"
+          }
+        }
+      }
+    },
+    "activity.system_process" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "系统进程 – 无法终止"
+          }
+        }
+      }
+    },
+    "alert.error" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "错误"
+          }
+        }
+      }
+    },
+    "app_icon.calculator" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "计算器"
+          }
+        }
+      }
+    },
+    "app_icon.classgod" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "ClassGod"
+          }
+        }
+      }
+    },
+    "app_icon.finder" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Finder"
+          }
+        }
+      }
+    },
+    "app_icon.hidden" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "隐藏（无图标）"
+          }
+        }
+      }
+    },
+    "app_icon.notes" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "备忘录"
+          }
+        }
+      }
+    },
+    "app_icon.safari" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Safari"
+          }
+        }
+      }
+    },
+    "app_icon.terminal" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "终端"
+          }
+        }
+      }
+    },
+    "automation.subtitle" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "打开 系统设置 > 隐私与安全性 > 自动化"
+          }
+        }
+      }
+    },
+    "battery.charging" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "充电中"
+          }
+        }
+      }
+    },
+    "battery.discharging" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "放电中"
+          }
+        }
+      }
+    },
+    "browser.chrome" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Google Chrome"
+          }
+        }
+      }
+    },
+    "browser.edge" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Microsoft Edge"
+          }
+        }
+      }
+    },
+    "browser.safari" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Safari"
+          }
+        }
+      }
+    },
+    "button.add" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "添加"
+          }
+        }
+      }
+    },
+    "button.add_rule" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "添加规则"
+          }
+        }
+      }
+    },
+    "button.back" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "返回"
+          }
+        }
+      }
+    },
+    "button.done" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "完成"
+          }
+        }
+      }
+    },
+    "button.edit" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "编辑"
+          }
+        }
+      }
+    },
+    "button.open_console.subtitle" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "打开 Console.app 查看日志"
+          }
+        }
+      }
+    },
+    "button.save" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "保存"
+          }
+        }
+      }
+    },
+    "button.skip" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "跳过"
+          }
+        }
+      }
+    },
+    "bypass.active_banner" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "绕过激活: %@"
+          }
+        }
+      }
+    },
+    "bypass.add_title" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "添加绕过规则"
+          }
+        }
+      }
+    },
+    "bypass.context.run" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "运行 %@"
+          }
+        }
+      }
+    },
+    "bypass.delete_message" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "移除绕过规则 \"%@\"?"
+          }
+        }
+      }
+    },
+    "bypass.delete_title" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "删除规则?"
+          }
+        }
+      }
+    },
+    "bypass.detected" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "检测到: %@"
+          }
+        }
+      }
+    },
+    "bypass.edit_title" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "编辑绕过规则"
+          }
+        }
+      }
+    },
+    "bypass.empty_subtitle" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "添加规则以绕过浏览器锁定"
+          }
+        }
+      }
+    },
+    "bypass.empty_title" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "无绕过规则"
+          }
+        }
+      }
+    },
+    "bypass.enable_immediately" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "立即启用"
+          }
+        }
+      }
+    },
+    "bypass.footer_hint" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "选择规则以激活绕过"
+          }
+        }
+      }
+    },
+    "bypass.method" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "绕过方式"
+          }
+        }
+      }
+    },
+    "bypass.name_placeholder" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "例如 Canvas 测验绕过"
+          }
+        }
+      }
+    },
+    "bypass.scan" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "扫描"
+          }
+        }
+      }
+    },
+    "bypass.stop" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "停止"
+          }
+        }
+      }
+    },
+    "bypass.toast.activated" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%@ 已激活"
+          }
+        }
+      }
+    },
+    "bypass.toast.added" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "已添加绕过规则: %@"
+          }
+        }
+      }
+    },
+    "bypass.toast.all_stopped" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "已停止所有绕过"
+          }
+        }
+      }
+    },
+    "bypass.toast.detected" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "检测到: %@"
+          }
+        }
+      }
+    },
+    "bypass.toast.not_detected" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "未检测到锁定浏览器"
+          }
+        }
+      }
+    },
+    "bypass.toast.shortcuts_enabled" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "系统快捷键已启用"
+          }
+        }
+      }
+    },
+    "bypass.toast.updated" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "已更新规则: %@"
+          }
+        }
+      }
+    },
+    "bypass.type.allow_shortcuts" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "允许快捷键"
+          }
+        }
+      }
+    },
+    "bypass.type.allow_shortcuts.description" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "允许 ⌘+Tab 和其他系统快捷键"
+          }
+        }
+      }
+    },
+    "bypass.type.exit_fullscreen" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "退出全屏"
+          }
+        }
+      }
+    },
+    "bypass.type.exit_fullscreen.description" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "强制浏览器退出全屏/ kiosk 模式"
+          }
+        }
+      }
+    },
+    "bypass.type.inject_script" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "注入绕过脚本"
+          }
+        }
+      }
+    },
+    "bypass.type.inject_script.description" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "注入 JavaScript 以禁用锁定检测"
+          }
+        }
+      }
+    },
+    "bypass.type.prevent_focus_loss" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "防止失焦"
+          }
+        }
+      }
+    },
+    "bypass.type.prevent_focus_loss.description" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "阻止页面检测到窗口失焦/聚焦丢失"
+          }
+        }
+      }
+    },
+    "bypass.url_placeholder" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "例如 canvas.*quiz"
+          }
+        }
+      }
+    },
+    "destintab.all" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "全选"
+          }
+        }
+      }
+    },
+    "destintab.bulk_select" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "批量选择"
+          }
+        }
+      }
+    },
+    "destintab.delete" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "删除"
+          }
+        }
+      }
+    },
+    "destintab.edit" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "编辑"
+          }
+        }
+      }
+    },
+    "destintab.exit_bulk_mode" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "退出批量模式"
+          }
+        }
+      }
+    },
+    "destintab.no_matches" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "无匹配"
+          }
+        }
+      }
+    },
+    "destintab.none" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "无"
+          }
+        }
+      }
+    },
+    "destintab.open" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "打开"
+          }
+        }
+      }
+    },
+    "destintab.pin" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "置顶"
+          }
+        }
+      }
+    },
+    "destintab.pinned" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "已置顶"
+          }
+        }
+      }
+    },
+    "destintab.search_placeholder" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "搜索标签..."
+          }
+        }
+      }
+    },
+    "destintab.sort_help" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "排序: %@"
+          }
+        }
+      }
+    },
+    "destintab.try_different_search" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "尝试其他搜索词"
+          }
+        }
+      }
+    },
+    "destintab.unpin" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "取消置顶"
+          }
+        }
+      }
+    },
+    "error.additional_info" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "附加信息"
+          }
+        }
+      }
+    },
+    "error.also_known_as" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "又名:"
+          }
+        }
+      }
+    },
+    "error.app_not_found" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "未找到应用: %@"
+          }
+        }
+      }
+    },
+    "error.apple_documentation" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Apple 文档:"
+          }
+        }
+      }
+    },
+    "error.code_examples" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "代码示例"
+          }
+        }
+      }
+    },
+    "error.copied" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "已复制!"
+          }
+        }
+      }
+    },
+    "error.copy_fix" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "复制修复"
+          }
+        }
+      }
+    },
+    "error.description" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "描述"
+          }
+        }
+      }
+    },
+    "error.fixed_code" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "修复后代码"
+          }
+        }
+      }
+    },
+    "error.no_related" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "没有记录相关错误。"
+          }
+        }
+      }
+    },
+    "error.open_in_encyclopedia" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "在百科中打开"
+          }
+        }
+      }
+    },
+    "error.problematic_code" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "问题代码"
+          }
+        }
+      }
+    },
+    "error.related_errors" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "相关错误"
+          }
+        }
+      }
+    },
+    "error.root_cause" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "根本原因"
+          }
+        }
+      }
+    },
+    "error.solutions_count" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "解决方案 (%1$lld)"
+          }
+        }
+      }
+    },
+    "fan.about.elevated" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "在某些 Mac 上，尤其是 Apple Silicon 机型，直接风扇控制可能需要提升权限，甚至可能不可用。"
+          }
+        }
+      }
+    },
+    "fan.about.restricted" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "如果传感器显示 N/A，则可能是你的设备限制了 SMC 访问。"
+          }
+        }
+      }
+    },
+    "fan.about.smc" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "风扇控制通过系统管理控制器 (SMC) 读取硬件传感器。"
+          }
+        }
+      }
+    },
+    "fan.active_rules" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "激活: %@"
+          }
+        }
+      }
+    },
+    "fan.boost" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "提升"
+          }
+        }
+      }
+    },
+    "fan.boosting" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "提升中"
+          }
+        }
+      }
+    },
+    "fan.copy_command" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "复制命令"
+          }
+        }
+      }
+    },
+    "fan.diagnostic.fans" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "风扇"
+          }
+        }
+      }
+    },
+    "fan.diagnostic.fans_ok" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "风扇工作正常"
+          }
+        }
+      }
+    },
+    "fan.diagnostic.helper" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "特权 Helper"
+          }
+        }
+      }
+    },
+    "fan.diagnostic.no_fan_data" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "无风扇数据"
+          }
+        }
+      }
+    },
+    "fan.diagnostic.no_sensor_data" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "无传感器数据"
+          }
+        }
+      }
+    },
+    "fan.diagnostic.sensors" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "温度传感器"
+          }
+        }
+      }
+    },
+    "fan.diagnostic.sensors_active" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld 个传感器活跃"
+          }
+        }
+      }
+    },
+    "fan.diagnostics" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "诊断"
+          }
+        }
+      }
+    },
+    "fan.header.summary" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "平均: %1$@ ・ CPU: %2$@ ・ 风扇: %3$lld RPM"
+          }
+        }
+      }
+    },
+    "fan.highest_temp" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "最高: %@"
+          }
+        }
+      }
+    },
+    "fan.mode.auto_max" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "自动最大"
+          }
+        }
+      }
+    },
+    "fan.mode.custom" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "自定义"
+          }
+        }
+      }
+    },
+    "fan.mode.manual" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "手动"
+          }
+        }
+      }
+    },
+    "fan.mode.max" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "最大"
+          }
+        }
+      }
+    },
+    "fan.mode.system" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "系统"
+          }
+        }
+      }
+    },
+    "fan.sensor_fan_count" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld 个传感器 · %2$lld 个风扇"
+          }
+        }
+      }
+    },
+    "fan.start_helper" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "启动 Helper"
+          }
+        }
+      }
+    },
+    "fan.temperatures" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "温度"
+          }
+        }
+      }
+    },
+    "fan.toast.boost_active" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "提升已激活 %lld 秒"
+          }
+        }
+      }
+    },
+    "fan.toast.boost_ended" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "提升结束 — 已恢复 %@"
+          }
+        }
+      }
+    },
+    "fan.toast.helper_copied" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Helper 命令已复制"
+          }
+        }
+      }
+    },
+    "fan.toast.helper_launched" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Helper 已启动，3 秒后重新扫描..."
+          }
+        }
+      }
+    },
+    "fan.toast.max_temps_reset" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "最高温度已重置"
+          }
+        }
+      }
+    },
+    "fan.toast.mode_set" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "风扇模式已设为 %@"
+          }
+        }
+      }
+    },
+    "fan.toast.rescan_complete" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "硬件重新扫描完成"
+          }
+        }
+      }
+    },
+    "fan.toast.sensor_data_copied" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "传感器数据已复制到剪贴板"
+          }
+        }
+      }
+    },
+    "field.name" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "名称"
+          }
+        }
+      }
+    },
+    "field.tag" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "标签（可选，例如 work, dev）"
+          }
+        }
+      }
+    },
+    "field.url_pattern" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "URL 模式"
+          }
+        }
+      }
+    },
+    "helper.status.optional" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "在 Intel Mac 上，特权 Helper 为可选。"
+          }
+        }
+      }
+    },
+    "helper.status.restricted" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Apple Silicon 限制 SMC 访问。以 root 运行 Helper 以解锁风扇控制。"
+          }
+        }
+      }
+    },
+    "helper.status.running" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "ClassGodHelper 正以 root 运行。完整 SMC 读/写已启用。"
+          }
+        }
+      }
+    },
+    "panic.add_title" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "添加应急应用"
+          }
+        }
+      }
+    },
+    "panic.delete_message" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "移除应急应用 \"%@\"？"
+          }
+        }
+      }
+    },
+    "panic.delete_title" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "删除应用?"
+          }
+        }
+      }
+    },
+    "panic.edit_title" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "编辑应急应用"
+          }
+        }
+      }
+    },
+    "panic.enabled" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "已启用"
+          }
+        }
+      }
+    },
+    "panic.technique.focus_guard" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "焦点守护"
+          }
+        }
+      }
+    },
+    "panic.technique.focus_guard.description" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "防止 AssessPrep 窃取焦点"
+          }
+        }
+      }
+    },
+    "panic.technique.keyboard_unlock" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "键盘解锁"
+          }
+        }
+      }
+    },
+    "panic.technique.keyboard_unlock.description" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "恢复系统键盘快捷键"
+          }
+        }
+      }
+    },
+    "panic.technique.panic_switch" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "应急切换"
+          }
+        }
+      }
+    },
+    "panic.technique.panic_switch.description" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "立即切换到安全应用"
+          }
+        }
+      }
+    },
+    "panic.technique.process_suspend" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "进程暂停"
+          }
+        }
+      }
+    },
+    "panic.technique.process_suspend.description" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "临时冻结 AssessPrep 进程"
+          }
+        }
+      }
+    },
+    "panic.technique.screen_spoof" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "屏幕欺骗"
+          }
+        }
+      }
+    },
+    "panic.technique.screen_spoof.description" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "伪造屏幕可见状态"
+          }
+        }
+      }
+    },
+    "panic.toast.added" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "已添加应急应用: %@"
+          }
+        }
+      }
+    },
+    "panic.toast.all_stopped" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "已停止所有绕过"
+          }
+        }
+      }
+    },
+    "panic.toast.technique_activated" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%@ 已激活"
+          }
+        }
+      }
+    },
+    "panic.toast.updated" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "已更新应用: %@"
+          }
+        }
+      }
+    },
+    "permission.all_set" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "全部完成"
+          }
+        }
+      }
+    },
+    "permission.all_set_message" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "所有请求的权限已查看。你可以随时在权限中心更改这些设置。"
+          }
+        }
+      }
+    },
+    "permission.allow" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "允许"
+          }
+        }
+      }
+    },
+    "permission.allow_and_continue" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "允许并继续"
+          }
+        }
+      }
+    },
+    "permission.category.all" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "全部"
+          }
+        }
+      }
+    },
+    "permission.category.browser" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "浏览器自动化"
+          }
+        }
+      }
+    },
+    "permission.category.core" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "核心访问"
+          }
+        }
+      }
+    },
+    "permission.category.hardware" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "硬件传感器"
+          }
+        }
+      }
+    },
+    "permission.category.optional" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "可选"
+          }
+        }
+      }
+    },
+    "permission.category.system" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "系统信息"
+          }
+        }
+      }
+    },
+    "permission.checking" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "正在检查权限…"
+          }
+        }
+      }
+    },
+    "permission.feature.activityMonitor" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "活动监视器"
+          }
+        }
+      }
+    },
+    "permission.feature.alerts" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "提醒"
+          }
+        }
+      }
+    },
+    "permission.feature.assessPrepHack" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "AssessPrepHack"
+          }
+        }
+      }
+    },
+    "permission.feature.audioFeatures" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "音频功能"
+          }
+        }
+      }
+    },
+    "permission.feature.browserControl" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Safari/Chrome/Edge 控制"
+          }
+        }
+      }
+    },
+    "permission.feature.browserDetection" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "浏览器检测"
+          }
+        }
+      }
+    },
+    "permission.feature.browserTabSwitching" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "浏览器标签切换"
+          }
+        }
+      }
+    },
+    "permission.feature.focusGuard" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "焦点保护"
+          }
+        }
+      }
+    },
+    "permission.feature.futureIntegrations" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "未来集成"
+          }
+        }
+      }
+    },
+    "permission.feature.geoFeatures" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "地理功能"
+          }
+        }
+      }
+    },
+    "permission.feature.peripherals" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "外设"
+          }
+        }
+      }
+    },
+    "permission.feature.processActions" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "进程操作"
+          }
+        }
+      }
+    },
+    "permission.feature.scheduleIntegrations" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "课程表集成"
+          }
+        }
+      }
+    },
+    "permission.feature.statusUpdates" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "状态更新"
+          }
+        }
+      }
+    },
+    "permission.feature.systemEvents" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "系统事件"
+          }
+        }
+      }
+    },
+    "permission.feature.systemFiles" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "系统文件"
+          }
+        }
+      }
+    },
+    "permission.feature.taskIntegrations" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "任务集成"
+          }
+        }
+      }
+    },
+    "permission.feature.videoFeatures" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "视频功能"
+          }
+        }
+      }
+    },
+    "permission.feature.windowCapture" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "窗口捕获"
+          }
+        }
+      }
+    },
+    "permission.granted" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "已授权"
+          }
+        }
+      }
+    },
+    "permission.last_checked" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "上次检查: %@"
+          }
+        }
+      }
+    },
+    "permission.manual_settings" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "macOS 将打开系统设置，以便你手动开启此权限。"
+          }
+        }
+      }
+    },
+    "permission.never" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "从未"
+          }
+        }
+      }
+    },
+    "permission.open_settings" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "打开设置"
+          }
+        }
+      }
+    },
+    "permission.open_settings_and_continue" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "打开设置并继续"
+          }
+        }
+      }
+    },
+    "permission.recheck" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "重新检查"
+          }
+        }
+      }
+    },
+    "permission.refresh_status" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "刷新状态"
+          }
+        }
+      }
+    },
+    "permission.required" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "需授权"
+          }
+        }
+      }
+    },
+    "permission.required_for" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "用于:"
+          }
+        }
+      }
+    },
+    "permission.step_format" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "第 %1$lld 步，共 %2$lld 步"
+          }
+        }
+      }
+    },
+    "permission.type.accessibility.description" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "需要查询最前端应用、模拟按键事件以及与窗口交互，用于 AssessPrepHack 和浏览器切换。"
+          }
+        }
+      }
+    },
+    "permission.type.accessibility.title" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "辅助功能"
+          }
+        }
+      }
+    },
+    "permission.type.appleEvents.description" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "需要通过 AppleScript 控制 Safari、Chrome、Edge 等浏览器。"
+          }
+        }
+      }
+    },
+    "permission.type.appleEvents.title" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "自动化 (AppleEvents)"
+          }
+        }
+      }
+    },
+    "permission.type.bluetooth.description" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "可选。可能用于未来的外设检测功能。"
+          }
+        }
+      }
+    },
+    "permission.type.bluetooth.title" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "蓝牙"
+          }
+        }
+      }
+    },
+    "permission.type.calendar.description" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "可选。可能用于未来的课程表集成。"
+          }
+        }
+      }
+    },
+    "permission.type.calendar.title" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "日历"
+          }
+        }
+      }
+    },
+    "permission.type.camera.description" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "用于未来更新中可能启用的视频相关功能。"
+          }
+        }
+      }
+    },
+    "permission.type.camera.title" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "摄像头"
+          }
+        }
+      }
+    },
+    "permission.type.contacts.description" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "可选。可能用于未来与通讯录集成的功能。"
+          }
+        }
+      }
+    },
+    "permission.type.contacts.title" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "通讯录"
+          }
+        }
+      }
+    },
+    "permission.type.fullDiskAccess.description" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "允许读取活动监视器的完整进程信息并访问受保护文件。"
+          }
+        }
+      }
+    },
+    "permission.type.fullDiskAccess.title" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "完全磁盘访问权限"
+          }
+        }
+      }
+    },
+    "permission.type.location.description" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "可选。可能用于未来基于地理位置的功能。"
+          }
+        }
+      }
+    },
+    "permission.type.location.title" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "定位服务"
+          }
+        }
+      }
+    },
+    "permission.type.microphone.description" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "用于声音检测或静音控制等音频相关功能。"
+          }
+        }
+      }
+    },
+    "permission.type.microphone.title" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "麦克风"
+          }
+        }
+      }
+    },
+    "permission.type.notifications.description" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "可选。用于发送状态提醒和权限提示。"
+          }
+        }
+      }
+    },
+    "permission.type.notifications.title" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "通知"
+          }
+        }
+      }
+    },
+    "permission.type.reminders.description" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "可选。可能用于未来的任务或提醒集成。"
+          }
+        }
+      }
+    },
+    "permission.type.reminders.title" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "提醒事项"
+          }
+        }
+      }
+    },
+    "permission.type.screenRecording.description" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "用于浏览器检测、窗口捕获和屏幕共享功能。"
+          }
+        }
+      }
+    },
+    "permission.type.screenRecording.title" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "屏幕录制"
+          }
+        }
+      }
+    },
+    "permission.used_by" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "用于:"
+          }
+        }
+      }
+    },
+    "rule.any_matched" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "任意匹配"
+          }
+        }
+      }
+    },
+    "rule.comparison.above" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "高于"
+          }
+        }
+      }
+    },
+    "rule.comparison.below" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "低于"
+          }
+        }
+      }
+    },
+    "rule.hold" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "保持"
+          }
+        }
+      }
+    },
+    "rule.hysteresis" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "滞后"
+          }
+        }
+      }
+    },
+    "rule.sensor.any_sensor" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "任意传感器"
+          }
+        }
+      }
+    },
+    "rule.sensor.average_cpu" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "平均 CPU"
+          }
+        }
+      }
+    },
+    "rule.sensor.highest_cpu" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "最高 CPU"
+          }
+        }
+      }
+    },
+    "rule.sensor.highest_gpu" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "最高 GPU"
+          }
+        }
+      }
+    },
+    "rule.sensor_missing" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%@ (缺失)"
+          }
+        }
+      }
+    },
+    "rule.target.all_fans" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "所有风扇"
+          }
+        }
+      }
+    },
+    "rule.target.left_side" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "左侧"
+          }
+        }
+      }
+    },
+    "rule.target.right_side" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "右侧"
+          }
+        }
+      }
+    },
+    "rule.to" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "到"
+          }
+        }
+      }
+    },
+    "rule.when" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "当"
+          }
+        }
+      }
+    },
+    "section.auto_max_rules" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "自动最大规则"
+          }
+        }
+      }
+    },
+    "section.auto_max_rules.caption" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "根据温度自动调整风扇转速。"
+          }
+        }
+      }
+    },
+    "section.chaos_animation" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "chaos 动画"
+          }
+        }
+      }
+    },
+    "section.fan_general" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "常规"
+          }
+        }
+      }
+    },
+    "section.fan_mode" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "风扇模式"
+          }
+        }
+      }
+    },
+    "section.notifications" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "通知"
+          }
+        }
+      }
+    },
+    "section.stealth" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "隐身"
+          }
+        }
+      }
+    },
+    "section.temperature" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "温度"
+          }
+        }
+      }
+    },
+    "setting.alert_threshold" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "警报阈值"
+          }
+        }
+      }
+    },
+    "setting.app_icon" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "应用图标"
+          }
+        }
+      }
+    },
+    "setting.app_icon.caption" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "将 ClassGod 伪装成 Dock 中的其他应用。图标更改会立即生效。"
+          }
+        }
+      }
+    },
+    "setting.auto_detect.subtitle" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "打开窗口时自动检测当前标签页"
+          }
+        }
+      }
+    },
+    "setting.close_on_click_outside" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "点击外部关闭"
+          }
+        }
+      }
+    },
+    "setting.close_on_click_outside.subtitle" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "点击窗口外部时隐藏窗口"
+          }
+        }
+      }
+    },
+    "setting.compact_mode.subtitle" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "减小间距与内边距"
+          }
+        }
+      }
+    },
+    "setting.confirm_clear.subtitle" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "清空所有数据前询问"
+          }
+        }
+      }
+    },
+    "setting.confirm_delete.subtitle" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "删除前询问"
+          }
+        }
+      }
+    },
+    "setting.default_fan_mode" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "默认模式"
+          }
+        }
+      }
+    },
+    "setting.disable_on_sleep" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "睡眠时禁用"
+          }
+        }
+      }
+    },
+    "setting.disable_on_sleep.note" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "注意：在较新的 Mac 上，睡眠后风扇很快就会关闭。"
+          }
+        }
+      }
+    },
+    "setting.disable_on_sleep.subtitle" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Mac 睡眠时将风扇控制权交还系统"
+          }
+        }
+      }
+    },
+    "setting.enable_fan_control" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "启用风扇控制"
+          }
+        }
+      }
+    },
+    "setting.enable_fan_control.subtitle" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "监控温度并控制风扇"
+          }
+        }
+      }
+    },
+    "setting.enable_temp_alerts" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "启用温度警报"
+          }
+        }
+      }
+    },
+    "setting.enable_temp_alerts.subtitle" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "过热时显示系统通知"
+          }
+        }
+      }
+    },
+    "setting.gradual_time" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "渐进时间"
+          }
+        }
+      }
+    },
+    "setting.haptic.subtitle" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "操作时提供触感反馈"
+          }
+        }
+      }
+    },
+    "setting.instant_mode.subtitle" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "禁用所有动画"
+          }
+        }
+      }
+    },
+    "setting.keep_on_top" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "置顶窗口"
+          }
+        }
+      }
+    },
+    "setting.keep_on_top.subtitle" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "窗口始终位于其他应用之上"
+          }
+        }
+      }
+    },
+    "setting.keyboard_nav.subtitle" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "使用方向键浏览列表"
+          }
+        }
+      }
+    },
+    "setting.maximize_behavior" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "最大化行为"
+          }
+        }
+      }
+    },
+    "setting.minimize_animation" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "最小化动画"
+          }
+        }
+      }
+    },
+    "setting.particle_count" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "粒子数量"
+          }
+        }
+      }
+    },
+    "setting.particle_count.caption" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "启动 chaos 动画时生成的故障窗口数量。数值越高越炫酷，但会占用更多内存。"
+          }
+        }
+      }
+    },
+    "setting.popover_animation" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "弹出动画"
+          }
+        }
+      }
+    },
+    "setting.popover_animation.subtitle" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "窗口打开和关闭时播放动画"
+          }
+        }
+      }
+    },
+    "setting.remember_position" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "记住窗口位置"
+          }
+        }
+      }
+    },
+    "setting.remember_position.subtitle" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "恢复上次窗口位置"
+          }
+        }
+      }
+    },
+    "setting.show_browser_icon.subtitle" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "在标签列表中显示浏览器图标"
+          }
+        }
+      }
+    },
+    "setting.show_fan_in_menu_bar" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "在菜单栏显示"
+          }
+        }
+      }
+    },
+    "setting.show_fan_in_menu_bar.subtitle" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "在状态栏显示最高温度和风扇转速"
+          }
+        }
+      }
+    },
+    "setting.show_on_launch.subtitle" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "应用启动时打开面板"
+          }
+        }
+      }
+    },
+    "setting.show_shortcut_badge.subtitle" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "在项目上显示快捷键"
+          }
+        }
+      }
+    },
+    "setting.show_tab_count.subtitle" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "在菜单栏图标上显示标签数量"
+          }
+        }
+      }
+    },
+    "setting.show_url_preview.subtitle" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "悬停时显示 URL 预览"
+          }
+        }
+      }
+    },
+    "setting.sound_effects.subtitle" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "交互时播放音效"
+          }
+        }
+      }
+    },
+    "setting.temp_alert_limit" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "限制：至少 10 分钟内不会重复发送通知。"
+          }
+        }
+      }
+    },
+    "setting.temperature_unit" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "温度单位"
+          }
+        }
+      }
+    },
+    "setting.toast.subtitle" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "显示操作反馈通知"
+          }
+        }
+      }
+    },
+    "setting.update_interval" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "更新间隔"
+          }
+        }
+      }
+    },
+    "setting.window_opacity" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "窗口不透明度"
+          }
+        }
+      }
+    },
+    "setting.window_zoom" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "窗口缩放"
+          }
+        }
+      }
+    },
+    "status.ioregistry" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "IORegistry 回退"
+          }
+        }
+      }
+    },
+    "status.no_hardware" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "无硬件访问"
+          }
+        }
+      }
+    },
+    "status.smc_connected" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "SMC 已连接"
+          }
+        }
+      }
+    },
+    "status.smc_limited" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "SMC 已连接 (受限)"
+          }
+        }
+      }
+    },
+    "superswitch.delete_message" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "从 SuperSwitch 中移除 %@？"
+          }
+        }
+      }
+    },
+    "superswitch.delete_title" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "删除目标?"
+          }
+        }
+      }
+    },
+    "toast.added" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "已添加 %@"
+          }
+        }
+      }
+    },
+    "toast.exported" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "已导出标签到 JSON"
+          }
+        }
+      }
+    },
+    "toast.import_failed" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "导入失败: %@"
+          }
+        }
+      }
+    },
+    "toast.switched_to" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "已切换到 %@"
+          }
+        }
+      }
+    },
+    "toggle.pin_to_top" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "置顶"
+          }
+        }
+      }
+    },
+    "unit.rpm" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "RPM"
+          }
+        }
+      }
+    },
+    "wallpaper.delete_title" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "删除壁纸?"
+          }
+        }
+      }
+    },
+    "wallpaper.item_count" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld 个项目"
+          }
+        }
+      }
+    },
+    "wallpaper.library" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "库"
+          }
+        }
+      }
+    },
+    "wallpaper.mode.playlist_loop" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "列表循环"
+          }
+        }
+      }
+    },
+    "wallpaper.mode.shuffle" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "随机"
+          }
+        }
+      }
+    },
+    "wallpaper.mode.single_loop" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "单曲循环"
+          }
+        }
+      }
+    },
+    "wallpaper.none" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "无壁纸"
+          }
+        }
+      }
+    },
+    "wallpaper.none_selected" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "未选择壁纸"
+          }
+        }
+      }
+    },
+    "wallpaper.status.idle" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "待机"
+          }
+        }
+      }
+    },
+    "wallpaper.status.live" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "运行中"
+          }
+        }
+      }
+    },
+    "wallpaper.status.off" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "关闭"
+          }
+        }
+      }
+    },
+    "wallpaper.status.paused" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "已暂停"
+          }
+        }
+      }
+    },
+    "widget.battery" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "电池"
+          }
+        }
+      }
+    },
+    "widget.clock" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "时钟"
+          }
+        }
+      }
+    },
+    "widget.cpu_gauge" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "CPU 仪表盘"
+          }
+        }
+      }
+    },
+    "widget.crypto_tab" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "加密货币标签"
+          }
+        }
+      }
+    },
+    "widget.disk_usage" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "磁盘使用"
+          }
+        }
+      }
+    },
+    "widget.fan_dashboard" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "风扇仪表盘"
+          }
+        }
+      }
+    },
+    "widget.fan_thermal" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "风扇 / 温度"
+          }
+        }
+      }
+    },
+    "widget.file" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "文件"
+          }
+        }
+      }
+    },
+    "widget.memory" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "内存"
+          }
+        }
+      }
+    },
+    "widget.network" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "网络"
+          }
+        }
+      }
+    },
+    "widget.note_tab" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "便签标签"
+          }
+        }
+      }
+    },
+    "widget.process_list" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "进程列表"
+          }
+        }
+      }
+    },
+    "widget.quote_tab" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "名言标签"
+          }
+        }
+      }
+    },
+    "widget.system_info" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "系统信息"
+          }
+        }
+      }
+    },
+    "widget.task_manager" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "任务管理器"
+          }
+        }
+      }
+    },
+    "widget.temperature" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "温度"
+          }
+        }
+      }
+    },
+    "widget.terminal_tab" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "终端标签"
+          }
+        }
+      }
+    },
+    "widget.todo_tab" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "待办标签"
+          }
+        }
+      }
+    },
+    "widget.uptime" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "运行时间"
+          }
+        }
+      }
+    },
     "— %@" : {
 
     },

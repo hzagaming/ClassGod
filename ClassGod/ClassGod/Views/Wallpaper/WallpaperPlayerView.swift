@@ -119,7 +119,7 @@ final class AnimatedImageNSView: NSView {
         guard !images.isEmpty else { return }
         
         let iv = NSImageView()
-        iv.imageScaling = .scaleProportionallyUpOrDown
+        iv.imageScaling = .scaleAxesIndependently
         iv.frame = bounds
         addSubview(iv)
         imageView = iv
@@ -356,7 +356,7 @@ struct WallpaperQuickAccessBar: View {
             .buttonStyle(.plain)
             .foregroundStyle(.white.opacity(0.5))
             
-            Text(engine.currentWallpaper?.name ?? "No wallpaper")
+            Text(engine.currentWallpaper?.name ?? String(localized: "wallpaper.none"))
                 .font(.system(size: 9 * zoomScale, design: .monospaced))
                 .foregroundStyle(.white.opacity(0.4))
                 .lineLimit(1)

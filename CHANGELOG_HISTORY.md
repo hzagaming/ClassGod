@@ -4,6 +4,51 @@
 
 ---
 
+## v1.5.2 — 2026-06-13
+
+### 新增
+- **全面 UI/UX/SFX/BGM 修复与本地化补全**：
+  - 为 MenuBar 功能按钮、设置页组件、权限中心、活动监视器、HackerDesktop、错误百科、风扇控制、应急应用、壁纸引擎等视图补充中文（zh-Hans）本地化键值
+  - `FeatureButton`、`Settings*Row`、`CollapsibleSection`、`TabButton`、`ConfigSection`、`StatBadge`、`sortableHeader`、`summaryItem`、`DiagnosticRow`、`footerButton`、`browserRow` 等复用组件改为接受 `LocalizedStringKey`，调用处字面量自动参与本地化
+  - 新增大量用户可见字符串键值：状态标签、诊断信息、按钮标题、提示文本、Alert 标题等
+
+### 优化
+- **交互反馈一致性提升**：
+  - `AddTabView` 的浏览器 Picker 和置顶 Toggle 增加音效与触感反馈
+  - `HackerDesktopView` 的 Tab 切换与待办完成操作增加音效与触感反馈
+  - `AddPanicAppView` 的绕过技术选择增加音效与触感反馈
+- **窗口圆角缩放一致性**：所有功能窗口（含设置、壁纸浏览器、HackerDesktop、错误中心）统一使用 `panelCornerRadius * windowZoomScale`
+- **壁纸填充模式**：GIF 动态壁纸改为 `scaleAxesIndependently` 以填满桌面
+- **错误中心主题色**：错误百科与详情页统一使用 `severity.colorHex` 主题色，移除硬编码 iOS 色调
+
+### 修复
+- **FanControl 状态与可用性**：
+  - 无风扇时 Boost 按钮禁用并降低透明度
+  - 模式按钮在无风扇时禁用
+  - 修复风扇状态文本在 helper/回退场景下的显示逻辑
+- **MenuBarView 风扇摘要定时器**：移除 `.onAppear` 与卡片 `onAppear` 中的重复注册，避免生命周期混乱
+- 版本号更新为 v1.5.2 (Build 27)
+
+---
+
+## v1.5.1 — 2026-06-12
+
+### 新增
+- **主应用直接读取 Apple Silicon HID 温度传感器**：通过 `IOHIDEventSystemClient` 私有 API 读取 `AppleARMPMUTempSensor` / `AppleEmbeddedNVMeTemperatureSensor` 的实时温度事件，即使不启动特权 helper，风扇面板也能显示 `PMU tdie*`、`PMU tcal`、`NAND CH0 temp`、`gas gauge battery` 等真实温度
+- **Helper `powermetrics` 后备数据源**：当传统 SMC keys 在 Apple Silicon M5 Pro 等设备上返回空数据时，特权 helper 会定期以 root 执行 `powermetrics --samplers smc`，解析 CPU/GPU/IO die 温度与风扇 RPM，并通过 socket 返回给主应用
+- **Helper 自清理旧实例**：新 helper 启动时会自动 `SIGTERM` 其他 `ClassGodHelper` 进程，避免旧 helper 占用 socket 导致新 helper `bind() failed: 48`
+
+### 优化
+- **`SMCService` 独立 CPU 负载估计**：不再依赖 `SystemMonitor.shared.thermal`，而是在 `SMCService` 内部直接通过 `host_statistics` 读取 CPU 负载，结合 `ProcessInfo.thermalState` 生成动态的 `CPU Estimated` / `GPU Estimated`，即使 `SystemMonitor` 未启动也能显示
+
+### 修复
+- **移除 Start Helper 脚本中多余的嵌套 `sudo`**：脚本本身已通过 `with administrator privileges` 以 root 运行，内部再调 `sudo` 可能失败；改为直接 `killall ClassGodHelper; ClassGodHelper`
+- 版本号更新为 v1.5.1 (Build 26)
+
+---
+
+
+
 ## v1.4.2 — 2026-06-09
 
 ### 优化

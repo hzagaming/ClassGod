@@ -47,11 +47,11 @@ struct BrowserBypasserView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(
-            RoundedRectangle(cornerRadius: prefs.preferences.panelCornerRadius)
+            RoundedRectangle(cornerRadius: prefs.preferences.panelCornerRadius * zoomScale)
                 .fill(Color.black)
         )
         .overlay(
-            RoundedRectangle(cornerRadius: prefs.preferences.panelCornerRadius)
+            RoundedRectangle(cornerRadius: prefs.preferences.panelCornerRadius * zoomScale)
                 .stroke(Color.white.opacity(0.15), lineWidth: 1 * zoomScale)
         
             .allowsHitTesting(false))
@@ -61,24 +61,24 @@ struct BrowserBypasserView: View {
         .sheet(item: $editingRule) { rule in
             AddBypassRuleView(viewModel: viewModel, rule: rule)
         }
-        .alert("Error", isPresented: $viewModel.showError) {
-            Button("OK", role: .cancel) {}
+        .alert(String(localized: "alert.error"), isPresented: $viewModel.showError) {
+            Button(String(localized: "button.ok"), role: .cancel) {}
         } message: {
-            Text(viewModel.errorMessage ?? "Unknown error")
+            Text(viewModel.errorMessage ?? String(localized: "error.unknown"))
         }
-        .alert("Delete rule?", isPresented: .init(
+        .alert(String(localized: "bypass.delete_title"), isPresented: .init(
             get: { ruleToDelete != nil },
             set: { if !$0 { ruleToDelete = nil } }
         )) {
-            Button("Cancel", role: .cancel) { ruleToDelete = nil }
-            Button("Delete", role: .destructive) {
+            Button(String(localized: "button.cancel"), role: .cancel) { ruleToDelete = nil }
+            Button(String(localized: "button.delete"), role: .destructive) {
                 if let rule = ruleToDelete {
                     viewModel.deleteRule(rule)
                 }
                 ruleToDelete = nil
             }
         } message: {
-            Text("Remove bypass rule \"\(ruleToDelete?.name ?? "")\"?")
+            Text(String(format: String(localized: "bypass.delete_message"), ruleToDelete?.name ?? ""))
         }
         .overlay(
             toastOverlay,
@@ -142,14 +142,15 @@ struct BrowserBypasserView: View {
                 .font(.system(size: 11 * zoomScale))
                 .foregroundStyle(.green)
             
-            Text("Bypass Active: \(viewModel.activeBypasses.map(\.displayName).joined(separator: ", "))")
+            Text(String(format: String(localized: "bypass.active_banner"), viewModel.activeBypasses.map(\.displayName).joined(separator: ", ")))
                 .font(.system(size: 11 * zoomScale, weight: .medium, design: .monospaced))
                 .foregroundStyle(.green.opacity(0.9))
             
             Spacer()
             
-            Button("Stop") {
+            Button("bypass.stop") {
                 SoundEffectManager.shared.playButtonClick()
+                HapticManager.shared.generic()
                 viewModel.stopAllBypasses()
             }
             .font(.system(size: 11 * zoomScale, weight: .semibold, design: .monospaced))
@@ -175,7 +176,7 @@ struct BrowserBypasserView: View {
                 .foregroundStyle(.yellow)
             
             VStack(alignment: .leading, spacing: 1) {
-                Text("Detected: \(viewModel.detectedBrowser)")
+                Text(String(format: String(localized: "bypass.detected"), viewModel.detectedBrowser))
                     .font(.system(size: 10 * zoomScale, weight: .medium, design: .monospaced))
                     .foregroundStyle(.yellow.opacity(0.9))
                 Text(viewModel.detectedURL)
@@ -243,11 +244,11 @@ struct BrowserBypasserView: View {
                     .symbolRenderingMode(.monochrome)
             }
             
-            Text("No bypass rules")
+            Text("bypass.empty_title")
                 .font(.system(size: 14 * zoomScale, weight: .medium, design: .monospaced))
                 .foregroundStyle(.white.opacity(0.7))
             
-            Text("Add rules to bypass browser lockdowns")
+            Text("bypass.empty_subtitle")
                 .font(.system(size: 11 * zoomScale, design: .monospaced))
                 .foregroundStyle(.white.opacity(0.5))
                 .multilineTextAlignment(.center)
@@ -261,7 +262,7 @@ struct BrowserBypasserView: View {
     private var footer: some View {
         VStack(spacing: 0 * zoomScale) {
             HStack(spacing: 14 * zoomScale) {
-                Text("Select a rule to activate bypass")
+                Text("bypass.footer_hint")
                     .font(.system(size: 9 * zoomScale, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.4))
                 
@@ -269,16 +270,17 @@ struct BrowserBypasserView: View {
                 
                 Button(action: {
                     SoundEffectManager.shared.playButtonClick()
+                    HapticManager.shared.generic()
                     if let detected = viewModel.detectLockedBrowser() {
-                        viewModel.showToast(message: "Detected: \(detected.browser)")
+                        viewModel.showToast(message: String(format: String(localized: "bypass.toast.detected"), detected.browser))
                     } else {
-                        viewModel.showToast(message: "No lockdown browser detected")
+                        viewModel.showToast(message: String(localized: "bypass.toast.not_detected"))
                     }
                 }) {
                     HStack(spacing: 4 * zoomScale) {
                         Image(systemName: "magnifyingglass")
                             .font(.system(size: 10 * zoomScale))
-                        Text("Scan")
+                        Text("bypass.scan")
                             .font(.system(size: 11 * zoomScale, design: .monospaced))
                     }
                 }
@@ -367,7 +369,11 @@ struct RuleRow: View {
                 
                 Toggle("", isOn: .init(
                     get: { rule.isEnabled },
-                    set: { _ in onToggle() }
+                    set: { _ in
+                        SoundEffectManager.shared.playButtonClick()
+                        HapticManager.shared.generic()
+                        onToggle()
+                    }
                 ))
                 .toggleStyle(.switch)
                 .scaleEffect(0.7 * zoomScale)
@@ -388,14 +394,20 @@ struct RuleRow: View {
         }
         .buttonStyle(.plain)
         .contextMenu {
-            Button("Run \(rule.bypassType.displayName)") {
+            Button(String(format: String(localized: "bypass.context.run"), rule.bypassType.displayName)) {
+                SoundEffectManager.shared.playButtonClick()
+                HapticManager.shared.generic()
                 onRun()
             }
-            Button("Edit") {
+            Button(String(localized: "button.edit")) {
+                SoundEffectManager.shared.playButtonClick()
+                HapticManager.shared.generic()
                 onEdit()
             }
             Divider()
-            Button("Delete", role: .destructive) {
+            Button(String(localized: "button.delete"), role: .destructive) {
+                SoundEffectManager.shared.playTabDeleted()
+                HapticManager.shared.warning()
                 onDelete()
             }
         }
@@ -445,25 +457,25 @@ struct AddBypassRuleView: View {
     
     var body: some View {
         VStack(spacing: 16 * zoomScale) {
-            Text(rule == nil ? "Add Bypass Rule" : "Edit Bypass Rule")
+            Text(rule == nil ? String(localized: "bypass.add_title") : String(localized: "bypass.edit_title"))
                 .font(.system(size: 18 * zoomScale, weight: .bold, design: .monospaced))
                 .foregroundStyle(.white)
             
             // Name
             VStack(alignment: .leading, spacing: 6) {
-                Text("Name")
+                Text("field.name")
                     .font(.system(size: 11 * zoomScale, weight: .semibold, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.7))
-                TextField("e.g. Canvas Quiz Bypass", text: $name)
+                TextField("bypass.name_placeholder", text: $name)
                     .textFieldStyle(.roundedBorder)
             }
             
             // URL Pattern
             VStack(alignment: .leading, spacing: 6) {
-                Text("URL Pattern")
+                Text("field.url_pattern")
                     .font(.system(size: 11 * zoomScale, weight: .semibold, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.7))
-                TextField("e.g. canvas.*quiz", text: $targetURLPattern)
+                TextField("bypass.url_placeholder", text: $targetURLPattern)
                     .textFieldStyle(.roundedBorder)
                 
                 // Common patterns
@@ -471,6 +483,8 @@ struct AddBypassRuleView: View {
                     HStack(spacing: 6 * zoomScale) {
                         ForEach(viewModel.commonPatterns, id: \.pattern) { item in
                             Button(action: {
+                                SoundEffectManager.shared.playButtonClick()
+                                HapticManager.shared.generic()
                                 name = item.name
                                 targetURLPattern = item.pattern
                             }) {
@@ -495,7 +509,7 @@ struct AddBypassRuleView: View {
             
             // Bypass Type
             VStack(alignment: .leading, spacing: 6) {
-                Text("Bypass Method")
+                Text("bypass.method")
                     .font(.system(size: 11 * zoomScale, weight: .semibold, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.7))
                 
@@ -516,24 +530,36 @@ struct AddBypassRuleView: View {
                 }
                 .pickerStyle(.radioGroup)
                 .foregroundStyle(.white)
+                .onChange(of: bypassType) { _, _ in
+                    SoundEffectManager.shared.playButtonClick()
+                    HapticManager.shared.generic()
+                }
             }
             
             // Enabled toggle
-            Toggle("Enable immediately", isOn: $isEnabled)
+            Toggle("bypass.enable_immediately", isOn: $isEnabled)
                 .font(.system(size: 11 * zoomScale, design: .monospaced))
                 .foregroundStyle(.white.opacity(0.7))
+                .onChange(of: isEnabled) { _, _ in
+                    SoundEffectManager.shared.playButtonClick()
+                    HapticManager.shared.generic()
+                }
             
             Spacer()
             
             HStack(spacing: 12 * zoomScale) {
-                Button("Cancel") {
+                Button(String(localized: "button.cancel")) {
+                    SoundEffectManager.shared.playButtonClick()
+                    HapticManager.shared.generic()
                     dismiss()
                 }
                 .buttonStyle(.bordered)
                 
                 Spacer()
                 
-                Button(rule == nil ? "Add" : "Save") {
+                Button(rule == nil ? String(localized: "button.add") : String(localized: "button.save")) {
+                    SoundEffectManager.shared.playButtonClick()
+                    HapticManager.shared.generic()
                     save()
                 }
                 .buttonStyle(.borderedProminent)

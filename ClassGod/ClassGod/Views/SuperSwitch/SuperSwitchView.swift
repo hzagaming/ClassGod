@@ -36,11 +36,11 @@ struct SuperSwitchView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(
-            RoundedRectangle(cornerRadius: prefs.preferences.panelCornerRadius)
+            RoundedRectangle(cornerRadius: prefs.preferences.panelCornerRadius * zoomScale)
                 .fill(Color.black)
         )
         .overlay(
-            RoundedRectangle(cornerRadius: prefs.preferences.panelCornerRadius)
+            RoundedRectangle(cornerRadius: prefs.preferences.panelCornerRadius * zoomScale)
                 .stroke(Color.white.opacity(0.15), lineWidth: 1 * zoomScale)
         
             .allowsHitTesting(false))
@@ -50,12 +50,12 @@ struct SuperSwitchView: View {
         .sheet(item: $editingTarget) { target in
             AddSwitchTargetView(viewModel: viewModel, target: target)
         }
-        .alert("Error", isPresented: $viewModel.showError) {
-            Button("OK", role: .cancel) {}
+        .alert(String(localized: "alert.error"), isPresented: $viewModel.showError) {
+            Button(String(localized: "button.ok"), role: .cancel) {}
         } message: {
-            Text(viewModel.errorMessage ?? "Unknown error")
+            Text(viewModel.errorMessage ?? String(localized: "error.unknown"))
         }
-        .alert("Delete target?", isPresented: .init(
+        .alert(String(localized: "superswitch.delete_title"), isPresented: .init(
             get: { targetToDelete != nil },
             set: { if !$0 { targetToDelete = nil } }
         )) {
@@ -67,7 +67,7 @@ struct SuperSwitchView: View {
                 targetToDelete = nil
             }
         } message: {
-            Text("Remove \(targetToDelete?.name ?? "") from SuperSwitch?")
+            Text(String(format: String(localized: "superswitch.delete_message"), targetToDelete?.name ?? ""))
         }
         .overlay(
             toastOverlay,

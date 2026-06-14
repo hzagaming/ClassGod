@@ -7,37 +7,41 @@ import SwiftUI
 
 struct WindowZoomControlBar: View {
     @ObservedObject var prefs = PreferencesManager.shared
-    
+
+    private var zoomScale: CGFloat { CGFloat(prefs.preferences.windowZoomScale) }
+
     var body: some View {
         HStack(spacing: 4) {
             Button(action: {
                 SoundEffectManager.shared.playButtonClick()
+                HapticManager.shared.generic()
                 prefs.preferences.windowZoomScale = max(0.5, prefs.preferences.windowZoomScale - 0.1)
             }) {
                 Image(systemName: "minus")
-                    .font(.system(size: 8, weight: .bold))
-                    .frame(width: 18, height: 18)
+                    .font(.system(size: 8 * zoomScale, weight: .bold))
+                    .frame(width: 18 * zoomScale, height: 18 * zoomScale)
                     .background(Color(white: 0.1))
-                    .clipShape(RoundedRectangle(cornerRadius: 4))
+                    .clipShape(RoundedRectangle(cornerRadius: 4 * zoomScale))
             }
             .buttonStyle(.plain)
             .foregroundStyle(.white.opacity(0.6))
             .disabled(prefs.preferences.windowZoomScale <= 0.5)
             
             Text("\(Int(prefs.preferences.windowZoomScale * 100))%")
-                .font(.system(size: 9, weight: .medium, design: .monospaced))
+                .font(.system(size: 9 * zoomScale, weight: .medium, design: .monospaced))
                 .foregroundStyle(.white.opacity(0.5))
-                .frame(minWidth: 28)
+                .frame(minWidth: 28 * zoomScale)
             
             Button(action: {
                 SoundEffectManager.shared.playButtonClick()
+                HapticManager.shared.generic()
                 prefs.preferences.windowZoomScale = min(2.0, prefs.preferences.windowZoomScale + 0.1)
             }) {
                 Image(systemName: "plus")
-                    .font(.system(size: 8, weight: .bold))
-                    .frame(width: 18, height: 18)
+                    .font(.system(size: 8 * zoomScale, weight: .bold))
+                    .frame(width: 18 * zoomScale, height: 18 * zoomScale)
                     .background(Color(white: 0.1))
-                    .clipShape(RoundedRectangle(cornerRadius: 4))
+                    .clipShape(RoundedRectangle(cornerRadius: 4 * zoomScale))
             }
             .buttonStyle(.plain)
             .foregroundStyle(.white.opacity(0.6))
@@ -45,13 +49,14 @@ struct WindowZoomControlBar: View {
             
             Button(action: {
                 SoundEffectManager.shared.playButtonClick()
+                HapticManager.shared.generic()
                 prefs.preferences.windowZoomScale = 1.0
             }) {
                 Image(systemName: "arrow.counterclockwise")
-                    .font(.system(size: 8, weight: .bold))
-                    .frame(width: 18, height: 18)
+                    .font(.system(size: 8 * zoomScale, weight: .bold))
+                    .frame(width: 18 * zoomScale, height: 18 * zoomScale)
                     .background(Color(white: 0.1))
-                    .clipShape(RoundedRectangle(cornerRadius: 4))
+                    .clipShape(RoundedRectangle(cornerRadius: 4 * zoomScale))
             }
             .buttonStyle(.plain)
             .foregroundStyle(.white.opacity(0.4))
@@ -60,11 +65,11 @@ struct WindowZoomControlBar: View {
         .padding(.horizontal, 4)
         .padding(.vertical, 2)
         .background(
-            RoundedRectangle(cornerRadius: 6)
+            RoundedRectangle(cornerRadius: 6 * zoomScale)
                 .fill(Color(white: 0.05))
                 .overlay(
-                    RoundedRectangle(cornerRadius: 6)
-                        .stroke(Color.white.opacity(0.06), lineWidth: 1)
+                    RoundedRectangle(cornerRadius: 6 * zoomScale)
+                        .stroke(Color.white.opacity(0.06), lineWidth: 1 * zoomScale)
                 
                     .allowsHitTesting(false))
         )
