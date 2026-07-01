@@ -10,6 +10,9 @@ let package = Package(
             linkerSettings: [
                 .linkedFramework("IOKit")
             ]
+        ),
+        .testTarget(
+            name: "ClassGodHelperTests"
         )
     ]
 )

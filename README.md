@@ -55,7 +55,19 @@ ClassGod/
     └── Settings/                  # 设置面板
 ```
 
-## 最新公告：v0.4.4
+## 最新公告：v1.5.4
+
+### 深度修复：工程配置、Widget、UI/UX/SFX 清理
+
+- [x] **版本统一**：实际构建产物更新为 v1.5.4 (Build 29)，Bundle ID 统一为 `com.hanazar.classgod`
+- [x] **Widget Extension 修复**：主 App 正式依赖并嵌入 `ClassGodWidget.appex`
+- [x] **Widget 权限修复**：Widget target 启用 Sandbox 并使用 `ClassGodWidget.entitlements`
+- [x] **共享容器说明**：`WidgetDataStore` 保留 `group.com.hanazar.classgod` 入口；App Group 需要开发证书/Team 签名，本地构建不强制启用
+- [x] **退出清理修复**：退出时补齐 Activity Monitor / Permission Center 窗口清理，取消状态栏后台刷新任务并断开 SMC Helper socket
+- [x] **Helper 测试接入**：修复 `ClassGodHelper` 下 `swift test` 报 `no tests found`
+- [x] **UI/UX/SFX 修复**：补齐主菜单、设置、AssessPrep 面板的本地化遗漏、窗口缩放和触感反馈
+
+## 历史公告：v0.4.4
 
 ### 全新体验：开机混乱弹窗动画 v5
 启动 ClassGod 后，你会看到+听到：

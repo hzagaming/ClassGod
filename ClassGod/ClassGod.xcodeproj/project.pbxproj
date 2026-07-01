@@ -24,6 +24,7 @@
 		6C9BFA5C1C8842BB7CD1E474 /* TerminalLogWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B3770C1B8DAE22615720722 /* TerminalLogWidgetView.swift */; };
 		769FB4940B9B56DC00D23E23 /* WidgetProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 801D7EDB041A172A4B4375C6 /* WidgetProvider.swift */; };
 		7A2D2540BE019A658A904ACA /* WidgetEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5AE60636E0D4FE2399EA2FCF /* WidgetEntry.swift */; };
+		AAE000000000000000000001 /* ClassGodWidget.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 7B9F77485B9CA75A1B081397 /* ClassGodWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		93AE47A74702DF949735BB1F /* TodoWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CECE49CA245F96FBCA3F07F /* TodoWidgetView.swift */; };
 		93C784CFE846C8888228B3F4 /* SystemInfoWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BE0498D5636BDD3C7BDC4B2 /* SystemInfoWidgetView.swift */; };
 		94BFAD6F3FB5F52E1E0F3E70 /* ClockWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A656A14BDC89DA0021C9939F /* ClockWidgetView.swift */; };
@@ -33,6 +34,30 @@
 		DAD0591EF2DCF18A18F7BA25 /* CPUWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B7C13D3BF251FFC850F0586 /* CPUWidgetView.swift */; };
 		DB9548201E524361DBE7FBF3 /* CalendarWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34D27161E4145112031152F0 /* CalendarWidgetView.swift */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		AAE000000000000000000002 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F2BB6B4B2FC08AFC0059D551 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = B92F7954AF1161ABBAC770E8;
+			remoteInfo = ClassGodWidget;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		AAE000000000000000000003 /* Embed App Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				AAE000000000000000000001 /* ClassGodWidget.appex in Embed App Extensions */,
+			);
+			name = "Embed App Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		084FE72C7EFFEB21F96EED91 /* QuoteWidgetView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = QuoteWidgetView.swift; path = ClassGodWidget/Views/QuoteWidgetView.swift; sourceTree = "<group>"; };
@@ -179,11 +204,13 @@
 				F2BB6B4F2FC08AFC0059D551 /* Sources */,
 				F2BB6B502FC08AFC0059D551 /* Frameworks */,
 				F2BB6B512FC08AFC0059D551 /* Resources */,
+				AAE000000000000000000003 /* Embed App Extensions */,
 				AA1234567890ABCDEF123456 /* Build ClassGodHelper */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				AAE000000000000000000004 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				F2BB6B552FC08AFC0059D551 /* ClassGod */,
@@ -319,18 +346,28 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		AAE000000000000000000004 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = B92F7954AF1161ABBAC770E8 /* ClassGodWidget */;
+			targetProxy = AAE000000000000000000002 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
 		B39279358C95FAA013EFE6AB /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
-				CODE_SIGN_ENTITLEMENTS = "";
+				CODE_SIGN_ENTITLEMENTS = ClassGodWidget/ClassGodWidget.entitlements;
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = "";
-				ENABLE_APP_SANDBOX = NO;
+				ENABLE_APP_SANDBOX = YES;
 				INFOPLIST_FILE = ClassGodWidget/Info.plist;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				CURRENT_PROJECT_VERSION = 29;
+				MARKETING_VERSION = 1.5.4;
 				PRODUCT_BUNDLE_IDENTIFIER = com.hanazar.classgod.ClassGodWidget;
 				PRODUCT_NAME = ClassGodWidget;
 				SDKROOT = macosx;
@@ -344,13 +381,15 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
-				CODE_SIGN_ENTITLEMENTS = "";
+				CODE_SIGN_ENTITLEMENTS = ClassGodWidget/ClassGodWidget.entitlements;
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = "";
-				ENABLE_APP_SANDBOX = NO;
+				ENABLE_APP_SANDBOX = YES;
 				INFOPLIST_FILE = ClassGodWidget/Info.plist;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				CURRENT_PROJECT_VERSION = 29;
+				MARKETING_VERSION = 1.5.4;
 				PRODUCT_BUNDLE_IDENTIFIER = com.hanazar.classgod.ClassGodWidget;
 				PRODUCT_NAME = ClassGodWidget;
 				SDKROOT = macosx;
@@ -486,10 +525,10 @@
 				CODE_SIGN_ENTITLEMENTS = ClassGod/ClassGod.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 27;
+				CURRENT_PROJECT_VERSION = 29;
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_PREVIEWS = YES;
-				ENABLE_USER_SELECTED_FILES = readonly;
+				ENABLE_USER_SELECTED_FILES = readwrite;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSAccessibilityUsageDescription = "ClassGod needs Accessibility permission to detect the frontmost browser and switch to specific tabs.";
@@ -507,10 +546,9 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.5.2;
-				PRODUCT_BUNDLE_IDENTIFIER = "Hanazar-Software.ClassGod";
+				MARKETING_VERSION = 1.5.4;
+				PRODUCT_BUNDLE_IDENTIFIER = com.hanazar.classgod;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				REGISTER_APP_GROUPS = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
@@ -528,10 +566,10 @@
 				CODE_SIGN_ENTITLEMENTS = ClassGod/ClassGod.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 27;
+				CURRENT_PROJECT_VERSION = 29;
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_PREVIEWS = YES;
-				ENABLE_USER_SELECTED_FILES = readonly;
+				ENABLE_USER_SELECTED_FILES = readwrite;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSAccessibilityUsageDescription = "ClassGod needs Accessibility permission to detect the frontmost browser and switch to specific tabs.";
@@ -549,10 +587,9 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.5.2;
-				PRODUCT_BUNDLE_IDENTIFIER = "Hanazar-Software.ClassGod";
+				MARKETING_VERSION = 1.5.4;
+				PRODUCT_BUNDLE_IDENTIFIER = com.hanazar.classgod;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				REGISTER_APP_GROUPS = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;

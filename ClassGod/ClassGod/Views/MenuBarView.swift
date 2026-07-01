@@ -44,56 +44,56 @@ struct MenuBarView: View {
                         FeatureButton(
                             icon: "link",
                             title: "DestinTab",
-                            description: "Manage & switch browser tabs",
+                            description: "menu.destintab.description",
                             action: onOpenDestinTab
                         )
                         
                         FeatureButton(
                             icon: "arrow.left.arrow.right",
                             title: "SuperSwitch",
-                            description: "Quick app switcher with shortcuts",
+                            description: "menu.superswitch.description",
                             action: onOpenSuperSwitch
                         )
                         
                         FeatureButton(
                             icon: "lock.open.fill",
                             title: "BrowserBypasser",
-                            description: "Break free from lockdown pages",
+                            description: "menu.browser_bypasser.description",
                             action: onOpenBrowserBypasser
                         )
                         
                         FeatureButton(
                             icon: "bolt.shield.fill",
                             title: "AssessPrepHack",
-                            description: "Break free from proctoring",
+                            description: "menu.assess_prep.description",
                             action: onOpenAssessPrepHack
                         )
                         
                         FeatureButton(
                             icon: "photo.on.rectangle.angled",
                             title: "Wallpaper Engine",
-                            description: "Custom wallpapers & live video",
+                            description: "menu.wallpaper.description",
                             action: onOpenWallpaper
                         )
                         
                         FeatureButton(
                             icon: "square.grid.2x2",
                             title: "HackerDesktop",
-                            description: "System monitor widgets dashboard",
+                            description: "menu.hacker_desktop.description",
                             action: onOpenHackerDesktop
                         )
                         
                         FeatureButton(
                             icon: "exclamationmark.triangle.fill",
                             title: "Error Encyclopedia",
-                            description: "Search & solve all Swift/macOS errors",
+                            description: "menu.error_hub.description",
                             action: onOpenErrorHub
                         )
                         
                         FeatureButton(
                             icon: "fanblades",
                             title: "Fan Control",
-                            description: "Monitor temps & control fan speeds",
+                            description: "menu.fan_control.description",
                             action: onOpenFanControl,
                             isEnabled: prefs.preferences.enableFanControl
                         )
@@ -101,14 +101,14 @@ struct MenuBarView: View {
                         FeatureButton(
                             icon: "waveform.path.ecg.rectangle",
                             title: "Activity Monitor",
-                            description: "System processes & resource usage",
+                            description: "menu.activity_monitor.description",
                             action: onOpenActivityMonitor
                         )
                         
                         FeatureButton(
                             icon: "checkmark.shield.fill",
                             title: "Permission Center",
-                            description: "Grant & manage system permissions",
+                            description: "menu.permission_center.description",
                             action: onOpenPermissionCenter
                         )
                     }
@@ -123,11 +123,12 @@ struct MenuBarView: View {
                     HStack(spacing: 12 * zoomScale) {
                         Button(action: {
                             SoundEffectManager.shared.playButtonClick()
+                            HapticManager.shared.generic()
                             onOpenSettings()
                         }) {
                             Image(systemName: "gearshape.fill")
                                 .font(.system(size: 11 * zoomScale))
-                            Text("Settings")
+                            Text("settings.title")
                                 .font(.system(size: 11 * zoomScale, design: .monospaced))
                         }
                         .buttonStyle(.plain)
@@ -137,9 +138,10 @@ struct MenuBarView: View {
                         
                         Button(action: {
                             SoundEffectManager.shared.playButtonClick()
+                            HapticManager.shared.warning()
                             NSApplication.shared.terminate(nil)
                         }) {
-                            Text("PeaceOut")
+                            Text("menu.quit")
                                 .font(.system(size: 11 * zoomScale, weight: .bold, design: .monospaced))
                                 .foregroundStyle(.red.opacity(0.8))
                         }
@@ -227,9 +229,10 @@ struct MenuBarView: View {
 
             Button(action: {
                 SoundEffectManager.shared.playButtonClick()
+                HapticManager.shared.generic()
                 onOpenFanControl()
             }) {
-                Text("Open")
+                Text("button.open")
                     .font(.system(size: 9 * zoomScale, weight: .bold, design: .monospaced))
                     .foregroundStyle(.cyan)
                     .padding(.horizontal, 10 * zoomScale)
@@ -335,6 +338,7 @@ struct FeatureButton: View {
         Button(action: {
             if isEnabled {
                 SoundEffectManager.shared.playButtonClick()
+                HapticManager.shared.generic()
                 action()
             }
         }) {

@@ -67,8 +67,8 @@ struct AssessPrepHackView: View {
             get: { appToDelete != nil },
             set: { if !$0 { appToDelete = nil } }
         )) {
-            Button("Cancel", role: .cancel) { appToDelete = nil }
-            Button("Delete", role: .destructive) {
+            Button(String(localized: "button.cancel"), role: .cancel) { appToDelete = nil }
+            Button(String(localized: "button.delete"), role: .destructive) {
                 if let app = appToDelete {
                     viewModel.deleteApp(app)
                 }
@@ -119,7 +119,7 @@ struct AssessPrepHackView: View {
                     .font(.system(size: 16 * zoomScale, weight: .bold, design: .monospaced))
                     .foregroundStyle(.white)
                 
-                Text("Break free from proctoring")
+                Text("panic.subtitle")
                     .font(.system(size: 9 * zoomScale, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.4))
             }
@@ -149,7 +149,7 @@ struct AssessPrepHackView: View {
                 .font(.system(size: 14 * zoomScale))
             
             VStack(alignment: .leading, spacing: 2) {
-                Text("AssessPrep Detected")
+                Text("panic.detected")
                     .font(.system(size: 11 * zoomScale, weight: .bold, design: .monospaced))
                     .foregroundStyle(.yellow)
                 Text(viewModel.assessPrepProcessName)
@@ -189,7 +189,7 @@ struct AssessPrepHackView: View {
                 .font(.system(size: 14 * zoomScale))
             
             VStack(alignment: .leading, spacing: 2) {
-                Text("Bypass Active")
+                Text("panic.active")
                     .font(.system(size: 11 * zoomScale, weight: .bold, design: .monospaced))
                     .foregroundStyle(.green)
                 Text(viewModel.activeTechniques.map(\.displayName).joined(separator: ", "))
@@ -204,7 +204,7 @@ struct AssessPrepHackView: View {
                 SoundEffectManager.shared.playButtonClick()
                 viewModel.stopAllBypasses()
             }) {
-                Text("Stop")
+                Text("bypass.stop")
                     .font(.system(size: 10 * zoomScale, weight: .bold, design: .monospaced))
                     .foregroundStyle(.red)
                     .padding(.horizontal, 10 * zoomScale)
@@ -237,24 +237,36 @@ struct AssessPrepHackView: View {
                             viewModel.executeBypass(for: app)
                         },
                         onToggle: {
+                            SoundEffectManager.shared.playButtonClick()
+                            HapticManager.shared.generic()
                             viewModel.toggleApp(app)
                         },
                         onEdit: {
+                            SoundEffectManager.shared.playButtonClick()
+                            HapticManager.shared.generic()
                             editingApp = app
                         },
                         onDelete: {
+                            SoundEffectManager.shared.playTabDeleted()
+                            HapticManager.shared.warning()
                             appToDelete = app
                         }
                     )
                     .contextMenu {
-                        Button("Execute Bypass") {
+                        Button(String(localized: "panic.execute")) {
+                            SoundEffectManager.shared.playButtonClick()
+                            HapticManager.shared.generic()
                             viewModel.executeBypass(for: app)
                         }
-                        Button("Edit") {
+                        Button(String(localized: "button.edit")) {
+                            SoundEffectManager.shared.playButtonClick()
+                            HapticManager.shared.generic()
                             editingApp = app
                         }
                         Divider()
-                        Button("Delete", role: .destructive) {
+                        Button(String(localized: "button.delete"), role: .destructive) {
+                            SoundEffectManager.shared.playTabDeleted()
+                            HapticManager.shared.warning()
                             appToDelete = app
                         }
                     }
@@ -272,11 +284,11 @@ struct AssessPrepHackView: View {
                 .font(.system(size: 40 * zoomScale))
                 .foregroundStyle(.white.opacity(0.15))
             
-            Text("No panic apps configured")
+            Text("panic.empty_title")
                 .font(.system(size: 13 * zoomScale, weight: .medium, design: .monospaced))
                 .foregroundStyle(.white.opacity(0.4))
             
-            Text("Add apps to bypass AssessPrep lockdown")
+            Text("panic.empty_subtitle")
                 .font(.system(size: 10 * zoomScale, design: .monospaced))
                 .foregroundStyle(.white.opacity(0.25))
                 .multilineTextAlignment(.center)
@@ -297,7 +309,7 @@ struct AssessPrepHackView: View {
             }) {
                 Image(systemName: "magnifyingglass")
                     .font(.system(size: 11 * zoomScale))
-                Text("Scan")
+                Text("panic.scan")
                     .font(.system(size: 11 * zoomScale, design: .monospaced))
             }
             .buttonStyle(.plain)
@@ -310,7 +322,7 @@ struct AssessPrepHackView: View {
                     SoundEffectManager.shared.playButtonClick()
                     viewModel.stopAllBypasses()
                 }) {
-                    Text("Stop All")
+                    Text("panic.stop_all")
                         .font(.system(size: 11 * zoomScale, weight: .bold, design: .monospaced))
                         .foregroundStyle(.red.opacity(0.8))
                 }
@@ -323,7 +335,7 @@ struct AssessPrepHackView: View {
             }) {
                 Image(systemName: "plus")
                     .font(.system(size: 11 * zoomScale))
-                Text("Add App")
+                Text("panic.add_app")
                     .font(.system(size: 11 * zoomScale, design: .monospaced))
             }
             .buttonStyle(.plain)
@@ -386,7 +398,7 @@ struct PanicAppRow: View {
                 }
             }
             .buttonStyle(.plain)
-            .help("Execute \(app.bypassTechnique.displayName)")
+            .help(String(format: String(localized: "panic.execute_help"), app.bypassTechnique.displayName))
             
             VStack(alignment: .leading, spacing: 2) {
                 Text(app.name)

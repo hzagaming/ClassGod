@@ -1857,6 +1857,106 @@
         }
       }
     },
+    "panic.active" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "应急状态已激活"
+          }
+        }
+      }
+    },
+    "panic.add_app" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "添加应用"
+          }
+        }
+      }
+    },
+    "panic.detected" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "检测到考试锁定应用"
+          }
+        }
+      }
+    },
+    "panic.empty_subtitle" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "添加应急切换目标，用于快速恢复到预设应用"
+          }
+        }
+      }
+    },
+    "panic.empty_title" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "尚未配置应急应用"
+          }
+        }
+      }
+    },
+    "panic.execute" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "执行应急动作"
+          }
+        }
+      }
+    },
+    "panic.execute_help" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "执行 %@"
+          }
+        }
+      }
+    },
+    "panic.scan" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "扫描"
+          }
+        }
+      }
+    },
+    "panic.stop_all" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "全部停止"
+          }
+        }
+      }
+    },
+    "panic.subtitle" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "管理应急应用与快捷切换"
+          }
+        }
+      }
+    },
     "panic.technique.focus_guard" : {
       "localizations" : {
         "zh-Hans" : {
@@ -3333,6 +3433,126 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "窗口缩放"
+          }
+        }
+      }
+    },
+    "settings.title" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "设置"
+          }
+        }
+      }
+    },
+    "menu.activity_monitor.description" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "查看进程与资源占用"
+          }
+        }
+      }
+    },
+    "menu.assess_prep.description" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "管理应急应用与快捷切换"
+          }
+        }
+      }
+    },
+    "menu.browser_bypasser.description" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "管理浏览器锁定规则"
+          }
+        }
+      }
+    },
+    "menu.destintab.description" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "管理并切换浏览器标签"
+          }
+        }
+      }
+    },
+    "menu.error_hub.description" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "搜索 Swift/macOS 错误"
+          }
+        }
+      }
+    },
+    "menu.fan_control.description" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "监控温度与风扇转速"
+          }
+        }
+      }
+    },
+    "menu.hacker_desktop.description" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "配置系统监控桌面小组件"
+          }
+        }
+      }
+    },
+    "menu.permission_center.description" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "检查并管理系统权限"
+          }
+        }
+      }
+    },
+    "menu.quit" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "退出"
+          }
+        }
+      }
+    },
+    "menu.superswitch.description" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "用快捷键快速切换应用"
+          }
+        }
+      }
+    },
+    "menu.wallpaper.description" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "管理图片与视频壁纸"
           }
         }
       }
@@ -5660,6 +5880,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "OK"
+          }
+        }
+      }
+    },
+    "button.open" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "打开"
           }
         }
       }

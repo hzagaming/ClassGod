@@ -1600,6 +1600,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationWillTerminate(_ notification: Notification) {
         statusItemTimer?.invalidate()
+        statusItemUpdateTask?.cancel()
+        statusItemUpdateTask = nil
+        SMCHelperClient.shared.disconnect()
         DesktopWallpaperController.shared.hideWallpapers()
         DesktopWidgetManager.shared.setEnabled(false)
         
@@ -1655,6 +1658,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             window.orderOut(nil)
         }
         if let window = fanControlWindow {
+            window.orderOut(nil)
+        }
+        if let window = activityMonitorWindow {
+            window.orderOut(nil)
+        }
+        if let window = permissionCenterWindow {
             window.orderOut(nil)
         }
     }
@@ -1932,26 +1941,26 @@ struct SettingsContainerView: View {
                     onClose()
                 }) {
                     Image(systemName: "xmark")
-                        .font(.system(size: 10, weight: .bold))
+                        .font(.system(size: 10 * zoomScale, weight: .bold))
                         .foregroundStyle(.white.opacity(0.6))
-                        .frame(width: 24, height: 24)
+                        .frame(width: 24 * zoomScale, height: 24 * zoomScale)
                         .background(Color(white: 0.08))
                         .clipShape(Circle())
                 }
                 .buttonStyle(.plain)
-                .padding(.leading, 12)
+                .padding(.leading, 12 * zoomScale)
                 
                 Spacer()
                 
-                Text("Settings")
-                    .font(.system(size: 13, weight: .bold, design: .monospaced))
+                Text("settings.title")
+                    .font(.system(size: 13 * zoomScale, weight: .bold, design: .monospaced))
                     .foregroundStyle(.white)
                 
                 Spacer()
                 
-                Color.clear.frame(width: 36, height: 24)
+                Color.clear.frame(width: 36 * zoomScale, height: 24 * zoomScale)
             }
-            .padding(.vertical, 8)
+            .padding(.vertical, 8 * zoomScale)
             .background(Color(white: 0.03))
             
             Divider().background(Color.white.opacity(0.1))
