@@ -59,8 +59,10 @@ struct SuperSwitchView: View {
             get: { targetToDelete != nil },
             set: { if !$0 { targetToDelete = nil } }
         )) {
-            Button("Cancel", role: .cancel) { targetToDelete = nil }
-            Button("Delete", role: .destructive) {
+            Button(String(localized: "button.cancel"), role: .cancel) { targetToDelete = nil }
+            Button(String(localized: "button.delete"), role: .destructive) {
+                SoundEffectManager.shared.playTabDeleted()
+                HapticManager.shared.warning()
                 if let target = targetToDelete {
                     viewModel.deleteTarget(target)
                 }
@@ -97,7 +99,7 @@ struct SuperSwitchView: View {
                     .font(.system(size: 16 * zoomScale, weight: .bold, design: .monospaced))
                     .foregroundStyle(.white)
                 
-                Text("Quick app switcher")
+                Text("superswitch.subtitle")
                     .font(.system(size: 9 * zoomScale, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.4))
             }
@@ -133,6 +135,7 @@ struct SuperSwitchView: View {
                             editingTarget = target
                         },
                         onDelete: {
+                            SoundEffectManager.shared.playButtonClick()
                             targetToDelete = target
                         }
                     )
@@ -162,11 +165,11 @@ struct SuperSwitchView: View {
                     .symbolRenderingMode(.monochrome)
             }
             
-            Text("No targets configured")
+            Text("superswitch.empty_title")
                 .font(.system(size: 14 * zoomScale, weight: .medium, design: .monospaced))
                 .foregroundStyle(.white.opacity(0.7))
-            
-            Text("Add apps to switch between them instantly")
+
+            Text("superswitch.empty_subtitle")
                 .font(.system(size: 11 * zoomScale, design: .monospaced))
                 .foregroundStyle(.white.opacity(0.5))
                 .multilineTextAlignment(.center)
@@ -179,7 +182,7 @@ struct SuperSwitchView: View {
     
     private var footer: some View {
         HStack(spacing: 14 * zoomScale) {
-            Text("Click a target to switch. Set shortcuts for instant access.")
+            Text("superswitch.footer_hint")
                 .font(.system(size: 9 * zoomScale, design: .monospaced))
                 .foregroundStyle(.white.opacity(0.4))
             
@@ -232,13 +235,9 @@ struct TargetRow: View {
     var body: some View {
         Button(action: {
             SoundEffectManager.shared.playButtonClick()
-            withAnimation(.easeOut(duration: 0.06)) {
-                isPressed = true
-            }
+            Anim.with { isPressed = true }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.06) {
-                withAnimation(.easeOut(duration: 0.06)) {
-                    isPressed = false
-                }
+                Anim.with { isPressed = false }
             }
             onSwitch()
         }) {
@@ -293,14 +292,18 @@ struct TargetRow: View {
         }
         .buttonStyle(.plain)
         .contextMenu {
-            Button("Switch to \(target.name)") {
+            Button(String(format: String(localized: "superswitch.context_switch"), target.name)) {
+                SoundEffectManager.shared.playButtonClick()
+                HapticManager.shared.generic()
                 onSwitch()
             }
-            Button("Edit") {
+            Button(String(localized: "button.edit")) {
+                SoundEffectManager.shared.playButtonClick()
+                HapticManager.shared.generic()
                 onEdit()
             }
             Divider()
-            Button("Delete", role: .destructive) {
+            Button(String(localized: "button.delete"), role: .destructive) {
                 onDelete()
             }
         }
@@ -356,59 +359,63 @@ struct AddSwitchTargetView: View {
     
     var body: some View {
         VStack(spacing: 16 * zoomScale) {
-            Text(target == nil ? "Add Switch Target" : "Edit Switch Target")
+            Text(target == nil ? String(localized: "superswitch.add_title") : String(localized: "superswitch.edit_title"))
                 .font(.system(size: 18 * zoomScale, weight: .bold, design: .monospaced))
                 .foregroundStyle(.white)
-            
+
             // Running apps picker
             VStack(alignment: .leading, spacing: 6) {
-                Text("Running Application")
+                Text("superswitch.running_app")
                     .font(.system(size: 11 * zoomScale, weight: .semibold, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.7))
-                
+
                 Picker("", selection: $selectedAppIndex) {
-                    Text("Custom...").tag(-1)
+                    Text("superswitch.custom").tag(-1)
                     ForEach(0..<runningApps.count, id: \.self) { index in
                         Text(runningApps[index].name).tag(index)
                     }
                 }
                 .pickerStyle(.menu)
                 .onChange(of: selectedAppIndex) { _, newValue in
+                    SoundEffectManager.shared.playButtonClick()
+                    HapticManager.shared.generic()
                     if newValue >= 0 && newValue < runningApps.count {
                         name = runningApps[newValue].name
                         bundleIdentifier = runningApps[newValue].bundleID
                     }
                 }
             }
-            
+
             // Name
             VStack(alignment: .leading, spacing: 6) {
-                Text("Name")
+                Text("field.name")
                     .font(.system(size: 11 * zoomScale, weight: .semibold, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.7))
-                TextField("App Name", text: $name)
+                TextField("superswitch.name_placeholder", text: $name)
                     .textFieldStyle(.roundedBorder)
             }
-            
+
             // Bundle ID
             VStack(alignment: .leading, spacing: 6) {
-                Text("Bundle Identifier")
+                Text("field.bundle_identifier")
                     .font(.system(size: 11 * zoomScale, weight: .semibold, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.7))
-                TextField("com.company.app", text: $bundleIdentifier)
+                TextField("superswitch.bundle_placeholder", text: $bundleIdentifier)
                     .textFieldStyle(.roundedBorder)
             }
-            
+
             // Icon picker
             VStack(alignment: .leading, spacing: 6) {
-                Text("Icon")
+                Text("field.icon")
                     .font(.system(size: 11 * zoomScale, weight: .semibold, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.7))
-                
+
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 8 * zoomScale) {
                         ForEach(iconOptions, id: \.self) { icon in
                             Button(action: {
+                                SoundEffectManager.shared.playButtonClick()
+                                HapticManager.shared.generic()
                                 iconName = icon
                             }) {
                                 Image(systemName: icon)
@@ -433,7 +440,7 @@ struct AddSwitchTargetView: View {
             
             // Shortcut
             VStack(alignment: .leading, spacing: 6) {
-                Text("Shortcut (optional)")
+                Text("superswitch.shortcut_optional")
                     .font(.system(size: 11 * zoomScale, weight: .semibold, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.7))
                 
@@ -445,14 +452,16 @@ struct AddSwitchTargetView: View {
             Spacer()
             
             HStack(spacing: 12 * zoomScale) {
-                Button("Cancel") {
+                Button(String(localized: "button.cancel")) {
+                    SoundEffectManager.shared.playButtonClick()
+                    HapticManager.shared.generic()
                     dismiss()
                 }
                 .buttonStyle(.bordered)
-                
+
                 Spacer()
-                
-                Button(target == nil ? "Add" : "Save") {
+
+                Button(target == nil ? String(localized: "button.add") : String(localized: "button.save")) {
                     save()
                 }
                 .buttonStyle(.borderedProminent)

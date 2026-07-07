@@ -72,6 +72,8 @@ struct BrowserBypasserView: View {
         )) {
             Button(String(localized: "button.cancel"), role: .cancel) { ruleToDelete = nil }
             Button(String(localized: "button.delete"), role: .destructive) {
+                SoundEffectManager.shared.playTabDeleted()
+                HapticManager.shared.warning()
                 if let rule = ruleToDelete {
                     viewModel.deleteRule(rule)
                 }
@@ -336,13 +338,9 @@ struct RuleRow: View {
     var body: some View {
         Button(action: {
             SoundEffectManager.shared.playButtonClick()
-            withAnimation(.easeOut(duration: 0.06)) {
-                isPressed = true
-            }
+            Anim.with { isPressed = true }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.06) {
-                withAnimation(.easeOut(duration: 0.06)) {
-                    isPressed = false
-                }
+                Anim.with { isPressed = false }
             }
             onRun()
         }) {
@@ -406,8 +404,7 @@ struct RuleRow: View {
             }
             Divider()
             Button(String(localized: "button.delete"), role: .destructive) {
-                SoundEffectManager.shared.playTabDeleted()
-                HapticManager.shared.warning()
+                SoundEffectManager.shared.playButtonClick()
                 onDelete()
             }
         }
@@ -499,14 +496,14 @@ struct AddBypassRuleView: View {
                                             .stroke(Color.white.opacity(0.15), lineWidth: 1 * zoomScale)
                                     
                                         .allowsHitTesting(false))
-                                    .cornerRadius(4)
+                                    .cornerRadius(4 * zoomScale)
                             }
                             .buttonStyle(.plain)
                         }
                     }
                 }
             }
-            
+
             // Bypass Type
             VStack(alignment: .leading, spacing: 6) {
                 Text("bypass.method")

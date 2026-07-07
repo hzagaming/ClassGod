@@ -59,12 +59,13 @@ struct WallpaperBrowserView: View {
             handleImport(result: result)
         }
         .alert(String(localized: "wallpaper.delete_title"), isPresented: $showDeleteConfirmation, presenting: itemToDelete) { item in
-            Button("Cancel", role: .cancel) {}
-            Button("Delete", role: .destructive) {
-                withAnimation(.easeInOut(duration: 0.2)) {
+            Button(String(localized: "button.cancel"), role: .cancel) {}
+            Button(String(localized: "button.delete"), role: .destructive) {
+                Anim.with {
                     engine.removeWallpaper(item)
                 }
                 SoundEffectManager.shared.playWallpaperDeleted()
+                HapticManager.shared.warning()
             }
         } message: { item in
             Text(String(format: String(localized: "wallpaper.delete_message"), item.name))
@@ -448,7 +449,7 @@ struct WallpaperBrowserView: View {
                     .padding(5 * zoomScale)
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                     .opacity(isHovered || isSelected ? 1 : 0)
-                    .animation(.easeInOut(duration: 0.15), value: isHovered)
+                    .animation(Anim.enabled ? .easeInOut(duration: Anim.duration) : nil, value: isHovered)
                 }
                 .aspectRatio(1, contentMode: .fit)
                 .clipShape(RoundedRectangle(cornerRadius: 8 * zoomScale))
@@ -459,7 +460,7 @@ struct WallpaperBrowserView: View {
                         .allowsHitTesting(false)
                 )
                 .scaleEffect(isHovered ? 1.03 : 1.0)
-                .animation(.easeOut(duration: 0.15), value: isHovered)
+                .animation(Anim.enabled ? .easeOut(duration: Anim.duration) : nil, value: isHovered)
                 
                 VStack(spacing: 2 * zoomScale) {
                     Text(item.name)
@@ -563,9 +564,9 @@ struct ControlButton: View {
         .buttonStyle(.plain)
         .onHover { isHovered = $0 }
         .pressEvents {
-            withAnimation(.easeOut(duration: 0.06)) { isPressed = true }
+            Anim.with { isPressed = true }
         } onRelease: {
-            withAnimation(.easeOut(duration: 0.1)) { isPressed = false }
+            Anim.with { isPressed = false }
         }
     }
 }

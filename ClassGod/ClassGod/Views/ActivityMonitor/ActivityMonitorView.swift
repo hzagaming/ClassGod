@@ -344,12 +344,12 @@ struct ActivityMonitorView: View {
         .contextMenu {
             if viewModel.canTerminate(proc) {
                 Button(role: .destructive) {
-                    _ = viewModel.terminateProcess(proc, force: false)
+                    terminate(proc, force: false)
                 } label: {
                     Label(String(localized: "activity.quit"), systemImage: "xmark.circle")
                 }
                 Button(role: .destructive) {
-                    _ = viewModel.terminateProcess(proc, force: true)
+                    terminate(proc, force: true)
                 } label: {
                     Label(String(localized: "activity.force_quit"), systemImage: "xmark.octagon")
                 }
@@ -361,6 +361,16 @@ struct ActivityMonitorView: View {
         }
     }
     
+    private func terminate(_ proc: ProcessMonitorInfo, force: Bool) {
+        if viewModel.terminateProcess(proc, force: force) {
+            SoundEffectManager.shared.playSwitchSuccess()
+            HapticManager.shared.warning()
+        } else {
+            SoundEffectManager.shared.playSwitchFailure()
+            HapticManager.shared.warning()
+        }
+    }
+
     private func processIcon(for name: String) -> some View {
         let icon = iconForProcessName(name)
         return Image(systemName: icon)

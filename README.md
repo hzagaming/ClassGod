@@ -55,7 +55,18 @@ ClassGod/
     └── Settings/                  # 设置面板
 ```
 
-## 最新公告：v1.5.4
+## 最新公告：v1.5.5
+
+### UI/UX/SFX 一致性修复
+
+- [x] **删除操作反馈时序修复**：BrowserBypasser / AssessPrepHack / SuperSwitch 的删除确认弹窗此前在打开确认框时就误播放"已删除"音效，取消也会触发；现在只在确认删除时才播放
+- [x] **桌面小组件音效接入**：桌面悬浮小组件关闭 / 锁定切换 / 编辑器删除按钮补齐了此前定义却从未使用的音效与触感反馈
+- [x] **进程管理器终止反馈**：Activity Monitor 的 Quit / Force Quit 操作补充成功/失败音效与触感
+- [x] **动画速度设置生效范围修复**：Fan Control、Wallpaper Browser、BrowserBypasser、SuperSwitch 中若干写死时长的动画现在正确遵循"动画速度"/"极速模式"设置
+- [x] **SuperSwitch 面板本地化补齐**：此前唯一完全未本地化的功能面板，现已接入字符串目录
+- [x] **圆角缩放遗漏修复**：多处 `cornerRadius` 未随窗口缩放比例联动的问题
+
+## 历史公告：v1.5.4
 
 ### 深度修复：工程配置、Widget、UI/UX/SFX 清理
 

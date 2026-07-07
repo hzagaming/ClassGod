@@ -59,7 +59,11 @@ struct DesktopWidgetContainer: View {
         VStack(spacing: 0) {
             // Title bar for desktop tabs
             HStack(spacing: 6) {
-                Button(action: onDelete) {
+                Button(action: {
+                    SoundEffectManager.shared.playWidgetDeleted()
+                    HapticManager.shared.warning()
+                    onDelete()
+                }) {
                     Image(systemName: "xmark")
                         .font(.system(size: 9, weight: .bold))
                         .foregroundStyle(.white.opacity(0.6))
@@ -68,19 +72,23 @@ struct DesktopWidgetContainer: View {
                         .clipShape(Circle())
                 }
                 .buttonStyle(.plain)
-                
+
                 Image(systemName: widget.type.iconName)
                     .font(.system(size: 9))
                     .foregroundStyle(.cyan)
-                
+
                 Text(widget.title)
                     .font(.system(size: 10, weight: .semibold, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.85))
                     .lineLimit(1)
-                
+
                 Spacer()
-                
-                Button(action: onToggleLock) {
+
+                Button(action: {
+                    SoundEffectManager.shared.playWidgetLocked()
+                    HapticManager.shared.generic()
+                    onToggleLock()
+                }) {
                     Image(systemName: widget.isLocked ? "lock.fill" : "lock.open")
                         .font(.system(size: 9, weight: .bold))
                         .foregroundStyle(widget.isLocked ? .orange : .white.opacity(0.6))

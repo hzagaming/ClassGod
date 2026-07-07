@@ -74,7 +74,7 @@ struct FanControlView: View {
         }
         .overlay(
             toastOverlay
-                .animation(.easeInOut(duration: 0.2), value: viewModel.showToast),
+                .animation(Anim.enabled ? .easeInOut(duration: Anim.duration) : nil, value: viewModel.showToast),
             alignment: .bottom
         )
     }
@@ -707,7 +707,7 @@ struct TemperatureRow: View {
                 )
                 .allowsHitTesting(false)
         )
-        .animation(.easeInOut(duration: 0.3), value: sensor.value >= 85)
+        .animation(Anim.enabled ? .easeInOut(duration: Anim.duration) : nil, value: sensor.value >= 85)
     }
 }
 

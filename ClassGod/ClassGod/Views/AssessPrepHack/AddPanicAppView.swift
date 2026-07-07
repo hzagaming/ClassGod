@@ -35,7 +35,10 @@ struct AddPanicAppView: View {
         VStack(spacing: 0 * zoomScale) {
             // Header
             HStack {
-                Button(action: { dismiss() }) {
+                Button(action: {
+                    SoundEffectManager.shared.playButtonClick()
+                    dismiss()
+                }) {
                     Image(systemName: "xmark")
                         .font(.system(size: 10 * zoomScale, weight: .bold))
                         .foregroundStyle(.white.opacity(0.6))
@@ -60,7 +63,7 @@ struct AddPanicAppView: View {
                         .padding(.horizontal, 12 * zoomScale)
                         .padding(.vertical, 4 * zoomScale)
                         .background(isValid ? Color.red.opacity(0.2) : Color(white: 0.08))
-                        .cornerRadius(4)
+                        .cornerRadius(4 * zoomScale)
                 }
                 .buttonStyle(.plain)
                 .disabled(!isValid)
@@ -74,7 +77,7 @@ struct AddPanicAppView: View {
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 16 * zoomScale) {
                     // Name
-                    formField(title: "Name") {
+                    formField(title: "field.name") {
                         TextField("", text: $name)
                             .font(.system(size: 13 * zoomScale, design: .monospaced))
                             .foregroundStyle(.white)
@@ -90,7 +93,7 @@ struct AddPanicAppView: View {
                     }
                     
                     // Bundle ID
-                    formField(title: "Bundle Identifier") {
+                    formField(title: "field.bundle_identifier") {
                         TextField("", text: $bundleIdentifier)
                             .font(.system(size: 13 * zoomScale, design: .monospaced))
                             .foregroundStyle(.white)
@@ -155,7 +158,7 @@ struct AddPanicAppView: View {
                     }
                     
                     // Icon picker
-                    formField(title: "Icon") {
+                    formField(title: "field.icon") {
                         LazyVGrid(columns: [GridItem(.adaptive(minimum: 36 * zoomScale))], spacing: 8 * zoomScale) {
                             ForEach(icons, id: \.self) { icon in
                                 Button(action: {
@@ -227,7 +230,9 @@ struct AddPanicAppView: View {
     
     private func save() {
         guard isValid else { return }
-        
+        SoundEffectManager.shared.playButtonClick()
+        HapticManager.shared.generic()
+
         if let existing = app {
             var updated = existing
             updated.name = name

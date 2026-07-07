@@ -256,7 +256,11 @@ private struct WidgetListCard: View {
                     .foregroundStyle(widget.isLocked ? .orange : .white.opacity(0.3))
             }
 
-            Button(action: onDelete) {
+            Button(action: {
+                SoundEffectManager.shared.playWidgetDeleted()
+                HapticManager.shared.warning()
+                onDelete()
+            }) {
                 Image(systemName: "trash")
                     .font(.system(size: 10 * zoomScale))
                     .foregroundStyle(.red.opacity(0.7))

@@ -69,6 +69,8 @@ struct AssessPrepHackView: View {
         )) {
             Button(String(localized: "button.cancel"), role: .cancel) { appToDelete = nil }
             Button(String(localized: "button.delete"), role: .destructive) {
+                SoundEffectManager.shared.playTabDeleted()
+                HapticManager.shared.warning()
                 if let app = appToDelete {
                     viewModel.deleteApp(app)
                 }
@@ -210,7 +212,7 @@ struct AssessPrepHackView: View {
                     .padding(.horizontal, 10 * zoomScale)
                     .padding(.vertical, 4 * zoomScale)
                     .background(Color.red.opacity(0.1))
-                    .cornerRadius(4)
+                    .cornerRadius(4 * zoomScale)
             }
             .buttonStyle(.plain)
         }
@@ -247,8 +249,7 @@ struct AssessPrepHackView: View {
                             editingApp = app
                         },
                         onDelete: {
-                            SoundEffectManager.shared.playTabDeleted()
-                            HapticManager.shared.warning()
+                            SoundEffectManager.shared.playButtonClick()
                             appToDelete = app
                         }
                     )
@@ -265,8 +266,7 @@ struct AssessPrepHackView: View {
                         }
                         Divider()
                         Button(String(localized: "button.delete"), role: .destructive) {
-                            SoundEffectManager.shared.playTabDeleted()
-                            HapticManager.shared.warning()
+                            SoundEffectManager.shared.playButtonClick()
                             appToDelete = app
                         }
                     }
