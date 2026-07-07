@@ -115,7 +115,7 @@ struct BrowserBypasserView: View {
                     .font(.system(size: 16 * zoomScale, weight: .bold, design: .monospaced))
                     .foregroundStyle(.white)
                 
-                Text("Break free from lockdown pages")
+                Text("bypass.subtitle")
                     .font(.system(size: 9 * zoomScale, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.4))
             }

@@ -202,7 +202,7 @@ struct DestinTabView: View {
                 Text("DestinTab")
                     .font(.system(prefs.preferences.useCompactMode ? .subheadline : .headline, design: .monospaced))
                     .foregroundStyle(.white)
-                Text("Manage & switch browser tabs")
+                Text("destintab.subtitle")
                     .font(.system(size: 8 * zoomScale, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.35))
             }
@@ -224,7 +224,7 @@ struct DestinTabView: View {
                 Image(systemName: "exclamationmark.triangle.fill")
                     .font(.system(size: 11 * zoomScale))
                     .foregroundStyle(.orange)
-                    .help("Duplicate URLs detected")
+                    .help(Text("destintab.duplicate_urls_detected"))
             }
 
             Button(action: {
@@ -675,7 +675,7 @@ struct TabRow: View {
                             Image(systemName: "exclamationmark.triangle.fill")
                                 .font(.system(size: 8 * zoomScale))
                                 .foregroundStyle(.orange.opacity(0.8))
-                                .help("Duplicate URL")
+                                .help(Text("destintab.duplicate_url"))
                         }
                     }
 

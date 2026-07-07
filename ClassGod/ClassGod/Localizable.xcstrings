@@ -15196,6 +15196,70 @@
     "Your PC ran into a problem and needs to restart." : {
 
     },
+    "destintab.subtitle" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "管理与切换浏览器标签"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Manage & switch browser tabs"
+          }
+        }
+      }
+    },
+    "bypass.subtitle" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "挣脱锁定页面的束缚"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Break free from lockdown pages"
+          }
+        }
+      }
+    },
+    "destintab.duplicate_urls_detected" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "检测到重复 URL"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Duplicate URLs detected"
+          }
+        }
+      }
+    },
+    "destintab.duplicate_url" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "重复 URL"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Duplicate URL"
+          }
+        }
+      }
+    },
     "superswitch.subtitle" : {
       "localizations" : {
         "zh-Hans" : {
