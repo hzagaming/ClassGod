@@ -1081,8 +1081,8 @@ final class SMCService {
                 let service = unsafeBitCast(raw, to: ServiceRef.self)
 
                 guard let productRef = copyProperty(service, "Product" as CFString),
-                      CFGetTypeID(productRef) == CFStringGetTypeID() else { continue }
-                let product = (productRef as! CFString) as String
+                      CFGetTypeID(productRef) == CFStringGetTypeID(),
+                      let product = productRef as? String else { continue }
 
                 let event = copyEvent(service, 15, 0, 0)
                 guard let event = event else { continue }

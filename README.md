@@ -65,6 +65,7 @@ ClassGod/
 - [x] **动画速度设置生效范围修复**：Fan Control、Wallpaper Browser、BrowserBypasser、SuperSwitch 中若干写死时长的动画现在正确遵循"动画速度"/"极速模式"设置
 - [x] **SuperSwitch 面板本地化补齐**：此前唯一完全未本地化的功能面板，现已接入字符串目录
 - [x] **圆角缩放遗漏修复**：多处 `cornerRadius` 未随窗口缩放比例联动的问题
+- [x] **SMC / Widget 稳定性补丁**：温度传感器读取去掉潜在崩溃的强制转换；HackerDesktop Widget 配置编辑后立即保存；源码 plist 同步到 v1.5.5 (Build 30)
 
 ## 历史公告：v1.5.4
 

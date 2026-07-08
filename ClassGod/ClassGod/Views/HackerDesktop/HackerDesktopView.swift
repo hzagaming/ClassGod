@@ -142,6 +142,7 @@ struct HackerDesktopView: View {
                             .padding(8 * zoomScale)
                             .background(Color(white: 0.06))
                             .clipShape(RoundedRectangle(cornerRadius: 6 * zoomScale))
+                            .onChange(of: clockCity) { _, _ in saveData() }
                     }
                     
                     VStack(alignment: .leading, spacing: 4) {
@@ -155,6 +156,7 @@ struct HackerDesktopView: View {
                             .padding(8 * zoomScale)
                             .background(Color(white: 0.06))
                             .clipShape(RoundedRectangle(cornerRadius: 6 * zoomScale))
+                            .onChange(of: weatherCity) { _, _ in saveData() }
                     }
                 }
             }
@@ -199,6 +201,7 @@ struct HackerDesktopView: View {
                     SoundEffectManager.shared.playButtonClick()
                     HapticManager.shared.generic()
                     todoItems.append(TodoItem(id: UUID(), text: "", isDone: false))
+                    saveData()
                 }) {
                     HStack(spacing: 4 * zoomScale) {
                         Image(systemName: "plus")
@@ -240,6 +243,7 @@ struct HackerDesktopView: View {
                             .padding(8 * zoomScale)
                             .background(Color(white: 0.06))
                             .clipShape(RoundedRectangle(cornerRadius: 6 * zoomScale))
+                            .onChange(of: cryptoBTC) { _, _ in saveData() }
                     }
                     
                     VStack(alignment: .leading, spacing: 4) {
@@ -253,6 +257,7 @@ struct HackerDesktopView: View {
                             .padding(8 * zoomScale)
                             .background(Color(white: 0.06))
                             .clipShape(RoundedRectangle(cornerRadius: 6 * zoomScale))
+                            .onChange(of: cryptoETH) { _, _ in saveData() }
                     }
                 }
             }
@@ -266,6 +271,7 @@ struct HackerDesktopView: View {
                         .padding(8 * zoomScale)
                         .background(Color(white: 0.06))
                         .clipShape(RoundedRectangle(cornerRadius: 6 * zoomScale))
+                        .onChange(of: quoteText) { _, _ in saveData() }
                     
                     TextField("Author", text: $quoteAuthor)
                         .textFieldStyle(.plain)
@@ -274,6 +280,7 @@ struct HackerDesktopView: View {
                         .padding(8 * zoomScale)
                         .background(Color(white: 0.06))
                         .clipShape(RoundedRectangle(cornerRadius: 6 * zoomScale))
+                        .onChange(of: quoteAuthor) { _, _ in saveData() }
                 }
             }
             
@@ -289,6 +296,7 @@ struct HackerDesktopView: View {
                             .clipShape(RoundedRectangle(cornerRadius: 4 * zoomScale))
                     }
                 }
+                .onChange(of: terminalLogs) { _, _ in saveData() }
             }
         }
     }
@@ -364,7 +372,6 @@ struct HackerDesktopView: View {
             uptime: Date().timeIntervalSince(SystemMonitor.shared.system.bootTime ?? Date())
         )
         store.set(clockCity, forKey: .clockCity)
-        store.set(weatherCity, forKey: .weatherCity)
         store.set(weatherCity, forKey: .weatherCity)
         store.set("24°", forKey: .weatherTemp)
         store.set("cloud.sun.fill", forKey: .weatherCondition)
