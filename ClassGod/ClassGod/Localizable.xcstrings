@@ -177,6 +177,22 @@
         }
       }
     },
+    "hackerdesktop.sync_notice" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "System data is collected every 5 seconds. Widget data uses the shared App Group when available and falls back to local storage in unsigned local builds."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "系统数据每 5 秒采集一次。Widget 数据会在共享 App Group 可用时同步，本地未签名构建会回退到应用内本地存储。"
+          }
+        }
+      }
+    },
     "Idle" : {
       "localizations" : {
         "zh-Hans" : {

@@ -4,6 +4,18 @@
 
 ---
 
+## v1.5.6 — 2026-07-13
+
+### 修复
+- **设置页缩放一致性**：`CollapsibleSection`、`SettingsToggleRow`、`SettingsSliderRow`、`SettingsPickerRow`、`SettingsActionRow`、`SectionResetButton` 现在完整跟随 `windowZoomScale`，不再只有外框缩放而字体、间距、图标尺寸保持原大小。
+- **动画速度设置补漏**：设置页折叠/hover 动画与主菜单功能按钮按压动画统一改为读取 `Anim.enabled` / `Anim.duration`，极速模式下不再残留写死动画时长。
+- **设置交互反馈补齐**：折叠设置分组时补齐触感反馈；重置按钮文案改用既有 `button.reset` 本地化键。
+- **Widget 本地构建回退**：`WidgetDataStore` / `WidgetExtensionStore` 在 App Group 容器不可用时回退到 `UserDefaults.standard`，避免未签名本地构建下 HackerDesktop / Widget 数据读写静默失效。
+- **HackerDesktop 同步提示修正**：同步说明不再无条件声称 App Group 一定可用，新增 `hackerdesktop.sync_notice` 本地化文案说明共享容器与本地回退行为。
+- 版本号更新为 v1.5.6 (Build 31)
+
+---
+
 ## v1.5.5 — 2026-07-07
 
 ### 修复

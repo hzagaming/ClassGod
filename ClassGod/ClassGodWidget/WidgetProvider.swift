@@ -62,31 +62,31 @@ struct WidgetProvider: TimelineProvider {
 // MARK: - Extension-Specific Store
 
 struct WidgetExtensionStore {
-    private let defaults = UserDefaults(suiteName: widgetAppGroupID)
+    private let defaults = UserDefaults(suiteName: widgetAppGroupID) ?? .standard
     
     func string(forKey key: WidgetDataKey) -> String? {
-        defaults?.string(forKey: key.rawValue)
+        defaults.string(forKey: key.rawValue)
     }
     
     func double(forKey key: WidgetDataKey) -> Double {
-        defaults?.double(forKey: key.rawValue) ?? 0
+        defaults.double(forKey: key.rawValue)
     }
     
     func bool(forKey key: WidgetDataKey) -> Bool {
-        defaults?.bool(forKey: key.rawValue) ?? false
+        defaults.bool(forKey: key.rawValue)
     }
     
     func date(forKey key: WidgetDataKey) -> Date? {
-        defaults?.object(forKey: key.rawValue) as? Date
+        defaults.object(forKey: key.rawValue) as? Date
     }
     
     func array<T: Codable>(forKey key: WidgetDataKey, type: T.Type) -> [T] {
-        guard let data = defaults?.data(forKey: key.rawValue),
+        guard let data = defaults.data(forKey: key.rawValue),
               let array = try? JSONDecoder().decode([T].self, from: data) else { return [] }
         return array
     }
     
     func stringArray(forKey key: WidgetDataKey) -> [String] {
-        defaults?.stringArray(forKey: key.rawValue) ?? []
+        defaults.stringArray(forKey: key.rawValue) ?? []
     }
 }

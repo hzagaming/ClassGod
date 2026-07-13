@@ -387,12 +387,22 @@ struct FeatureButton: View {
             isHovered = hovering
         }
         .pressEvents {
-            withAnimation(.easeOut(duration: 0.08)) {
+            let press = {
                 isPressed = true
             }
+            if Anim.enabled {
+                withAnimation(.easeOut(duration: Anim.duration), press)
+            } else {
+                press()
+            }
         } onRelease: {
-            withAnimation(.easeOut(duration: 0.12)) {
+            let release = {
                 isPressed = false
+            }
+            if Anim.enabled {
+                withAnimation(.easeOut(duration: Anim.duration), release)
+            } else {
+                release()
             }
         }
     }

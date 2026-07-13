@@ -11,9 +11,9 @@
     <key>CFBundleName</key>
     <string>ClassGod</string>
     <key>CFBundleShortVersionString</key>
-    <string>1.5.5</string>
+    <string>1.5.6</string>
     <key>CFBundleVersion</key>
-    <string>30</string>
+    <string>31</string>
     <key>NSQuitAlwaysKeepsWindows</key>
     <false/>
 </dict>

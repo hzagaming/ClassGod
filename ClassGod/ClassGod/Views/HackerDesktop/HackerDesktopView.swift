@@ -117,7 +117,7 @@ struct HackerDesktopView: View {
     private var dataTab: some View {
         VStack(spacing: 14 * zoomScale) {
             ConfigSection(title: "System Monitor", icon: "cpu") {
-                Text("System data is automatically collected every 5 seconds and synced to Desk Widgets via App Group.")
+                Text("hackerdesktop.sync_notice")
                     .font(.system(size: 11 * zoomScale, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.45))
                     .frame(maxWidth: .infinity, alignment: .leading)

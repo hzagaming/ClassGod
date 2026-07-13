@@ -55,7 +55,18 @@ ClassGod/
     └── Settings/                  # 设置面板
 ```
 
-## 最新公告：v1.5.5
+## 最新公告：v1.5.6
+
+### 设置 UI / Widget 稳定性深度修复
+
+- [x] **设置页缩放一致性**：设置页折叠分组、Toggle、Slider、Picker、Action Row、Reset 按钮的字体、间距、图标和固定宽度完整跟随 `windowZoomScale`
+- [x] **动画速度补漏**：设置页 hover / 折叠动画与主菜单功能按钮按压动画统一遵循“动画速度”与“极速模式”
+- [x] **交互反馈补齐**：设置分组折叠补齐触感反馈，Reset 按钮改用本地化文案
+- [x] **Widget 本地构建回退**：App Group 容器不可用时，主 App 与 Widget 读取端回退到本地存储，避免 HackerDesktop / Widget 数据读写静默失效
+- [x] **HackerDesktop 提示修正**：同步提示明确区分共享 App Group 与本地未签名构建回退行为
+- [x] **版本号更新**：实际构建产物更新为 v1.5.6 (Build 31)
+
+## 历史公告：v1.5.5
 
 ### UI/UX/SFX 一致性修复
 

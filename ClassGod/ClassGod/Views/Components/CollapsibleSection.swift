@@ -22,29 +22,35 @@ struct CollapsibleSection<Content: View>: View {
             // Header
             Button(action: {
                 SoundEffectManager.shared.playButtonClick()
-                withAnimation(.easeInOut(duration: 0.22)) {
+                HapticManager.shared.generic()
+                let toggle = {
                     isExpanded.toggle()
                 }
+                if Anim.enabled {
+                    withAnimation(.easeInOut(duration: Anim.duration), toggle)
+                } else {
+                    toggle()
+                }
             }) {
-                HStack(spacing: 10) {
+                HStack(spacing: 10 * zoomScale) {
                     Image(systemName: icon)
-                        .font(.system(size: 13, weight: .semibold))
+                        .font(.system(size: 13 * zoomScale, weight: .semibold))
                         .foregroundStyle(accentColor)
-                        .frame(width: 20)
+                        .frame(width: 20 * zoomScale)
 
                     Text(title)
-                        .font(.system(size: 12, weight: .bold, design: .monospaced))
+                        .font(.system(size: 12 * zoomScale, weight: .bold, design: .monospaced))
                         .foregroundStyle(.white)
 
                     Spacer()
 
                     Image(systemName: isExpanded ? "chevron.down" : "chevron.right")
-                        .font(.system(size: 11, weight: .bold))
+                        .font(.system(size: 11 * zoomScale, weight: .bold))
                         .foregroundStyle(.white.opacity(0.4))
-                        .animation(.easeInOut(duration: 0.2), value: isExpanded)
+                        .animation(Anim.enabled ? .easeInOut(duration: Anim.duration) : nil, value: isExpanded)
                 }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 10)
+                .padding(.horizontal, 12 * zoomScale)
+                .padding(.vertical, 10 * zoomScale)
                 .background(
                     RoundedRectangle(cornerRadius: 8 * zoomScale)
                         .fill(Color(white: 0.06))
@@ -60,11 +66,11 @@ struct CollapsibleSection<Content: View>: View {
 
             // Content
             if isExpanded {
-                VStack(alignment: .leading, spacing: 12) {
+                VStack(alignment: .leading, spacing: 12 * zoomScale) {
                     content
                 }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 12)
+                .padding(.horizontal, 12 * zoomScale)
+                .padding(.vertical, 12 * zoomScale)
                 .background(
                     RoundedRectangle(cornerRadius: 8 * zoomScale)
                         .fill(Color(white: 0.03))

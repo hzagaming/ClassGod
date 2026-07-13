@@ -18,22 +18,22 @@ struct SettingsToggleRow: View {
     private var zoomScale: CGFloat { CGFloat(prefs.preferences.windowZoomScale) }
 
     var body: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: 10 * zoomScale) {
             if let icon = icon {
                 Image(systemName: icon)
-                    .font(.system(size: 12))
+                    .font(.system(size: 12 * zoomScale))
                     .foregroundStyle(.white.opacity(0.4))
-                    .frame(width: 18)
+                    .frame(width: 18 * zoomScale)
             }
 
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 2 * zoomScale) {
                 Text(title)
-                    .font(.system(size: 12, weight: .medium))
+                    .font(.system(size: 12 * zoomScale, weight: .medium))
                     .foregroundStyle(.white)
 
                 if let subtitle = subtitle {
                     Text(subtitle)
-                        .font(.system(size: 10))
+                        .font(.system(size: 10 * zoomScale))
                         .foregroundStyle(.white.opacity(0.35))
                         .lineLimit(1)
                 }
@@ -45,14 +45,14 @@ struct SettingsToggleRow: View {
                 .toggleStyle(.switch)
                 .controlSize(.small)
         }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 8)
+        .padding(.horizontal, 10 * zoomScale)
+        .padding(.vertical, 8 * zoomScale)
         .background(
             RoundedRectangle(cornerRadius: 6 * zoomScale)
                 .fill(isHovered ? Color.white.opacity(0.04) : Color.clear)
         )
         .onHover { isHovered = $0 }
-        .animation(.easeInOut(duration: 0.15), value: isHovered)
+        .animation(Anim.enabled ? .easeInOut(duration: Anim.duration) : nil, value: isHovered)
         .onChange(of: isOn) { _, _ in
             SoundEffectManager.shared.playButtonClick()
             HapticManager.shared.generic()
@@ -118,28 +118,28 @@ struct SettingsSliderRow: View {
     }
 
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 12 * zoomScale) {
             Text(label)
-                .font(.system(size: 12, weight: .medium))
+                .font(.system(size: 12 * zoomScale, weight: .medium))
                 .foregroundStyle(.white)
-                .frame(minWidth: 100, alignment: .leading)
+                .frame(minWidth: 100 * zoomScale, alignment: .leading)
 
             Slider(value: $value, in: range, step: step)
-                .frame(height: 16)
+                .frame(height: 16 * zoomScale)
 
             Text(displayFormatter(value))
-                .font(.system(size: 11, design: .monospaced))
+                .font(.system(size: 11 * zoomScale, design: .monospaced))
                 .foregroundStyle(.white.opacity(0.5))
-                .frame(width: 50, alignment: .trailing)
+                .frame(width: 50 * zoomScale, alignment: .trailing)
         }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 6)
+        .padding(.horizontal, 10 * zoomScale)
+        .padding(.vertical, 6 * zoomScale)
         .background(
             RoundedRectangle(cornerRadius: 6 * zoomScale)
                 .fill(isHovered ? Color.white.opacity(0.03) : Color.clear)
         )
         .onHover { isHovered = $0 }
-        .animation(.easeInOut(duration: 0.15), value: isHovered)
+        .animation(Anim.enabled ? .easeInOut(duration: Anim.duration) : nil, value: isHovered)
         .onChange(of: value) { _, _ in
             SoundEffectManager.shared.playButtonClick()
             HapticManager.shared.generic()
@@ -167,9 +167,9 @@ struct SettingsPickerRow<T: Hashable & Identifiable>: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 8 * zoomScale) {
             Text(label)
-                .font(.system(size: 12, weight: .medium))
+                .font(.system(size: 12 * zoomScale, weight: .medium))
                 .foregroundStyle(.white)
 
             switch style {
@@ -201,14 +201,14 @@ struct SettingsPickerRow<T: Hashable & Identifiable>: View {
                 .labelsHidden()
             }
         }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 8)
+        .padding(.horizontal, 10 * zoomScale)
+        .padding(.vertical, 8 * zoomScale)
         .background(
             RoundedRectangle(cornerRadius: 6 * zoomScale)
                 .fill(isHovered ? Color.white.opacity(0.03) : Color.clear)
         )
         .onHover { isHovered = $0 }
-        .animation(.easeInOut(duration: 0.15), value: isHovered)
+        .animation(Anim.enabled ? .easeInOut(duration: Anim.duration) : nil, value: isHovered)
         .onChange(of: selection) { _, _ in
             SoundEffectManager.shared.playButtonClick()
             HapticManager.shared.generic()
@@ -235,22 +235,22 @@ struct SettingsActionRow: View {
             HapticManager.shared.generic()
             action()
         }) {
-            HStack(spacing: 10) {
+            HStack(spacing: 10 * zoomScale) {
                 if let icon = icon {
                     Image(systemName: icon)
-                        .font(.system(size: 12))
+                        .font(.system(size: 12 * zoomScale))
                         .foregroundStyle(isDestructive ? .red.opacity(0.7) : .white.opacity(0.4))
-                        .frame(width: 18)
+                        .frame(width: 18 * zoomScale)
                 }
 
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: 2 * zoomScale) {
                     Text(title)
-                        .font(.system(size: 12, weight: .medium))
+                        .font(.system(size: 12 * zoomScale, weight: .medium))
                         .foregroundStyle(isDestructive ? .red.opacity(0.9) : .white)
 
                     if let subtitle = subtitle {
                         Text(subtitle)
-                            .font(.system(size: 10))
+                            .font(.system(size: 10 * zoomScale))
                             .foregroundStyle(.white.opacity(0.35))
                             .lineLimit(1)
                     }
@@ -259,11 +259,11 @@ struct SettingsActionRow: View {
                 Spacer()
 
                 Image(systemName: "chevron.right")
-                    .font(.system(size: 10, weight: .bold))
+                    .font(.system(size: 10 * zoomScale, weight: .bold))
                     .foregroundStyle(.white.opacity(0.2))
             }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 8)
+            .padding(.horizontal, 10 * zoomScale)
+            .padding(.vertical, 8 * zoomScale)
             .background(
                 RoundedRectangle(cornerRadius: 6 * zoomScale)
                     .fill(isHovered ? Color.white.opacity(0.06) : Color.white.opacity(0.02))
@@ -276,7 +276,7 @@ struct SettingsActionRow: View {
         }
         .buttonStyle(.plain)
         .onHover { isHovered = $0 }
-        .animation(.easeInOut(duration: 0.15), value: isHovered)
+        .animation(Anim.enabled ? .easeInOut(duration: Anim.duration) : nil, value: isHovered)
     }
 }
 
@@ -285,6 +285,9 @@ struct SettingsActionRow: View {
 struct SectionResetButton: View {
     let action: () -> Void
     @State private var isHovered = false
+    @ObservedObject private var prefs = PreferencesManager.shared
+
+    private var zoomScale: CGFloat { CGFloat(prefs.preferences.windowZoomScale) }
 
     var body: some View {
         Button(action: {
@@ -292,24 +295,24 @@ struct SectionResetButton: View {
             HapticManager.shared.generic()
             action()
         }) {
-            HStack(spacing: 4) {
+            HStack(spacing: 4 * zoomScale) {
                 Image(systemName: "arrow.counterclockwise")
-                    .font(.system(size: 8, weight: .bold))
-                Text("Reset")
-                    .font(.system(size: 9, weight: .bold, design: .monospaced))
+                    .font(.system(size: 8 * zoomScale, weight: .bold))
+                Text("button.reset")
+                    .font(.system(size: 9 * zoomScale, weight: .bold, design: .monospaced))
             }
             .foregroundStyle(.white.opacity(0.35))
-            .padding(.horizontal, 8)
-            .padding(.vertical, 3)
+            .padding(.horizontal, 8 * zoomScale)
+            .padding(.vertical, 3 * zoomScale)
             .background(
                 Capsule()
                     .fill(isHovered ? Color.white.opacity(0.08) : Color.clear)
-                    .overlay(Capsule().stroke(Color.white.opacity(0.1), lineWidth: 0.5))
+                    .overlay(Capsule().stroke(Color.white.opacity(0.1), lineWidth: 0.5 * zoomScale))
             )
         }
         .buttonStyle(.plain)
         .onHover { isHovered = $0 }
-        .animation(.easeInOut(duration: 0.15), value: isHovered)
+        .animation(Anim.enabled ? .easeInOut(duration: Anim.duration) : nil, value: isHovered)
     }
 }
 

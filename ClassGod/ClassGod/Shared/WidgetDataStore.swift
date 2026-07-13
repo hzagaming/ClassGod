@@ -2,7 +2,7 @@
 //  WidgetDataStore.swift
 //  ClassGod
 //
-//  Shared between main app and Widget Extension via App Group.
+//  Shared between main app and Widget Extension via App Group when available.
 //
 
 import Foundation
@@ -50,57 +50,64 @@ enum WidgetDataKey: String {
 final class WidgetDataStore {
     static let shared = WidgetDataStore()
     
-    private let defaults: UserDefaults?
+    private let defaults: UserDefaults
+    let usesSharedContainer: Bool
     
     private init() {
-        defaults = UserDefaults(suiteName: widgetAppGroupID)
+        if let sharedDefaults = UserDefaults(suiteName: widgetAppGroupID) {
+            defaults = sharedDefaults
+            usesSharedContainer = true
+        } else {
+            defaults = .standard
+            usesSharedContainer = false
+        }
     }
     
     // MARK: - Generic
     
     func set(_ value: Any, forKey key: WidgetDataKey) {
-        defaults?.set(value, forKey: key.rawValue)
+        defaults.set(value, forKey: key.rawValue)
     }
     
     func string(forKey key: WidgetDataKey) -> String? {
-        defaults?.string(forKey: key.rawValue)
+        defaults.string(forKey: key.rawValue)
     }
     
     func double(forKey key: WidgetDataKey) -> Double {
-        defaults?.double(forKey: key.rawValue) ?? 0
+        defaults.double(forKey: key.rawValue)
     }
     
     func bool(forKey key: WidgetDataKey) -> Bool {
-        defaults?.bool(forKey: key.rawValue) ?? false
+        defaults.bool(forKey: key.rawValue)
     }
     
     func integer(forKey key: WidgetDataKey) -> Int {
-        defaults?.integer(forKey: key.rawValue) ?? 0
+        defaults.integer(forKey: key.rawValue)
     }
     
     func data(forKey key: WidgetDataKey) -> Data? {
-        defaults?.data(forKey: key.rawValue)
+        defaults.data(forKey: key.rawValue)
     }
     
     func date(forKey key: WidgetDataKey) -> Date? {
-        defaults?.object(forKey: key.rawValue) as? Date
+        defaults.object(forKey: key.rawValue) as? Date
     }
     
     func set(_ array: [String], forKey key: WidgetDataKey) {
-        defaults?.set(array, forKey: key.rawValue)
+        defaults.set(array, forKey: key.rawValue)
     }
     
     func stringArray(forKey key: WidgetDataKey) -> [String] {
-        defaults?.stringArray(forKey: key.rawValue) ?? []
+        defaults.stringArray(forKey: key.rawValue) ?? []
     }
     
     func setArray<T: Codable>(_ array: [T], forKey key: WidgetDataKey) {
         guard let data = try? JSONEncoder().encode(array) else { return }
-        defaults?.set(data, forKey: key.rawValue)
+        defaults.set(data, forKey: key.rawValue)
     }
     
     func array<T: Codable>(forKey key: WidgetDataKey, type: T.Type) -> [T] {
-        guard let data = defaults?.data(forKey: key.rawValue),
+        guard let data = defaults.data(forKey: key.rawValue),
               let array = try? JSONDecoder().decode([T].self, from: data) else { return [] }
         return array
     }
