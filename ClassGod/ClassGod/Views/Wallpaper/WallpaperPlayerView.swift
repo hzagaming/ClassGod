@@ -20,8 +20,8 @@ struct WallpaperPlayerView: View {
             }
         }
         .transition(.asymmetric(
-            insertion: .opacity.animation(.easeInOut(duration: 0.6)),
-            removal: .opacity.animation(.easeInOut(duration: 0.4))
+            insertion: .opacity.animation(Anim.enabled ? .easeInOut(duration: Anim.duration * 2) : nil),
+            removal: .opacity.animation(Anim.enabled ? .easeInOut(duration: Anim.duration) : nil)
         ))
     }
 }
@@ -373,7 +373,7 @@ struct WallpaperQuickAccessBar: View {
                 )
         )
         .opacity(isHovered ? 1 : 0)
-        .animation(.easeInOut(duration: 0.25), value: isHovered)
+        .animation(Anim.enabled ? .easeInOut(duration: Anim.duration) : nil, value: isHovered)
         .onHover { isHovered = $0 }
     }
 }

@@ -182,13 +182,45 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "System data is collected every 5 seconds. Widget data uses the shared App Group when available and falls back to local storage in unsigned local builds."
+            "value" : "System data is collected every 5 seconds. WidgetKit sync requires the shared App Group; local builds keep in-app widget data in a fallback store."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "系统数据每 5 秒采集一次。Widget 数据会在共享 App Group 可用时同步，本地未签名构建会回退到应用内本地存储。"
+            "value" : "系统数据每 5 秒采集一次。WidgetKit 同步需要共享 App Group；本地构建会把应用内小组件数据保存在回退存储里。"
+          }
+        }
+      }
+    },
+    "hackerdesktop.shared_active" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shared App Group active"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "共享 App Group 已启用"
+          }
+        }
+      }
+    },
+    "hackerdesktop.local_fallback" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Local fallback store active"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "本地回退存储已启用"
           }
         }
       }

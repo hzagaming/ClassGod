@@ -68,6 +68,7 @@ struct SettingsSliderRow: View {
     let range: ClosedRange<Double>
     let step: Double
     @State private var isHovered = false
+    @State private var lastFeedbackAt = Date.distantPast
     @ObservedObject private var prefs = PreferencesManager.shared
 
     private var zoomScale: CGFloat { CGFloat(prefs.preferences.windowZoomScale) }
@@ -141,9 +142,16 @@ struct SettingsSliderRow: View {
         .onHover { isHovered = $0 }
         .animation(Anim.enabled ? .easeInOut(duration: Anim.duration) : nil, value: isHovered)
         .onChange(of: value) { _, _ in
-            SoundEffectManager.shared.playButtonClick()
-            HapticManager.shared.generic()
+            playThrottledFeedback()
         }
+    }
+
+    private func playThrottledFeedback() {
+        let now = Date()
+        guard now.timeIntervalSince(lastFeedbackAt) >= 0.18 else { return }
+        lastFeedbackAt = now
+        SoundEffectManager.shared.playButtonClick()
+        HapticManager.shared.generic()
     }
 }
 

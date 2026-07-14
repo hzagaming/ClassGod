@@ -99,7 +99,7 @@ struct HackerDesktopView: View {
         .onAppear {
             loadData()
             SystemMonitor.shared.start(interval: 2.0)
-            // Periodically save system data to App Group
+            // Periodically save system data to the active widget store.
             saveTimer?.invalidate()
             saveTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { _ in
                 saveSystemData()
@@ -121,6 +121,14 @@ struct HackerDesktopView: View {
                     .font(.system(size: 11 * zoomScale, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.45))
                     .frame(maxWidth: .infinity, alignment: .leading)
+
+                HStack(spacing: 6 * zoomScale) {
+                    Image(systemName: WidgetDataStore.shared.usesSharedContainer ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
+                        .font(.system(size: 10 * zoomScale))
+                    Text(WidgetDataStore.shared.usesSharedContainer ? "hackerdesktop.shared_active" : "hackerdesktop.local_fallback")
+                        .font(.system(size: 10 * zoomScale, weight: .medium, design: .monospaced))
+                }
+                .foregroundStyle(WidgetDataStore.shared.usesSharedContainer ? .green.opacity(0.75) : .yellow.opacity(0.75))
                 
                 HStack(spacing: 12 * zoomScale) {
                     StatBadge(label: "CPU", value: "\(Int(SystemMonitor.shared.cpu.total))%", color: .cyan)

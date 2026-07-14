@@ -55,7 +55,17 @@ ClassGod/
     └── Settings/                  # 设置面板
 ```
 
-## 最新公告：v1.5.6
+## 最新公告：v1.5.7
+
+### SFX / Wallpaper / Widget 状态修复
+
+- [x] **设置 Slider 音效节流**：拖动 Slider 时不再每个数值变化都触发音效和触感，设置页不会再出现高频反馈噪声
+- [x] **Wallpaper 动画速度补漏**：壁纸切换淡入淡出、Quick Access Bar hover 显隐统一遵循“动画速度”与“极速模式”
+- [x] **HackerDesktop Widget 状态提示**：系统监控区会显示当前是共享 App Group 还是本地回退存储
+- [x] **Widget 文案修正**：同步提示明确说明 WidgetKit 同步依赖 App Group，本地构建使用应用内回退存储
+- [x] **版本号更新**：实际构建产物更新为 v1.5.7 (Build 32)
+
+## 历史公告：v1.5.6
 
 ### 设置 UI / Widget 稳定性深度修复
 

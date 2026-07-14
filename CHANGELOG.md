@@ -4,6 +4,17 @@
 
 ---
 
+## v1.5.7 — 2026-07-14
+
+### 修复
+- **设置 Slider 音效节流**：`SettingsSliderRow` 拖动时不再对每一次数值变化连续播放按钮音效和触感，避免设置页 SFX 变成高频噪声。
+- **Wallpaper 动画速度补漏**：`WallpaperPlayerView` 的壁纸切换淡入/淡出、Quick Access Bar hover 显隐改为读取 `Anim.enabled` / `Anim.duration`，极速模式下不再残留写死动画。
+- **HackerDesktop Widget 状态提示**：同步说明改为准确描述 WidgetKit App Group 要求与本地回退存储，并在系统监控区显示当前使用的是共享 App Group 还是本地回退存储。
+- **本地化补齐**：新增 `hackerdesktop.shared_active` / `hackerdesktop.local_fallback` 状态文案，并更新 `hackerdesktop.sync_notice` 的 zh-Hans / en 文案。
+- 版本号更新为 v1.5.7 (Build 32)
+
+---
+
 ## v1.5.6 — 2026-07-13
 
 ### 修复
