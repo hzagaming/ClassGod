@@ -29,6 +29,7 @@ struct HackerDesktopView: View {
     
     @State private var selectedTab = 0
     @State private var saveTimer: Timer?
+    @State private var pendingSaveWorkItem: DispatchWorkItem?
     
     @ObservedObject private var prefs = PreferencesManager.shared
     private var zoomScale: CGFloat { CGFloat(prefs.preferences.windowZoomScale) }
@@ -109,6 +110,9 @@ struct HackerDesktopView: View {
             SystemMonitor.shared.stop()
             saveTimer?.invalidate()
             saveTimer = nil
+            pendingSaveWorkItem?.cancel()
+            pendingSaveWorkItem = nil
+            saveSystemData()
         }
     }
     
@@ -184,7 +188,7 @@ struct HackerDesktopView: View {
                                     SoundEffectManager.shared.playButtonClick()
                                     HapticManager.shared.generic()
                                     item.isDone.toggle()
-                                    saveData()
+                                    saveData(immediate: true)
                                 }
                             TextField("Task", text: $item.text)
                                 .textFieldStyle(.plain)
@@ -193,8 +197,10 @@ struct HackerDesktopView: View {
                                 .strikethrough(item.isDone)
                             
                             Button(action: {
+                                SoundEffectManager.shared.playWidgetDeleted()
+                                HapticManager.shared.warning()
                                 todoItems.removeAll { $0.id == item.id }
-                                saveData()
+                                saveData(immediate: true)
                             }) {
                                 Image(systemName: "xmark")
                                     .font(.system(size: 9 * zoomScale))
@@ -209,7 +215,7 @@ struct HackerDesktopView: View {
                     SoundEffectManager.shared.playButtonClick()
                     HapticManager.shared.generic()
                     todoItems.append(TodoItem(id: UUID(), text: "", isDone: false))
-                    saveData()
+                    saveData(immediate: true)
                 }) {
                     HStack(spacing: 4 * zoomScale) {
                         Image(systemName: "plus")
@@ -396,8 +402,19 @@ struct HackerDesktopView: View {
         store.reloadAllWidgets()
     }
     
-    private func saveData() {
-        saveSystemData()
+    private func saveData(immediate: Bool = false) {
+        pendingSaveWorkItem?.cancel()
+        if immediate {
+            pendingSaveWorkItem = nil
+            saveSystemData()
+            return
+        }
+
+        let workItem = DispatchWorkItem {
+            saveSystemData()
+        }
+        pendingSaveWorkItem = workItem
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35, execute: workItem)
     }
     
     private func loadData() {

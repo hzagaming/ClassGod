@@ -2,7 +2,7 @@
 
 ## 项目定位
 
-ClassGod 本质上是一个**紧急切屏工具**——帮用户在关键时刻（比如老师来了、老板路过）瞬间切回指定页面。当前版本 v1.5.7 (Build 32)，核心逻辑是 AppleScript + Carbon HotKey + SwiftUI。
+ClassGod 本质上是一个**紧急切屏工具**——帮用户在关键时刻（比如老师来了、老板路过）瞬间切回指定页面。当前版本 v1.5.8 (Build 33)，核心逻辑是 AppleScript + Carbon HotKey + SwiftUI。
 
 ## 技术约束
 

@@ -21,17 +21,21 @@ struct DesktopWidgetEditor: View {
             // Toggle
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Enable Desktop Widgets")
+                    Text("desktop_widgets.enable")
                         .font(.system(size: 12 * zoomScale, weight: .bold, design: .monospaced))
                         .foregroundStyle(.white)
-                    Text("Show overlay widgets on Finder desktop")
+                    Text("desktop_widgets.enable.subtitle")
                         .font(.system(size: 10 * zoomScale, design: .monospaced))
                         .foregroundStyle(.white.opacity(0.4))
                 }
                 Spacer()
                 Toggle("", isOn: Binding(
                     get: { manager.isEnabled },
-                    set: { manager.setEnabled($0) }
+                    set: {
+                        SoundEffectManager.shared.playButtonClick()
+                        HapticManager.shared.generic()
+                        manager.setEnabled($0)
+                    }
                 ))
                 .toggleStyle(SwitchToggleStyle(tint: .cyan))
             }
@@ -48,12 +52,13 @@ struct DesktopWidgetEditor: View {
                 HStack {
                     Button(action: {
                         SoundEffectManager.shared.playButtonClick()
+                        HapticManager.shared.generic()
                         manager.toggleEditMode()
                     }) {
                         HStack(spacing: 4 * zoomScale) {
                             Image(systemName: manager.isEditMode ? "checkmark" : "pencil")
                                 .font(.system(size: 10 * zoomScale))
-                            Text(manager.isEditMode ? "Done" : "Edit Layout")
+                            Text(LocalizedStringKey(manager.isEditMode ? "button.done" : "desktop_widgets.edit_layout"))
                                 .font(.system(size: 11 * zoomScale, weight: .bold, design: .monospaced))
                         }
                         .foregroundStyle(.white)
@@ -62,7 +67,7 @@ struct DesktopWidgetEditor: View {
                         .background(manager.isEditMode ? Color.green.opacity(0.2) : Color.white.opacity(0.08))
                         .overlay(
                             RoundedRectangle(cornerRadius: 6 * zoomScale)
-                                .stroke(manager.isEditMode ? Color.green.opacity(0.5) : Color.white.opacity(0.15), lineWidth: 1)
+                                .stroke(manager.isEditMode ? Color.green.opacity(0.5) : Color.white.opacity(0.15), lineWidth: 1 * zoomScale)
                         )
                     }
                     .buttonStyle(.plain)
@@ -71,12 +76,13 @@ struct DesktopWidgetEditor: View {
 
                     Button(action: {
                         SoundEffectManager.shared.playButtonClick()
+                        HapticManager.shared.generic()
                         manager.resetToDefaults()
                     }) {
                         HStack(spacing: 4 * zoomScale) {
                             Image(systemName: "arrow.counterclockwise")
                                 .font(.system(size: 10 * zoomScale))
-                            Text("Reset")
+                            Text("button.reset")
                                 .font(.system(size: 11 * zoomScale, weight: .bold, design: .monospaced))
                         }
                         .foregroundStyle(.white.opacity(0.6))
@@ -85,7 +91,7 @@ struct DesktopWidgetEditor: View {
                         .background(Color.white.opacity(0.05))
                         .overlay(
                             RoundedRectangle(cornerRadius: 6 * zoomScale)
-                                .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                                .stroke(Color.white.opacity(0.1), lineWidth: 1 * zoomScale)
                         )
                     }
                     .buttonStyle(.plain)
@@ -98,7 +104,7 @@ struct DesktopWidgetEditor: View {
                     
                     if !regularWidgets.isEmpty {
                         VStack(alignment: .leading, spacing: 8 * zoomScale) {
-                            Text("Active Widgets (\(regularWidgets.count))")
+                            Text(String(format: String(localized: "desktop_widgets.active_count"), regularWidgets.count))
                                 .font(.system(size: 11 * zoomScale, weight: .bold, design: .monospaced))
                                 .foregroundStyle(.white.opacity(0.6))
                             
@@ -114,7 +120,7 @@ struct DesktopWidgetEditor: View {
                     
                     if !desktopTabs.isEmpty {
                         VStack(alignment: .leading, spacing: 8 * zoomScale) {
-                            Text("Desktop Tabs (\(desktopTabs.count))")
+                            Text(String(format: String(localized: "desktop_widgets.tabs_count"), desktopTabs.count))
                                 .font(.system(size: 11 * zoomScale, weight: .bold, design: .monospaced))
                                 .foregroundStyle(.white.opacity(0.6))
                             
@@ -129,11 +135,11 @@ struct DesktopWidgetEditor: View {
                     }
                     
                     if manager.widgets.isEmpty {
-                        Text("No widgets or tabs. Add one below.")
+                        Text("desktop_widgets.empty")
                             .font(.system(size: 10 * zoomScale, design: .monospaced))
                             .foregroundStyle(.white.opacity(0.3))
                             .frame(maxWidth: .infinity, alignment: .center)
-                            .padding(.vertical, 20)
+                            .padding(.vertical, 20 * zoomScale)
                     }
                 }
                 .padding(12 * zoomScale)
@@ -146,7 +152,7 @@ struct DesktopWidgetEditor: View {
 
                 // Add widget section
                 VStack(alignment: .leading, spacing: 10 * zoomScale) {
-                    Text("Add Widget")
+                    Text("desktop_widgets.add_widget")
                         .font(.system(size: 11 * zoomScale, weight: .bold, design: .monospaced))
                         .foregroundStyle(.white.opacity(0.6))
 
@@ -173,7 +179,7 @@ struct DesktopWidgetEditor: View {
                 
                 // Add desktop tab section
                 VStack(alignment: .leading, spacing: 10 * zoomScale) {
-                    Text("Add Desktop Tab")
+                    Text("desktop_widgets.add_tab")
                         .font(.system(size: 11 * zoomScale, weight: .bold, design: .monospaced))
                         .foregroundStyle(.white.opacity(0.6))
 
@@ -205,6 +211,8 @@ struct DesktopWidgetEditor: View {
             switch result {
             case .success(let urls):
                 if let url = urls.first {
+                    SoundEffectManager.shared.playButtonClick()
+                    HapticManager.shared.generic()
                     let path = url.path
                     var widget = HackerWidgetItem(type: type)
                     widget.filePath = path
@@ -215,6 +223,8 @@ struct DesktopWidgetEditor: View {
                     }
                 }
             case .failure:
+                SoundEffectManager.shared.playSwitchFailure()
+                HapticManager.shared.warning()
                 break
             }
         }
@@ -272,7 +282,7 @@ private struct WidgetListCard: View {
         .clipShape(RoundedRectangle(cornerRadius: 6 * zoomScale))
         .overlay(
             RoundedRectangle(cornerRadius: 6 * zoomScale)
-                .stroke(Color.white.opacity(0.06), lineWidth: 1)
+                .stroke(Color.white.opacity(0.06), lineWidth: 1 * zoomScale)
         )
     }
 }
@@ -287,6 +297,7 @@ private struct AddWidgetButton: View {
     var body: some View {
         Button(action: {
             SoundEffectManager.shared.playButtonClick()
+            HapticManager.shared.generic()
             action()
         }) {
             VStack(spacing: 4 * zoomScale) {
@@ -304,7 +315,7 @@ private struct AddWidgetButton: View {
             .clipShape(RoundedRectangle(cornerRadius: 8 * zoomScale))
             .overlay(
                 RoundedRectangle(cornerRadius: 8 * zoomScale)
-                    .stroke(Color.white.opacity(0.08), lineWidth: 1)
+                    .stroke(Color.white.opacity(0.08), lineWidth: 1 * zoomScale)
             )
         }
         .buttonStyle(.plain)
