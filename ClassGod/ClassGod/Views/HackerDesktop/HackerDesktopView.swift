@@ -53,7 +53,7 @@ struct HackerDesktopView: View {
                 
                 Spacer()
                 
-                Text("Widget Config Center")
+                Text("hackerdesktop.config_title")
                     .font(.system(size: 13 * zoomScale, weight: .bold, design: .monospaced))
                     .foregroundStyle(.white)
                 
@@ -144,10 +144,10 @@ struct HackerDesktopView: View {
             ConfigSection(title: "Clock & Weather", icon: "clock") {
                 HStack(spacing: 12 * zoomScale) {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Clock City")
+                        Text("hackerdesktop.clock_city")
                             .font(.system(size: 10 * zoomScale, design: .monospaced))
                             .foregroundStyle(.white.opacity(0.4))
-                        TextField("City", text: $clockCity)
+                        TextField("hackerdesktop.city_placeholder", text: $clockCity)
                             .textFieldStyle(.plain)
                             .font(.system(size: 12 * zoomScale, design: .monospaced))
                             .foregroundStyle(.white)
@@ -158,10 +158,10 @@ struct HackerDesktopView: View {
                     }
                     
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Weather City")
+                        Text("hackerdesktop.weather_city")
                             .font(.system(size: 10 * zoomScale, design: .monospaced))
                             .foregroundStyle(.white.opacity(0.4))
-                        TextField("City", text: $weatherCity)
+                        TextField("hackerdesktop.city_placeholder", text: $weatherCity)
                             .textFieldStyle(.plain)
                             .font(.system(size: 12 * zoomScale, design: .monospaced))
                             .foregroundStyle(.white)
@@ -190,7 +190,7 @@ struct HackerDesktopView: View {
                                     item.isDone.toggle()
                                     saveData(immediate: true)
                                 }
-                            TextField("Task", text: $item.text)
+                            TextField("hackerdesktop.task_placeholder", text: $item.text)
                                 .textFieldStyle(.plain)
                                 .font(.system(size: 11 * zoomScale, design: .monospaced))
                                 .foregroundStyle(item.isDone ? .white.opacity(0.3) : .white.opacity(0.8))
@@ -220,7 +220,7 @@ struct HackerDesktopView: View {
                     HStack(spacing: 4 * zoomScale) {
                         Image(systemName: "plus")
                             .font(.system(size: 10 * zoomScale, weight: .bold))
-                        Text("Add Task")
+                        Text("hackerdesktop.add_task")
                             .font(.system(size: 11 * zoomScale, weight: .bold, design: .monospaced))
                     }
                     .foregroundStyle(.cyan)
@@ -250,7 +250,7 @@ struct HackerDesktopView: View {
                         Text("BTC")
                             .font(.system(size: 10 * zoomScale, design: .monospaced))
                             .foregroundStyle(.white.opacity(0.4))
-                        TextField("Price", text: $cryptoBTC)
+                        TextField("hackerdesktop.price_placeholder", text: $cryptoBTC)
                             .textFieldStyle(.plain)
                             .font(.system(size: 12 * zoomScale, design: .monospaced))
                             .foregroundStyle(.white)
@@ -264,7 +264,7 @@ struct HackerDesktopView: View {
                         Text("ETH")
                             .font(.system(size: 10 * zoomScale, design: .monospaced))
                             .foregroundStyle(.white.opacity(0.4))
-                        TextField("Price", text: $cryptoETH)
+                        TextField("hackerdesktop.price_placeholder", text: $cryptoETH)
                             .textFieldStyle(.plain)
                             .font(.system(size: 12 * zoomScale, design: .monospaced))
                             .foregroundStyle(.white)
@@ -278,7 +278,7 @@ struct HackerDesktopView: View {
             
             ConfigSection(title: "Hacker Quote", icon: "quote.bubble") {
                 VStack(alignment: .leading, spacing: 6) {
-                    TextField("Quote", text: $quoteText)
+                    TextField("hackerdesktop.quote_placeholder", text: $quoteText)
                         .textFieldStyle(.plain)
                         .font(.system(size: 11 * zoomScale, design: .monospaced))
                         .foregroundStyle(.white.opacity(0.8))
@@ -287,7 +287,7 @@ struct HackerDesktopView: View {
                         .clipShape(RoundedRectangle(cornerRadius: 6 * zoomScale))
                         .onChange(of: quoteText) { _, _ in saveData() }
                     
-                    TextField("Author", text: $quoteAuthor)
+                    TextField("hackerdesktop.author_placeholder", text: $quoteAuthor)
                         .textFieldStyle(.plain)
                         .font(.system(size: 11 * zoomScale, design: .monospaced))
                         .foregroundStyle(.white.opacity(0.5))
@@ -301,7 +301,7 @@ struct HackerDesktopView: View {
             ConfigSection(title: "Terminal Logs", icon: "terminal") {
                 VStack(spacing: 4 * zoomScale) {
                     ForEach(terminalLogs.indices, id: \.self) { i in
-                        TextField("Log line", text: $terminalLogs[i])
+                        TextField("hackerdesktop.log_line_placeholder", text: $terminalLogs[i])
                             .textFieldStyle(.plain)
                             .font(.system(size: 10 * zoomScale, design: .monospaced))
                             .foregroundStyle(.green.opacity(0.8))
@@ -322,35 +322,35 @@ struct HackerDesktopView: View {
                     .font(.system(size: 40 * zoomScale, weight: .light))
                     .foregroundStyle(.cyan.opacity(0.4))
                 
-                Text("ClassGod Desk Widgets")
+                Text("hackerdesktop.about_title")
                     .font(.system(size: 14 * zoomScale, weight: .bold, design: .monospaced))
                     .foregroundStyle(.white)
                 
-                Text("macOS Sonoma-style Desk Widgets powered by WidgetKit")
+                Text("hackerdesktop.about_subtitle")
                     .font(.system(size: 11 * zoomScale, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.4))
                     .multilineTextAlignment(.center)
             }
             
             VStack(alignment: .leading, spacing: 10 * zoomScale) {
-                Text("Available Widgets")
+                Text("hackerdesktop.available_widgets")
                     .font(.system(size: 11 * zoomScale, weight: .bold, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.6))
                 
-                let widgets = [
-                    ("System", "CPU, Memory, Disk, Network, Battery, Uptime"),
-                    ("Info", "Clock, World Clock, Calendar, Weather, System Info"),
-                    ("Tools", "Todo List, Notes, Files, App Launcher"),
-                    ("Hacker", "Terminal Log, ASCII Art, Crypto, Quotes")
+                let widgets: [(id: String, category: LocalizedStringKey, list: LocalizedStringKey)] = [
+                    ("system", "hackerdesktop.widgets.system", "hackerdesktop.widgets.system_list"),
+                    ("info", "hackerdesktop.widgets.info", "hackerdesktop.widgets.info_list"),
+                    ("tools", "hackerdesktop.widgets.tools", "hackerdesktop.widgets.tools_list"),
+                    ("hacker", "hackerdesktop.widgets.hacker", "hackerdesktop.widgets.hacker_list")
                 ]
                 
-                ForEach(widgets, id: \.0) { category, list in
+                ForEach(widgets, id: \.id) { item in
                     HStack(alignment: .top, spacing: 8 * zoomScale) {
-                        Text("\(category):")
+                        Text(item.category)
                             .font(.system(size: 10 * zoomScale, weight: .bold, design: .monospaced))
                             .foregroundStyle(.cyan.opacity(0.7))
                             .frame(width: 50 * zoomScale, alignment: .leading)
-                        Text(list)
+                        Text(item.list)
                             .font(.system(size: 10 * zoomScale, design: .monospaced))
                             .foregroundStyle(.white.opacity(0.5))
                     }
@@ -360,7 +360,7 @@ struct HackerDesktopView: View {
             .background(Color(white: 0.03))
             .clipShape(RoundedRectangle(cornerRadius: 10 * zoomScale))
             
-            Text("Right-click on desktop → Edit Widgets → Add ClassGod widgets")
+            Text("hackerdesktop.about_hint")
                 .font(.system(size: 10 * zoomScale, design: .monospaced))
                 .foregroundStyle(.white.opacity(0.35))
                 .multilineTextAlignment(.center)

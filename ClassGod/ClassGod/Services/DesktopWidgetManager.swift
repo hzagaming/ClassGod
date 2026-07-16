@@ -340,6 +340,7 @@ final class DesktopWidgetWindow: NSWindow {
         isDragging = true
         dragStartLocation = NSEvent.mouseLocation
         dragStartFrame = self.frame
+        SoundEffectManager.shared.playDragStart()
     }
 
     override func mouseDragged(with event: NSEvent) {

@@ -225,6 +225,358 @@
         }
       }
     },
+    "hackerdesktop.add_task" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add Task"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "添加任务"
+          }
+        }
+      }
+    },
+    "hackerdesktop.about_hint" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Right-click on desktop -> Edit Widgets -> Add ClassGod widgets"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "右键桌面 -> 编辑小组件 -> 添加 ClassGod 小组件"
+          }
+        }
+      }
+    },
+    "hackerdesktop.about_subtitle" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS Sonoma-style Desk Widgets powered by WidgetKit"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "由 WidgetKit 驱动的 macOS Sonoma 风格桌面小组件"
+          }
+        }
+      }
+    },
+    "hackerdesktop.about_title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ClassGod Desk Widgets"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "ClassGod 桌面小组件"
+          }
+        }
+      }
+    },
+    "hackerdesktop.author_placeholder" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Author"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "作者"
+          }
+        }
+      }
+    },
+    "hackerdesktop.available_widgets" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Available Widgets"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "可用小组件"
+          }
+        }
+      }
+    },
+    "hackerdesktop.city_placeholder" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "City"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "城市"
+          }
+        }
+      }
+    },
+    "hackerdesktop.clock_city" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clock City"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "时钟城市"
+          }
+        }
+      }
+    },
+    "hackerdesktop.config_title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Widget Config Center"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "小组件配置中心"
+          }
+        }
+      }
+    },
+    "hackerdesktop.log_line_placeholder" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Log line"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "日志行"
+          }
+        }
+      }
+    },
+    "hackerdesktop.price_placeholder" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Price"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "价格"
+          }
+        }
+      }
+    },
+    "hackerdesktop.quote_placeholder" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quote"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "引语"
+          }
+        }
+      }
+    },
+    "hackerdesktop.task_placeholder" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Task"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "任务"
+          }
+        }
+      }
+    },
+    "hackerdesktop.weather_city" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weather City"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "天气城市"
+          }
+        }
+      }
+    },
+    "hackerdesktop.widgets.hacker" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hacker"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "黑客"
+          }
+        }
+      }
+    },
+    "hackerdesktop.widgets.hacker_list" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Terminal Log, ASCII Art, Crypto, Quotes"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "终端日志、ASCII 艺术、加密货币、引语"
+          }
+        }
+      }
+    },
+    "hackerdesktop.widgets.info" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Info"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "信息"
+          }
+        }
+      }
+    },
+    "hackerdesktop.widgets.info_list" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clock, World Clock, Calendar, Weather, System Info"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "时钟、世界时钟、日历、天气、系统信息"
+          }
+        }
+      }
+    },
+    "hackerdesktop.widgets.system" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "System"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "系统"
+          }
+        }
+      }
+    },
+    "hackerdesktop.widgets.system_list" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CPU, Memory, Disk, Network, Battery, Uptime"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "CPU、内存、磁盘、网络、电池、运行时间"
+          }
+        }
+      }
+    },
+    "hackerdesktop.widgets.tools" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tools"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "工具"
+          }
+        }
+      }
+    },
+    "hackerdesktop.widgets.tools_list" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Todo List, Notes, Files, App Launcher"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "待办清单、便签、文件、应用启动器"
+          }
+        }
+      }
+    },
     "desktop_widgets.active_count" : {
       "localizations" : {
         "en" : {

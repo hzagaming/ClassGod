@@ -8,6 +8,10 @@
 import SwiftUI
 import Combine
 
+private var desktopWidgetValueAnimation: Animation? {
+    Anim.enabled ? .linear(duration: Anim.duration) : nil
+}
+
 // MARK: - Container
 
 struct DesktopWidgetContainer: View {
@@ -180,7 +184,11 @@ struct DesktopWidgetContainer: View {
                     .font(.system(size: 9, weight: .bold, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.7))
                 Spacer()
-                Button(action: onDelete) {
+                Button(action: {
+                    SoundEffectManager.shared.playWidgetDeleted()
+                    HapticManager.shared.warning()
+                    onDelete()
+                }) {
                     Image(systemName: "xmark.circle.fill")
                         .font(.system(size: 14))
                         .foregroundStyle(.red.opacity(0.8))
@@ -221,7 +229,7 @@ struct CPUWidgetContent: View {
                         style: StrokeStyle(lineWidth: 6, lineCap: .round)
                     )
                     .rotationEffect(.degrees(-90))
-                    .animation(.linear(duration: 0.5), value: monitor.cpu.total)
+                    .animation(desktopWidgetValueAnimation, value: monitor.cpu.total)
                 VStack(spacing: 0) {
                     Text("\(Int(monitor.cpu.total))%")
                         .font(.system(size: 18, weight: .bold, design: .monospaced))
@@ -268,7 +276,7 @@ struct MemoryWidgetContent: View {
                     RoundedRectangle(cornerRadius: 4)
                         .fill(memColor)
                         .frame(width: max(2, geo.size.width * CGFloat(used)))
-                        .animation(.linear(duration: 0.5), value: used)
+                        .animation(desktopWidgetValueAnimation, value: used)
                 }
             }
             .frame(height: 8)
@@ -908,4 +916,3 @@ struct QuoteTabContent: View {
         author = store.string(forKey: .quoteAuthor) ?? ""
     }
 }
-

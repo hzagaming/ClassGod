@@ -51,7 +51,7 @@ struct DesktopWidgetEditor: View {
                 // Edit mode toggle
                 HStack {
                     Button(action: {
-                        SoundEffectManager.shared.playButtonClick()
+                        SoundEffectManager.shared.playGridToggle()
                         HapticManager.shared.generic()
                         manager.toggleEditMode()
                     }) {
@@ -75,7 +75,7 @@ struct DesktopWidgetEditor: View {
                     Spacer()
 
                     Button(action: {
-                        SoundEffectManager.shared.playButtonClick()
+                        SoundEffectManager.shared.playLayoutReset()
                         HapticManager.shared.generic()
                         manager.resetToDefaults()
                     }) {
@@ -204,14 +204,14 @@ struct DesktopWidgetEditor: View {
         }
         .fileImporter(
             isPresented: $showingFilePicker,
-            allowedContentTypes: [.data],
+            allowedContentTypes: [.item],
             allowsMultipleSelection: false
         ) { result in
             guard let type = selectedFileType else { return }
             switch result {
             case .success(let urls):
                 if let url = urls.first {
-                    SoundEffectManager.shared.playButtonClick()
+                    SoundEffectManager.shared.playWidgetAdded()
                     HapticManager.shared.generic()
                     let path = url.path
                     var widget = HackerWidgetItem(type: type)
@@ -296,7 +296,11 @@ private struct AddWidgetButton: View {
 
     var body: some View {
         Button(action: {
-            SoundEffectManager.shared.playButtonClick()
+            if type == .finderFile {
+                SoundEffectManager.shared.playWidgetPickerOpen()
+            } else {
+                SoundEffectManager.shared.playWidgetAdded()
+            }
             HapticManager.shared.generic()
             action()
         }) {
