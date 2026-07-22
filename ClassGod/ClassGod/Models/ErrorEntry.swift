@@ -150,6 +150,10 @@ struct CodeExample: Codable, Hashable, Identifiable {
     let badCode: String
     let goodCode: String
     let explanation: String
+
+    private enum CodingKeys: String, CodingKey {
+        case language, title, badCode, goodCode, explanation
+    }
 }
 
 // MARK: - Runtime Error Capture

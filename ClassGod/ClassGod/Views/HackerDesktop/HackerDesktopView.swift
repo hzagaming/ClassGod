@@ -30,6 +30,7 @@ struct HackerDesktopView: View {
     @State private var selectedTab = 0
     @State private var saveTimer: Timer?
     @State private var pendingSaveWorkItem: DispatchWorkItem?
+    @State private var isActive = false
     
     @ObservedObject private var prefs = PreferencesManager.shared
     private var zoomScale: CGFloat { CGFloat(prefs.preferences.windowZoomScale) }
@@ -98,21 +99,16 @@ struct HackerDesktopView: View {
         
             .allowsHitTesting(false))
         .onAppear {
-            loadData()
-            SystemMonitor.shared.start(interval: 2.0)
-            // Periodically save system data to the active widget store.
-            saveTimer?.invalidate()
-            saveTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { _ in
-                saveSystemData()
-            }
+            activate()
         }
         .onDisappear {
-            SystemMonitor.shared.stop()
-            saveTimer?.invalidate()
-            saveTimer = nil
-            pendingSaveWorkItem?.cancel()
-            pendingSaveWorkItem = nil
-            saveSystemData()
+            deactivate()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .hackerDesktopWindowDidShow)) { _ in
+            activate()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .hackerDesktopWindowWillHide)) { _ in
+            deactivate()
         }
     }
     
@@ -369,6 +365,28 @@ struct HackerDesktopView: View {
     }
     
     // MARK: - Data Management
+
+    private func activate() {
+        guard !isActive else { return }
+        isActive = true
+        loadData()
+        SystemMonitor.shared.start(interval: 2.0)
+        saveTimer?.invalidate()
+        saveTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { _ in
+            saveSystemData()
+        }
+    }
+
+    private func deactivate() {
+        guard isActive else { return }
+        isActive = false
+        SystemMonitor.shared.stop()
+        saveTimer?.invalidate()
+        saveTimer = nil
+        pendingSaveWorkItem?.cancel()
+        pendingSaveWorkItem = nil
+        saveSystemData()
+    }
     
     private func saveSystemData() {
         let store = WidgetDataStore.shared

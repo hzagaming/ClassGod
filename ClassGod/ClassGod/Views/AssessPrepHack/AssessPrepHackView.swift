@@ -92,6 +92,15 @@ struct AssessPrepHackView: View {
                 viewModel.stopAllBypasses()
             }
         }
+        .onReceive(NotificationCenter.default.publisher(for: .assessPrepHackWindowDidShow)) { _ in
+            viewModel.startDetectionTimer()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .assessPrepHackWindowWillHide)) { _ in
+            viewModel.stopDetectionTimer()
+            if viewModel.isBypassActive {
+                viewModel.stopAllBypasses()
+            }
+        }
     }
     
     // MARK: - Header

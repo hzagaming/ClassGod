@@ -44,6 +44,7 @@ final class ActivityMonitorViewModel: ObservableObject {
     private var timer: Timer?
     private var energyAccumulator: [Int32: UInt64] = [:]
     private let monitor = SystemMonitor.shared
+    private var isMonitoring = false
     
     var processes: [ProcessMonitorInfo] {
         var list = monitor.processes
@@ -101,6 +102,8 @@ final class ActivityMonitorViewModel: ObservableObject {
     }
     
     func startMonitoring() {
+        guard !isMonitoring else { return }
+        isMonitoring = true
         monitor.start(interval: 1.0)
         updateEnergyHistory()
         timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
@@ -111,8 +114,11 @@ final class ActivityMonitorViewModel: ObservableObject {
     }
     
     func stopMonitoring() {
+        guard isMonitoring else { return }
+        isMonitoring = false
         timer?.invalidate()
         timer = nil
+        monitor.stop()
     }
     
     func toggleSort(_ key: ActivitySortKey) {

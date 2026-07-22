@@ -104,7 +104,13 @@ final class TabListViewModel: ObservableObject {
     private var registeredTabIDs: Set<UUID> = []
 
     init() {
-        loadTabs()
+        var initialTabs = StorageManager.shared.loadTabs()
+        initialTabs.sort { lhs, rhs in
+            if lhs.isPinned != rhs.isPinned { return lhs.isPinned && !rhs.isPinned }
+            return false
+        }
+        _tabs = Published(initialValue: initialTabs)
+        refreshShortcuts()
         setupStorageChangeObserver()
     }
     

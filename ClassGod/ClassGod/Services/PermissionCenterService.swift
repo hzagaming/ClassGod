@@ -306,7 +306,7 @@ final class PermissionCenterService: ObservableObject {
             return (status == .authorized, status == .denied ? "Denied" : nil)
             
         case .location:
-            let status = CLLocationManager.authorizationStatus()
+            let status = CLLocationManager().authorizationStatus
             let granted = status == .authorizedAlways || status == .authorized
             return (granted, status == .denied ? "Denied" : nil)
             

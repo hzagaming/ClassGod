@@ -32,7 +32,9 @@ final class DesktopWallpaperController {
             object: nil,
             queue: .main
         ) { [weak self] _ in
-            self?.refreshWindows()
+            Task { @MainActor [weak self] in
+                self?.refreshWindows()
+            }
         }
         
         // React to engine state changes

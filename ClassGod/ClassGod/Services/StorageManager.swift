@@ -144,4 +144,12 @@ extension Notification.Name {
     static let draggableWindowDidMove = Notification.Name("draggableWindowDidMove")
     static let classGodShowErrorHubEntry = Notification.Name("classGodShowErrorHubEntry")
     static let fanControlWindowWillHide = Notification.Name("fanControlWindowWillHide")
+    static let mainWindowDidShow = Notification.Name("mainWindowDidShow")
+    static let mainWindowWillHide = Notification.Name("mainWindowWillHide")
+    static let hackerDesktopWindowDidShow = Notification.Name("hackerDesktopWindowDidShow")
+    static let hackerDesktopWindowWillHide = Notification.Name("hackerDesktopWindowWillHide")
+    static let activityMonitorWindowDidShow = Notification.Name("activityMonitorWindowDidShow")
+    static let activityMonitorWindowWillHide = Notification.Name("activityMonitorWindowWillHide")
+    static let assessPrepHackWindowDidShow = Notification.Name("assessPrepHackWindowDidShow")
+    static let assessPrepHackWindowWillHide = Notification.Name("assessPrepHackWindowWillHide")
 }

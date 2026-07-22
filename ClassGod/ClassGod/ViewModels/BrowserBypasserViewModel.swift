@@ -39,7 +39,7 @@ final class BrowserBypasserViewModel: ObservableObject {
     ]
     
     init() {
-        loadRules()
+        _rules = Published(initialValue: StorageManager.shared.loadBypassRules())
     }
     
     deinit {

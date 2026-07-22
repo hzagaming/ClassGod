@@ -30,7 +30,9 @@ final class LaunchAnimationManager {
         self.mainWindow = mainWindow
         pendingCompletion = completion
         closedCount = 0
-        totalWindows = PreferencesManager.shared.preferences.chaosParticleCount
+        // Each particle is a real NSWindow. Keep the total safely below AppKit's
+        // excessive-live-window threshold after accounting for feature windows.
+        totalWindows = min(max(PreferencesManager.shared.preferences.chaosParticleCount, 12), 48)
         
         guard let screen = NSScreen.main else {
             finish()
@@ -218,7 +220,7 @@ final class LaunchAnimationManager {
     private func createDenseGlitchWindows(screenFrame: NSRect, count: Int) -> [NSWindow] {
         var result: [NSWindow] = []
         
-        // Sparse grid: 8x8 = 64, windows can overflow grid boundaries
+        // Sparse grid: up to 48 windows, with controlled overflow between cells.
         let cols = 8
         let rows = 8
         let cellW = screenFrame.width / CGFloat(cols)

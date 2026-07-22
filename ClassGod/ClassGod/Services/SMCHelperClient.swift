@@ -10,7 +10,7 @@
 
 import Foundation
 
-final class SMCHelperClient {
+nonisolated final class SMCHelperClient: @unchecked Sendable {
     static let shared = SMCHelperClient()
     static let socketPath = "/tmp/com.hanazar.classgod.helper.sock"
 

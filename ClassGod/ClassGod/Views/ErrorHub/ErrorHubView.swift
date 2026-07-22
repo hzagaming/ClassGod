@@ -231,19 +231,16 @@ struct ErrorHubView: View {
         let severity = selectedSeverity
         let tag = selectedTag
         
-        let results = await Task.detached(priority: .userInitiated) {
-            var results = knowledgeBase.search(
-                query: query,
-                category: category == .all ? nil : category
-            )
-            if let severity = severity {
-                results = results.filter { $0.entry.severity == severity }
-            }
-            if let tag = tag {
-                results = results.filter { $0.entry.tags.contains(tag) }
-            }
-            return results
-        }.value
+        var results = knowledgeBase.search(
+            query: query,
+            category: category == .all ? nil : category
+        )
+        if let severity = severity {
+            results = results.filter { $0.entry.severity == severity }
+        }
+        if let tag = tag {
+            results = results.filter { $0.entry.tags.contains(tag) }
+        }
         
         guard searchQuery == query else { return }
         searchResults = results

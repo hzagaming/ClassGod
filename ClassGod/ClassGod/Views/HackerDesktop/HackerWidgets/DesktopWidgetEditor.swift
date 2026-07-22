@@ -13,6 +13,7 @@ struct DesktopWidgetEditor: View {
     @ObservedObject private var prefs = PreferencesManager.shared
     @State private var showingFilePicker = false
     @State private var selectedFileType: WidgetType?
+    @State private var showingResetConfirmation = false
 
     private var zoomScale: CGFloat { CGFloat(prefs.preferences.windowZoomScale) }
 
@@ -75,9 +76,12 @@ struct DesktopWidgetEditor: View {
                     Spacer()
 
                     Button(action: {
-                        SoundEffectManager.shared.playLayoutReset()
-                        HapticManager.shared.generic()
-                        manager.resetToDefaults()
+                        if prefs.preferences.confirmBeforeClear {
+                            SoundEffectManager.shared.playButtonClick()
+                            showingResetConfirmation = true
+                        } else {
+                            resetLayout()
+                        }
                     }) {
                         HStack(spacing: 4 * zoomScale) {
                             Image(systemName: "arrow.counterclockwise")
@@ -208,6 +212,7 @@ struct DesktopWidgetEditor: View {
             allowsMultipleSelection: false
         ) { result in
             guard let type = selectedFileType else { return }
+            selectedFileType = nil
             switch result {
             case .success(let urls):
                 if let url = urls.first {
@@ -222,12 +227,28 @@ struct DesktopWidgetEditor: View {
                         manager.showAllWidgets()
                     }
                 }
-            case .failure:
-                SoundEffectManager.shared.playSwitchFailure()
-                HapticManager.shared.warning()
-                break
+            case .failure(let error):
+                let nsError = error as NSError
+                if nsError.domain != NSCocoaErrorDomain || nsError.code != NSUserCancelledError {
+                    SoundEffectManager.shared.playSwitchFailure()
+                    HapticManager.shared.warning()
+                }
             }
         }
+        .alert("desktop_widgets.reset_title", isPresented: $showingResetConfirmation) {
+            Button("button.cancel", role: .cancel) {}
+            Button("button.reset", role: .destructive) {
+                resetLayout()
+            }
+        } message: {
+            Text("desktop_widgets.reset_message")
+        }
+    }
+
+    private func resetLayout() {
+        SoundEffectManager.shared.playLayoutReset()
+        HapticManager.shared.warning()
+        manager.resetToDefaults()
     }
 }
 

@@ -157,7 +157,7 @@ struct SettingsSliderRow: View {
 
 // MARK: - Picker Row
 
-struct SettingsPickerRow<T: Hashable & Identifiable>: View {
+struct SettingsPickerRow<T: Hashable>: View {
     let label: LocalizedStringKey
     @Binding var selection: T
     let options: [T]
@@ -183,7 +183,7 @@ struct SettingsPickerRow<T: Hashable & Identifiable>: View {
             switch style {
             case .segmented:
                 Picker("", selection: $selection) {
-                    ForEach(options) { option in
+                    ForEach(options, id: \.self) { option in
                         Text(displayName(option)).tag(option)
                     }
                 }
@@ -192,7 +192,7 @@ struct SettingsPickerRow<T: Hashable & Identifiable>: View {
 
             case .radio:
                 Picker("", selection: $selection) {
-                    ForEach(options) { option in
+                    ForEach(options, id: \.self) { option in
                         Text(displayName(option)).tag(option)
                     }
                 }
@@ -201,7 +201,7 @@ struct SettingsPickerRow<T: Hashable & Identifiable>: View {
 
             case .menu:
                 Picker("", selection: $selection) {
-                    ForEach(options) { option in
+                    ForEach(options, id: \.self) { option in
                         Text(displayName(option)).tag(option)
                     }
                 }

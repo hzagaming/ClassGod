@@ -82,7 +82,12 @@ final class AssessPrepHackViewModel: ObservableObject {
     ]
     
     init() {
-        loadApps()
+        let savedApps = StorageManager.shared.loadPanicApps()
+        let initialApps = savedApps.isEmpty ? PanicApp.presets : savedApps
+        _panicApps = Published(initialValue: initialApps)
+        if savedApps.isEmpty {
+            StorageManager.shared.savePanicApps(initialApps)
+        }
     }
     
     deinit {

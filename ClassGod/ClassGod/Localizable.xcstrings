@@ -1017,6 +1017,12 @@
     },
     "about.developer_name" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Hanazar Software"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1027,6 +1033,12 @@
     },
     "activity.energy_note" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "能耗值以 proc_pid_rusage 返回的纳焦耳为单位显示"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1037,6 +1049,12 @@
     },
     "activity.force_quit" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "强制退出"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1047,6 +1065,12 @@
     },
     "activity.memory_pressure" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "内存压力"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1057,6 +1081,12 @@
     },
     "activity.network_note" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "通过 nettop 实时获取的每进程网络数据"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1067,6 +1097,12 @@
     },
     "activity.no_battery" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "未检测到电池"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1077,6 +1113,12 @@
     },
     "activity.permission_banner" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "进程可见性受限。要查看所有系统进程，请在 系统设置 > 隐私与安全性 中为 ClassGod 授予完全磁盘访问权限。"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1087,6 +1129,12 @@
     },
     "activity.process_count" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld 个进程"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1097,6 +1145,12 @@
     },
     "activity.quit" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "退出"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1107,6 +1161,12 @@
     },
     "activity.search" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "搜索"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1117,6 +1177,12 @@
     },
     "activity.system_process" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "系统进程 – 无法终止"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1127,6 +1193,12 @@
     },
     "alert.error" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "错误"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1137,6 +1209,12 @@
     },
     "app_icon.calculator" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "计算器"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1147,6 +1225,12 @@
     },
     "app_icon.classgod" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "ClassGod"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1157,6 +1241,12 @@
     },
     "app_icon.finder" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Finder"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1167,6 +1257,12 @@
     },
     "app_icon.hidden" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "隐藏（无图标）"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1177,6 +1273,12 @@
     },
     "app_icon.notes" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "备忘录"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1187,6 +1289,12 @@
     },
     "app_icon.safari" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Safari"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1197,6 +1305,12 @@
     },
     "app_icon.terminal" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "终端"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1207,6 +1321,12 @@
     },
     "automation.subtitle" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "打开 系统设置 > 隐私与安全性 > 自动化"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1217,6 +1337,12 @@
     },
     "battery.charging" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "充电中"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1227,6 +1353,12 @@
     },
     "battery.discharging" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "放电中"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1237,6 +1369,12 @@
     },
     "browser.chrome" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Google Chrome"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1247,6 +1385,12 @@
     },
     "browser.edge" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Microsoft Edge"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1257,6 +1401,12 @@
     },
     "browser.safari" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Safari"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1267,6 +1417,12 @@
     },
     "button.add" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "添加"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1277,6 +1433,12 @@
     },
     "button.add_rule" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "添加规则"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1287,6 +1449,12 @@
     },
     "button.back" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "返回"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1313,6 +1481,12 @@
     },
     "button.edit" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "编辑"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1323,6 +1497,12 @@
     },
     "button.open_console.subtitle" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "打开 Console.app 查看日志"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1333,6 +1513,12 @@
     },
     "button.save" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "保存"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1343,6 +1529,12 @@
     },
     "button.skip" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "跳过"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1353,6 +1545,12 @@
     },
     "bypass.active_banner" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "绕过激活: %@"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1363,6 +1561,12 @@
     },
     "bypass.add_title" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "添加绕过规则"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1373,6 +1577,12 @@
     },
     "bypass.context.run" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "运行 %@"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1383,6 +1593,12 @@
     },
     "bypass.delete_message" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "移除绕过规则 \"%@\"?"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1393,6 +1609,12 @@
     },
     "bypass.delete_title" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "删除规则?"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1403,6 +1625,12 @@
     },
     "bypass.detected" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "检测到: %@"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1413,6 +1641,12 @@
     },
     "bypass.edit_title" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "编辑绕过规则"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1423,6 +1657,12 @@
     },
     "bypass.empty_subtitle" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "添加规则以绕过浏览器锁定"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1433,6 +1673,12 @@
     },
     "bypass.empty_title" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "无绕过规则"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1443,6 +1689,12 @@
     },
     "bypass.enable_immediately" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "立即启用"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1453,6 +1705,12 @@
     },
     "bypass.footer_hint" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "选择规则以激活绕过"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1463,6 +1721,12 @@
     },
     "bypass.method" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "绕过方式"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1473,6 +1737,12 @@
     },
     "bypass.name_placeholder" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "例如 Canvas 测验绕过"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1483,6 +1753,12 @@
     },
     "bypass.scan" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "扫描"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1493,6 +1769,12 @@
     },
     "bypass.stop" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "停止"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1503,6 +1785,12 @@
     },
     "bypass.toast.activated" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%@ 已激活"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1513,6 +1801,12 @@
     },
     "bypass.toast.added" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "已添加绕过规则: %@"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1523,6 +1817,12 @@
     },
     "bypass.toast.all_stopped" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "已停止所有绕过"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1533,6 +1833,12 @@
     },
     "bypass.toast.detected" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "检测到: %@"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1543,6 +1849,12 @@
     },
     "bypass.toast.not_detected" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "未检测到锁定浏览器"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1553,6 +1865,12 @@
     },
     "bypass.toast.shortcuts_enabled" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "系统快捷键已启用"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1563,6 +1881,12 @@
     },
     "bypass.toast.updated" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "已更新规则: %@"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1573,6 +1897,12 @@
     },
     "bypass.type.allow_shortcuts" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "允许快捷键"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1583,6 +1913,12 @@
     },
     "bypass.type.allow_shortcuts.description" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "允许 ⌘+Tab 和其他系统快捷键"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1593,6 +1929,12 @@
     },
     "bypass.type.exit_fullscreen" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "退出全屏"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1603,6 +1945,12 @@
     },
     "bypass.type.exit_fullscreen.description" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "强制浏览器退出全屏/ kiosk 模式"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1613,6 +1961,12 @@
     },
     "bypass.type.inject_script" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "注入绕过脚本"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1623,6 +1977,12 @@
     },
     "bypass.type.inject_script.description" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "注入 JavaScript 以禁用锁定检测"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1633,6 +1993,12 @@
     },
     "bypass.type.prevent_focus_loss" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "防止失焦"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1643,6 +2009,12 @@
     },
     "bypass.type.prevent_focus_loss.description" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "阻止页面检测到窗口失焦/聚焦丢失"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1653,6 +2025,12 @@
     },
     "bypass.url_placeholder" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "例如 canvas.*quiz"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1661,8 +2039,46 @@
         }
       }
     },
+    "desktop_widgets.reset_message" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Replace the current widget layout with the default widgets? This cannot be undone."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "要用默认小组件替换当前布局吗？此操作无法撤销。"
+          }
+        }
+      }
+    },
+    "desktop_widgets.reset_title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reset widget layout?"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重置小组件布局？"
+          }
+        }
+      }
+    },
     "destintab.all" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "全选"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1673,6 +2089,12 @@
     },
     "destintab.bulk_select" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "批量选择"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1683,6 +2105,12 @@
     },
     "destintab.delete" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "删除"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1693,6 +2121,12 @@
     },
     "destintab.edit" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "编辑"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1703,6 +2137,12 @@
     },
     "destintab.exit_bulk_mode" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "退出批量模式"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1713,6 +2153,12 @@
     },
     "destintab.no_matches" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "无匹配"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1723,6 +2169,12 @@
     },
     "destintab.none" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "无"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1733,6 +2185,12 @@
     },
     "destintab.open" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "打开"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1743,6 +2201,12 @@
     },
     "destintab.pin" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "置顶"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1753,6 +2217,12 @@
     },
     "destintab.pinned" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "已置顶"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1763,6 +2233,12 @@
     },
     "destintab.search_placeholder" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "搜索标签..."
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1773,6 +2249,12 @@
     },
     "destintab.sort_help" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "排序: %@"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1783,6 +2265,12 @@
     },
     "destintab.try_different_search" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "尝试其他搜索词"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1793,6 +2281,12 @@
     },
     "destintab.unpin" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "取消置顶"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1803,6 +2297,12 @@
     },
     "error.additional_info" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "附加信息"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1813,6 +2313,12 @@
     },
     "error.also_known_as" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "又名:"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1823,6 +2329,12 @@
     },
     "error.app_not_found" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "未找到应用: %@"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1833,6 +2345,12 @@
     },
     "error.apple_documentation" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Apple 文档:"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1843,6 +2361,12 @@
     },
     "error.code_examples" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "代码示例"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1853,6 +2377,12 @@
     },
     "error.copied" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "已复制!"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1863,6 +2393,12 @@
     },
     "error.copy_fix" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "复制修复"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1873,6 +2409,12 @@
     },
     "error.description" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "描述"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1883,6 +2425,12 @@
     },
     "error.fixed_code" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "修复后代码"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1893,6 +2441,12 @@
     },
     "error.no_related" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "没有记录相关错误。"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1903,6 +2457,12 @@
     },
     "error.open_in_encyclopedia" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "在百科中打开"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1913,6 +2473,12 @@
     },
     "error.problematic_code" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "问题代码"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1923,6 +2489,12 @@
     },
     "error.related_errors" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "相关错误"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1933,6 +2505,12 @@
     },
     "error.root_cause" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "根本原因"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1943,6 +2521,12 @@
     },
     "error.solutions_count" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "解决方案 (%1$lld)"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1953,6 +2537,12 @@
     },
     "fan.about.elevated" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "在某些 Mac 上，尤其是 Apple Silicon 机型，直接风扇控制可能需要提升权限，甚至可能不可用。"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1963,6 +2553,12 @@
     },
     "fan.about.restricted" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "如果传感器显示 N/A，则可能是你的设备限制了 SMC 访问。"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1973,6 +2569,12 @@
     },
     "fan.about.smc" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "风扇控制通过系统管理控制器 (SMC) 读取硬件传感器。"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1983,6 +2585,12 @@
     },
     "fan.active_rules" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "激活: %@"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -1993,6 +2601,12 @@
     },
     "fan.boost" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "提升"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2003,6 +2617,12 @@
     },
     "fan.boosting" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "提升中"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2013,6 +2633,12 @@
     },
     "fan.copy_command" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "复制命令"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2023,6 +2649,12 @@
     },
     "fan.diagnostic.fans" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "风扇"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2033,6 +2665,12 @@
     },
     "fan.diagnostic.fans_ok" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "风扇工作正常"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2043,6 +2681,12 @@
     },
     "fan.diagnostic.helper" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "特权 Helper"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2053,6 +2697,12 @@
     },
     "fan.diagnostic.no_fan_data" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "无风扇数据"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2063,6 +2713,12 @@
     },
     "fan.diagnostic.no_sensor_data" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "无传感器数据"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2073,6 +2729,12 @@
     },
     "fan.diagnostic.sensors" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "温度传感器"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2083,6 +2745,12 @@
     },
     "fan.diagnostic.sensors_active" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld 个传感器活跃"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2093,6 +2761,12 @@
     },
     "fan.diagnostics" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "诊断"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2103,6 +2777,12 @@
     },
     "fan.header.summary" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "平均: %1$@ ・ CPU: %2$@ ・ 风扇: %3$lld RPM"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2113,6 +2793,12 @@
     },
     "fan.highest_temp" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "最高: %@"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2123,6 +2809,12 @@
     },
     "fan.mode.auto_max" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "自动最大"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2133,6 +2825,12 @@
     },
     "fan.mode.custom" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "自定义"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2143,6 +2841,12 @@
     },
     "fan.mode.manual" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "手动"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2153,6 +2857,12 @@
     },
     "fan.mode.max" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "最大"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2163,6 +2873,12 @@
     },
     "fan.mode.system" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "系统"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2173,6 +2889,12 @@
     },
     "fan.sensor_fan_count" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld 个传感器 · %2$lld 个风扇"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2183,6 +2905,12 @@
     },
     "fan.start_helper" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "启动 Helper"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2193,6 +2921,12 @@
     },
     "fan.temperatures" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "温度"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2203,6 +2937,12 @@
     },
     "fan.toast.boost_active" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "提升已激活 %lld 秒"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2213,6 +2953,12 @@
     },
     "fan.toast.boost_ended" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "提升结束 — 已恢复 %@"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2223,6 +2969,12 @@
     },
     "fan.toast.helper_copied" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Helper 命令已复制"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2233,6 +2985,12 @@
     },
     "fan.toast.helper_launched" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Helper 已启动，3 秒后重新扫描..."
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2243,6 +3001,12 @@
     },
     "fan.toast.max_temps_reset" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "最高温度已重置"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2253,6 +3017,12 @@
     },
     "fan.toast.mode_set" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "风扇模式已设为 %@"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2263,6 +3033,12 @@
     },
     "fan.toast.rescan_complete" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "硬件重新扫描完成"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2273,6 +3049,12 @@
     },
     "fan.toast.sensor_data_copied" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "传感器数据已复制到剪贴板"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2283,6 +3065,12 @@
     },
     "field.name" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "名称"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2293,6 +3081,12 @@
     },
     "field.tag" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "标签（可选，例如 work, dev）"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2303,6 +3097,12 @@
     },
     "field.url_pattern" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "URL 模式"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2313,6 +3113,12 @@
     },
     "helper.status.optional" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "在 Intel Mac 上，特权 Helper 为可选。"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2323,6 +3129,12 @@
     },
     "helper.status.restricted" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Apple Silicon 限制 SMC 访问。以 root 运行 Helper 以解锁风扇控制。"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2333,6 +3145,12 @@
     },
     "helper.status.running" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "ClassGodHelper 正以 root 运行。完整 SMC 读/写已启用。"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2343,6 +3161,12 @@
     },
     "panic.add_title" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "添加应急应用"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2353,6 +3177,12 @@
     },
     "panic.delete_message" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "移除应急应用 \"%@\"？"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2363,6 +3193,12 @@
     },
     "panic.delete_title" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "删除应用?"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2373,6 +3209,12 @@
     },
     "panic.edit_title" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "编辑应急应用"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2383,6 +3225,12 @@
     },
     "panic.enabled" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "已启用"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2393,6 +3241,12 @@
     },
     "panic.active" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "应急状态已激活"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2403,6 +3257,12 @@
     },
     "panic.add_app" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "添加应用"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2413,6 +3273,12 @@
     },
     "panic.detected" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "检测到考试锁定应用"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2423,6 +3289,12 @@
     },
     "panic.empty_subtitle" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "添加应急切换目标，用于快速恢复到预设应用"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2433,6 +3305,12 @@
     },
     "panic.empty_title" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "尚未配置应急应用"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2443,6 +3321,12 @@
     },
     "panic.execute" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "执行应急动作"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2453,6 +3337,12 @@
     },
     "panic.execute_help" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "执行 %@"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2463,6 +3353,12 @@
     },
     "panic.scan" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "扫描"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2473,6 +3369,12 @@
     },
     "panic.stop_all" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "全部停止"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2483,6 +3385,12 @@
     },
     "panic.subtitle" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "管理应急应用与快捷切换"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2493,6 +3401,12 @@
     },
     "panic.technique.focus_guard" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "焦点守护"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2503,6 +3417,12 @@
     },
     "panic.technique.focus_guard.description" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "防止 AssessPrep 窃取焦点"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2513,6 +3433,12 @@
     },
     "panic.technique.keyboard_unlock" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "键盘解锁"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2523,6 +3449,12 @@
     },
     "panic.technique.keyboard_unlock.description" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "恢复系统键盘快捷键"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2533,6 +3465,12 @@
     },
     "panic.technique.panic_switch" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "应急切换"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2543,6 +3481,12 @@
     },
     "panic.technique.panic_switch.description" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "立即切换到安全应用"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2553,6 +3497,12 @@
     },
     "panic.technique.process_suspend" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "进程暂停"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2563,6 +3513,12 @@
     },
     "panic.technique.process_suspend.description" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "临时冻结 AssessPrep 进程"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2573,6 +3529,12 @@
     },
     "panic.technique.screen_spoof" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "屏幕欺骗"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2583,6 +3545,12 @@
     },
     "panic.technique.screen_spoof.description" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "伪造屏幕可见状态"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2593,6 +3561,12 @@
     },
     "panic.toast.added" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "已添加应急应用: %@"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2603,6 +3577,12 @@
     },
     "panic.toast.all_stopped" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "已停止所有绕过"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2613,6 +3593,12 @@
     },
     "panic.toast.technique_activated" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%@ 已激活"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2623,6 +3609,12 @@
     },
     "panic.toast.updated" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "已更新应用: %@"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2633,6 +3625,12 @@
     },
     "permission.all_set" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "全部完成"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2643,6 +3641,12 @@
     },
     "permission.all_set_message" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "所有请求的权限已查看。你可以随时在权限中心更改这些设置。"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2653,6 +3657,12 @@
     },
     "permission.allow" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "允许"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2663,6 +3673,12 @@
     },
     "permission.allow_and_continue" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "允许并继续"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2673,6 +3689,12 @@
     },
     "permission.category.all" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "全部"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2683,6 +3705,12 @@
     },
     "permission.category.browser" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "浏览器自动化"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2693,6 +3721,12 @@
     },
     "permission.category.core" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "核心访问"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2703,6 +3737,12 @@
     },
     "permission.category.hardware" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "硬件传感器"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2713,6 +3753,12 @@
     },
     "permission.category.optional" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "可选"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2723,6 +3769,12 @@
     },
     "permission.category.system" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "系统信息"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2733,6 +3785,12 @@
     },
     "permission.checking" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "正在检查权限…"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2743,6 +3801,12 @@
     },
     "permission.feature.activityMonitor" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "活动监视器"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2753,6 +3817,12 @@
     },
     "permission.feature.alerts" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "提醒"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2763,6 +3833,12 @@
     },
     "permission.feature.assessPrepHack" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "AssessPrepHack"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2773,6 +3849,12 @@
     },
     "permission.feature.audioFeatures" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "音频功能"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2783,6 +3865,12 @@
     },
     "permission.feature.browserControl" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Safari/Chrome/Edge 控制"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2793,6 +3881,12 @@
     },
     "permission.feature.browserDetection" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "浏览器检测"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2803,6 +3897,12 @@
     },
     "permission.feature.browserTabSwitching" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "浏览器标签切换"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2813,6 +3913,12 @@
     },
     "permission.feature.focusGuard" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "焦点保护"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2823,6 +3929,12 @@
     },
     "permission.feature.futureIntegrations" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "未来集成"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2833,6 +3945,12 @@
     },
     "permission.feature.geoFeatures" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "地理功能"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2843,6 +3961,12 @@
     },
     "permission.feature.peripherals" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "外设"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2853,6 +3977,12 @@
     },
     "permission.feature.processActions" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "进程操作"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2863,6 +3993,12 @@
     },
     "permission.feature.scheduleIntegrations" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "课程表集成"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2873,6 +4009,12 @@
     },
     "permission.feature.statusUpdates" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "状态更新"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2883,6 +4025,12 @@
     },
     "permission.feature.systemEvents" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "系统事件"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2893,6 +4041,12 @@
     },
     "permission.feature.systemFiles" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "系统文件"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2903,6 +4057,12 @@
     },
     "permission.feature.taskIntegrations" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "任务集成"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2913,6 +4073,12 @@
     },
     "permission.feature.videoFeatures" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "视频功能"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2923,6 +4089,12 @@
     },
     "permission.feature.windowCapture" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "窗口捕获"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2933,6 +4105,12 @@
     },
     "permission.granted" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "已授权"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2943,6 +4121,12 @@
     },
     "permission.last_checked" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "上次检查: %@"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2953,6 +4137,12 @@
     },
     "permission.manual_settings" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "macOS 将打开系统设置，以便你手动开启此权限。"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2963,6 +4153,12 @@
     },
     "permission.never" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "从未"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2973,6 +4169,12 @@
     },
     "permission.open_settings" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "打开设置"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2983,6 +4185,12 @@
     },
     "permission.open_settings_and_continue" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "打开设置并继续"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -2993,6 +4201,12 @@
     },
     "permission.recheck" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "重新检查"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3003,6 +4217,12 @@
     },
     "permission.refresh_status" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "刷新状态"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3013,6 +4233,12 @@
     },
     "permission.required" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "需授权"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3023,6 +4249,12 @@
     },
     "permission.required_for" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "用于:"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3033,6 +4265,12 @@
     },
     "permission.step_format" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "第 %1$lld 步，共 %2$lld 步"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3043,6 +4281,12 @@
     },
     "permission.type.accessibility.description" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "需要查询最前端应用、模拟按键事件以及与窗口交互，用于 AssessPrepHack 和浏览器切换。"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3053,6 +4297,12 @@
     },
     "permission.type.accessibility.title" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "辅助功能"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3063,6 +4313,12 @@
     },
     "permission.type.appleEvents.description" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "需要通过 AppleScript 控制 Safari、Chrome、Edge 等浏览器。"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3073,6 +4329,12 @@
     },
     "permission.type.appleEvents.title" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "自动化 (AppleEvents)"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3083,6 +4345,12 @@
     },
     "permission.type.bluetooth.description" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "可选。可能用于未来的外设检测功能。"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3093,6 +4361,12 @@
     },
     "permission.type.bluetooth.title" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "蓝牙"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3103,6 +4377,12 @@
     },
     "permission.type.calendar.description" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "可选。可能用于未来的课程表集成。"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3113,6 +4393,12 @@
     },
     "permission.type.calendar.title" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "日历"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3123,6 +4409,12 @@
     },
     "permission.type.camera.description" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "用于未来更新中可能启用的视频相关功能。"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3133,6 +4425,12 @@
     },
     "permission.type.camera.title" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "摄像头"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3143,6 +4441,12 @@
     },
     "permission.type.contacts.description" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "可选。可能用于未来与通讯录集成的功能。"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3153,6 +4457,12 @@
     },
     "permission.type.contacts.title" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "通讯录"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3163,6 +4473,12 @@
     },
     "permission.type.fullDiskAccess.description" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "允许读取活动监视器的完整进程信息并访问受保护文件。"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3173,6 +4489,12 @@
     },
     "permission.type.fullDiskAccess.title" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "完全磁盘访问权限"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3183,6 +4505,12 @@
     },
     "permission.type.location.description" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "可选。可能用于未来基于地理位置的功能。"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3193,6 +4521,12 @@
     },
     "permission.type.location.title" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "定位服务"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3203,6 +4537,12 @@
     },
     "permission.type.microphone.description" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "用于声音检测或静音控制等音频相关功能。"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3213,6 +4553,12 @@
     },
     "permission.type.microphone.title" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "麦克风"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3223,6 +4569,12 @@
     },
     "permission.type.notifications.description" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "可选。用于发送状态提醒和权限提示。"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3233,6 +4585,12 @@
     },
     "permission.type.notifications.title" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "通知"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3243,6 +4601,12 @@
     },
     "permission.type.reminders.description" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "可选。可能用于未来的任务或提醒集成。"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3253,6 +4617,12 @@
     },
     "permission.type.reminders.title" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "提醒事项"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3263,6 +4633,12 @@
     },
     "permission.type.screenRecording.description" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "用于浏览器检测、窗口捕获和屏幕共享功能。"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3273,6 +4649,12 @@
     },
     "permission.type.screenRecording.title" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "屏幕录制"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3283,6 +4665,12 @@
     },
     "permission.used_by" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "用于:"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3293,6 +4681,12 @@
     },
     "rule.any_matched" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "任意匹配"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3303,6 +4697,12 @@
     },
     "rule.comparison.above" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "高于"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3313,6 +4713,12 @@
     },
     "rule.comparison.below" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "低于"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3323,6 +4729,12 @@
     },
     "rule.hold" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "保持"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3333,6 +4745,12 @@
     },
     "rule.hysteresis" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "滞后"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3343,6 +4761,12 @@
     },
     "rule.sensor.any_sensor" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "任意传感器"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3353,6 +4777,12 @@
     },
     "rule.sensor.average_cpu" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "平均 CPU"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3363,6 +4793,12 @@
     },
     "rule.sensor.highest_cpu" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "最高 CPU"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3373,6 +4809,12 @@
     },
     "rule.sensor.highest_gpu" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "最高 GPU"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3383,6 +4825,12 @@
     },
     "rule.sensor_missing" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%@ (缺失)"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3393,6 +4841,12 @@
     },
     "rule.target.all_fans" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "所有风扇"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3403,6 +4857,12 @@
     },
     "rule.target.left_side" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "左侧"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3413,6 +4873,12 @@
     },
     "rule.target.right_side" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "右侧"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3423,6 +4889,12 @@
     },
     "rule.to" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "到"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3433,6 +4905,12 @@
     },
     "rule.when" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "当"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3443,6 +4921,12 @@
     },
     "section.auto_max_rules" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "自动最大规则"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3453,6 +4937,12 @@
     },
     "section.auto_max_rules.caption" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "根据温度自动调整风扇转速。"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3463,6 +4953,12 @@
     },
     "section.chaos_animation" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "chaos 动画"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3473,6 +4969,12 @@
     },
     "section.fan_general" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "常规"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3483,6 +4985,12 @@
     },
     "section.fan_mode" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "风扇模式"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3493,6 +5001,12 @@
     },
     "section.notifications" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "通知"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3503,6 +5017,12 @@
     },
     "section.stealth" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "隐身"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3513,6 +5033,12 @@
     },
     "section.temperature" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "温度"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3523,6 +5049,12 @@
     },
     "setting.alert_threshold" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "警报阈值"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3533,6 +5065,12 @@
     },
     "setting.app_icon" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "应用图标"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3543,6 +5081,12 @@
     },
     "setting.app_icon.caption" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "将 ClassGod 伪装成 Dock 中的其他应用。图标更改会立即生效。"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3553,6 +5097,12 @@
     },
     "setting.auto_detect.subtitle" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "打开窗口时自动检测当前标签页"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3563,6 +5113,12 @@
     },
     "setting.close_on_click_outside" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "点击外部关闭"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3573,6 +5129,12 @@
     },
     "setting.close_on_click_outside.subtitle" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "点击窗口外部时隐藏窗口"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3583,6 +5145,12 @@
     },
     "setting.compact_mode.subtitle" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "减小间距与内边距"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3593,6 +5161,12 @@
     },
     "setting.confirm_clear.subtitle" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "清空所有数据前询问"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3603,6 +5177,12 @@
     },
     "setting.confirm_delete.subtitle" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "删除前询问"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3613,6 +5193,12 @@
     },
     "setting.default_fan_mode" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "默认模式"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3623,6 +5209,12 @@
     },
     "setting.disable_on_sleep" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "睡眠时禁用"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3633,6 +5225,12 @@
     },
     "setting.disable_on_sleep.note" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "注意：在较新的 Mac 上，睡眠后风扇很快就会关闭。"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3643,6 +5241,12 @@
     },
     "setting.disable_on_sleep.subtitle" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Mac 睡眠时将风扇控制权交还系统"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3653,6 +5257,12 @@
     },
     "setting.enable_fan_control" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "启用风扇控制"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3663,6 +5273,12 @@
     },
     "setting.enable_fan_control.subtitle" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "监控温度并控制风扇"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3673,6 +5289,12 @@
     },
     "setting.enable_temp_alerts" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "启用温度警报"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3683,6 +5305,12 @@
     },
     "setting.enable_temp_alerts.subtitle" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "过热时显示系统通知"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3693,6 +5321,12 @@
     },
     "setting.gradual_time" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "渐进时间"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3703,6 +5337,12 @@
     },
     "setting.haptic.subtitle" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "操作时提供触感反馈"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3713,6 +5353,12 @@
     },
     "setting.instant_mode.subtitle" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "禁用所有动画"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3723,6 +5369,12 @@
     },
     "setting.keep_on_top" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "置顶窗口"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3733,6 +5385,12 @@
     },
     "setting.keep_on_top.subtitle" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "窗口始终位于其他应用之上"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3743,6 +5401,12 @@
     },
     "setting.keyboard_nav.subtitle" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "使用方向键浏览列表"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3753,6 +5417,12 @@
     },
     "setting.maximize_behavior" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "最大化行为"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3763,6 +5433,12 @@
     },
     "setting.minimize_animation" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "最小化动画"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3773,6 +5449,12 @@
     },
     "setting.particle_count" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Particle Count"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3783,16 +5465,28 @@
     },
     "setting.particle_count.caption" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Number of glitch windows used by the launch animation. The safe range is limited to 48 to protect responsiveness."
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "启动 chaos 动画时生成的故障窗口数量。数值越高越炫酷，但会占用更多内存。"
+            "value" : "启动 chaos 动画时生成的故障窗口数量。为保持流畅度，安全范围限制为 48 个以内。"
           }
         }
       }
     },
     "setting.popover_animation" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "弹出动画"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3803,6 +5497,12 @@
     },
     "setting.popover_animation.subtitle" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "窗口打开和关闭时播放动画"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3813,6 +5513,12 @@
     },
     "setting.remember_position" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "记住窗口位置"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3823,6 +5529,12 @@
     },
     "setting.remember_position.subtitle" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "恢复上次窗口位置"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3833,6 +5545,12 @@
     },
     "setting.show_browser_icon.subtitle" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "在标签列表中显示浏览器图标"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3843,6 +5561,12 @@
     },
     "setting.show_fan_in_menu_bar" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "在菜单栏显示"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3853,6 +5577,12 @@
     },
     "setting.show_fan_in_menu_bar.subtitle" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "在状态栏显示最高温度和风扇转速"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3863,6 +5593,12 @@
     },
     "setting.show_on_launch.subtitle" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "应用启动时打开面板"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3873,6 +5609,12 @@
     },
     "setting.show_shortcut_badge.subtitle" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "在项目上显示快捷键"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3883,6 +5625,12 @@
     },
     "setting.show_tab_count.subtitle" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "在菜单栏图标上显示标签数量"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3893,6 +5641,12 @@
     },
     "setting.show_url_preview.subtitle" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "悬停时显示 URL 预览"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3903,6 +5657,12 @@
     },
     "setting.sound_effects.subtitle" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "交互时播放音效"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3913,6 +5673,12 @@
     },
     "setting.temp_alert_limit" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "限制：至少 10 分钟内不会重复发送通知。"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3923,6 +5689,12 @@
     },
     "setting.temperature_unit" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "温度单位"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3933,6 +5705,12 @@
     },
     "setting.toast.subtitle" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "显示操作反馈通知"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3943,6 +5721,12 @@
     },
     "setting.update_interval" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "更新间隔"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3953,6 +5737,12 @@
     },
     "setting.window_opacity" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "窗口不透明度"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3963,6 +5753,12 @@
     },
     "setting.window_zoom" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "窗口缩放"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3973,6 +5769,12 @@
     },
     "settings.title" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Settings"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3983,6 +5785,12 @@
     },
     "menu.activity_monitor.description" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inspect processes and resource usage"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -3993,6 +5801,12 @@
     },
     "menu.assess_prep.description" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Manage emergency apps and quick switching"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -4003,6 +5817,12 @@
     },
     "menu.browser_bypasser.description" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Manage browser lockdown rules"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -4013,6 +5833,12 @@
     },
     "menu.destintab.description" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Manage and switch browser tabs"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -4023,6 +5849,12 @@
     },
     "menu.error_hub.description" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search Swift and macOS errors"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -4033,6 +5865,12 @@
     },
     "menu.fan_control.description" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Monitor temperatures and fan speeds"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -4043,6 +5881,12 @@
     },
     "menu.hacker_desktop.description" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Configure system-monitoring desktop widgets"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -4053,6 +5897,12 @@
     },
     "menu.permission_center.description" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Review and manage system permissions"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -4063,6 +5913,12 @@
     },
     "menu.quit" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quit"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -4073,6 +5929,12 @@
     },
     "menu.superswitch.description" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Switch apps quickly with shortcuts"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -4083,6 +5945,12 @@
     },
     "menu.wallpaper.description" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Manage image and video wallpapers"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -4093,6 +5961,12 @@
     },
     "status.ioregistry" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "IORegistry 回退"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -4103,6 +5977,12 @@
     },
     "status.no_hardware" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "无硬件访问"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -4113,6 +5993,12 @@
     },
     "status.smc_connected" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "SMC 已连接"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -4123,6 +6009,12 @@
     },
     "status.smc_limited" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "SMC 已连接 (受限)"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -4133,6 +6025,12 @@
     },
     "superswitch.delete_message" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "从 SuperSwitch 中移除 %@？"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -4143,6 +6041,12 @@
     },
     "superswitch.delete_title" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "删除目标?"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -4153,6 +6057,12 @@
     },
     "toast.added" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "已添加 %@"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -4163,6 +6073,12 @@
     },
     "toast.exported" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "已导出标签到 JSON"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -4173,6 +6089,12 @@
     },
     "toast.import_failed" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "导入失败: %@"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -4183,6 +6105,12 @@
     },
     "toast.switched_to" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "已切换到 %@"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -4193,6 +6121,12 @@
     },
     "toggle.pin_to_top" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "置顶"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -4203,6 +6137,12 @@
     },
     "unit.rpm" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "RPM"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -4213,6 +6153,12 @@
     },
     "wallpaper.delete_title" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "删除壁纸?"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -4223,6 +6169,12 @@
     },
     "wallpaper.item_count" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld 个项目"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -4233,6 +6185,12 @@
     },
     "wallpaper.library" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "库"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -4243,6 +6201,12 @@
     },
     "wallpaper.mode.playlist_loop" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "列表循环"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -4253,6 +6217,12 @@
     },
     "wallpaper.mode.shuffle" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "随机"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -4263,6 +6233,12 @@
     },
     "wallpaper.mode.single_loop" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "单曲循环"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -4273,6 +6249,12 @@
     },
     "wallpaper.none" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "无壁纸"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -4283,6 +6265,12 @@
     },
     "wallpaper.none_selected" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "未选择壁纸"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -4293,6 +6281,12 @@
     },
     "wallpaper.status.idle" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "待机"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -4303,6 +6297,12 @@
     },
     "wallpaper.status.live" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "运行中"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -4313,6 +6313,12 @@
     },
     "wallpaper.status.off" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "关闭"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -4323,6 +6329,12 @@
     },
     "wallpaper.status.paused" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "已暂停"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -4333,6 +6345,12 @@
     },
     "widget.battery" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Battery"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -4343,6 +6361,12 @@
     },
     "widget.clock" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clock"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -4353,6 +6377,12 @@
     },
     "widget.cpu_gauge" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CPU Gauge"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -4363,6 +6393,12 @@
     },
     "widget.crypto_tab" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crypto Tab"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -4373,6 +6409,12 @@
     },
     "widget.disk_usage" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disk Usage"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -4383,6 +6425,12 @@
     },
     "widget.fan_dashboard" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fan Dashboard"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -4393,6 +6441,12 @@
     },
     "widget.fan_thermal" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fan / Thermal"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -4403,6 +6457,12 @@
     },
     "widget.file" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "File"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -4413,6 +6473,12 @@
     },
     "widget.memory" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Memory"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -4423,6 +6489,12 @@
     },
     "widget.network" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Network"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -4433,6 +6505,12 @@
     },
     "widget.note_tab" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notes Tab"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -4443,6 +6521,12 @@
     },
     "widget.process_list" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Process List"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -4453,6 +6537,12 @@
     },
     "widget.quote_tab" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quotes Tab"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -4463,6 +6553,12 @@
     },
     "widget.system_info" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "System Info"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -4473,6 +6569,12 @@
     },
     "widget.task_manager" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Task Manager"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -4483,6 +6585,12 @@
     },
     "widget.temperature" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Temperature"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -4493,6 +6601,12 @@
     },
     "widget.terminal_tab" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Terminal Tab"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -4503,6 +6617,12 @@
     },
     "widget.todo_tab" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Todo Tab"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -4513,6 +6633,12 @@
     },
     "widget.uptime" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uptime"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -4719,6 +6845,12 @@
             "value" : "Разработчик"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "开发者"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4775,6 +6907,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Профиль разработчика"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "开发者主页"
           }
         },
         "zh-Hant" : {
@@ -4835,6 +6973,12 @@
             "value" : "GitHub репозиторий"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GitHub 仓库"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4893,6 +7037,12 @@
             "value" : "Примечания к выпуску"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "发行说明"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4949,6 +7099,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Версия"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "版本"
           }
         },
         "zh-Hant" : {
@@ -5010,6 +7166,12 @@
             "value" : "Проверить статус разрешений"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "检查权限状态"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -5066,6 +7228,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Нажми желаемое сочетание клавиш"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按你想设的快捷键组合"
           }
         },
         "zh-Hant" : {
@@ -5126,6 +7294,12 @@
             "value" : "Записать глобальную горячую клавишу"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "录全局快捷键"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -5182,6 +7356,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Записать горячую клавишу"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "录个快捷键"
           }
         },
         "zh-Hant" : {
@@ -5242,6 +7422,12 @@
             "value" : "Нажми, чтобы начать запись горячей клавиши"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "点一下开始录快捷键"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -5298,6 +7484,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Нажми, чтобы начать запись"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "点一下开始录"
           }
         },
         "zh-Hant" : {
@@ -5403,6 +7595,12 @@
             "value" : "Новая вкладка"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新建一条"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -5476,6 +7674,12 @@
             "value" : "Выключи анимации для максимальной отзывчивости."
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "关掉动画，反应最快。"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -5536,6 +7740,12 @@
           }
         },
         "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ClassGod"
+          }
+        },
+        "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "ClassGod"
@@ -5642,6 +7852,12 @@
             "value" : "Автоопределение (нет)"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自动探测（无）"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -5700,6 +7916,12 @@
             "value" : "Браузер по умолчанию используется при ручном добавлении вкладки без открытого браузера."
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "手动添加页面且没开浏览器时，用这个默认浏览器。"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -5756,6 +7978,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Определяет, что происходит при срабатывании горячей клавиши для браузера, который сейчас не запущен."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "浏览器没开时按快捷键会发生什么。"
           }
         },
         "zh-Hant" : {
@@ -5828,6 +8056,12 @@
             "value" : "Добавить вкладку"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "加一条"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -5884,6 +8118,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Разрешения автоматизации..."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自动化权限..."
           }
         },
         "zh-Hant" : {
@@ -5944,6 +8184,12 @@
             "value" : "Да ладно"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "算了"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6000,6 +8246,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Очистить"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清空"
           }
         },
         "zh-Hant" : {
@@ -6060,6 +8312,12 @@
             "value" : "Очистить все сохранённые вкладки"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清空所有保存的页面"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6118,6 +8376,12 @@
             "value" : "Удалить"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "删掉"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6174,6 +8438,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Экспорт настроек..."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导出设定..."
           }
         },
         "zh-Hant" : {
@@ -6235,6 +8505,12 @@
             "value" : "Открыть настройки"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "去设定"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6291,6 +8567,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Импорт настроек..."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导入设定..."
           }
         },
         "zh-Hant" : {
@@ -6352,6 +8634,12 @@
             "value" : "Потом"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "等会儿"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6410,6 +8698,12 @@
             "value" : "OK"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OK"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6420,6 +8714,12 @@
     },
     "button.open" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -6476,6 +8776,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Открыть настройки автоматизации..."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开自动化权限设定..."
           }
         },
         "zh-Hant" : {
@@ -6536,6 +8842,12 @@
             "value" : "Открыть Console.app"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开 Console.app"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6594,6 +8906,12 @@
             "value" : "Открыть настройки"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "去设定"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6650,6 +8968,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Перезаписать"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "覆盖"
           }
         },
         "zh-Hant" : {
@@ -6711,6 +9035,12 @@
             "value" : "Свалил"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "溜了"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6767,6 +9097,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Сбросить"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重置"
           }
         },
         "zh-Hant" : {
@@ -6827,6 +9163,12 @@
             "value" : "Сбросить все настройки"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重置所有设定"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6883,6 +9225,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Сохранить изменения"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保存修改"
           }
         },
         "zh-Hant" : {
@@ -6943,6 +9291,12 @@
             "value" : "Сохранить текущую вкладку"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保存当前页面"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6999,6 +9353,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Настройки..."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "设定..."
           }
         },
         "zh-Hant" : {
@@ -7089,6 +9449,12 @@
             "value" : "Все сохранённые вкладки и горячие клавиши будут безвозвратно удалены. Это нельзя отменить."
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这会永久删除所有保存的页面和快捷键，删了就没了。"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -7145,6 +9511,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Очистить все вкладки?"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清空所有页面？"
           }
         },
         "zh-Hant" : {
@@ -7224,6 +9596,12 @@
             "value" : "Изменить"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "编辑"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -7281,6 +9659,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Открыть"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开"
           }
         },
         "zh-Hant" : {
@@ -7366,6 +9750,12 @@
             "value" : "Отладочные логи выводятся в Console.app"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "调试日志输出到 Console.app"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -7442,6 +9832,12 @@
             "value" : "Точно удалить \"%@\"? Когда учитель придёт, не сможешь переключить."
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "确定要删 \"%@\" 吗？删了老师来了就没法切了"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -7498,6 +9894,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Удалить это?"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "删了这条？"
           }
         },
         "zh-Hant" : {
@@ -7624,6 +10026,12 @@
             "value" : "Изменить"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "改一下"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -7682,6 +10090,12 @@
             "value" : "Нажми \"Сохранить текущую вкладку\" снизу, чтобы сохранить страницу, и сможешь мгновенно переключить когда учитель придёт."
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "点下面的\"保存当前页面\"把当前网页存下来，老师来了好秒切"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -7738,6 +10152,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ещё нет сохранённых вкладок"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "还没存过页面"
           }
         },
         "zh-Hant" : {
@@ -7822,6 +10242,12 @@
             "value" : "AppleScript упал: %@"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AppleScript 挂了：%@"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -7878,6 +10304,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Не удалось найти %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "找不到 %@"
           }
         },
         "zh-Hant" : {
@@ -7938,6 +10370,12 @@
             "value" : "%@ не запущен"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ 没开"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -7996,6 +10434,12 @@
             "value" : "Не удалось создать AppleScript"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "创建 AppleScript 失败"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -8052,6 +10496,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Не удалось создать AppleScript"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "创建 AppleScript 失败"
           }
         },
         "zh-Hant" : {
@@ -8144,6 +10594,12 @@
             "value" : "Некорректный ответ от браузера."
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "浏览器回的数据不对"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -8200,6 +10656,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Не удалось запустить %@: %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "启动 %@ 失败：%@"
           }
         },
         "zh-Hant" : {
@@ -8261,6 +10723,12 @@
             "value" : "Активная вкладка не найдена"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没找到活跃标签"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -8320,6 +10788,12 @@
             "value" : "Браузер не обнаружен"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没探测到浏览器"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -8376,6 +10850,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "На переднем плане нет поддерживаемого браузера."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当前最前面的不是支持的浏览器"
           }
         },
         "zh-Hant" : {
@@ -8437,6 +10917,12 @@
             "value" : "Не удалось сохранить вкладку"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保存失败"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -8493,6 +10979,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Браузер не ответил вовремя. Таймаут."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "浏览器没响应，超时了"
           }
         },
         "zh-Hant" : {
@@ -8553,6 +11045,12 @@
             "value" : "Ошибка"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "出错了"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -8609,6 +11107,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Неизвестная ошибка"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未知错误"
           }
         },
         "zh-Hant" : {
@@ -8681,6 +11185,12 @@
             "value" : "ClassGod-Настройки-%@.json"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ClassGod-设定-%@.json"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -8751,6 +11261,12 @@
             "value" : "Какой браузер"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "用哪个浏览器"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -8809,6 +11325,12 @@
             "value" : "Название (любое)"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "标题（随便填）"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -8865,6 +11387,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ссылка"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "连结"
           }
         },
         "zh-Hant" : {
@@ -8955,6 +11483,12 @@
             "value" : "Молния"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "闪电"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -9011,6 +11545,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "По умолчанию (круг ссылки)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "默认（圆圈连结）"
           }
         },
         "zh-Hant" : {
@@ -9071,6 +11611,12 @@
             "value" : "Глаз"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "眼睛"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -9129,6 +11675,12 @@
             "value" : "Круг ссылки залитый"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "实心圆圈连结"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -9185,6 +11737,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ссылка"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "连结"
           }
         },
         "zh-Hant" : {
@@ -9251,6 +11809,12 @@
             "value" : "Не удалось импортировать настройки. Файл может быть повреждён или несовместим."
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导入失败，文件可能坏了或者不兼容。"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -9309,6 +11873,12 @@
             "value" : "Результат импорта"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导入结果"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -9365,6 +11935,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Настройки успешно импортированы."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "设定导入成功。"
           }
         },
         "zh-Hant" : {
@@ -9429,6 +12005,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "В следующем обновлении"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "后续版本再说"
           }
         },
         "zh-Hant" : {
@@ -9516,6 +12098,12 @@
             "value" : "Точное совпадение URL"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "完全匹配"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -9574,6 +12162,12 @@
             "value" : "Только хост (напр. google.com)"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "只匹配域名（比如 google.com）"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -9630,6 +12224,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Совпадение по префиксу (рекомендуется)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "前缀匹配（推荐）"
           }
         },
         "zh-Hant" : {
@@ -9768,6 +12368,12 @@
             "value" : "Ничего не делать"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "啥也不干"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -9826,6 +12432,12 @@
             "value" : "Только запустить браузер"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "只启动浏览器"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -9882,6 +12494,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Запустить браузер и открыть URL"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "启动浏览器并打开连结"
           }
         },
         "zh-Hant" : {
@@ -9979,6 +12597,12 @@
             "value" : "ClassGod требуются разрешения Специальных возможностей и Автоматизации для обнаружения вкладок браузера и переключения на них. Предоставь эти разрешения в Системных настройках."
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ClassGod 需要 Accessibility 和 Automation 权限才能帮你探测浏览器和切屏。去系统设定里给一下。"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -10036,6 +12660,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "ClassGod требуются разрешения"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ClassGod 要权限"
           }
         },
         "zh-Hant" : {
@@ -10097,6 +12727,12 @@
             "value" : "Открыть настройки"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "去设定"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -10154,6 +12790,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Разрешение не дано — Переключение ограничено"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "权限未开启 — 切屏功能受限"
           }
         },
         "zh-Hant" : {
@@ -10214,6 +12856,12 @@
             "value" : "Как я буду следить без разрешения Специальных возможностей? Зайди в Системные настройки > Конфиденциальность и безопасность > Специальные возможности и включи."
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "不给 Accessibility 权限我怎么帮你放风？去 系统设定 > 隐私与安全性 > 辅助功能 里打开"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -10270,6 +12918,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Недостаточно прав"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "权限没给够"
           }
         },
         "zh-Hant" : {
@@ -10340,6 +12994,12 @@
             "value" : "ClassGod требуется разрешение Специальных возможностей для обнаружения браузера на переднем плане и переключения на конкретные вкладки."
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ClassGod 需要 Accessibility 权限来探测最前面的浏览器并切换到指定标签。"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -10397,6 +13057,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "ClassGod необходимо управлять Safari, Chrome и Edge для обнаружения и переключения вкладок браузера."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ClassGod 需要控制 Safari、Chrome 和 Edge 来探测和切换浏览器标签。"
           }
         },
         "zh-Hant" : {
@@ -10511,6 +13177,12 @@
             "value" : "Все настройки будут сброшены до значений по умолчанию. Сохранённые вкладки не пострадают."
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这会重置所有设定成默认值。保存的页面不会丢。"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -10567,6 +13239,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Сбросить настройки?"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重置设定？"
           }
         },
         "zh-Hant" : {
@@ -10663,6 +13341,12 @@
             "value" : "О приложении"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "关于"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -10719,6 +13403,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Анимация"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "动画"
           }
         },
         "zh-Hant" : {
@@ -10779,6 +13469,12 @@
             "value" : "Поведение"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "行为"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -10837,6 +13533,12 @@
             "value" : "Когда браузер не запущен"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "浏览器没开时"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -10893,6 +13595,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Управление данными"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "数据管理"
           }
         },
         "zh-Hant" : {
@@ -10954,6 +13662,12 @@
             "value" : "Отладка"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "调试"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -11010,6 +13724,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Браузер по умолчанию"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "默认浏览器"
           }
         },
         "zh-Hant" : {
@@ -11070,6 +13790,12 @@
             "value" : "Параметры отображения"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示选项"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -11126,6 +13852,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Обратная связь"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "反馈"
           }
         },
         "zh-Hant" : {
@@ -11186,6 +13918,12 @@
             "value" : "Глобальная горячая клавиша"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "呼出快捷键"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -11242,6 +13980,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Запуск"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "启动"
           }
         },
         "zh-Hant" : {
@@ -11302,6 +14046,12 @@
             "value" : "Иконка менюбара"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "菜单栏图标"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -11358,6 +14108,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Панель"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "面板"
           }
         },
         "zh-Hant" : {
@@ -11418,6 +14174,12 @@
             "value" : "Разрешения"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "权限"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -11474,6 +14236,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Безопасность"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "安全"
           }
         },
         "zh-Hant" : {
@@ -11534,6 +14302,12 @@
             "value" : "Горячая клавиша"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "快捷键"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -11590,6 +14364,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Поддерживаемые браузеры"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "支持的浏览器"
           }
         },
         "zh-Hant" : {
@@ -11650,6 +14430,12 @@
             "value" : "Тема"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "主题"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -11706,6 +14492,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Подсказки"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "小贴士"
           }
         },
         "zh-Hant" : {
@@ -11778,6 +14570,12 @@
             "value" : "Скорость анимации"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "动画速度"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -11834,6 +14632,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Внешний вид"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "外观"
           }
         },
         "zh-Hant" : {
@@ -11894,6 +14698,12 @@
             "value" : "Автоопределять текущую вкладку при отображении"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示面板时自动探测"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -11950,6 +14760,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Поведение"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "行为"
           }
         },
         "zh-Hant" : {
@@ -12010,6 +14826,12 @@
             "value" : "Компактный режим"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "紧凑模式"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -12066,6 +14888,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Подтверждать перед очисткой всех вкладок"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清空前确认一下"
           }
         },
         "zh-Hant" : {
@@ -12126,6 +14954,12 @@
             "value" : "Подтверждать перед удалением вкладки"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "删页面前确认一下"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -12182,6 +15016,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Радиус скругления панели:"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "面板圆角："
           }
         },
         "zh-Hant" : {
@@ -12243,6 +15083,12 @@
             "value" : "Включить отладочное логирование"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "开启调试日志"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -12299,6 +15145,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Включить тактильную обратную связь"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "开启震动"
           }
         },
         "zh-Hant" : {
@@ -12359,6 +15211,12 @@
             "value" : "Стиль иконки"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "图标样式"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -12415,6 +15273,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ультраскоростной режим (отключить все анимации)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "极速模式（关闭所有动画）"
           }
         },
         "zh-Hant" : {
@@ -12475,6 +15339,12 @@
             "value" : "Включить навигацию с клавиатуры"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "启用键盘导航"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -12531,6 +15401,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Запуск при входе"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "开机自启动"
           }
         },
         "zh-Hant" : {
@@ -12591,6 +15467,12 @@
             "value" : "Макс. высота:"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最大高度："
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -12647,6 +15529,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Макс. отображаемых вкладок:"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最多显示："
           }
         },
         "zh-Hant" : {
@@ -12707,6 +15595,12 @@
             "value" : "Высота строки:"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "行高："
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -12763,6 +15657,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Показывать иконки браузеров"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示浏览器图标"
           }
         },
         "zh-Hant" : {
@@ -12823,6 +15723,12 @@
             "value" : "Показывать панель при запуске"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "启动时展开面板"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -12879,6 +15785,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Показывать панель меню:"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "呼出菜单栏面板："
           }
         },
         "zh-Hant" : {
@@ -12939,6 +15851,12 @@
             "value" : "Показывать значки горячих клавиш"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示快捷键徽章"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -12995,6 +15913,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Показывать значок количества вкладок"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示标签数量徽章"
           }
         },
         "zh-Hant" : {
@@ -13055,6 +15979,12 @@
             "value" : "Показывать превью URL"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示 URL 预览"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -13111,6 +16041,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Включить звуковые эффекты"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "开启音效"
           }
         },
         "zh-Hant" : {
@@ -13171,6 +16107,12 @@
             "value" : "Переключение вкладок"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "切屏方式"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -13227,6 +16169,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Задержка переключения (мс):"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "切换延迟（毫秒）："
           }
         },
         "zh-Hant" : {
@@ -13287,6 +16235,12 @@
             "value" : "Показывать Toast-уведомления"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示 Toast 通知"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -13343,6 +16297,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Длительность Toast:"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toast 停留时间："
           }
         },
         "zh-Hant" : {
@@ -13403,6 +16363,12 @@
             "value" : "Сопоставление URL"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "URL 匹配"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -13461,6 +16427,12 @@
             "value" : "При ручном добавлении"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "手动添加时用"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -13517,6 +16489,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ширина:"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "宽度："
           }
         },
         "zh-Hant" : {
@@ -13586,6 +16564,12 @@
             "value" : "Другая вкладка уже использует эту горячую клавишу. Перезаписать?"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已经有别的页面用了这个快捷键，覆盖掉？"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -13642,6 +16626,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Конфликт горячих клавиш"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "快捷键撞车了"
           }
         },
         "zh-Hant" : {
@@ -13702,6 +16692,12 @@
             "value" : "Эта горячая клавиша уже занята. Будешь отбирать?"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这快捷键被别人占了，你要硬抢吗？"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -13758,6 +16754,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Клавиша %d"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按键 %d"
           }
         },
         "zh-Hant" : {
@@ -13818,6 +16820,12 @@
             "value" : "Нет"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -13874,6 +16882,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Нажми горячую клавишу..."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按快捷键..."
           }
         },
         "zh-Hant" : {
@@ -13934,6 +16948,12 @@
             "value" : "Нажми клавиши..."
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按快捷键..."
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -13992,6 +17012,12 @@
             "value" : "Нажми, чтобы назначить горячую клавишу"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "点一下设定快捷键"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -14048,6 +17074,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Нажми на поле горячей клавиши сверху, чтобы записать новую глобальную горячую клавишу для открытия панели ClassGod."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "点上面的快捷键框录一个新的全局快捷键，用来呼出 ClassGod 面板。"
           }
         },
         "zh-Hant" : {
@@ -14117,6 +17149,12 @@
             "value" : "Быстро"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "快"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -14173,6 +17211,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Выкл. (мгновенно)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "关掉（瞬间）"
           }
         },
         "zh-Hant" : {
@@ -14233,6 +17277,12 @@
             "value" : "Нормально"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正常"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -14291,6 +17341,12 @@
             "value" : "ClassGod"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ClassGod"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -14344,6 +17400,12 @@
           }
         },
         "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hanazar Products"
+          }
+        },
+        "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hanazar Products"
@@ -14435,6 +17497,12 @@
             "value" : "Переключиться на существующую вкладку, если найдена"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "找到就切过去"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -14492,6 +17560,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Всегда открывать в новой вкладке"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "永远新开标签"
           }
         },
         "zh-Hant" : {
@@ -14567,6 +17641,12 @@
             "value" : "Дополнительно"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "高级"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -14625,6 +17705,12 @@
             "value" : "Внешний вид"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "外观"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -14681,6 +17767,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Браузер"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "浏览器"
           }
         },
         "zh-Hant" : {
@@ -14805,6 +17897,12 @@
             "value" : "Общие"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "常规"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -14861,6 +17959,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Горячие клавиши"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "快捷键"
           }
         },
         "zh-Hant" : {
@@ -14939,6 +18043,12 @@
             "value" : "Тёмная"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "深色"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -14997,6 +18107,12 @@
             "value" : "Светлая"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "浅色"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -15053,6 +18169,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Как в системе"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "跟随系统"
           }
         },
         "zh-Hant" : {
@@ -15119,6 +18241,12 @@
             "value" : "Избегай конфликтов с системными горячими клавишами"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "别跟系统快捷键撞车"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -15177,6 +18305,12 @@
             "value" : "Горячие клавиши для вкладок настраиваются в главной панели"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "每个页面的快捷键在主面板里设"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -15233,6 +18367,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Перезапусти приложение после изменения этой горячей клавиши"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "改完最好重启一下"
           }
         },
         "zh-Hant" : {
@@ -15328,6 +18468,12 @@
             "value" : "%@ запущен"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已启动 %@"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -15384,6 +18530,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "URL открыт в %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已在 %@ 打开连结"
           }
         },
         "zh-Hant" : {
@@ -15444,6 +18596,12 @@
             "value" : "\"%@\" сохранено"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已保存 \"%@\""
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -15500,6 +18658,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Текущая вкладка сохранена"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当前页面已保存"
           }
         },
         "zh-Hant" : {
@@ -15560,6 +18724,12 @@
             "value" : "Переключено на %@"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已切到 %@"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -15618,6 +18788,12 @@
             "value" : "Переключено на %@"
           }
         },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已切到 %@"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -15674,6 +18850,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "\"%@\" обновлено"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已更新 \"%@\""
           }
         },
         "zh-Hant" : {

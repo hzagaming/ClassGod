@@ -22,7 +22,8 @@ final class SuperSwitchViewModel: ObservableObject {
     private var registeredTargetIDs: Set<UUID> = []
     
     init() {
-        loadTargets()
+        _targets = Published(initialValue: StorageManager.shared.loadSwitchTargets())
+        refreshShortcuts()
     }
     
     deinit {

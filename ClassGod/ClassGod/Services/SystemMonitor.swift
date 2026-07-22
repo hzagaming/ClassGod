@@ -460,11 +460,15 @@ final class SystemMonitor: ObservableObject, @unchecked Sendable {
                 infos.append(sample.info)
             }
             
+            let rusageSnapshot = currentRUsage
+            let taskTimesSnapshot = currentTaskTimes
+            let sortedInfos = infos.sorted { $0.cpuPercent > $1.cpuPercent }
+
             Task { @MainActor [weak self] in
                 guard let self else { return }
-                self.previousProcessRUsage = currentRUsage
-                self.previousProcessTaskTimes = currentTaskTimes
-                self.processes = infos.sorted { $0.cpuPercent > $1.cpuPercent }
+                self.previousProcessRUsage = rusageSnapshot
+                self.previousProcessTaskTimes = taskTimesSnapshot
+                self.processes = sortedInfos
             }
         }
     }

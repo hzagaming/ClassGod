@@ -7,7 +7,6 @@
 
 import Foundation
 import AppKit
-import AudioToolbox
 
 enum SoundEffect: String, CaseIterable {
     case popoverOpen = "PopoverOpen"
@@ -35,32 +34,32 @@ enum SoundEffect: String, CaseIterable {
     case resizeStart = "ResizeStart"
     case temperatureWarning = "TemperatureWarning"
     
-    var systemSoundID: SystemSoundID? {
+    var systemSoundName: String {
         switch self {
-        case .popoverOpen:       return 1106  // Tock
-        case .popoverClose:      return 1105  // Tock
-        case .tabSaved:          return 1102  // Glass
-        case .tabDeleted:        return 1107  // Tock
-        case .switchSuccess:     return 1103  // Basso
-        case .switchFailure:     return 1006  // Basso (lower)
-        case .shortcutRecorded:  return 1104  // Ping
-        case .shortcutConflict:  return 1005  // Basso
-        case .buttonClick:       return 1105  // Tock
-        case .settingsChanged:   return 1106  // Tock
-        case .wallpaperAdded:    return 1262  // Glass — cinematic add
-        case .wallpaperDeleted:  return 1053  // Error — removal
-        case .wallpaperSwitched: return 1104  // Ping — quick switch
-        case .wallpaperPlayPause: return 1106 // Tock — toggle
-        case .widgetAdded:       return 1104  // Ping — tech add
-        case .widgetDeleted:     return 1053  // Error — removal
-        case .widgetLocked:      return 1106  // Tock — toggle lock
-        case .widgetPickerOpen:  return 1103  // Basso — modal open
-        case .layoutReset:       return 1104  // Ping — reset confirmation
-        case .layoutCleared:     return 1053  // Error — mass removal
-        case .gridToggle:        return 1106  // Tock — toggle grid
-        case .dragStart:         return 1107  // Tock — light grab
-        case .resizeStart:       return 1107  // Tock — light grab
-        case .temperatureWarning: return 1005  // Basso — warning alert
+        case .popoverOpen:        return "Pop"
+        case .popoverClose:       return "Tink"
+        case .tabSaved:           return "Glass"
+        case .tabDeleted:         return "Basso"
+        case .switchSuccess:      return "Ping"
+        case .switchFailure:      return "Basso"
+        case .shortcutRecorded:   return "Ping"
+        case .shortcutConflict:   return "Basso"
+        case .buttonClick:        return "Tink"
+        case .settingsChanged:    return "Tink"
+        case .wallpaperAdded:     return "Glass"
+        case .wallpaperDeleted:   return "Basso"
+        case .wallpaperSwitched:  return "Ping"
+        case .wallpaperPlayPause: return "Tink"
+        case .widgetAdded:        return "Ping"
+        case .widgetDeleted:      return "Basso"
+        case .widgetLocked:       return "Tink"
+        case .widgetPickerOpen:   return "Funk"
+        case .layoutReset:        return "Ping"
+        case .layoutCleared:      return "Basso"
+        case .gridToggle:         return "Tink"
+        case .dragStart:          return "Pop"
+        case .resizeStart:        return "Pop"
+        case .temperatureWarning: return "Basso"
         }
     }
 }
@@ -71,13 +70,91 @@ final class SoundEffectManager {
     private var isEnabled: Bool {
         PreferencesManager.shared.preferences.enableSoundEffects
     }
+
+    private let audioQueue = DispatchQueue(label: "com.hanazar.classgod.sfx", qos: .userInitiated)
+    nonisolated(unsafe) private var sounds: [String: NSSound] = [:]
     
     private init() {}
-    
+
     func play(_ effect: SoundEffect) {
         guard isEnabled else { return }
-        if let soundID = effect.systemSoundID {
-            AudioServicesPlaySystemSound(soundID)
+        playSound(named: effect.systemSoundName)
+    }
+
+    private func playSound(named name: String) {
+        audioQueue.async { [weak self] in
+            self?.playSoundOnAudioQueue(named: name)
+        }
+    }
+
+    nonisolated private func playSoundOnAudioQueue(named name: String) {
+        let sound: NSSound
+        if let cached = sounds[name] {
+            sound = cached
+        } else if let created = NSSound(data: makeToneData(named: name)) {
+            sounds[name] = created
+            sound = created
+        } else {
+            NSSound.beep()
+            return
+        }
+        sound.stop()
+        sound.play()
+    }
+
+    nonisolated private func makeToneData(named name: String) -> Data {
+        let parameters: (frequency: Double, duration: Double) = switch name {
+        case "Basso":     (220, 0.14)
+        case "Blow":      (170, 0.10)
+        case "Bottle":    (660, 0.09)
+        case "Frog":      (330, 0.11)
+        case "Funk":      (520, 0.10)
+        case "Glass":     (1_040, 0.12)
+        case "Morse":     (880, 0.06)
+        case "Ping":      (880, 0.09)
+        case "Pop":       (720, 0.05)
+        case "Sosumi":    (440, 0.15)
+        case "Submarine": (140, 0.18)
+        case "Tink":      (1_200, 0.06)
+        default:           (640, 0.08)
+        }
+
+        let sampleRate = 44_100
+        let sampleCount = max(1, Int(Double(sampleRate) * parameters.duration))
+        let dataByteCount = UInt32(sampleCount * MemoryLayout<Int16>.size)
+        var data = Data()
+        data.reserveCapacity(44 + Int(dataByteCount))
+
+        data.append(contentsOf: "RIFF".utf8)
+        appendLittleEndian(UInt32(36) + dataByteCount, to: &data)
+        data.append(contentsOf: "WAVEfmt ".utf8)
+        appendLittleEndian(UInt32(16), to: &data)
+        appendLittleEndian(UInt16(1), to: &data)
+        appendLittleEndian(UInt16(1), to: &data)
+        appendLittleEndian(UInt32(sampleRate), to: &data)
+        appendLittleEndian(UInt32(sampleRate * MemoryLayout<Int16>.size), to: &data)
+        appendLittleEndian(UInt16(MemoryLayout<Int16>.size), to: &data)
+        appendLittleEndian(UInt16(16), to: &data)
+        data.append(contentsOf: "data".utf8)
+        appendLittleEndian(dataByteCount, to: &data)
+
+        for index in 0..<sampleCount {
+            let time = Double(index) / Double(sampleRate)
+            let attack = min(1, time / 0.006)
+            let release = max(0, 1 - time / parameters.duration)
+            let envelope = attack * release * release
+            let fundamental = sin(2 * .pi * parameters.frequency * time)
+            let harmonic = 0.22 * sin(2 * .pi * parameters.frequency * 2 * time)
+            let value = max(-1, min(1, (fundamental + harmonic) * envelope * 0.32))
+            appendLittleEndian(Int16(value * Double(Int16.max)), to: &data)
+        }
+        return data
+    }
+
+    nonisolated private func appendLittleEndian<T: FixedWidthInteger>(_ value: T, to data: inout Data) {
+        var littleEndian = value.littleEndian
+        withUnsafeBytes(of: &littleEndian) { bytes in
+            data.append(contentsOf: bytes)
         }
     }
     
@@ -115,32 +192,22 @@ final class SoundEffectManager {
     
     // MARK: - Glitch SFX (chaos launch animation)
     
-    private let glitchSoundIDs: [SystemSoundID] = [
-        1005,  // Basso (short error)
-        1006,  // Basso (error)
-        1050,  // Error
-        1051,  // Error
-        1052,  // Error
-        1053,  // Error
-        1107,  // Tock
-        1256,  // Basso
-        1257,  // Funk
-        1262,  // Glass
-        1306,  // Error
-        1328,  // Sosumi
-        1330,  // System
-        1331,  // System
-        1332,  // System
-        1333,  // System
-        1334,  // System
-        1335,  // System
-        1336,  // System
+    private let glitchSoundNames: [String] = [
+        "Basso",
+        "Blow",
+        "Bottle",
+        "Frog",
+        "Funk",
+        "Morse",
+        "Sosumi",
+        "Submarine",
+        "Tink",
     ]
     
     func playGlitchSound() {
         guard isEnabled else { return }
-        guard let soundID = glitchSoundIDs.randomElement() else { return }
-        AudioServicesPlaySystemSound(soundID)
+        guard let soundName = glitchSoundNames.randomElement() else { return }
+        playSound(named: soundName)
     }
     
     func playGlitchBurst(count: Int) {
@@ -163,12 +230,12 @@ final class SoundEffectManager {
     
     func playHackerRevealSound() {
         guard isEnabled else { return }
-        AudioServicesPlaySystemSound(1262)  // Glass — decrypt complete
+        playSound(named: "Glass")
     }
     
     func playScreenFlashSound() {
         guard isEnabled else { return }
-        AudioServicesPlaySystemSound(1306)  // Error — flash impact
+        playSound(named: "Basso")
     }
     
     // MARK: - Window Switch SFX
@@ -177,23 +244,23 @@ final class SoundEffectManager {
         guard isEnabled else { return }
         switch feature {
         case "destintab":
-            AudioServicesPlaySystemSound(1103)  // Basso — deep open
+            playSound(named: "Basso")
         case "superswitch":
-            AudioServicesPlaySystemSound(1104)  // Ping — snappy open
+            playSound(named: "Ping")
         case "browserbypasser":
-            AudioServicesPlaySystemSound(1328)  // Sosumi — tech open
+            playSound(named: "Sosumi")
         case "assessprephack":
-            AudioServicesPlaySystemSound(1257)  // Funk — edgy open
+            playSound(named: "Funk")
         case "hackerdesktop":
-            AudioServicesPlaySystemSound(1328)  // Sosumi — tech dashboard open
+            playSound(named: "Sosumi")
         case "fancontrol":
-            AudioServicesPlaySystemSound(1104)  // Ping — cool/tech open
+            playSound(named: "Ping")
         case "activitymonitor":
-            AudioServicesPlaySystemSound(1106)  // Tock — system open
+            playSound(named: "Tink")
         case "permissioncenter":
-            AudioServicesPlaySystemSound(1262)  // Glass — security open
+            playSound(named: "Glass")
         case "errorhub":
-            AudioServicesPlaySystemSound(1053)  // Error — error encyclopedia open
+            playSound(named: "Basso")
         default:
             playPopoverOpen()
         }
@@ -204,7 +271,7 @@ final class SoundEffectManager {
         switch feature {
         case "destintab", "superswitch", "browserbypasser", "assessprephack", "hackerdesktop",
              "fancontrol", "activitymonitor", "permissioncenter", "errorhub":
-            AudioServicesPlaySystemSound(1107)  // Tock — tight close
+            playSound(named: "Tink")
         default:
             playPopoverClose()
         }
@@ -212,7 +279,7 @@ final class SoundEffectManager {
     
     func playFeatureSwitch() {
         guard isEnabled else { return }
-        AudioServicesPlaySystemSound(1106)  // Tock — quick switch
+        playSound(named: "Tink")
     }
     
     // MARK: - Wallpaper SFX

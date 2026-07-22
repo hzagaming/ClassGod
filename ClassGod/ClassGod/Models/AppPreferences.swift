@@ -401,7 +401,7 @@ struct AppPreferences: Codable, Equatable {
         self.confirmBeforeClear = confirmBeforeClear
         self.maxTabsInPopover = maxTabsInPopover
         self.useInstantAnimations = useInstantAnimations
-        self.chaosParticleCount = chaosParticleCount
+        self.chaosParticleCount = min(max(chaosParticleCount, 12), 48)
         self.logRetentionDays = logRetentionDays
         self.enableDeveloperMode = enableDeveloperMode
         self.enableAutoBackup = enableAutoBackup
@@ -474,7 +474,7 @@ struct AppPreferences: Codable, Equatable {
         confirmBeforeClear: true,
         maxTabsInPopover: 50,
         useInstantAnimations: false,
-        chaosParticleCount: 200,
+        chaosParticleCount: 40,
         logRetentionDays: 7,
         enableDeveloperMode: false,
         enableAutoBackup: false,
@@ -645,7 +645,8 @@ extension AppPreferences {
         preferences.confirmBeforeClear = try container.decodeIfPresent(Bool.self, forKey: .confirmBeforeClear) ?? preferences.confirmBeforeClear
         preferences.maxTabsInPopover = try container.decodeIfPresent(Int.self, forKey: .maxTabsInPopover) ?? preferences.maxTabsInPopover
         preferences.useInstantAnimations = try container.decodeIfPresent(Bool.self, forKey: .useInstantAnimations) ?? preferences.useInstantAnimations
-        preferences.chaosParticleCount = try container.decodeIfPresent(Int.self, forKey: .chaosParticleCount) ?? preferences.chaosParticleCount
+        let storedParticleCount = try container.decodeIfPresent(Int.self, forKey: .chaosParticleCount) ?? preferences.chaosParticleCount
+        preferences.chaosParticleCount = min(max(storedParticleCount, 12), 48)
         preferences.logRetentionDays = try container.decodeIfPresent(Int.self, forKey: .logRetentionDays) ?? preferences.logRetentionDays
         preferences.enableDeveloperMode = try container.decodeIfPresent(Bool.self, forKey: .enableDeveloperMode) ?? preferences.enableDeveloperMode
         preferences.enableAutoBackup = try container.decodeIfPresent(Bool.self, forKey: .enableAutoBackup) ?? preferences.enableAutoBackup

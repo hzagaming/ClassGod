@@ -13,6 +13,7 @@ struct MenuBarView: View {
     @State private var fanSummaryRPM: Double = 0
     @State private var fanSummaryTimer: Timer?
     @State private var sleepObserverTokens: [any NSObjectProtocol] = []
+    @State private var isActive = false
 
     var onClose: () -> Void
     var onOpenDestinTab: () -> Void
@@ -158,39 +159,22 @@ struct MenuBarView: View {
                 .stroke(Color.white.opacity(0.12), lineWidth: 1 * zoomScale)
                 .allowsHitTesting(false)
         )
-        .onAppear {
-            // Register sleep/wake observers only here. The actual fan-summary
-            // polling timer is owned by fanSummaryCard so it starts and stops
-            // together with the card's lifecycle.
-            let willSleep = NSWorkspace.shared.notificationCenter.addObserver(
-                forName: NSWorkspace.willSleepNotification,
-                object: nil,
-                queue: .main
-            ) { _ in
-                fanSummaryTimer?.invalidate()
-                fanSummaryTimer = nil
+        .onReceive(NotificationCenter.default.publisher(for: .mainWindowDidShow)) { _ in
+            activate()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .mainWindowWillHide)) { _ in
+            deactivate()
+        }
+        .onChange(of: prefs.preferences.enableFanControl) { _, enabled in
+            guard isActive else { return }
+            if enabled {
+                startFanSummaryTimer()
+            } else {
+                stopFanSummaryTimer()
             }
-            let didWake = NSWorkspace.shared.notificationCenter.addObserver(
-                forName: NSWorkspace.didWakeNotification,
-                object: nil,
-                queue: .main
-            ) { _ in
-                guard prefs.preferences.enableFanControl else { return }
-                updateFanSummary()
-                fanSummaryTimer?.invalidate()
-                fanSummaryTimer = Timer.scheduledTimer(withTimeInterval: 3, repeats: true) { _ in
-                    updateFanSummary()
-                }
-            }
-            sleepObserverTokens = [willSleep, didWake]
         }
         .onDisappear {
-            fanSummaryTimer?.invalidate()
-            fanSummaryTimer = nil
-            for token in sleepObserverTokens {
-                NSWorkspace.shared.notificationCenter.removeObserver(token)
-            }
-            sleepObserverTokens.removeAll()
+            deactivate()
         }
     }
     
@@ -252,17 +236,55 @@ struct MenuBarView: View {
                 .stroke(Color.white.opacity(0.08), lineWidth: 1 * zoomScale)
                 .allowsHitTesting(false)
         )
-        .onAppear {
+    }
+
+    private func activate() {
+        guard !isActive else { return }
+        isActive = true
+
+        let willSleep = NSWorkspace.shared.notificationCenter.addObserver(
+            forName: NSWorkspace.willSleepNotification,
+            object: nil,
+            queue: .main
+        ) { _ in
+            stopFanSummaryTimer()
+        }
+        let didWake = NSWorkspace.shared.notificationCenter.addObserver(
+            forName: NSWorkspace.didWakeNotification,
+            object: nil,
+            queue: .main
+        ) { _ in
+            guard prefs.preferences.enableFanControl else { return }
+            startFanSummaryTimer()
+        }
+        sleepObserverTokens = [willSleep, didWake]
+
+        if prefs.preferences.enableFanControl {
+            startFanSummaryTimer()
+        }
+    }
+
+    private func deactivate() {
+        guard isActive else { return }
+        isActive = false
+        stopFanSummaryTimer()
+        for token in sleepObserverTokens {
+            NSWorkspace.shared.notificationCenter.removeObserver(token)
+        }
+        sleepObserverTokens.removeAll()
+    }
+
+    private func startFanSummaryTimer() {
+        updateFanSummary()
+        fanSummaryTimer?.invalidate()
+        fanSummaryTimer = Timer.scheduledTimer(withTimeInterval: 3, repeats: true) { _ in
             updateFanSummary()
-            fanSummaryTimer?.invalidate()
-            fanSummaryTimer = Timer.scheduledTimer(withTimeInterval: 3, repeats: true) { _ in
-                updateFanSummary()
-            }
         }
-        .onDisappear {
-            fanSummaryTimer?.invalidate()
-            fanSummaryTimer = nil
-        }
+    }
+
+    private func stopFanSummaryTimer() {
+        fanSummaryTimer?.invalidate()
+        fanSummaryTimer = nil
     }
 
     private func updateFanSummary() {

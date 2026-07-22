@@ -2,7 +2,7 @@
 
 ## 项目定位
 
-ClassGod 本质上是一个**紧急切屏工具**——帮用户在关键时刻（比如老师来了、老板路过）瞬间切回指定页面。当前版本 v1.5.9 (Build 34)，核心逻辑是 AppleScript + Carbon HotKey + SwiftUI。
+ClassGod 本质上是一个**紧急切屏工具**——帮用户在关键时刻（比如老师来了、老板路过）瞬间切回指定页面。当前版本 v1.5.10 (Build 35)，核心逻辑是 AppleScript + Carbon HotKey + SwiftUI。
 
 ## 技术约束
 
@@ -77,7 +77,7 @@ xcodebuild -project ClassGod.xcodeproj -scheme ClassGod -destination 'platform=m
 - 快捷键只支持字母、数字、F1-F12
 - Safari 标签匹配基于 URL 前缀或 host，可能误匹配
 - 不支持 Firefox
-- 音效使用未文档化的系统 Sound ID，未来 macOS 更新可能失效
+- 音效由 `SoundEffectManager` 在内存中生成短 PCM/WAV 音色并通过 `NSSound(data:)` 缓存播放，不依赖未文档化 Sound ID 或外部音频文件
 - 全局呼出快捷键修改后需要重启应用才能完全生效（部分情况下）
 - Apple Silicon 机型上 SMC 风扇控制需要 root/系统扩展权限；现在提供 `ClassGodHelper` 特权工具，以 root 运行后可解锁完整 SMC 读/写；未运行 Helper 时回退到 IORegistry / thermalState 估计值
 - `AppleARMPMUTempSensor` 的温度值在 Apple Silicon 用户空间下通常不可读，应用会列出 discovered 硬件并以 thermalState 作为占位值（标记为 estimated）

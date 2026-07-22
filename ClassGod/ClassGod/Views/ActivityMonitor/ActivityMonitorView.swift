@@ -38,6 +38,13 @@ struct ActivityMonitorView: View {
         .onDisappear {
             viewModel.stopMonitoring()
         }
+        .onReceive(NotificationCenter.default.publisher(for: .activityMonitorWindowDidShow)) { _ in
+            viewModel.startMonitoring()
+            checkPermissions()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .activityMonitorWindowWillHide)) { _ in
+            viewModel.stopMonitoring()
+        }
     }
     
     // MARK: - Header

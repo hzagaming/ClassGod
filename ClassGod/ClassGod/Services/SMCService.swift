@@ -45,7 +45,7 @@ enum FanControlMode: String, Codable, CaseIterable, Identifiable {
     }
 }
 
-enum TemperatureUnit: String, Codable, CaseIterable, Identifiable {
+nonisolated enum TemperatureUnit: String, Codable, CaseIterable, Identifiable {
     case celsius = "celsius"
     case fahrenheit = "fahrenheit"
 
@@ -75,9 +75,7 @@ enum TemperatureUnit: String, Codable, CaseIterable, Identifiable {
 
 // MARK: - SMC Service
 
-private let KERNEL_INDEX_SMC: UInt32 = 2
-
-final class SMCService {
+nonisolated final class SMCService: @unchecked Sendable {
     static let shared = SMCService()
 
     private var conn: io_connect_t = 0
@@ -132,7 +130,15 @@ final class SMCService {
         ("SSD", "Ts2S", 80),
     ]
 
+    let isAppleSilicon: Bool
+
     private init() {
+        var sysinfo = utsname()
+        uname(&sysinfo)
+        let machine = withUnsafePointer(to: &sysinfo.machine) {
+            $0.withMemoryRebound(to: CChar.self, capacity: 256) { String(cString: $0) }
+        }
+        isAppleSilicon = machine == "arm64" || machine.hasPrefix("Apple")
         connect()
         updateFanAccessReason()
     }
@@ -182,15 +188,6 @@ final class SMCService {
         }
     }
     
-    private(set) lazy var isAppleSilicon: Bool = {
-        var sysinfo = utsname()
-        uname(&sysinfo)
-        let machine = withUnsafePointer(to: &sysinfo.machine) {
-            $0.withMemoryRebound(to: CChar.self, capacity: 256) { String(cString: $0) }
-        }
-        return machine == "arm64" || machine.hasPrefix("Apple")
-    }()
-
     deinit {
         if conn != 0 {
             IOServiceClose(conn)
@@ -243,7 +240,7 @@ final class SMCService {
                 }
                 return IOConnectCallStructMethod(
                     conn,
-                    KERNEL_INDEX_SMC,
+                    2,
                     inputAddr, inputSize,
                     outputAddr, &outputSize
                 )
@@ -991,7 +988,7 @@ final class SMCService {
         return (cpu: cpuTemp, gpu: cpuTemp + 3.0)
     }
 
-    private lazy var hidReader = HIDTemperatureReader()
+    private let hidReader = HIDTemperatureReader()
 
     /// Reads live temperature events from Apple Silicon PMU/NVMe HID services.
     /// Uses the private IOHIDEventSystemClient API (same path as iStat/TG Pro).

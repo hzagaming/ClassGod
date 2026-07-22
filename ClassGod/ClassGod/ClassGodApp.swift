@@ -14,11 +14,9 @@ struct ClassGodApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
     var body: some Scene {
-        WindowGroup {
+        Settings {
             EmptyView()
         }
-        .windowStyle(.hiddenTitleBar)
-        .defaultSize(width: 0.001, height: 0.001)
         .commands {
             CommandGroup(replacing: .appSettings) {}
         }
@@ -109,14 +107,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 object: nil
             )
 
-            // Phase 2: Setup main menu window first (hidden at bottom layer)
+            // Phase 2: Setup only the main window. Feature windows are created
+            // lazily on first use to avoid launch-time rendering side effects and
+            // unnecessary work for windows the user may never open.
             self.setupMainWindow()
-            self.setupDestinTabWindow()
-            self.setupSuperSwitchWindow()
-            self.setupBrowserBypasserWindow()
-            self.setupAssessPrepHackWindow()
-            self.setupSettingsWindow()
-            self.setupErrorHubWindow()
             if let window = self.mainWindow {
                 window.alphaValue = 0
                 window.orderBack(nil)
@@ -125,7 +119,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 LaunchAnimationManager.shared.startChaosAnimation(mainWindow: window) { [weak self] in
                     // Phase 4: Animation complete
                     if PreferencesManager.shared.preferences.showPopoverOnLaunch {
-                        self?.mainWindow?.makeKeyAndOrderFront(nil)
+                        self?.showMainWindow(animated: false)
                     }
                 }
             }
@@ -178,9 +172,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func setupMainWindow() {
         let prefs = PreferencesManager.shared.preferences
         let zoom = CGFloat(prefs.windowZoomScale)
-        let size = NSSize(
-            width: prefs.panelWidth * zoom,
-            height: min(prefs.panelMaxHeight, CGFloat(prefs.maxTabsInPopover) * CGFloat(prefs.rowHeight) + 120) * zoom
+        let size = constrainedWindowSize(
+            base: NSSize(
+                width: prefs.panelWidth,
+                height: min(prefs.panelMaxHeight, CGFloat(prefs.maxTabsInPopover) * CGFloat(prefs.rowHeight) + 120)
+            ),
+            zoom: zoom
         )
 
         let window = DraggableWindow(
@@ -261,9 +258,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func setupDestinTabWindow() {
         let prefs = PreferencesManager.shared.preferences
         let zoom = CGFloat(prefs.windowZoomScale)
-        let size = NSSize(
-            width: prefs.panelWidth * zoom,
-            height: min(prefs.panelMaxHeight, CGFloat(prefs.maxTabsInPopover) * CGFloat(prefs.rowHeight) + 120) * zoom
+        let size = constrainedWindowSize(
+            base: NSSize(
+                width: prefs.panelWidth,
+                height: min(prefs.panelMaxHeight, CGFloat(prefs.maxTabsInPopover) * CGFloat(prefs.rowHeight) + 120)
+            ),
+            zoom: zoom
         )
 
         let window = DraggableWindow(
@@ -363,9 +363,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func setupSuperSwitchWindow() {
         let prefs = PreferencesManager.shared.preferences
         let zoom = CGFloat(prefs.windowZoomScale)
-        let size = NSSize(
-            width: prefs.panelWidth * zoom,
-            height: prefs.panelMaxHeight * zoom
+        let size = constrainedWindowSize(
+            base: NSSize(width: prefs.panelWidth, height: prefs.panelMaxHeight),
+            zoom: zoom
         )
 
         let window = DraggableWindow(
@@ -464,9 +464,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func setupBrowserBypasserWindow() {
         let prefs = PreferencesManager.shared.preferences
         let zoom = CGFloat(prefs.windowZoomScale)
-        let size = NSSize(
-            width: prefs.panelWidth * zoom,
-            height: prefs.panelMaxHeight * zoom
+        let size = constrainedWindowSize(
+            base: NSSize(width: prefs.panelWidth, height: prefs.panelMaxHeight),
+            zoom: zoom
         )
 
         let window = DraggableWindow(
@@ -565,9 +565,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func setupAssessPrepHackWindow() {
         let prefs = PreferencesManager.shared.preferences
         let zoom = CGFloat(prefs.windowZoomScale)
-        let size = NSSize(
-            width: prefs.panelWidth * zoom,
-            height: prefs.panelMaxHeight * zoom
+        let size = constrainedWindowSize(
+            base: NSSize(width: prefs.panelWidth, height: prefs.panelMaxHeight),
+            zoom: zoom
         )
 
         let window = DraggableWindow(
@@ -619,6 +619,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
         
         SoundEffectManager.shared.playWindowOpen(feature: "assessprephack")
+        NotificationCenter.default.post(name: .assessPrepHackWindowDidShow, object: nil)
         
         if animated {
             window.alphaValue = 0
@@ -637,6 +638,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func hideAssessPrepHackWindow() {
         guard let window = assessPrepHackWindow else { return }
         SoundEffectManager.shared.playWindowClose(feature: "assessprephack")
+        NotificationCenter.default.post(name: .assessPrepHackWindowWillHide, object: nil)
         
         NSAnimationContext.runAnimationGroup { context in
             context.duration = 0.12
@@ -666,7 +668,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func setupSettingsWindow() {
         let prefs = PreferencesManager.shared.preferences
         let zoom = CGFloat(prefs.windowZoomScale)
-        let size = NSSize(width: 520 * zoom, height: 480 * zoom)
+        let size = constrainedWindowSize(base: NSSize(width: 520, height: 480), zoom: zoom)
 
         let window = DraggableWindow(
             contentRect: NSRect(origin: .zero, size: size),
@@ -763,7 +765,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func setupWallpaperBrowserWindow() {
         let prefs = PreferencesManager.shared.preferences
         let zoom = CGFloat(prefs.windowZoomScale)
-        let size = NSSize(width: 520 * zoom, height: 480 * zoom)
+        let size = constrainedWindowSize(base: NSSize(width: 520, height: 480), zoom: zoom)
 
         let window = DraggableWindow(
             contentRect: NSRect(origin: .zero, size: size),
@@ -862,7 +864,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let zoom = CGFloat(prefs.windowZoomScale)
         guard let screen = NSScreen.main else { return }
         let screenFrame = screen.visibleFrame
-        let size = NSSize(width: min(900, screenFrame.width - 100) * zoom, height: min(600, screenFrame.height - 100) * zoom)
+        let size = constrainedWindowSize(
+            base: NSSize(width: 900, height: 600),
+            zoom: zoom,
+            margin: 100,
+            screen: screen
+        )
 
         let window = DraggableWindow(
             contentRect: NSRect(origin: .zero, size: size),
@@ -908,6 +915,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         SoundEffectManager.shared.playWindowOpen(feature: "hackerdesktop")
+        NotificationCenter.default.post(name: .hackerDesktopWindowDidShow, object: nil)
 
         if animated {
             window.alphaValue = 0
@@ -926,6 +934,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func hideHackerDesktopWindow() {
         guard let window = hackerDesktopWindow else { return }
         SoundEffectManager.shared.playWindowClose(feature: "hackerdesktop")
+        NotificationCenter.default.post(name: .hackerDesktopWindowWillHide, object: nil)
 
         NSAnimationContext.runAnimationGroup { context in
             context.duration = 0.12
@@ -955,7 +964,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func setupErrorHubWindow() {
         let prefs = PreferencesManager.shared.preferences
         let zoom = CGFloat(prefs.windowZoomScale)
-        let size = NSSize(width: 520 * zoom, height: 600 * zoom)
+        let size = constrainedWindowSize(base: NSSize(width: 520, height: 600), zoom: zoom)
 
         let window = DraggableWindow(
             contentRect: NSRect(origin: .zero, size: size),
@@ -1056,9 +1065,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func setupFanControlWindow() {
         let prefs = PreferencesManager.shared.preferences
         let zoom = CGFloat(prefs.windowZoomScale)
-        let size = NSSize(
-            width: min(520, prefs.panelWidth * 1.3) * zoom,
-            height: prefs.panelMaxHeight * zoom
+        let size = constrainedWindowSize(
+            base: NSSize(width: min(520, prefs.panelWidth * 1.3), height: prefs.panelMaxHeight),
+            zoom: zoom
         )
 
         let window = DraggableWindow(
@@ -1160,9 +1169,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let zoom = CGFloat(prefs.windowZoomScale)
         guard let screen = NSScreen.main else { return }
         let screenFrame = screen.visibleFrame
-        let size = NSSize(
-            width: min(960, screenFrame.width - 80) * zoom,
-            height: min(640, screenFrame.height - 80) * zoom
+        let size = constrainedWindowSize(
+            base: NSSize(width: 960, height: 640),
+            zoom: zoom,
+            margin: 80,
+            screen: screen
         )
 
         let window = DraggableWindow(
@@ -1208,6 +1219,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         SoundEffectManager.shared.playWindowOpen(feature: "activitymonitor")
+        NotificationCenter.default.post(name: .activityMonitorWindowDidShow, object: nil)
 
         if animated {
             window.alphaValue = 0
@@ -1226,6 +1238,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func hideActivityMonitorWindow() {
         guard let window = activityMonitorWindow else { return }
         SoundEffectManager.shared.playWindowClose(feature: "activitymonitor")
+        NotificationCenter.default.post(name: .activityMonitorWindowWillHide, object: nil)
 
         NSAnimationContext.runAnimationGroup { context in
             context.duration = 0.12
@@ -1257,9 +1270,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let zoom = CGFloat(prefs.windowZoomScale)
         guard let screen = NSScreen.main else { return }
         let screenFrame = screen.visibleFrame
-        let size = NSSize(
-            width: min(820, screenFrame.width - 80) * zoom,
-            height: min(620, screenFrame.height - 80) * zoom
+        let size = constrainedWindowSize(
+            base: NSSize(width: 820, height: 620),
+            zoom: zoom,
+            margin: 80,
+            screen: screen
         )
 
         let window = DraggableWindow(
@@ -1351,15 +1366,47 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         guard let window = mainWindow else { return }
         let prefs = PreferencesManager.shared.preferences
         let zoom = CGFloat(prefs.windowZoomScale)
-        let newSize = NSSize(
-            width: prefs.panelWidth * zoom,
-            height: min(prefs.panelMaxHeight, CGFloat(prefs.maxTabsInPopover) * CGFloat(prefs.rowHeight) + 120) * zoom
+        let newSize = constrainedWindowSize(
+            base: NSSize(
+                width: prefs.panelWidth,
+                height: min(prefs.panelMaxHeight, CGFloat(prefs.maxTabsInPopover) * CGFloat(prefs.rowHeight) + 120)
+            ),
+            zoom: zoom,
+            screen: window.screen
         )
         window.setContentSize(newSize)
     }
 
+    private func constrainedWindowSize(
+        base: NSSize,
+        zoom: CGFloat,
+        margin: CGFloat = 40,
+        screen: NSScreen? = nil
+    ) -> NSSize {
+        let requested = NSSize(width: base.width * zoom, height: base.height * zoom)
+        guard let visibleFrame = (screen ?? NSScreen.main ?? NSScreen.screens.first)?.visibleFrame else {
+            return requested
+        }
+        return NSSize(
+            width: min(requested.width, max(1, visibleFrame.width - margin)),
+            height: min(requested.height, max(1, visibleFrame.height - margin))
+        )
+    }
+
+    private func constrainWindowToVisibleScreen(_ window: NSWindow) {
+        guard let visibleFrame = (window.screen ?? NSScreen.main ?? NSScreen.screens.first)?.visibleFrame else { return }
+        let frame = window.frame
+        let x = min(max(frame.minX, visibleFrame.minX), visibleFrame.maxX - frame.width)
+        let y = min(max(frame.minY, visibleFrame.minY), visibleFrame.maxY - frame.height)
+        window.setFrameOrigin(NSPoint(x: x, y: y))
+    }
+
     func showMainWindow(animated: Bool = false) {
         guard let window = mainWindow else { return }
+
+        // Status-item and global-hotkey actions do not necessarily activate an accessory app.
+        // Activate first so a normal-level panel is not ordered behind the current application.
+        NSApp.activate(ignoringOtherApps: true)
 
         // Center only on first show; respect user-dragged position afterwards
         if !PreferencesManager.shared.preferences.rememberWindowPosition || window.frame.origin == .zero {
@@ -1367,6 +1414,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         SoundEffectManager.shared.playWindowOpen()
+        NotificationCenter.default.post(name: .mainWindowDidShow, object: nil)
 
         let useAnimation = animated && PreferencesManager.shared.preferences.showPopoverAnimation
 
@@ -1397,6 +1445,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func hideMainWindow() {
         guard let window = mainWindow else { return }
         SoundEffectManager.shared.playWindowClose()
+        NotificationCenter.default.post(name: .mainWindowWillHide, object: nil)
 
         if PreferencesManager.shared.preferences.showPopoverAnimation {
             NSAnimationContext.runAnimationGroup { context in
@@ -1452,70 +1501,71 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // mainWindow
         if let w = mainWindow {
             let baseH = min(prefs.panelMaxHeight, CGFloat(prefs.maxTabsInPopover) * CGFloat(prefs.rowHeight) + 120)
-            w.setContentSize(NSSize(width: prefs.panelWidth * zoom, height: baseH * zoom))
+            w.setContentSize(constrainedWindowSize(base: NSSize(width: prefs.panelWidth, height: baseH), zoom: zoom, screen: w.screen))
         }
 
         // destinTabWindow
         if let w = destinTabWindow {
             let baseH = min(prefs.panelMaxHeight, CGFloat(prefs.maxTabsInPopover) * CGFloat(prefs.rowHeight) + 120)
-            w.setContentSize(NSSize(width: prefs.panelWidth * zoom, height: baseH * zoom))
+            w.setContentSize(constrainedWindowSize(base: NSSize(width: prefs.panelWidth, height: baseH), zoom: zoom, screen: w.screen))
         }
 
         // superSwitchWindow
         if let w = superSwitchWindow {
-            w.setContentSize(NSSize(width: prefs.panelWidth * zoom, height: prefs.panelMaxHeight * zoom))
+            w.setContentSize(constrainedWindowSize(base: NSSize(width: prefs.panelWidth, height: prefs.panelMaxHeight), zoom: zoom, screen: w.screen))
         }
 
         // browserBypasserWindow
         if let w = browserBypasserWindow {
-            w.setContentSize(NSSize(width: prefs.panelWidth * zoom, height: prefs.panelMaxHeight * zoom))
+            w.setContentSize(constrainedWindowSize(base: NSSize(width: prefs.panelWidth, height: prefs.panelMaxHeight), zoom: zoom, screen: w.screen))
         }
 
         // assessPrepHackWindow
         if let w = assessPrepHackWindow {
-            w.setContentSize(NSSize(width: prefs.panelWidth * zoom, height: prefs.panelMaxHeight * zoom))
+            w.setContentSize(constrainedWindowSize(base: NSSize(width: prefs.panelWidth, height: prefs.panelMaxHeight), zoom: zoom, screen: w.screen))
         }
 
         // settingsWindow
         if let w = settingsWindow {
             let base = NSSize(width: 520, height: 480)
-            w.setContentSize(NSSize(width: base.width * zoom, height: base.height * zoom))
+            w.setContentSize(constrainedWindowSize(base: base, zoom: zoom, screen: w.screen))
         }
 
         // wallpaperBrowserWindow
         if let w = wallpaperBrowserWindow {
             let base = NSSize(width: 520, height: 480)
-            w.setContentSize(NSSize(width: base.width * zoom, height: base.height * zoom))
+            w.setContentSize(constrainedWindowSize(base: base, zoom: zoom, screen: w.screen))
         }
 
         // fanControlWindow
         if let w = fanControlWindow {
             let base = NSSize(width: min(520, prefs.panelWidth * 1.3), height: prefs.panelMaxHeight)
-            w.setContentSize(NSSize(width: base.width * zoom, height: base.height * zoom))
+            w.setContentSize(constrainedWindowSize(base: base, zoom: zoom, screen: w.screen))
         }
 
         // activityMonitorWindow
         if let w = activityMonitorWindow, let screen = NSScreen.main {
-            let frame = screen.visibleFrame
-            let baseW = min(960, frame.width - 80)
-            let baseH = min(640, frame.height - 80)
-            w.setContentSize(NSSize(width: baseW * zoom, height: baseH * zoom))
+            w.setContentSize(constrainedWindowSize(base: NSSize(width: 960, height: 640), zoom: zoom, margin: 80, screen: screen))
         }
 
         // permissionCenterWindow
         if let w = permissionCenterWindow, let screen = NSScreen.main {
-            let frame = screen.visibleFrame
-            let baseW = min(820, frame.width - 80)
-            let baseH = min(620, frame.height - 80)
-            w.setContentSize(NSSize(width: baseW * zoom, height: baseH * zoom))
+            w.setContentSize(constrainedWindowSize(base: NSSize(width: 820, height: 620), zoom: zoom, margin: 80, screen: screen))
         }
 
         // hackerDesktopWindow
         if let w = hackerDesktopWindow, let screen = NSScreen.main {
-            let frame = screen.visibleFrame
-            let baseW = min(900, frame.width - 100)
-            let baseH = min(600, frame.height - 100)
-            w.setContentSize(NSSize(width: baseW * zoom, height: baseH * zoom))
+            w.setContentSize(constrainedWindowSize(base: NSSize(width: 900, height: 600), zoom: zoom, margin: 100, screen: screen))
+        }
+
+        let windows = [
+            mainWindow, destinTabWindow, superSwitchWindow, browserBypasserWindow,
+            assessPrepHackWindow, settingsWindow, wallpaperBrowserWindow,
+            hackerDesktopWindow, errorHubWindow, fanControlWindow,
+            activityMonitorWindow, permissionCenterWindow
+        ]
+        for window in windows.compactMap({ $0 }) {
+            constrainWindowToVisibleScreen(window)
         }
     }
 
@@ -1798,7 +1848,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         panicHotKeyID = ShortcutManager.shared.registerCustomHotKey(
             keyCode: 0x61, // F6
             cocoaModifiers: 0
-        ) { [weak self] in
+        ) {
             Task { @MainActor in
                 let viewModel = AssessPrepHackViewModel.shared
                 

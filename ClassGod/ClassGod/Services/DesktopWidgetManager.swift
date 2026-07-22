@@ -139,6 +139,7 @@ final class DesktopWidgetManager: ObservableObject {
             widgets[index].isLocked.toggle()
             saveState()
             windows[id]?.setLocked(widgets[index].isLocked)
+            windows[id]?.refreshContent()
         }
     }
 

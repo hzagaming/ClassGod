@@ -73,8 +73,8 @@ struct AdvancedSettingsView: View {
                             get: { Double(prefs.preferences.chaosParticleCount) },
                             set: { prefs.preferences.chaosParticleCount = Int($0) }
                         ),
-                        range: 50...500,
-                        step: 25,
+                        range: 12...48,
+                        step: 4,
                         suffix: ""
                     )
 

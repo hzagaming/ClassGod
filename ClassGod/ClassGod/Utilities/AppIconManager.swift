@@ -9,10 +9,8 @@ final class AppIconManager {
     static let shared = AppIconManager()
     
     private var originalIcon: NSImage?
-    private let bundlePath: String
     
     private init() {
-        bundlePath = Bundle.main.bundlePath
         originalIcon = NSApp.applicationIconImage
     }
     
@@ -29,8 +27,6 @@ final class AppIconManager {
     
     private func restoreOriginalIcon() {
         NSApp.applicationIconImage = originalIcon
-        // Clear Finder custom icon
-        NSWorkspace.shared.setIcon(nil, forFile: bundlePath, options: [])
     }
     
     private func setHiddenIcon() {
@@ -50,13 +46,13 @@ final class AppIconManager {
         // Get icon from system app bundle
         let icon = NSWorkspace.shared.icon(forFile: appPath)
         NSApp.applicationIconImage = icon
-        
-        // Also try to set Finder icon
-        NSWorkspace.shared.setIcon(icon, forFile: bundlePath, options: [])
     }
     
     func refreshIcon() {
         let style = PreferencesManager.shared.preferences.appIconStyle
+        // The default icon is already loaded by AppKit. Avoid rewriting the app
+        // bundle's Finder icon during launch, which can invalidate its signature.
+        guard style != .default else { return }
         applyStyle(style)
     }
 }
