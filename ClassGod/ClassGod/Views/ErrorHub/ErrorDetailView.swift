@@ -70,7 +70,7 @@ struct ErrorDetailView: View {
                 
                 Spacer()
                 
-                Text("Error Detail")
+                Text("error.detail_title")
                     .font(.system(size: 13 * zoomScale, weight: .bold, design: .monospaced))
                     .foregroundStyle(.white)
                 
@@ -84,7 +84,7 @@ struct ErrorDetailView: View {
                 Image(systemName: entry.severity.icon)
                     .font(.system(size: 14 * zoomScale))
                     .foregroundStyle(Color(hex: entry.severity.colorHex))
-                Text(entry.severity.rawValue.uppercased())
+                Text(entry.severity.displayName.uppercased())
                     .font(.system(size: 10 * zoomScale, weight: .bold, design: .monospaced))
                     .foregroundStyle(Color(hex: entry.severity.colorHex))
             }
@@ -108,7 +108,7 @@ struct ErrorDetailView: View {
             // Error code
             if let code = entry.errorCode {
                 HStack(spacing: 4 * zoomScale) {
-                    Text("ERROR CODE:")
+                    Text("error.code_label")
                         .font(.system(size: 8 * zoomScale, weight: .bold, design: .monospaced))
                         .foregroundStyle(.white.opacity(0.4))
                     Text(code)
@@ -126,7 +126,7 @@ struct ErrorDetailView: View {
                 HStack(spacing: 3 * zoomScale) {
                     Image(systemName: entry.category.icon)
                         .font(.system(size: 8 * zoomScale))
-                    Text(entry.category.rawValue)
+                    Text(entry.category.displayName)
                         .font(.system(size: 8 * zoomScale, design: .monospaced))
                 }
                 .foregroundStyle(.white.opacity(0.5))
@@ -412,7 +412,7 @@ struct ErrorDetailView: View {
                                 NSWorkspace.shared.open(url)
                             }
                         }) {
-                            Text("Open")
+                            Text("button.open")
                                 .font(.system(size: 9 * zoomScale, weight: .bold, design: .monospaced))
                                 .foregroundStyle(.cyan)
                         }
@@ -425,7 +425,7 @@ struct ErrorDetailView: View {
                         Image(systemName: "number")
                             .font(.system(size: 9 * zoomScale))
                             .foregroundStyle(.white.opacity(0.4))
-                        Text("Common in:")
+                        Text("error.common_in")
                             .font(.system(size: 9 * zoomScale, weight: .bold, design: .monospaced))
                             .foregroundStyle(.white.opacity(0.5))
                         Text(entry.commonInVersions.joined(separator: ", "))
@@ -438,7 +438,7 @@ struct ErrorDetailView: View {
                     Image(systemName: "tag.fill")
                         .font(.system(size: 9 * zoomScale))
                         .foregroundStyle(.white.opacity(0.4))
-                    Text("Tags:")
+                    Text("error.tags")
                         .font(.system(size: 9 * zoomScale, weight: .bold, design: .monospaced))
                         .foregroundStyle(.white.opacity(0.5))
                     Text(entry.tags.joined(separator: ", "))

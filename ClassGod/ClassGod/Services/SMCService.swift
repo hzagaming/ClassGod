@@ -84,6 +84,7 @@ nonisolated final class SMCService: @unchecked Sendable {
     private(set) var fanAccessReason: String?
     private var cachedIORegistryFans: [FanInfo] = []
     private var hasScannedIORegistryFans = false
+    private var cachedDirectTemperatureKeys: [(key: String, type: String)]?
     private var previousCPUInfo: host_cpu_load_info? = nil
 
     // Short-term cache shared across readTemperatures/readFans consumers
@@ -158,6 +159,10 @@ nonisolated final class SMCService: @unchecked Sendable {
         fanAccessReason = nil
         cachedIORegistryFans.removeAll()
         hasScannedIORegistryFans = false
+        cachedDirectTemperatureKeys = nil
+        lastReadAll = nil
+        lastReadAllTime = nil
+        SMCHelperClient.shared.rescan()
         
         // Reconnect
         connect()
@@ -170,20 +175,20 @@ nonisolated final class SMCService: @unchecked Sendable {
 
     private func updateFanAccessReason() {
         if isHelperAvailable {
-            fanAccessReason = "Privileged helper tool is present. If sensors/fans still show N/A, restart the helper with: sudo killall ClassGodHelper; sudo /path/to/ClassGodHelper"
+            fanAccessReason = String(localized: "fan.access.helper_present")
             return
         }
         if isConnected {
             if isAppleSilicon {
-                fanAccessReason = "Apple Silicon Macs restrict fan access to system processes. Run ClassGodHelper as root to enable fan control."
+                fanAccessReason = String(localized: "fan.access.apple_silicon_restricted")
             } else {
-                fanAccessReason = "SMC connected but no fan data returned. This Mac may not have controllable fans."
+                fanAccessReason = String(localized: "fan.access.no_fans")
             }
         } else {
             if isAppleSilicon {
-                fanAccessReason = "Apple Silicon Macs restrict fan access to system processes. Run ClassGodHelper as root to enable fan control."
+                fanAccessReason = String(localized: "fan.access.apple_silicon_restricted")
             } else {
-                fanAccessReason = "Could not connect to SMC. Ensure ClassGod is not sandboxed and try rescanning."
+                fanAccessReason = String(localized: "fan.access.smc_unavailable")
             }
         }
     }
@@ -276,6 +281,7 @@ nonisolated final class SMCService: @unchecked Sendable {
     /// Enumerates all SMC keys and returns temperature keys (type sp78/sp79/sp7a/sp5a/si8c)
     /// that are not already in the hardcoded list.
     private func enumerateSMCTemperatureKeys() -> [(key: String, type: String)] {
+        if let cachedDirectTemperatureKeys { return cachedDirectTemperatureKeys }
         guard isConnected else { return [] }
         guard let keyCountBytes = readSMCBytes(key: "#KEY"), keyCountBytes.count >= 4 else { return [] }
         let count = Int(UInt32(keyCountBytes[0]) << 24 | UInt32(keyCountBytes[1]) << 16 |
@@ -301,6 +307,7 @@ nonisolated final class SMCService: @unchecked Sendable {
             guard key4cc.hasPrefix("T"), validTypes.contains(typeLower) else { continue }
             results.append((key: key4cc, type: typeLower))
         }
+        cachedDirectTemperatureKeys = results
         return results
     }
 
@@ -412,7 +419,7 @@ nonisolated final class SMCService: @unchecked Sendable {
             if !usedHelper {
                 // Helper socket exists but returned no usable data — likely an old helper
                 // running with a stale socket or permission mismatch.
-                fanAccessReason = "Helper socket found but returned no data. Restart the helper: sudo killall ClassGodHelper; sudo /Applications/ClassGod.app/Contents/MacOS/ClassGodHelper"
+                fanAccessReason = String(localized: "fan.access.helper_no_data")
             }
         }
 
@@ -431,9 +438,9 @@ nonisolated final class SMCService: @unchecked Sendable {
             
             // Dynamic enumeration: scan all SMC keys for additional temperature sensors
             let dynamicTemps = enumerateSMCTemperatureKeys()
-            for (key, _) in dynamicTemps where !seenKeys.contains(key) {
+            for (key, type) in dynamicTemps where !seenKeys.contains(key) {
                 if let bytes = readSMCBytes(key: key), bytes.count >= 2 {
-                    let value = decodeSP78(bytes: bytes)
+                    let value = decodeTemperature(bytes: bytes, type: type)
                     if value > -50 && value < 150 {
                         sensors.append(TemperatureSensor(name: key, key: key, value: value, maxValue: 100))
                     }
@@ -443,10 +450,10 @@ nonisolated final class SMCService: @unchecked Sendable {
             if let numBytes = readSMCBytes(key: "FNum"), numBytes.count >= 1, numBytes[0] > 0 {
                 let numFans = min(Int(numBytes[0]), 16)
                 for i in 0..<numFans {
-                    let actualKey = "F\(i)Ac"
-                    let minKey = "F\(i)Mn"
-                    let maxKey = "F\(i)Mx"
-                    let targetKey = "F\(i)Tg"
+                    guard let actualKey = fanSMCKey(index: i, suffix: "Ac"),
+                          let minKey = fanSMCKey(index: i, suffix: "Mn"),
+                          let maxKey = fanSMCKey(index: i, suffix: "Mx"),
+                          let targetKey = fanSMCKey(index: i, suffix: "Tg") else { continue }
 
                     var info = FanInfo(id: i, name: fanName(for: i))
 
@@ -538,8 +545,8 @@ nonisolated final class SMCService: @unchecked Sendable {
 
         if !fans.isEmpty {
             fanAccessReason = nil
-        } else if fanAccessReason == nil || fanAccessReason?.contains("Helper socket found") == false {
-            // Only update the generic reason if we haven't already set a specific diagnostic.
+        } else if fanAccessReason != String(localized: "fan.access.helper_no_data") {
+            // Preserve the specific Helper diagnostic; refresh every generic reason.
             updateFanAccessReason()
         }
 
@@ -555,6 +562,20 @@ nonisolated final class SMCService: @unchecked Sendable {
 
     func readFans() -> [FanInfo] {
         return readAll().fans
+    }
+
+    private func decodeTemperature(bytes: [UInt8], type: String) -> Double {
+        guard bytes.count >= 2 else { return 0 }
+        if type.hasPrefix("sp"), let fractionBits = Int(String(type.suffix(1)), radix: 16) {
+            let raw = Int16(bitPattern: UInt16(bytes[0]) << 8 | UInt16(bytes[1]))
+            return Double(raw) / pow(2, Double(fractionBits))
+        }
+        return decodeSP78(bytes: bytes)
+    }
+
+    private func fanSMCKey(index: Int, suffix: String) -> String? {
+        guard (0...15).contains(index), suffix.utf8.count == 2 else { return nil }
+        return "F\(String(index, radix: 16, uppercase: true))\(suffix)"
     }
     
     private func readIORegistryFans() -> [FanInfo] {
@@ -651,10 +672,13 @@ nonisolated final class SMCService: @unchecked Sendable {
         defer { readAllLock.unlock() }
         switch mode {
         case .system:
-            return writeSMCBytes(key: "F\(fanIndex)Tg", bytes: [0, 0])
+            guard let targetKey = fanSMCKey(index: fanIndex, suffix: "Tg") else { return false }
+            return writeSMCBytes(key: targetKey, bytes: [0, 0])
         case .max:
-            guard let maxBytes = readSMCBytes(key: "F\(fanIndex)Mx"), maxBytes.count >= 2 else { return false }
-            return writeSMCBytes(key: "F\(fanIndex)Tg", bytes: Array(maxBytes.prefix(2)))
+            guard let maxKey = fanSMCKey(index: fanIndex, suffix: "Mx"),
+                  let targetKey = fanSMCKey(index: fanIndex, suffix: "Tg"),
+                  let maxBytes = readSMCBytes(key: maxKey), maxBytes.count >= 2 else { return false }
+            return writeSMCBytes(key: targetKey, bytes: Array(maxBytes.prefix(2)))
         case .autoMax, .manual, .custom:
             // autoMax/manual/custom are handled by the view model timer / UI controls.
             return true
@@ -667,8 +691,9 @@ nonisolated final class SMCService: @unchecked Sendable {
         }
         readAllLock.lock()
         defer { readAllLock.unlock() }
+        guard let targetKey = fanSMCKey(index: fanIndex, suffix: "Tg") else { return false }
         let bytes = encodeFPE2(value: rpm)
-        return writeSMCBytes(key: "F\(fanIndex)Tg", bytes: bytes)
+        return writeSMCBytes(key: targetKey, bytes: bytes)
     }
 
     // MARK: - Thermal State Temperatures

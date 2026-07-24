@@ -22,6 +22,10 @@ struct WallpaperBrowserView: View {
             GridItem(.adaptive(minimum: 100 * zoomScale, maximum: 140 * zoomScale), spacing: 12 * zoomScale)
         ]
     }
+
+    private var allowedContentTypes: [UTType] {
+        [.image, .movie] + ["mp4", "mov", "mkv", "webm"].compactMap { UTType(filenameExtension: $0) }
+    }
     
     var body: some View {
         VStack(spacing: 0) {
@@ -46,14 +50,7 @@ struct WallpaperBrowserView: View {
         )
         .fileImporter(
             isPresented: $showImportPanel,
-            allowedContentTypes: [
-                .image,
-                .movie,
-                UTType(filenameExtension: "mp4")!,
-                UTType(filenameExtension: "mov")!,
-                UTType(filenameExtension: "mkv")!,
-                UTType(filenameExtension: "webm")!
-            ],
+            allowedContentTypes: allowedContentTypes,
             allowsMultipleSelection: true
         ) { result in
             handleImport(result: result)
@@ -92,7 +89,7 @@ struct WallpaperBrowserView: View {
             
             Spacer()
             
-            Text("Wallpaper Engine")
+            Text("wallpaper.title")
                 .font(.system(size: 13 * zoomScale, weight: .bold, design: .monospaced))
                 .foregroundStyle(.white)
             
@@ -152,7 +149,7 @@ struct WallpaperBrowserView: View {
                     HStack(spacing: 3 * zoomScale) {
                         Image(systemName: "desktopcomputer")
                             .font(.system(size: 8 * zoomScale))
-                        Text("DESKTOP")
+                        Text("wallpaper.desktop")
                             .font(.system(size: 8 * zoomScale, weight: .bold, design: .monospaced))
                     }
                     .foregroundStyle(.cyan.opacity(0.8))
@@ -240,10 +237,7 @@ struct WallpaperBrowserView: View {
                     // Playback mode pill
                     Button(action: {
                         SoundEffectManager.shared.playButtonClick()
-                        let modes = WallpaperPlaybackMode.allCases
-                        if let idx = modes.firstIndex(of: engine.playbackMode) {
-                            engine.playbackMode = modes[(idx + 1) % modes.count]
-                        }
+                        engine.cyclePlaybackMode()
                     }) {
                         HStack(spacing: 4 * zoomScale) {
                             Image(systemName: engine.playbackMode.iconName)
@@ -282,7 +276,7 @@ struct WallpaperBrowserView: View {
                     
                     // Power toggle pill
                     HStack(spacing: 6 * zoomScale) {
-                        Text(engine.isEnabled ? "ON" : "OFF")
+                        Text(engine.isEnabled ? String(localized: "status.on") : String(localized: "status.off"))
                             .font(.system(size: 9 * zoomScale, weight: .bold, design: .monospaced))
                             .foregroundStyle(engine.isEnabled ? .green : .white.opacity(0.25))
                         Toggle("", isOn: .init(
@@ -372,7 +366,7 @@ struct WallpaperBrowserView: View {
             Image(systemName: "arrow.down.circle")
                 .font(.system(size: 28 * zoomScale))
                 .foregroundStyle(.white.opacity(0.12))
-            Text("Drop images or videos")
+            Text("wallpaper.drop_hint")
                 .font(.system(size: 11 * zoomScale, design: .monospaced))
                 .foregroundStyle(.white.opacity(0.25))
         }
@@ -405,7 +399,9 @@ struct WallpaperBrowserView: View {
                         .fill(Color(white: 0.05))
                     
                     Group {
-                        if item.type == .image, let nsImage = NSImage(contentsOf: item.fileURL!) {
+                        if item.type == .image,
+                           let fileURL = item.fileURL,
+                           let nsImage = NSImage(contentsOf: fileURL) {
                             Image(nsImage: nsImage)
                                 .resizable()
                                 .aspectRatio(contentMode: .fill)

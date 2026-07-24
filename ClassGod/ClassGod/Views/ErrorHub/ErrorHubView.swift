@@ -151,10 +151,10 @@ struct ErrorHubView: View {
             Spacer()
             
             VStack(spacing: 0 * zoomScale) {
-                Text("Error Encyclopedia")
+                Text("error.hub_title")
                     .font(.system(size: 13 * zoomScale, weight: .bold, design: .monospaced))
                     .foregroundStyle(.white)
-                Text("\(knowledgeBase.allEntries.count) errors documented")
+                Text(String(format: String(localized: "error.documented_count"), knowledgeBase.allEntries.count))
                     .font(.system(size: 8 * zoomScale, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.3))
             }
@@ -174,7 +174,7 @@ struct ErrorHubView: View {
                 .font(.system(size: 12 * zoomScale))
                 .foregroundStyle(.white.opacity(0.4))
             
-            TextField("Search errors by name, code, or keyword...", text: $searchQuery)
+            TextField(String(localized: "error.search_placeholder"), text: $searchQuery)
                 .font(.system(size: 11 * zoomScale, design: .monospaced))
                 .foregroundStyle(.white)
                 .textFieldStyle(.plain)
@@ -283,7 +283,7 @@ struct ErrorHubView: View {
                                 HStack(spacing: 3 * zoomScale) {
                                     Image(systemName: "xmark.circle.fill")
                                         .font(.system(size: 9 * zoomScale))
-                                    Text("Clear")
+                                    Text("button.clear")
                                         .font(.system(size: 8 * zoomScale, design: .monospaced))
                                 }
                                 .foregroundStyle(.white.opacity(0.5))
@@ -312,7 +312,7 @@ struct ErrorHubView: View {
     // MARK: - Severity Filter
     private var severityFilter: some View {
         HStack(spacing: 6 * zoomScale) {
-            Text("Severity:")
+            Text("error.severity_label")
                 .font(.system(size: 9 * zoomScale, design: .monospaced))
                 .foregroundStyle(.white.opacity(0.4))
             
@@ -320,7 +320,7 @@ struct ErrorHubView: View {
                 SoundEffectManager.shared.playButtonClick()
                 selectedSeverity = nil
             }) {
-                Text("All")
+                Text("permission.category.all")
                     .font(.system(size: 9 * zoomScale, weight: selectedSeverity == nil ? .bold : .regular, design: .monospaced))
                     .foregroundStyle(selectedSeverity == nil ? .white : .white.opacity(0.5))
                     .padding(.horizontal, 8 * zoomScale)
@@ -339,7 +339,7 @@ struct ErrorHubView: View {
                         Circle()
                             .fill(Color(hex: severity.colorHex))
                             .frame(width: 6 * zoomScale, height: 6 * zoomScale)
-                        Text(severity.rawValue)
+                        Text(severity.displayName)
                             .font(.system(size: 9 * zoomScale, weight: selectedSeverity == severity ? .bold : .regular, design: .monospaced))
                     }
                     .foregroundStyle(selectedSeverity == severity ? .white : .white.opacity(0.5))
@@ -365,18 +365,18 @@ struct ErrorHubView: View {
     // MARK: - Stats Bar
     private var statsBar: some View {
         HStack {
-            Text("\(displayedEntries.count) error\(displayedEntries.count == 1 ? "" : "s")")
+            Text(String(format: String(localized: "error.result_count"), displayedEntries.count))
                 .font(.system(size: 9 * zoomScale, design: .monospaced))
                 .foregroundStyle(.white.opacity(0.35))
             
             Spacer()
             
             if !searchQuery.isEmpty {
-                Text("Searching: \"\(searchQuery)\"")
+                Text(String(format: String(localized: "error.searching"), searchQuery))
                     .font(.system(size: 9 * zoomScale, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.35))
             } else if let tag = selectedTag {
-                Text("Tag: #\(tag)")
+                Text(String(format: String(localized: "error.tag_filter"), tag))
                     .font(.system(size: 9 * zoomScale, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.35))
             }
@@ -434,7 +434,7 @@ struct ErrorHubView: View {
             ProgressView()
                 .scaleEffect(0.8 * zoomScale)
                 .tint(.white.opacity(0.6))
-            Text("Loading error encyclopedia...")
+            Text("error.loading")
                 .font(.system(size: 10 * zoomScale, design: .monospaced))
                 .foregroundStyle(.white.opacity(0.5))
         }
@@ -447,7 +447,7 @@ struct ErrorHubView: View {
             Image(systemName: "exclamationmark.triangle")
                 .font(.system(size: 20 * zoomScale))
                 .foregroundStyle(.orange)
-            Text("Failed to load encyclopedia")
+            Text("error.load_failed")
                 .font(.system(size: 11 * zoomScale, weight: .bold, design: .monospaced))
                 .foregroundStyle(.white)
             Text(message)
@@ -455,7 +455,7 @@ struct ErrorHubView: View {
                 .foregroundStyle(.white.opacity(0.5))
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 20 * zoomScale)
-            Button("Retry") {
+            Button(String(localized: "button.retry")) {
                 knowledgeBase.ensureLoaded()
             }
             .font(.system(size: 10 * zoomScale, design: .monospaced))
@@ -475,7 +475,7 @@ struct ErrorHubView: View {
             Image(systemName: category.icon)
                 .font(.system(size: 10 * zoomScale))
                 .foregroundStyle(.white.opacity(0.6))
-            Text(category.rawValue)
+            Text(category.displayName)
                 .font(.system(size: 11 * zoomScale, weight: .bold, design: .monospaced))
                 .foregroundStyle(.white.opacity(0.8))
             Text("\(knowledgeBase.entries(for: category).count)")
@@ -505,7 +505,7 @@ struct CategoryPill: View {
             HStack(spacing: 4 * zoomScale) {
                 Image(systemName: category.icon)
                     .font(.system(size: 9 * zoomScale))
-                Text(category.rawValue)
+                Text(category.displayName)
                     .font(.system(size: 9 * zoomScale, weight: isSelected ? .bold : .medium, design: .monospaced))
                 Text("\(count)")
                     .font(.system(size: 8 * zoomScale, weight: .bold, design: .monospaced))
@@ -569,7 +569,7 @@ struct ErrorRowView: View {
                         .font(.system(size: 14 * zoomScale))
                         .foregroundStyle(Color(hex: entry.severity.colorHex))
                     
-                    Text(entry.severity.rawValue)
+                    Text(entry.severity.displayName)
                         .font(.system(size: 7 * zoomScale, weight: .bold, design: .monospaced))
                         .foregroundStyle(Color(hex: entry.severity.colorHex))
                 }
@@ -615,7 +615,7 @@ struct ErrorRowView: View {
                         
                         Spacer()
                         
-                        Text(entry.category.rawValue)
+                        Text(entry.category.displayName)
                             .font(.system(size: 7 * zoomScale, design: .monospaced))
                             .foregroundStyle(.white.opacity(0.25))
                     }

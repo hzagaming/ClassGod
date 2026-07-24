@@ -16,6 +16,16 @@ enum ActivityMonitorTab: String, CaseIterable, Identifiable {
     case network = "Network"
     
     var id: String { rawValue }
+    var displayName: String {
+        switch self {
+        case .cpu: return String(localized: "activity.tab.cpu")
+        case .memory: return String(localized: "activity.tab.memory")
+        case .energy: return String(localized: "activity.tab.energy")
+        case .disk: return String(localized: "activity.tab.disk")
+        case .network: return String(localized: "activity.tab.network")
+        }
+    }
+
     var iconName: String {
         switch self {
         case .cpu: return "cpu"

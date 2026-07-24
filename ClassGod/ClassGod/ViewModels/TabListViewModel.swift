@@ -17,10 +17,10 @@ enum TabSortMode: String, Codable, CaseIterable, Identifiable {
     var id: String { rawValue }
     var displayName: String {
         switch self {
-        case .manual: return "Manual"
-        case .recentlyUsed: return "Recent"
+        case .manual: return String(localized: "sort.manual")
+        case .recentlyUsed: return String(localized: "sort.recent")
         case .alphabetical: return "A-Z"
-        case .byBrowser: return "Browser"
+        case .byBrowser: return String(localized: "sort.browser")
         }
     }
     var icon: String {

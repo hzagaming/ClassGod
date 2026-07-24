@@ -13,10 +13,12 @@ struct WallpaperPlayerView: View {
     
     var body: some View {
         Group {
-            if wallpaper.type == .video {
-                VideoWallpaperView(fileURL: wallpaper.fileURL!)
+            if let fileURL = wallpaper.fileURL, wallpaper.type == .video {
+                VideoWallpaperView(fileURL: fileURL)
+            } else if let fileURL = wallpaper.fileURL {
+                ImageWallpaperView(fileURL: fileURL)
             } else {
-                ImageWallpaperView(fileURL: wallpaper.fileURL!)
+                Color.black
             }
         }
         .transition(.asymmetric(
@@ -35,7 +37,7 @@ struct ImageWallpaperView: View {
         GeometryReader { geo in
             if let imageSource = CGImageSourceCreateWithURL(fileURL as CFURL, nil),
                CGImageSourceGetCount(imageSource) > 1 {
-                AnimatedImageView(imageSource: imageSource)
+                AnimatedImageView(imageSource: imageSource, identifier: fileURL)
                     .frame(width: geo.size.width, height: geo.size.height)
             } else if let nsImage = NSImage(contentsOf: fileURL) {
                 Image(nsImage: nsImage)
@@ -55,16 +57,20 @@ struct ImageWallpaperView: View {
 
 struct AnimatedImageView: NSViewRepresentable {
     let imageSource: CGImageSource
+    let identifier: URL
     
     func makeNSView(context: Context) -> AnimatedImageNSView {
         let view = AnimatedImageNSView()
-        view.loadAnimatedImage(imageSource)
+        view.loadAnimatedImage(imageSource, identifier: identifier)
         return view
     }
     
     func updateNSView(_ nsView: AnimatedImageNSView, context: Context) {
-        // NSView is reused but imageSource changes; reload if needed
-        nsView.loadAnimatedImage(imageSource)
+        nsView.loadAnimatedImage(imageSource, identifier: identifier)
+    }
+
+    static func dismantleNSView(_ nsView: AnimatedImageNSView, coordinator: ()) {
+        nsView.stopAnimation()
     }
 }
 
@@ -74,17 +80,16 @@ final class AnimatedImageNSView: NSView {
     private var delays: [Double] = []
     private var currentFrame = 0
     private var imageView: NSImageView?
-    private var lastSourceHash: Int?
+    private var currentIdentifier: URL?
     
     override func layout() {
         super.layout()
         imageView?.frame = bounds
     }
     
-    func loadAnimatedImage(_ source: CGImageSource) {
-        let hash = CGImageSourceGetCount(source)
-        guard lastSourceHash != hash else { return }
-        lastSourceHash = hash
+    func loadAnimatedImage(_ source: CGImageSource, identifier: URL) {
+        guard currentIdentifier != identifier else { return }
+        currentIdentifier = identifier
         
         // Clean up old timer and view
         timer?.invalidate()
@@ -143,6 +148,11 @@ final class AnimatedImageNSView: NSView {
         imageView?.image = images[currentFrame]
         scheduleNextFrame()
     }
+
+    func stopAnimation() {
+        timer?.invalidate()
+        timer = nil
+    }
     
     deinit {
         timer?.invalidate()
@@ -162,6 +172,10 @@ struct VideoWallpaperView: NSViewRepresentable {
     
     func updateNSView(_ nsView: VideoWallpaperNSView, context: Context) {
         nsView.loadVideo(url: fileURL)
+    }
+
+    static func dismantleNSView(_ nsView: VideoWallpaperNSView, coordinator: ()) {
+        nsView.stopPlayback()
     }
 }
 
@@ -254,7 +268,7 @@ final class VideoWallpaperNSView: NSView {
         let engine = WallpaperEngine.shared
         player.isMuted = engine.isMuted
         player.volume = Float(engine.volume)
-        if engine.isPlaying {
+        if engine.isEnabled && engine.isPlaying {
             player.play()
         } else {
             player.pause()
@@ -275,6 +289,11 @@ final class VideoWallpaperNSView: NSView {
             player.replaceCurrentItem(with: nil)
         }
         playerLayer?.player = nil
+    }
+
+    func stopPlayback() {
+        currentURL = nil
+        cleanupPlayer()
     }
     
     deinit {

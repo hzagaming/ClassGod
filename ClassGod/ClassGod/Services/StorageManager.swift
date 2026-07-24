@@ -152,4 +152,5 @@ extension Notification.Name {
     static let activityMonitorWindowWillHide = Notification.Name("activityMonitorWindowWillHide")
     static let assessPrepHackWindowDidShow = Notification.Name("assessPrepHackWindowDidShow")
     static let assessPrepHackWindowWillHide = Notification.Name("assessPrepHackWindowWillHide")
+    static let permissionCenterWindowDidShow = Notification.Name("permissionCenterWindowDidShow")
 }

@@ -36,6 +36,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		B10000000000000000000001 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F2BB6B4B2FC08AFC0059D551 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F2BB6B522FC08AFC0059D551;
+			remoteInfo = ClassGod;
+		};
 		AAE000000000000000000002 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = F2BB6B4B2FC08AFC0059D551 /* Project object */;
@@ -60,6 +67,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		B10000000000000000000002 /* ClassGodTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ClassGodTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		084FE72C7EFFEB21F96EED91 /* QuoteWidgetView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = QuoteWidgetView.swift; path = ClassGodWidget/Views/QuoteWidgetView.swift; sourceTree = "<group>"; };
 		15989160BD5957DA6025E56D /* WeatherWidgetView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = WeatherWidgetView.swift; path = ClassGodWidget/Views/WeatherWidgetView.swift; sourceTree = "<group>"; };
 		34D27161E4145112031152F0 /* CalendarWidgetView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = CalendarWidgetView.swift; path = ClassGodWidget/Views/CalendarWidgetView.swift; sourceTree = "<group>"; };
@@ -91,6 +99,11 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		B10000000000000000000003 /* ClassGodTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = ClassGodTests;
+			sourceTree = "<group>";
+		};
 		F2BB6B552FC08AFC0059D551 /* ClassGod */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = ClassGod;
@@ -99,6 +112,13 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		B10000000000000000000005 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		77A45A5A4B39F3F51D029571 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -139,6 +159,7 @@
 			isa = PBXGroup;
 			children = (
 				F2BB6B552FC08AFC0059D551 /* ClassGod */,
+				B10000000000000000000003 /* ClassGodTests */,
 				F2BB6B542FC08AFC0059D551 /* Products */,
 				28A7A53CC3B6632D706EDFD7 /* Frameworks */,
 				5F230C477466435602A08DB6 /* ClassGodWidgetBundle.swift */,
@@ -173,6 +194,7 @@
 			children = (
 				F2BB6B532FC08AFC0059D551 /* ClassGod.app */,
 				7B9F77485B9CA75A1B081397 /* ClassGodWidget.appex */,
+				B10000000000000000000002 /* ClassGodTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -180,6 +202,27 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		B10000000000000000000007 /* ClassGodTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B1000000000000000000000B /* Build configuration list for PBXNativeTarget "ClassGodTests" */;
+			buildPhases = (
+				B10000000000000000000004 /* Sources */,
+				B10000000000000000000005 /* Frameworks */,
+				B10000000000000000000006 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				B10000000000000000000008 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				B10000000000000000000003 /* ClassGodTests */,
+			);
+			name = ClassGodTests;
+			productName = ClassGodTests;
+			productReference = B10000000000000000000002 /* ClassGodTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 		B92F7954AF1161ABBAC770E8 /* ClassGodWidget */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = F532BD457686A7CCD6DAA037 /* Build configuration list for PBXNativeTarget "ClassGodWidget" */;
@@ -262,11 +305,19 @@
 			targets = (
 				F2BB6B522FC08AFC0059D551 /* ClassGod */,
 				B92F7954AF1161ABBAC770E8 /* ClassGodWidget */,
+				B10000000000000000000007 /* ClassGodTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		B10000000000000000000006 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		F0937B56988E26C38658E39D /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -307,6 +358,13 @@
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		B10000000000000000000004 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		F2BB6B4F2FC08AFC0059D551 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -347,6 +405,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		B10000000000000000000008 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F2BB6B522FC08AFC0059D551 /* ClassGod */;
+			targetProxy = B10000000000000000000001 /* PBXContainerItemProxy */;
+		};
 		AAE000000000000000000004 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = B92F7954AF1161ABBAC770E8 /* ClassGodWidget */;
@@ -355,6 +418,36 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		B10000000000000000000009 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.hanazar.classgod.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/ClassGod.app/Contents/MacOS/ClassGod";
+			};
+			name = Debug;
+		};
+		B1000000000000000000000A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.hanazar.classgod.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/ClassGod.app/Contents/MacOS/ClassGod";
+			};
+			name = Release;
+		};
 		B39279358C95FAA013EFE6AB /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -366,8 +459,8 @@
 				ENABLE_APP_SANDBOX = YES;
 				INFOPLIST_FILE = ClassGodWidget/Info.plist;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				CURRENT_PROJECT_VERSION = 35;
-				MARKETING_VERSION = 1.5.10;
+				CURRENT_PROJECT_VERSION = 36;
+				MARKETING_VERSION = 1.5.11;
 				PRODUCT_BUNDLE_IDENTIFIER = com.hanazar.classgod.ClassGodWidget;
 				PRODUCT_NAME = ClassGodWidget;
 				SDKROOT = macosx;
@@ -388,8 +481,8 @@
 				ENABLE_APP_SANDBOX = YES;
 				INFOPLIST_FILE = ClassGodWidget/Info.plist;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				CURRENT_PROJECT_VERSION = 35;
-				MARKETING_VERSION = 1.5.10;
+				CURRENT_PROJECT_VERSION = 36;
+				MARKETING_VERSION = 1.5.11;
 				PRODUCT_BUNDLE_IDENTIFIER = com.hanazar.classgod.ClassGodWidget;
 				PRODUCT_NAME = ClassGodWidget;
 				SDKROOT = macosx;
@@ -525,7 +618,7 @@
 				CODE_SIGN_ENTITLEMENTS = ClassGod/ClassGod.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 35;
+				CURRENT_PROJECT_VERSION = 36;
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readwrite;
@@ -534,19 +627,24 @@
 				INFOPLIST_KEY_NSAccessibilityUsageDescription = "ClassGod needs Accessibility permission to detect the frontmost browser and switch to specific tabs.";
 				INFOPLIST_KEY_NSAppleEventsUsageDescription = "ClassGod needs to control Safari, Chrome, and Edge to detect and switch browser tabs.";
 				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "ClassGod may use Bluetooth for future peripheral detection features.";
+				INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = "ClassGod may access calendars for class schedule integrations when you choose to enable them.";
 				INFOPLIST_KEY_NSCalendarsUsageDescription = "ClassGod may access calendars for future class schedule integrations.";
 				INFOPLIST_KEY_NSCameraUsageDescription = "ClassGod uses camera access for video-related features.";
 				INFOPLIST_KEY_NSContactsUsageDescription = "ClassGod may access contacts for future integrations.";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "ClassGod may use location for future geo-aware features.";
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "ClassGod may discover devices on your local network for network-aware features.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "ClassGod uses microphone access for audio-related features.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "ClassGod uses Photos access to select wallpapers and other image content.";
+				INFOPLIST_KEY_NSRemindersFullAccessUsageDescription = "ClassGod may access reminders for task integrations when you choose to enable them.";
 				INFOPLIST_KEY_NSRemindersUsageDescription = "ClassGod may access reminders for future task integrations.";
 				INFOPLIST_KEY_NSScreenCaptureUsageDescription = "ClassGod needs screen recording permission for browser detection and window capture features.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "ClassGod may use speech recognition for voice-to-text features.";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.5.10;
+				MARKETING_VERSION = 1.5.11;
 				PRODUCT_BUNDLE_IDENTIFIER = com.hanazar.classgod;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -566,7 +664,7 @@
 				CODE_SIGN_ENTITLEMENTS = ClassGod/ClassGod.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 35;
+				CURRENT_PROJECT_VERSION = 36;
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readwrite;
@@ -575,19 +673,24 @@
 				INFOPLIST_KEY_NSAccessibilityUsageDescription = "ClassGod needs Accessibility permission to detect the frontmost browser and switch to specific tabs.";
 				INFOPLIST_KEY_NSAppleEventsUsageDescription = "ClassGod needs to control Safari, Chrome, and Edge to detect and switch browser tabs.";
 				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "ClassGod may use Bluetooth for future peripheral detection features.";
+				INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = "ClassGod may access calendars for class schedule integrations when you choose to enable them.";
 				INFOPLIST_KEY_NSCalendarsUsageDescription = "ClassGod may access calendars for future class schedule integrations.";
 				INFOPLIST_KEY_NSCameraUsageDescription = "ClassGod uses camera access for video-related features.";
 				INFOPLIST_KEY_NSContactsUsageDescription = "ClassGod may access contacts for future integrations.";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "ClassGod may use location for future geo-aware features.";
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "ClassGod may discover devices on your local network for network-aware features.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "ClassGod uses microphone access for audio-related features.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "ClassGod uses Photos access to select wallpapers and other image content.";
+				INFOPLIST_KEY_NSRemindersFullAccessUsageDescription = "ClassGod may access reminders for task integrations when you choose to enable them.";
 				INFOPLIST_KEY_NSRemindersUsageDescription = "ClassGod may access reminders for future task integrations.";
 				INFOPLIST_KEY_NSScreenCaptureUsageDescription = "ClassGod needs screen recording permission for browser detection and window capture features.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "ClassGod may use speech recognition for voice-to-text features.";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.5.10;
+				MARKETING_VERSION = 1.5.11;
 				PRODUCT_BUNDLE_IDENTIFIER = com.hanazar.classgod;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -602,6 +705,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		B1000000000000000000000B /* Build configuration list for PBXNativeTarget "ClassGodTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B10000000000000000000009 /* Debug */,
+				B1000000000000000000000A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		F2BB6B4E2FC08AFC0059D551 /* Build configuration list for PBXProject "ClassGod" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

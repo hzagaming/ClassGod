@@ -82,7 +82,7 @@ struct SystemInfoWidgetView: View {
     }
     
     private var hostName: String {
-        ProcessInfo.processInfo.hostName ?? "unknown"
+        ProcessInfo.processInfo.hostName
     }
     
     private var osVersion: String {

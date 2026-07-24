@@ -222,6 +222,46 @@
         }
       }
     },
+    "NSCalendarsFullAccessUsageDescription" : {
+      "comment" : "Privacy - Calendars Full Access Usage Description",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "ClassGod may access calendars for class schedule integrations when you choose to enable them." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "ClassGod 可按用户选择访问日历，用于课程表集成。" } }
+      }
+    },
+    "NSLocalNetworkUsageDescription" : {
+      "comment" : "Privacy - Local Network Usage Description",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "ClassGod may discover devices on your local network for network-aware features." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "ClassGod 可按用户选择发现本地网络设备，用于网络相关功能。" } }
+      }
+    },
+    "NSPhotoLibraryUsageDescription" : {
+      "comment" : "Privacy - Photo Library Usage Description",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "ClassGod uses Photos access to select wallpapers and other image content." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "ClassGod 需要照片权限以选择壁纸和其他图像内容。" } }
+      }
+    },
+    "NSRemindersFullAccessUsageDescription" : {
+      "comment" : "Privacy - Reminders Full Access Usage Description",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "ClassGod may access reminders for task integrations when you choose to enable them." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "ClassGod 可按用户选择访问提醒事项，用于任务集成。" } }
+      }
+    },
+    "NSSpeechRecognitionUsageDescription" : {
+      "comment" : "Privacy - Speech Recognition Usage Description",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "ClassGod may use speech recognition for voice-to-text features." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "ClassGod 可按用户选择使用语音识别，用于语音转文字功能。" } }
+      }
+    },
     "NSRemindersUsageDescription" : {
       "comment" : "Privacy - Reminders Usage Description",
       "extractionState" : "extracted_with_value",

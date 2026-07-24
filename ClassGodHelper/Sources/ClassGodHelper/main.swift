@@ -25,6 +25,8 @@ final class SMCHelper {
     private var conn: io_connect_t = 0
     private var isConnected = false
     private let lock = NSLock()
+    private let discoveryLock = NSLock()
+    private var cachedSMCKeys: [(key: String, type: String)]?
 
     private init() {
         connect()
@@ -147,7 +149,7 @@ final class SMCHelper {
     
     /// Enumerates all available SMC keys by reading #KEY and iterating indices.
     /// Returns a map of key 4CC -> type string for keys matching the given prefixes.
-    func enumerateSMCKeys(matchingPrefixes prefixes: [String] = ["T", "F"]) -> [(key: String, type: String)] {
+    private func discoverSMCKeys() -> [(key: String, type: String)] {
         var results: [(key: String, type: String)] = []
         let keyCountBytes = readBytes(key: "#KEY")
         guard let keyCountBytes, keyCountBytes.count >= 4 else {
@@ -163,60 +165,97 @@ final class SMCHelper {
         }
         
         for i in 0..<count {
-            var input = [UInt8](repeating: 0, count: 56)
-            var output = [UInt8](repeating: 0, count: 56)
-            input[0] = UInt8((i >> 24) & 0xFF)
-            input[1] = UInt8((i >> 16) & 0xFF)
-            input[2] = UInt8((i >> 8) & 0xFF)
-            input[3] = UInt8(i & 0xFF)
-            input[16] = 8 // READ_INDEX command
-            let kr = smcCall(input: &input, output: &output)
-            guard kr == KERN_SUCCESS && output[14] == 0 else { continue }
-            let key4cc = String(bytes: output[0..<4].map { $0 }, encoding: .ascii) ?? ""
-            let type = String(bytes: output[4..<8].map { $0 }, encoding: .ascii) ?? ""
+            guard let indexedKey = readKey(at: i) else { continue }
+            let key4cc = indexedKey.key
+            let type = indexedKey.type
             let typeLower = type.lowercased()
-            guard prefixes.contains(where: { key4cc.hasPrefix($0) }) else { continue }
-            // Collect both standard sensor types and any T/F key
+            guard key4cc.hasPrefix("T") || key4cc.hasPrefix("F") else { continue }
             let validTypes = Set(["sp78", "sp79", "sp7a", "sp5a", "si8c", "fpe2", "ui8 ", "ui16", "ui32", "flag"])
-            guard validTypes.contains(typeLower) || key4cc.hasPrefix("T") || key4cc.hasPrefix("F") else { continue }
+            guard validTypes.contains(typeLower) else { continue }
             results.append((key: key4cc, type: typeLower))
         }
         return results
     }
 
+    private func readKey(at index: Int) -> (key: String, type: String)? {
+        lock.lock()
+        defer { lock.unlock() }
+        guard isConnected else { return nil }
+        var input = [UInt8](repeating: 0, count: 56)
+        var output = [UInt8](repeating: 0, count: 56)
+        input[0] = UInt8((index >> 24) & 0xFF)
+        input[1] = UInt8((index >> 16) & 0xFF)
+        input[2] = UInt8((index >> 8) & 0xFF)
+        input[3] = UInt8(index & 0xFF)
+        input[16] = 8
+        guard smcCall(input: &input, output: &output) == KERN_SUCCESS, output[14] == 0 else { return nil }
+        let key = String(bytes: output[0..<4], encoding: .ascii) ?? ""
+        let type = String(bytes: output[4..<8], encoding: .ascii) ?? ""
+        return (key, type)
+    }
+
+    func enumerateSMCKeys(matchingPrefixes prefixes: [String] = ["T", "F"]) -> [(key: String, type: String)] {
+        discoveryLock.lock()
+        defer { discoveryLock.unlock() }
+        if cachedSMCKeys == nil {
+            cachedSMCKeys = discoverSMCKeys()
+        }
+        return cachedSMCKeys?.filter { entry in
+            prefixes.contains { entry.key.hasPrefix($0) }
+        } ?? []
+    }
+
+    func rescan() {
+        discoveryLock.lock()
+        cachedSMCKeys = nil
+        discoveryLock.unlock()
+
+        lock.lock()
+        if conn != 0 {
+            IOServiceClose(conn)
+            conn = 0
+        }
+        isConnected = false
+        connect()
+        lock.unlock()
+
+        refreshPowerMetricsFallback(using: self)
+    }
+
     func readFans() -> [[String: Any]] {
-        var out: [[String: Any]] = []
-        var seenKeys = Set<String>()
-        
-        // 1. Standard FNum path
+        var indexes = Set<Int>()
+
         if let numBytes = readBytes(key: "FNum"), numBytes.count >= 1, numBytes[0] > 0 {
             let count = min(Int(numBytes[0]), 16)
-            for i in 0..<count {
-                var dict: [String: Any] = ["id": i, "name": fanName(i)]
-                if let b = readBytes(key: "F\(i)Ac") { dict["actualRPM"] = decodeFPE2(b) }
-                if let b = readBytes(key: "F\(i)Mn") { dict["minimumRPM"] = decodeFPE2(b) }
-                if let b = readBytes(key: "F\(i)Mx") { dict["maximumRPM"] = decodeFPE2(b) }
-                if let b = readBytes(key: "F\(i)Tg") { dict["targetRPM"] = decodeFPE2(b) }
-                out.append(dict)
-                seenKeys.insert("F\(i)Ac")
+            indexes.formUnion(0..<count)
+        }
+
+        for entry in enumerateSMCKeys(matchingPrefixes: ["F"]) {
+            if let fanKey = FanSMCKey(entry.key) {
+                indexes.insert(fanKey.index)
             }
         }
-        
-        // 2. Enumerate dynamic F* keys as supplement
-        let dynamicFans = enumerateSMCKeys(matchingPrefixes: ["F"])
-        for entry in dynamicFans {
-            let key = entry.key
-            guard key.count == 4, key.hasPrefix("F"), key != "FNum" else { continue }
-            guard !seenKeys.contains(key) else { continue }
-            if let b = readBytes(key: key) {
-                let idx = out.count
-                var dict: [String: Any] = ["id": idx, "name": key]
-                dict["actualRPM"] = decodeFPE2(b)
-                out.append(dict)
-                seenKeys.insert(key)
+
+        return indexes.sorted().compactMap { index in
+            guard let actualKey = FanSMCKey.actualRPMKey(for: index),
+                  let fanKey = FanSMCKey(actualKey),
+                  let actualBytes = readBytes(key: actualKey) else { return nil }
+            var fan: [String: Any] = [
+                "id": index,
+                "name": fanName(index),
+                "actualRPM": decodeFPE2(actualBytes)
+            ]
+            if let key = fanKey.key(suffix: "Mn"), let bytes = readBytes(key: key) {
+                fan["minimumRPM"] = decodeFPE2(bytes)
             }
+            if let key = fanKey.key(suffix: "Mx"), let bytes = readBytes(key: key) {
+                fan["maximumRPM"] = decodeFPE2(bytes)
+            }
+            if let key = fanKey.key(suffix: "Tg"), let bytes = readBytes(key: key) {
+                fan["targetRPM"] = decodeFPE2(bytes)
+            }
+            return fan
         }
-        return out
     }
 
     func readTemps() -> [[String: Any]] {
@@ -259,26 +298,22 @@ final class SMCHelper {
         ]
         var out: [[String: Any]] = []
         var seenKeys = Set<String>()
-        var hardcodedSuccess = 0
         for (name, key, max) in keys {
             guard let b = readBytes(key: key), b.count >= 2 else { continue }
             let v = decodeSP78(b)
             if v > -50 && v < 150 {
                 out.append(["name": name, "key": key, "value": v, "maxValue": max])
                 seenKeys.insert(key)
-                hardcodedSuccess += 1
             }
         }
-        print("[Helper] readTemps: \(hardcodedSuccess)/\(keys.count) hardcoded keys succeeded")
-        
+
         // Enumerate dynamic T* keys as supplement
         let dynamicTemps = enumerateSMCKeys(matchingPrefixes: ["T"])
-        print("[Helper] readTemps: \(dynamicTemps.count) dynamic T-keys discovered")
         for entry in dynamicTemps {
             let key = entry.key
             guard key.count == 4, key.hasPrefix("T"), !seenKeys.contains(key) else { continue }
             if let b = readBytes(key: key) {
-                let v = decodeSP78(b)
+                let v = decodeTemperature(b, type: entry.type)
                 if v > -50 && v < 150 {
                     out.append(["name": key, "key": key, "value": v, "maxValue": 100])
                 }
@@ -287,36 +322,37 @@ final class SMCHelper {
         return out
     }
 
+    private func decodeTemperature(_ bytes: [UInt8], type: String) -> Double {
+        guard bytes.count >= 2 else { return 0 }
+        if type.hasPrefix("sp"), let fractionBits = Int(String(type.suffix(1)), radix: 16) {
+            let raw = Int16(bitPattern: UInt16(bytes[0]) << 8 | UInt16(bytes[1]))
+            return Double(raw) / pow(2, Double(fractionBits))
+        }
+        return decodeSP78(bytes)
+    }
+
     func readAll() -> [String: Any] {
-        let fans = readFans()
-        let temps = readTemps()
-        if !fans.isEmpty || !temps.isEmpty {
-            return ["fans": fans, "temps": temps, "source": "smc"]
-        }
-
-        // Modern Apple Silicon (e.g. M5) may not expose live SMC keys to user space.
-        // Try powermetrics first, then the IOHIDEventSystem PMU/NVMe temperature sensors.
-        let pmTemps = PowerMetricsSampler.shared.temps
-        let pmFans = PowerMetricsSampler.shared.fans
-        if !pmTemps.isEmpty || !pmFans.isEmpty {
-            return ["fans": pmFans, "temps": pmTemps, "source": "powermetrics"]
-        }
-
-        let hidTemps = HIDTemperatureReader.shared.readTemperatures()
-        if !hidTemps.isEmpty {
-            return ["fans": [], "temps": hidTemps, "source": "hid"]
-        }
-
-        return ["fans": [], "temps": [], "source": "none"]
+        let readings = HardwareReadings.merge(
+            smcFans: readFans(),
+            smcTemps: readTemps(),
+            powerMetricsFans: PowerMetricsSampler.shared.fans,
+            powerMetricsTemps: PowerMetricsSampler.shared.temps,
+            hidTemps: HIDTemperatureReader.shared.readTemperatures()
+        )
+        return ["fans": readings.fans, "temps": readings.temps, "source": readings.source]
     }
 
     func setFanMode(_ mode: String, fanIndex: Int) -> Bool {
+        guard let actualKey = FanSMCKey.actualRPMKey(for: fanIndex),
+              let fanKey = FanSMCKey(actualKey),
+              let targetKey = fanKey.key(suffix: "Tg") else { return false }
         switch mode {
         case "system":
-            return writeBytes(key: "F\(fanIndex)Tg", bytes: [0, 0])
+            return writeBytes(key: targetKey, bytes: [0, 0])
         case "max":
-            guard let b = readBytes(key: "F\(fanIndex)Mx"), b.count >= 2 else { return false }
-            return writeBytes(key: "F\(fanIndex)Tg", bytes: Array(b.prefix(2)))
+            guard let maxKey = fanKey.key(suffix: "Mx"),
+                  let bytes = readBytes(key: maxKey), bytes.count >= 2 else { return false }
+            return writeBytes(key: targetKey, bytes: Array(bytes.prefix(2)))
         case "autoMax", "manual", "custom":
             return true
         default:
@@ -325,7 +361,9 @@ final class SMCHelper {
     }
 
     func setFanRPM(_ rpm: Double, fanIndex: Int) -> Bool {
-        return writeBytes(key: "F\(fanIndex)Tg", bytes: encodeFPE2(rpm))
+        guard let actualKey = FanSMCKey.actualRPMKey(for: fanIndex),
+              let targetKey = FanSMCKey(actualKey)?.key(suffix: "Tg") else { return false }
+        return writeBytes(key: targetKey, bytes: encodeFPE2(rpm))
     }
 
     private func fanName(_ index: Int) -> String {
@@ -349,6 +387,8 @@ final class PowerMetricsSampler {
     private var _latest: (temps: [[String: Any]], fans: [[String: Any]], error: String?) = ([], [], nil)
     private let accessQueue = DispatchQueue(label: "com.hanazar.classgod.powermetrics.access")
     private var isSamplerUnsupported = false
+    private var needsFans = false
+    private var needsTemps = false
 
     private init() {}
 
@@ -368,12 +408,18 @@ final class PowerMetricsSampler {
         return value
     }
 
-    func start(interval: TimeInterval = 3.0) {
+    func start(interval: TimeInterval = 0.5, needsFans: Bool, needsTemps: Bool) {
         stop()
+        accessQueue.sync {
+            _latest = ([], [], nil)
+        }
+        guard needsFans || needsTemps else { return }
         guard !isSamplerUnsupported else {
             print("[Helper] PowerMetricsSampler skipped: SMC sampler is unsupported on this machine")
             return
         }
+        self.needsFans = needsFans
+        self.needsTemps = needsTemps
         let timer = DispatchSource.makeTimerSource(queue: queue)
         timer.schedule(deadline: .now(), repeating: .milliseconds(Int(interval * 1000)))
         timer.setEventHandler { [weak self] in
@@ -397,6 +443,20 @@ final class PowerMetricsSampler {
             self.isSamplerUnsupported = true
             self.stop()
         }
+        if result.error == nil,
+           !PowerMetricsSamplingPolicy.shouldContinue(
+               needsFans: needsFans,
+               needsTemps: needsTemps,
+               sampledFans: result.fans.count,
+               sampledTemps: result.temps.count
+           ) {
+            print("[Helper] PowerMetricsSampler found no required fallback data, stopping")
+            accessQueue.async {
+                self._latest = ([], [], nil)
+            }
+            stop()
+            return
+        }
         accessQueue.async {
             self._latest = result
         }
@@ -405,8 +465,7 @@ final class PowerMetricsSampler {
     private static func runOnce() -> (temps: [[String: Any]], fans: [[String: Any]], error: String?) {
         let task = Process()
         task.launchPath = "/usr/bin/powermetrics"
-        // -n 1: one sample; -i 1000: 1s interval; --samplers smc: SMC section only
-        task.arguments = ["-n", "1", "-i", "1000", "--samplers", "smc"]
+        task.arguments = ["-n", "1", "-i", "500", "--samplers", "smc"]
         let pipe = Pipe()
         task.standardOutput = pipe
         task.standardError = pipe  // powermetrics writes errors to stderr
@@ -591,8 +650,8 @@ final class HIDTemperatureReader {
             let service = unsafeBitCast(raw, to: ServiceRef.self)
 
             guard let productRef = copyProperty(service, "Product" as CFString),
-                  CFGetTypeID(productRef) == CFStringGetTypeID() else { continue }
-            let product = (productRef as! CFString) as String
+                  CFGetTypeID(productRef) == CFStringGetTypeID(),
+                  let product = productRef as? String else { continue }
 
             let event = copyEvent(service, temperatureEventType, 0, 0)
             guard let event = event else { continue }
@@ -616,6 +675,22 @@ final class HIDTemperatureReader {
         }
         return results
     }
+}
+
+private func refreshPowerMetricsFallback(
+    using smc: SMCHelper,
+    fans discoveredFans: [[String: Any]]? = nil,
+    smcTemps discoveredSMCTemps: [[String: Any]]? = nil,
+    hidTemps discoveredHIDTemps: [[String: Any]]? = nil
+) {
+    let fans = discoveredFans ?? smc.readFans()
+    let smcTemps = discoveredSMCTemps ?? smc.readTemps()
+    let hidTemps = discoveredHIDTemps ?? HIDTemperatureReader.shared.readTemperatures()
+    PowerMetricsSampler.shared.start(
+        interval: 0.5,
+        needsFans: fans.isEmpty,
+        needsTemps: smcTemps.isEmpty && hidTemps.isEmpty
+    )
 }
 
 // MARK: - Socket server
@@ -709,13 +784,28 @@ private func sendJSON(fd: Int32, _ obj: [String: Any]) {
     var payload = Data()
     payload.append(contentsOf: withUnsafeBytes(of: &header) { Array($0) })
     payload.append(data)
-    payload.withUnsafeBytes { ptr in
-        _ = send(fd, ptr.baseAddress, payload.count, 0)
+    _ = sendAll(fd: fd, data: payload)
+}
+
+private func sendAll(fd: Int32, data: Data) -> Bool {
+    data.withUnsafeBytes { bytes in
+        guard let baseAddress = bytes.baseAddress else { return false }
+        var offset = 0
+        while offset < bytes.count {
+            let sent = send(fd, baseAddress.advanced(by: offset), bytes.count - offset, 0)
+            if sent < 0, errno == EINTR { continue }
+            guard sent > 0 else { return false }
+            offset += sent
+        }
+        return true
     }
 }
 
 private func handleClient(fd: Int32) {
     defer { close(fd) }
+
+    var noSigPipe: Int32 = 1
+    setsockopt(fd, SOL_SOCKET, SO_NOSIGPIPE, &noSigPipe, socklen_t(MemoryLayout<Int32>.size))
 
     // Authenticate peer — fail closed if credentials cannot be retrieved.
     var peerUID: uid_t = 0, peerGID: gid_t = 0
@@ -724,8 +814,8 @@ private func handleClient(fd: Int32) {
         sendJSON(fd: fd, ["success": false, "error": "peer authentication failed"])
         return
     }
-    if let allowed = allowedPeerUID, peerUID != allowed {
-        print("[Helper] Rejected peer uid=\(peerUID), allowed=\(allowed)")
+    guard let allowed = allowedPeerUID, peerUID == allowed else {
+        print("[Helper] Rejected peer uid=\(peerUID), allowed=\(allowedPeerUID.map(String.init) ?? "unset")")
         sendJSON(fd: fd, ["success": false, "error": "unauthorized peer uid"])
         return
     }
@@ -753,6 +843,9 @@ private func handleClient(fd: Int32) {
         case "readAll":
             let all = smc.readAll()
             sendJSON(fd: fd, ["success": true, "fans": all["fans"] ?? [], "temps": all["temps"] ?? []])
+        case "rescan":
+            smc.rescan()
+            sendJSON(fd: fd, ["success": true])
         case "setFanMode":
             let mode = req["mode"] as? String ?? ""
             let idx = req["fanIndex"] as? Int ?? 0
@@ -782,15 +875,15 @@ private func signalHandler(_ sig: Int32) {
 signal(SIGINT) { _ in signalHandler(SIGINT) }
 signal(SIGTERM) { _ in signalHandler(SIGTERM) }
 
-// Determine allowed peer UID. If run via sudo, restrict to the original user.
-if let sudoUIDString = getenv("SUDO_UID"),
-   let sudoUIDStr = String(cString: sudoUIDString).trimmingCharacters(in: .whitespacesAndNewlines) as String?,
-   let sudoUID = uid_t(sudoUIDStr) {
-    allowedPeerUID = sudoUID
-    print("[Helper] Allowed peer UID (SUDO_UID): \(sudoUID)")
-} else {
-    print("[Helper] No SUDO_UID; allowing any peer (not recommended for production)")
+guard let peerUID = HelperPeerPolicy.allowedUID(
+    arguments: CommandLine.arguments,
+    environment: ProcessInfo.processInfo.environment
+) else {
+    print("[Helper] Missing or invalid allowed peer UID; refusing to start")
+    exit(1)
 }
+allowedPeerUID = peerUID
+print("[Helper] Allowed peer UID: \(peerUID)")
 
 // Clean up stale helpers first, before doing any expensive work, so we can
 // take over the socket as soon as possible.
@@ -820,7 +913,12 @@ if hidTemps.count > 15 {
 
 // Start powermetrics sampler in parallel. It runs independent of SMC reads
 // and provides a fallback data path on modern Apple Silicon.
-PowerMetricsSampler.shared.start(interval: 3.0)
+refreshPowerMetricsFallback(
+    using: smc,
+    fans: discoveredFans,
+    smcTemps: discoveredTemps,
+    hidTemps: hidTemps
+)
 
 listen_fd = setupSocket()
 guard listen_fd >= 0 else {

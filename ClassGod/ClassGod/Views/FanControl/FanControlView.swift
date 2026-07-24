@@ -67,6 +67,9 @@ struct FanControlView: View {
         .onDisappear {
             viewModel.stopMonitoring()
         }
+        .onChange(of: prefs.preferences.fanControlUpdateInterval) { _, _ in
+            viewModel.startMonitoring()
+        }
         .alert(String(localized: "alert.error"), isPresented: $viewModel.showError) {
             Button(String(localized: "button.ok"), role: .cancel) {}
         } message: {
@@ -99,7 +102,7 @@ struct FanControlView: View {
                 .buttonStyle(.plain)
 
                 VStack(alignment: .leading, spacing: 0) {
-                    Text("Fan Control")
+                    Text("fan.title")
                         .font(.system(size: 14 * zoomScale, weight: .semibold, design: .monospaced))
                         .foregroundStyle(.white)
 
@@ -253,7 +256,7 @@ struct FanControlView: View {
                         HapticManager.shared.generic()
                         viewModel.resetMaxTemperatures()
                     }) {
-                        Text("Reset")
+                        Text("button.reset")
                             .font(.system(size: 9 * zoomScale, weight: .medium, design: .monospaced))
                             .foregroundStyle(.cyan.opacity(0.7))
                     }
@@ -271,7 +274,7 @@ struct FanControlView: View {
                         HapticManager.shared.generic()
                             viewModel.sensorFilter = filter
                         }) {
-                            Text(filter.rawValue)
+                            Text(filter.displayName)
                                 .font(.system(size: 9 * zoomScale, weight: .medium, design: .monospaced))
                                 .foregroundStyle(viewModel.sensorFilter == filter ? .black : .white.opacity(0.6))
                                 .padding(.horizontal, 8 * zoomScale)
@@ -292,7 +295,7 @@ struct FanControlView: View {
                         .font(.system(size: 8 * zoomScale))
                         .foregroundStyle(.white.opacity(0.3))
 
-                    TextField("Search", text: $viewModel.sensorSearchText)
+                    TextField(String(localized: "activity.search"), text: $viewModel.sensorSearchText)
                         .font(.system(size: 9 * zoomScale, design: .monospaced))
                         .foregroundStyle(.white)
                         .textFieldStyle(.plain)
@@ -326,7 +329,9 @@ struct FanControlView: View {
                 if viewModel.filteredSensors.isEmpty {
                     HStack {
                         Spacer()
-                        Text(viewModel.sensorSearchText.isEmpty ? "No sensors available" : "No sensors match \"\(viewModel.sensorSearchText)\"")
+                        Text(viewModel.sensorSearchText.isEmpty
+                             ? String(localized: "fan.no_sensors")
+                             : String(format: String(localized: "fan.no_sensor_matches"), viewModel.sensorSearchText))
                             .font(.system(size: 10 * zoomScale, design: .monospaced))
                             .foregroundStyle(.white.opacity(0.3))
                         Spacer()
@@ -354,7 +359,7 @@ struct FanControlView: View {
     private var fanSection: some View {
         VStack(alignment: .leading, spacing: 8 * zoomScale) {
             HStack {
-                Label("Fans", systemImage: "fanblades")
+                Label("fan.diagnostic.fans", systemImage: "fanblades")
                     .font(.system(size: 12 * zoomScale, weight: .bold, design: .monospaced))
                     .foregroundStyle(.white)
 
@@ -369,7 +374,7 @@ struct FanControlView: View {
                     HStack(spacing: 3 * zoomScale) {
                         Image(systemName: "arrow.clockwise")
                             .font(.system(size: 8 * zoomScale))
-                        Text("Rescan")
+                        Text("fan.rescan")
                             .font(.system(size: 9 * zoomScale, weight: .medium, design: .monospaced))
                     }
                     .foregroundStyle(.cyan.opacity(0.7))
@@ -384,7 +389,7 @@ struct FanControlView: View {
                 .buttonStyle(.plain)
 
                 if viewModel.fans.isEmpty {
-                    Text("No fans detected")
+                    Text("fan.no_fans")
                         .font(.system(size: 10 * zoomScale, design: .monospaced))
                         .foregroundStyle(.white.opacity(0.4))
                 }
@@ -548,7 +553,7 @@ struct FanControlView: View {
                         HStack(spacing: 4 * zoomScale) {
                             Image(systemName: "doc.on.doc")
                                 .font(.system(size: 9 * zoomScale))
-                            Text("Copy Sensor Data")
+                            Text("fan.copy_sensor_data")
                                 .font(.system(size: 10 * zoomScale, weight: .medium, design: .monospaced))
                         }
                         .foregroundStyle(.cyan.opacity(0.7))
@@ -839,7 +844,7 @@ struct FanRow: View {
             // Manual RPM slider (shown in Auto Max mode for override and Manual mode for direct control)
             if mode == .autoMax || mode == .manual {
                 HStack(spacing: 8 * zoomScale) {
-                    Text(mode == .manual ? "Set" : "Manual")
+                    Text(mode == .manual ? String(localized: "fan.set") : String(localized: "fan.manual_override"))
                         .font(.system(size: 9 * zoomScale, design: .monospaced))
                         .foregroundStyle(.white.opacity(0.4))
                         .frame(width: 45 * zoomScale, alignment: .leading)

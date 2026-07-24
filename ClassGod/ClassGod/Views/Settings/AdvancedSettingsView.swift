@@ -112,7 +112,7 @@ struct AdvancedSettingsView: View {
                     HStack {
                         Text(String(localized: "about.version"))
                         Spacer()
-                        Text("\(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.8.0") (Build \(Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "12"))")
+                        Text("\(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "—") (Build \(Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "—"))")
                             .foregroundStyle(.secondary)
                     }
                     .padding(.horizontal, 10)

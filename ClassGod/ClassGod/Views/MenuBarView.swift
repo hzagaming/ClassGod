@@ -11,9 +11,12 @@ struct MenuBarView: View {
     @ObservedObject private var prefs = PreferencesManager.shared
     @State private var fanSummaryTemp: Double = 0
     @State private var fanSummaryRPM: Double = 0
+    @State private var hasFanSummaryTemp = false
+    @State private var hasFanSummaryRPM = false
     @State private var fanSummaryTimer: Timer?
     @State private var sleepObserverTokens: [any NSObjectProtocol] = []
     @State private var isActive = false
+    @State private var refreshGate = FanRefreshGate()
 
     var onClose: () -> Void
     var onOpenDestinTab: () -> Void
@@ -72,7 +75,7 @@ struct MenuBarView: View {
                         
                         FeatureButton(
                             icon: "photo.on.rectangle.angled",
-                            title: "Wallpaper Engine",
+                            title: "wallpaper.title",
                             description: "menu.wallpaper.description",
                             action: onOpenWallpaper
                         )
@@ -86,14 +89,14 @@ struct MenuBarView: View {
                         
                         FeatureButton(
                             icon: "exclamationmark.triangle.fill",
-                            title: "Error Encyclopedia",
+                            title: "error.hub_title",
                             description: "menu.error_hub.description",
                             action: onOpenErrorHub
                         )
                         
                         FeatureButton(
                             icon: "fanblades",
-                            title: "Fan Control",
+                            title: "fan.title",
                             description: "menu.fan_control.description",
                             action: onOpenFanControl,
                             isEnabled: prefs.preferences.enableFanControl
@@ -101,14 +104,14 @@ struct MenuBarView: View {
                         
                         FeatureButton(
                             icon: "waveform.path.ecg.rectangle",
-                            title: "Activity Monitor",
+                            title: "activity.title",
                             description: "menu.activity_monitor.description",
                             action: onOpenActivityMonitor
                         )
                         
                         FeatureButton(
                             icon: "checkmark.shield.fill",
-                            title: "Permission Center",
+                            title: "permission.center.title",
                             description: "menu.permission_center.description",
                             action: onOpenPermissionCenter
                         )
@@ -173,6 +176,10 @@ struct MenuBarView: View {
                 stopFanSummaryTimer()
             }
         }
+        .onChange(of: prefs.preferences.fanControlUpdateInterval) { _, _ in
+            guard isActive, prefs.preferences.enableFanControl else { return }
+            startFanSummaryTimer()
+        }
         .onDisappear {
             deactivate()
         }
@@ -194,7 +201,7 @@ struct MenuBarView: View {
                     Image(systemName: "thermometer")
                         .font(.system(size: 9 * zoomScale))
                         .foregroundStyle(.white.opacity(0.5))
-                    Text(prefs.preferences.fanControlTemperatureUnit.formatted(fanSummaryTemp))
+                    Text(hasFanSummaryTemp ? prefs.preferences.fanControlTemperatureUnit.formatted(fanSummaryTemp) : "--")
                         .font(.system(size: 11 * zoomScale, weight: .bold, design: .monospaced))
                         .foregroundStyle(.white)
                 }
@@ -203,7 +210,7 @@ struct MenuBarView: View {
                     Image(systemName: "fanblades")
                         .font(.system(size: 9 * zoomScale))
                         .foregroundStyle(.white.opacity(0.5))
-                    Text("\(Int(fanSummaryRPM)) RPM")
+                    Text(hasFanSummaryRPM ? "\(Int(fanSummaryRPM)) RPM" : "-- RPM")
                         .font(.system(size: 11 * zoomScale, weight: .bold, design: .monospaced))
                         .foregroundStyle(.white)
                 }
@@ -277,7 +284,8 @@ struct MenuBarView: View {
     private func startFanSummaryTimer() {
         updateFanSummary()
         fanSummaryTimer?.invalidate()
-        fanSummaryTimer = Timer.scheduledTimer(withTimeInterval: 3, repeats: true) { _ in
+        let interval = FanRefreshPolicy.normalized(prefs.preferences.fanControlUpdateInterval)
+        fanSummaryTimer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { _ in
             updateFanSummary()
         }
     }
@@ -288,6 +296,7 @@ struct MenuBarView: View {
     }
 
     private func updateFanSummary() {
+        guard refreshGate.begin() else { return }
         Task.detached(priority: .userInitiated) {
             let all = SMCService.shared.readAll()
             // Use only non-estimated sensors for menu-bar highest temp to avoid
@@ -296,8 +305,12 @@ struct MenuBarView: View {
             let temp = realSensors.map(\.value).max() ?? 0
             let rpm = all.fans.isEmpty ? 0 : all.fans.map(\.actualRPM).reduce(0, +) / Double(all.fans.count)
             await MainActor.run {
+                defer { self.refreshGate.end() }
+                guard self.isActive else { return }
                 self.fanSummaryTemp = temp
                 self.fanSummaryRPM = rpm
+                self.hasFanSummaryTemp = !realSensors.isEmpty
+                self.hasFanSummaryRPM = !all.fans.isEmpty
             }
         }
     }
@@ -327,7 +340,7 @@ struct MenuBarView: View {
                 Text("ClassGod")
                     .font(.system(size: 13 * zoomScale, weight: .bold, design: .monospaced))
                     .foregroundStyle(.white)
-                Text("v\(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.6.0")")
+                Text("v\(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "—")")
                     .font(.system(size: 8 * zoomScale, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.3))
             }
@@ -382,7 +395,7 @@ struct FeatureButton: View {
                     
                     Text(description)
                         .font(.system(size: 9 * zoomScale, design: .monospaced))
-                        .foregroundStyle(.white.opacity(0.35))
+                        .foregroundStyle(.white.opacity(isEnabled ? 0.55 : 0.3))
                         .lineLimit(1)
                 }
                 
@@ -405,10 +418,13 @@ struct FeatureButton: View {
             .scaleEffect(isPressed ? 0.97 : 1.0)
         }
         .buttonStyle(.plain)
+        .disabled(!isEnabled)
+        .accessibilityHint(description)
         .onHover { hovering in
-            isHovered = hovering
+            isHovered = hovering && isEnabled
         }
         .pressEvents {
+            guard isEnabled else { return }
             let press = {
                 isPressed = true
             }
@@ -418,6 +434,7 @@ struct FeatureButton: View {
                 press()
             }
         } onRelease: {
+            guard isEnabled else { return }
             let release = {
                 isPressed = false
             }

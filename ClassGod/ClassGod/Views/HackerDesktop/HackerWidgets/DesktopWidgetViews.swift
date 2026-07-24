@@ -764,7 +764,7 @@ struct NoteTabContent: View {
 
     var body: some View {
         ScrollView(showsIndicators: false) {
-            Text(noteText.isEmpty ? "No note saved yet." : noteText)
+            Text(noteText.isEmpty ? String(localized: "widget.no_note") : noteText)
                 .font(.system(size: 10, design: .monospaced))
                 .foregroundStyle(.white.opacity(noteText.isEmpty ? 0.4 : 0.85))
                 .frame(maxWidth: .infinity, alignment: .topLeading)
@@ -892,7 +892,7 @@ struct QuoteTabContent: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(text.isEmpty ? "No quote saved yet." : "\"\(text)\"")
+            Text(text.isEmpty ? String(localized: "widget.no_quote") : "\"\(text)\"")
                 .font(.system(size: 10, design: .monospaced))
                 .foregroundStyle(.white.opacity(text.isEmpty ? 0.4 : 0.85))
                 .italic(text.isEmpty == false)

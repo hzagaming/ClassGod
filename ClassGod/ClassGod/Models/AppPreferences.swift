@@ -9,6 +9,29 @@ import Carbon
 
 // MARK: - Enums
 
+enum FanRefreshPolicy {
+    static let minimumInterval: TimeInterval = 0.5
+    static let defaultInterval: TimeInterval = 0.5
+
+    static func normalized(_ interval: TimeInterval) -> TimeInterval {
+        max(minimumInterval, interval)
+    }
+}
+
+struct FanRefreshGate {
+    private var isRefreshing = false
+
+    mutating func begin() -> Bool {
+        guard !isRefreshing else { return false }
+        isRefreshing = true
+        return true
+    }
+
+    mutating func end() {
+        isRefreshing = false
+    }
+}
+
 enum SwitchBehavior: String, Codable, CaseIterable, Identifiable {
     case activateExisting = "activateExisting"
     case alwaysNewTab = "alwaysNewTab"
@@ -465,7 +488,7 @@ struct AppPreferences: Codable, Equatable {
         fontSizeScale: 1.0,
         enableBlurBackground: true,
         listDividerStyle: .thin,
-        version: 3,
+        version: 4,
         animationSpeed: .fast,
         enableDebugLogging: false,
         enableSoundEffects: true,
@@ -481,7 +504,7 @@ struct AppPreferences: Codable, Equatable {
         autoBackupIntervalHours: 24,
         enableFanControl: true,
         fanControlShowInMenuBar: false,
-        fanControlUpdateInterval: 1,
+        fanControlUpdateInterval: FanRefreshPolicy.defaultInterval,
         fanControlTemperatureUnit: .celsius,
         fanControlMode: .system,
         fanControlAutoMaxThreshold: 85,
@@ -655,7 +678,10 @@ extension AppPreferences {
         // Fan Control
         preferences.enableFanControl = try container.decodeIfPresent(Bool.self, forKey: .enableFanControl) ?? preferences.enableFanControl
         preferences.fanControlShowInMenuBar = try container.decodeIfPresent(Bool.self, forKey: .fanControlShowInMenuBar) ?? preferences.fanControlShowInMenuBar
-        preferences.fanControlUpdateInterval = try container.decodeIfPresent(Double.self, forKey: .fanControlUpdateInterval) ?? preferences.fanControlUpdateInterval
+        let storedFanInterval = try container.decodeIfPresent(Double.self, forKey: .fanControlUpdateInterval)
+        preferences.fanControlUpdateInterval = storedVersion < 4
+            ? FanRefreshPolicy.defaultInterval
+            : FanRefreshPolicy.normalized(storedFanInterval ?? preferences.fanControlUpdateInterval)
         preferences.fanControlTemperatureUnit = try container.decodeIfPresent(TemperatureUnit.self, forKey: .fanControlTemperatureUnit) ?? preferences.fanControlTemperatureUnit
         preferences.fanControlMode = try container.decodeIfPresent(FanControlMode.self, forKey: .fanControlMode) ?? preferences.fanControlMode
         preferences.fanControlAutoMaxThreshold = try container.decodeIfPresent(Double.self, forKey: .fanControlAutoMaxThreshold) ?? preferences.fanControlAutoMaxThreshold

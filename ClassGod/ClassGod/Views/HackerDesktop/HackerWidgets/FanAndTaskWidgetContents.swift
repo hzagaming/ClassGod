@@ -15,6 +15,7 @@ struct FanThermalWidgetContent: View {
     @State private var fanAccessReason: String? = SMCService.shared.fanAccessReason
     @State private var isLoading = true
     @State private var timer: Timer? = nil
+    @State private var refreshGate = FanRefreshGate()
 
     private var unit: TemperatureUnit { prefs.preferences.fanControlTemperatureUnit }
 
@@ -24,7 +25,7 @@ struct FanThermalWidgetContent: View {
                 Image(systemName: "fan.desk")
                     .font(.system(size: 10))
                     .foregroundStyle(.orange)
-                Text("Thermal Sensors")
+                Text("fan.thermal_sensors")
                     .font(.system(size: 10, weight: .bold, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.6))
                 Spacer()
@@ -42,7 +43,7 @@ struct FanThermalWidgetContent: View {
                     .multilineTextAlignment(.center)
                     .frame(maxHeight: .infinity)
             } else if sensors.isEmpty {
-                Text("No thermal data")
+                Text("fan.no_thermal_data")
                     .font(.system(size: 10, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.3))
                     .frame(maxHeight: .infinity)
@@ -58,6 +59,9 @@ struct FanThermalWidgetContent: View {
         }
         .onAppear(perform: startPolling)
         .onDisappear(perform: stopPolling)
+        .onChange(of: prefs.preferences.fanControlUpdateInterval) { _, _ in
+            startPolling()
+        }
     }
 
     private func sensorRow(_ sensor: TemperatureSensor) -> some View {
@@ -88,7 +92,8 @@ struct FanThermalWidgetContent: View {
 
     private func startPolling() {
         refresh()
-        let interval = max(0.5, prefs.preferences.fanControlUpdateInterval)
+        let interval = FanRefreshPolicy.normalized(prefs.preferences.fanControlUpdateInterval)
+        timer?.invalidate()
         timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { _ in
             refresh()
         }
@@ -100,9 +105,11 @@ struct FanThermalWidgetContent: View {
     }
 
     private func refresh() {
+        guard refreshGate.begin() else { return }
         Task.detached(priority: .userInitiated) {
             let newSensors = SMCService.shared.readTemperatures()
             await MainActor.run {
+                defer { refreshGate.end() }
                 sensors = newSensors.sorted { $0.value > $1.value }
                 fanAccessReason = SMCService.shared.fanAccessReason
                 isLoading = false
@@ -118,6 +125,7 @@ struct FanControlDashboardWidgetContent: View {
     @State private var fans: [FanInfo] = []
     @State private var fanAccessReason: String? = SMCService.shared.fanAccessReason
     @State private var timer: Timer? = nil
+    @State private var refreshGate = FanRefreshGate()
 
     private var mode: FanControlMode { prefs.preferences.fanControlMode }
 
@@ -127,7 +135,7 @@ struct FanControlDashboardWidgetContent: View {
                 Image(systemName: "gauge.with.dots.needle.67percent")
                     .font(.system(size: 10))
                     .foregroundStyle(.cyan)
-                Text("Fan Control")
+                Text("fan.title")
                     .font(.system(size: 10, weight: .bold, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.6))
                 Spacer()
@@ -156,7 +164,7 @@ struct FanControlDashboardWidgetContent: View {
                     Image(systemName: "fan.fill")
                         .font(.system(size: 24))
                         .foregroundStyle(.white.opacity(0.15))
-                    Text("No fans detected")
+                    Text("fan.no_fans")
                         .font(.system(size: 10, design: .monospaced))
                         .foregroundStyle(.white.opacity(0.3))
                 }
@@ -179,6 +187,9 @@ struct FanControlDashboardWidgetContent: View {
         }
         .onAppear(perform: startPolling)
         .onDisappear(perform: stopPolling)
+        .onChange(of: prefs.preferences.fanControlUpdateInterval) { _, _ in
+            startPolling()
+        }
     }
 
     private func fanRow(_ fan: FanInfo) -> some View {
@@ -257,7 +268,8 @@ struct FanControlDashboardWidgetContent: View {
 
     private func startPolling() {
         refresh()
-        timer = Timer.scheduledTimer(withTimeInterval: max(0.5, prefs.preferences.fanControlUpdateInterval), repeats: true) { _ in
+        timer?.invalidate()
+        timer = Timer.scheduledTimer(withTimeInterval: FanRefreshPolicy.normalized(prefs.preferences.fanControlUpdateInterval), repeats: true) { _ in
             refresh()
         }
     }
@@ -268,9 +280,11 @@ struct FanControlDashboardWidgetContent: View {
     }
 
     private func refresh() {
+        guard refreshGate.begin() else { return }
         Task.detached(priority: .userInitiated) {
             let newFans = SMCService.shared.readFans()
             await MainActor.run {
+                defer { refreshGate.end() }
                 fans = newFans
                 fanAccessReason = SMCService.shared.fanAccessReason
             }
@@ -305,7 +319,7 @@ struct TaskManagerWidgetContent: View {
                 Image(systemName: "list.bullet.indent")
                     .font(.system(size: 10))
                     .foregroundStyle(.green)
-                Text("Task Manager")
+                Text("widget.task_manager")
                     .font(.system(size: 10, weight: .bold, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.6))
                 Spacer()

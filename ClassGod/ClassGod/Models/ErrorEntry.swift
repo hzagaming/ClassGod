@@ -14,6 +14,16 @@ enum ErrorSeverity: String, CaseIterable, Codable {
     case medium = "Medium"
     case low = "Low"
     case info = "Info"
+
+    var displayName: String {
+        switch self {
+        case .critical: return String(localized: "error.severity.critical")
+        case .high: return String(localized: "error.severity.high")
+        case .medium: return String(localized: "error.severity.medium")
+        case .low: return String(localized: "error.severity.low")
+        case .info: return String(localized: "error.severity.info")
+        }
+    }
     
     var colorHex: String {
         switch self {
@@ -64,6 +74,35 @@ enum ErrorCategory: String, CaseIterable, Codable, Identifiable {
     case general = "General"
     
     var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .all: return String(localized: "error.category.all")
+        case .swiftCompile: return String(localized: "error.category.swift_compile")
+        case .swiftRuntime: return String(localized: "error.category.swift_runtime")
+        case .swiftUI: return "SwiftUI"
+        case .appKit: return "AppKit / macOS"
+        case .xcodeBuild: return String(localized: "error.category.xcode_build")
+        case .network: return String(localized: "error.category.network")
+        case .fileSystem: return String(localized: "error.category.file_system")
+        case .permissions: return String(localized: "error.category.permissions")
+        case .memory: return String(localized: "error.category.memory")
+        case .concurrency: return String(localized: "error.category.concurrency")
+        case .coreData: return "Core Data"
+        case .codeSigning: return String(localized: "error.category.code_signing")
+        case .widgetKit: return "WidgetKit"
+        case .combine: return "Combine"
+        case .metal: return "Metal / GPU"
+        case .security: return String(localized: "error.category.security")
+        case .notification: return String(localized: "error.category.notifications")
+        case .audioVideo: return String(localized: "error.category.audio_video")
+        case .accessibility: return String(localized: "permission.type.accessibility.title")
+        case .localization: return String(localized: "error.category.localization")
+        case .testing: return String(localized: "error.category.testing")
+        case .packageManager: return String(localized: "error.category.packages")
+        case .general: return String(localized: "error.category.general")
+        }
+    }
     
     var icon: String {
         switch self {

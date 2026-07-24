@@ -69,10 +69,10 @@ struct ActivityMonitorView: View {
                 .foregroundStyle(.cyan)
             
             VStack(alignment: .leading, spacing: 0) {
-                Text("Activity Monitor")
+                Text("activity.title")
                     .font(.system(size: 14 * zoomScale, weight: .bold, design: .monospaced))
                     .foregroundStyle(.white)
-                Text("System processes & resource usage")
+                Text("activity.subtitle")
                     .font(.system(size: 8 * zoomScale, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.4))
             }
@@ -159,7 +159,7 @@ struct ActivityMonitorView: View {
             HStack(spacing: 4 * zoomScale) {
                 Image(systemName: tab.iconName)
                     .font(.system(size: 10 * zoomScale))
-                Text(tab.rawValue)
+                Text(tab.displayName)
                     .font(.system(size: 10 * zoomScale, weight: selected ? .bold : .medium, design: .monospaced))
             }
             .foregroundStyle(selected ? .black : .white.opacity(0.7))

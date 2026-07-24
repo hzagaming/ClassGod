@@ -44,6 +44,8 @@ struct SettingsToggleRow: View {
             Toggle("", isOn: $isOn)
                 .toggleStyle(.switch)
                 .controlSize(.small)
+                .labelsHidden()
+                .accessibilityLabel(title)
         }
         .padding(.horizontal, 10 * zoomScale)
         .padding(.vertical, 8 * zoomScale)
@@ -127,6 +129,8 @@ struct SettingsSliderRow: View {
 
             Slider(value: $value, in: range, step: step)
                 .frame(height: 16 * zoomScale)
+                .accessibilityLabel(label)
+                .accessibilityValue(Text(verbatim: displayFormatter(value)))
 
             Text(displayFormatter(value))
                 .font(.system(size: 11 * zoomScale, design: .monospaced))
@@ -189,6 +193,7 @@ struct SettingsPickerRow<T: Hashable>: View {
                 }
                 .pickerStyle(.segmented)
                 .labelsHidden()
+                .accessibilityLabel(label)
 
             case .radio:
                 Picker("", selection: $selection) {
@@ -198,6 +203,7 @@ struct SettingsPickerRow<T: Hashable>: View {
                 }
                 .pickerStyle(.radioGroup)
                 .labelsHidden()
+                .accessibilityLabel(label)
 
             case .menu:
                 Picker("", selection: $selection) {
@@ -207,6 +213,7 @@ struct SettingsPickerRow<T: Hashable>: View {
                 }
                 .pickerStyle(.menu)
                 .labelsHidden()
+                .accessibilityLabel(label)
             }
         }
         .padding(.horizontal, 10 * zoomScale)

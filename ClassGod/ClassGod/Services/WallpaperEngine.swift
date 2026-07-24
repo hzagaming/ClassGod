@@ -91,12 +91,17 @@ final class WallpaperEngine: ObservableObject {
     }
     
     func removeWallpaper(_ item: WallpaperItem) {
+        let removedCurrent = currentWallpaper?.id == item.id
         playlist.removeAll { $0.id == item.id }
         deleteWallpaperFileIfManaged(path: item.filePath)
-        if currentWallpaper?.id == item.id {
-            currentWallpaper = playlist.first
-            if let next = currentWallpaper {
+        if removedCurrent {
+            currentWallpaper = nil
+            if let next = playlist.first {
                 selectWallpaper(next)
+            } else {
+                isEnabled = false
+                saveSettings()
+                NotificationCenter.default.post(name: .wallpaperStateDidChange, object: nil)
             }
         }
         savePlaylist()
@@ -138,6 +143,8 @@ final class WallpaperEngine: ObservableObject {
             } else {
                 currentWallpaper = nil
                 isEnabled = false
+                saveSettings()
+                NotificationCenter.default.post(name: .wallpaperStateDidChange, object: nil)
             }
             return
         }
@@ -145,6 +152,7 @@ final class WallpaperEngine: ObservableObject {
         currentWallpaper = item
         isEnabled = true
         saveSettings()
+        NotificationCenter.default.post(name: .wallpaperStateDidChange, object: nil)
     }
     
     func toggleEnabled() {
@@ -154,9 +162,12 @@ final class WallpaperEngine: ObservableObject {
                 selectWallpaper(current)
             } else if let first = playlist.first {
                 selectWallpaper(first)
+            } else {
+                isEnabled = false
             }
         }
         saveSettings()
+        NotificationCenter.default.post(name: .wallpaperStateDidChange, object: nil)
     }
     
     func toggleShowOnDesktop() {
@@ -167,9 +178,12 @@ final class WallpaperEngine: ObservableObject {
                 selectWallpaper(current)
             } else if let first = playlist.first {
                 selectWallpaper(first)
+            } else {
+                isEnabled = false
             }
         }
         saveSettings()
+        NotificationCenter.default.post(name: .wallpaperStateDidChange, object: nil)
     }
     
     func togglePlayPause() {
@@ -188,6 +202,13 @@ final class WallpaperEngine: ObservableObject {
         volume = max(0, min(1, value))
         saveSettings()
         NotificationCenter.default.post(name: .wallpaperStateDidChange, object: nil)
+    }
+
+    func cyclePlaybackMode() {
+        let modes = WallpaperPlaybackMode.allCases
+        guard let index = modes.firstIndex(of: playbackMode) else { return }
+        playbackMode = modes[(index + 1) % modes.count]
+        saveSettings()
     }
     
     func nextWallpaper() {
@@ -271,12 +292,16 @@ final class WallpaperEngine: ObservableObject {
             let settings = try decoder.decode(WallpaperSettings.self, from: data)
             isEnabled = settings.isEnabled
             showOnDesktop = settings.showOnDesktop
+            isPlaying = settings.isPlaying
             isMuted = settings.isMuted
             playbackMode = settings.playbackMode
-            volume = settings.volume
+            volume = max(0, min(1, settings.volume))
             if let currentId = settings.currentWallpaperId,
                let item = playlist.first(where: { $0.id == currentId }) {
                 currentWallpaper = item
+            } else if isEnabled {
+                currentWallpaper = playlist.first
+                isEnabled = currentWallpaper != nil
             }
         } catch {
             print("[WallpaperEngine] Failed to load settings: \(error)")
@@ -287,6 +312,7 @@ final class WallpaperEngine: ObservableObject {
         let settings = WallpaperSettings(
             isEnabled: isEnabled,
             showOnDesktop: showOnDesktop,
+            isPlaying: isPlaying,
             isMuted: isMuted,
             playbackMode: playbackMode,
             volume: volume,
@@ -303,11 +329,41 @@ final class WallpaperEngine: ObservableObject {
 
 // MARK: - Settings Codable
 
-private struct WallpaperSettings: Codable {
+struct WallpaperSettings: Codable {
     var isEnabled: Bool
     var showOnDesktop: Bool
+    var isPlaying: Bool
     var isMuted: Bool
     var playbackMode: WallpaperPlaybackMode
     var volume: Double
     var currentWallpaperId: UUID?
+
+    init(
+        isEnabled: Bool,
+        showOnDesktop: Bool,
+        isPlaying: Bool,
+        isMuted: Bool,
+        playbackMode: WallpaperPlaybackMode,
+        volume: Double,
+        currentWallpaperId: UUID?
+    ) {
+        self.isEnabled = isEnabled
+        self.showOnDesktop = showOnDesktop
+        self.isPlaying = isPlaying
+        self.isMuted = isMuted
+        self.playbackMode = playbackMode
+        self.volume = volume
+        self.currentWallpaperId = currentWallpaperId
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        isEnabled = try container.decode(Bool.self, forKey: .isEnabled)
+        showOnDesktop = try container.decode(Bool.self, forKey: .showOnDesktop)
+        isPlaying = try container.decodeIfPresent(Bool.self, forKey: .isPlaying) ?? true
+        isMuted = try container.decode(Bool.self, forKey: .isMuted)
+        playbackMode = try container.decode(WallpaperPlaybackMode.self, forKey: .playbackMode)
+        volume = try container.decode(Double.self, forKey: .volume)
+        currentWallpaperId = try container.decodeIfPresent(UUID.self, forKey: .currentWallpaperId)
+    }
 }

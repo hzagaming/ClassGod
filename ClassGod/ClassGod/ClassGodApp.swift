@@ -1333,6 +1333,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         } else {
             window.makeKeyAndOrderFront(nil)
         }
+        NotificationCenter.default.post(name: .permissionCenterWindowDidShow, object: nil)
     }
 
     func hidePermissionCenterWindow() {
@@ -1730,6 +1731,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     // MARK: - Status Item
     private var statusItemTimer: Timer?
     private var statusItemUpdateTask: Task<Void, Never>?
+    private var statusItemRefreshGate = FanRefreshGate()
 
     private func setupStatusItem() {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
@@ -1750,7 +1752,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let prefs = PreferencesManager.shared.preferences
         guard prefs.enableFanControl, prefs.fanControlShowInMenuBar else { return }
 
-        let interval = max(0.5, prefs.fanControlUpdateInterval)
+        let interval = FanRefreshPolicy.normalized(prefs.fanControlUpdateInterval)
         statusItemTimer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
             self?.updateStatusItemIcon()
         }
@@ -1787,22 +1789,25 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         statusItem?.button?.imagePosition = .imageLeading
 
         if prefs.enableFanControl, prefs.fanControlShowInMenuBar {
-            // Read fan/temp data off the main thread so the menu bar stays responsive.
-            // Cancel any previous update to avoid pile-up when the interval is very short.
-            statusItemUpdateTask?.cancel()
-            statusItemUpdateTask = Task.detached(priority: .userInitiated) { [weak self] in
-                guard let self else { return }
-                let all = SMCService.shared.readAll()
-                // Only use real hardware sensors for the menu-bar summary; estimates would be misleading.
-                let realTemps = all.sensors.filter { !$0.isEstimated }
-                let highestTemp = realTemps.map(\.value).max() ?? 0
-                let avgRPM = all.fans.isEmpty ? 0 : all.fans.map(\.actualRPM).reduce(0, +) / Double(all.fans.count)
-                let unit = prefs.fanControlTemperatureUnit
-                let tempStr = unit.formatted(highestTemp)
-                let rpmStr = "\(Int(avgRPM)) RPM"
-                let title = " \(tempStr) / \(rpmStr)"
-                await MainActor.run {
-                    self.statusItem?.button?.title = title
+            // Read fan/temp data off the main thread and coalesce overlapping ticks.
+            if statusItemRefreshGate.begin() {
+                statusItemUpdateTask = Task.detached(priority: .userInitiated) { [weak self] in
+                    guard let self else { return }
+                    let all = SMCService.shared.readAll()
+                    // Only use real hardware sensors for the menu-bar summary; estimates would be misleading.
+                    let realTemps = all.sensors.filter { !$0.isEstimated }
+                    let highestTemp = realTemps.map(\.value).max() ?? 0
+                    let avgRPM = all.fans.isEmpty ? 0 : all.fans.map(\.actualRPM).reduce(0, +) / Double(all.fans.count)
+                    let unit = prefs.fanControlTemperatureUnit
+                    let tempStr = realTemps.isEmpty ? "--" : unit.formatted(highestTemp)
+                    let rpmStr = all.fans.isEmpty ? "-- RPM" : "\(Int(avgRPM)) RPM"
+                    let title = " \(tempStr) / \(rpmStr)"
+                    await MainActor.run {
+                        defer { self.statusItemRefreshGate.end() }
+                        let current = PreferencesManager.shared.preferences
+                        guard current.enableFanControl, current.fanControlShowInMenuBar else { return }
+                        self.statusItem?.button?.title = title
+                    }
                 }
             }
         } else if showBadge && count > 0 {

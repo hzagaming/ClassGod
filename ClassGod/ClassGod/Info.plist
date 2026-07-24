@@ -6,14 +6,24 @@
     <string>ClassGod 需要控制 Safari、Chrome 和 Edge 来探测和切换浏览器标签。</string>
     <key>NSAccessibilityUsageDescription</key>
     <string>ClassGod 需要 Accessibility 权限来探测最前面的浏览器并切换到指定标签。</string>
+    <key>NSCalendarsFullAccessUsageDescription</key>
+    <string>ClassGod 可按用户选择访问日历，用于课程表集成。</string>
+    <key>NSLocalNetworkUsageDescription</key>
+    <string>ClassGod 可按用户选择发现本地网络设备，用于网络相关功能。</string>
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>ClassGod 需要照片权限以选择壁纸和其他图像内容。</string>
+    <key>NSRemindersFullAccessUsageDescription</key>
+    <string>ClassGod 可按用户选择访问提醒事项，用于任务集成。</string>
+    <key>NSSpeechRecognitionUsageDescription</key>
+    <string>ClassGod 可按用户选择使用语音识别，用于语音转文字功能。</string>
     <key>CFBundleIdentifier</key>
     <string>com.hanazar.classgod</string>
     <key>CFBundleName</key>
     <string>ClassGod</string>
     <key>CFBundleShortVersionString</key>
-    <string>1.5.10</string>
+	<string>1.5.11</string>
     <key>CFBundleVersion</key>
-    <string>35</string>
+	<string>36</string>
     <key>NSQuitAlwaysKeepsWindows</key>
     <false/>
 </dict>

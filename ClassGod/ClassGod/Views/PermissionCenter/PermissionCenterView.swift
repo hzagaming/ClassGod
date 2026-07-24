@@ -29,7 +29,11 @@ struct PermissionCenterView: View {
     }
     
     private var totalCount: Int {
-        PermissionType.allCases.count
+        PermissionType.allCases.filter { !$0.requiresManualReview }.count
+    }
+
+    private var manualCount: Int {
+        PermissionType.allCases.filter(\.requiresManualReview).count
     }
     
     var body: some View {
@@ -45,6 +49,12 @@ struct PermissionCenterView: View {
             }
         }
         .onAppear {
+            service.refreshAll()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .permissionCenterWindowDidShow)) { _ in
+            service.refreshAll()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
             service.refreshAll()
         }
         .sheet(isPresented: $showingOnboarding) {
@@ -76,10 +86,10 @@ struct PermissionCenterView: View {
                 .foregroundStyle(.green)
             
             VStack(alignment: .leading, spacing: 0) {
-                Text("Permission Center")
+                Text("permission.center.title")
                     .font(.system(size: 14 * zoomScale, weight: .bold, design: .monospaced))
                     .foregroundStyle(.white)
-                Text("Control what ClassGod can access on your Mac")
+                Text("permission.center.subtitle")
                     .font(.system(size: 8 * zoomScale, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.4))
             }
@@ -93,7 +103,7 @@ struct PermissionCenterView: View {
                 HStack(spacing: 4 * zoomScale) {
                     Image(systemName: "person.badge.key.fill")
                         .font(.system(size: 9 * zoomScale))
-                    Text("First-Time Setup")
+                    Text("permission.first_time_setup")
                         .font(.system(size: 9 * zoomScale, weight: .medium, design: .monospaced))
                 }
                 .foregroundStyle(.black)
@@ -119,11 +129,11 @@ struct PermissionCenterView: View {
     private var progressBar: some View {
         VStack(spacing: 4 * zoomScale) {
             HStack {
-                Text("Permission Status")
+                Text("permission.status")
                     .font(.system(size: 9 * zoomScale, weight: .bold, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.5))
                 Spacer()
-                Text("\(grantedCount)/\(totalCount) granted")
+                Text(String(format: String(localized: "permission.progress_format"), grantedCount, totalCount, manualCount))
                     .font(.system(size: 9 * zoomScale, weight: .bold, design: .monospaced))
                     .foregroundStyle(progressColor)
             }
@@ -233,16 +243,18 @@ struct PermissionCenterView: View {
     private func permissionCard(_ item: PermissionItemInfo) -> some View {
         let status = service.statuses[item.type]
         let granted = status?.isGranted ?? false
+        let manual = item.requiresManualReview
+        let statusColor: Color = granted ? .green : (manual ? .cyan : .orange)
         
         return HStack(spacing: 10 * zoomScale) {
             // Icon
             ZStack {
                 Circle()
-                    .fill(granted ? Color.green.opacity(0.12) : Color.orange.opacity(0.12))
+                    .fill(statusColor.opacity(0.12))
                     .frame(width: 34 * zoomScale, height: 34 * zoomScale)
                 Image(systemName: item.type.iconName)
                     .font(.system(size: 14 * zoomScale))
-                    .foregroundStyle(granted ? .green : .orange)
+                    .foregroundStyle(statusColor)
             }
             
             // Info
@@ -271,17 +283,21 @@ struct PermissionCenterView: View {
             VStack(alignment: .trailing, spacing: 4 * zoomScale) {
                 HStack(spacing: 3 * zoomScale) {
                     Circle()
-                        .fill(granted ? Color.green : Color.orange)
+                        .fill(statusColor)
                         .frame(width: 6 * zoomScale, height: 6 * zoomScale)
-                    Text(granted ? String(localized: "permission.granted") : String(localized: "permission.required"))
+                    Text(statusTitle(granted: granted, manual: manual))
                         .font(.system(size: 9 * zoomScale, weight: .bold, design: .monospaced))
-                        .foregroundStyle(granted ? .green : .orange)
+                        .foregroundStyle(statusColor)
                 }
                 
                 Button(action: {
                     SoundEffectManager.shared.playButtonClick()
                     HapticManager.shared.generic()
-                    service.requestPermission(item.type)
+                    if granted {
+                        service.refreshAll()
+                    } else {
+                        service.requestPermission(item.type)
+                    }
                 }) {
                     Text(buttonTitle(for: item, granted: granted))
                         .font(.system(size: 8 * zoomScale, weight: .bold, design: .monospaced))
@@ -299,7 +315,7 @@ struct PermissionCenterView: View {
         .background(Color(white: 0.05))
         .overlay(
             RoundedRectangle(cornerRadius: 8 * zoomScale)
-                .stroke(granted ? Color.green.opacity(0.2) : Color.white.opacity(0.06), lineWidth: 1 * zoomScale)
+                .stroke(statusColor.opacity(granted ? 0.2 : 0.1), lineWidth: 1 * zoomScale)
         )
         .clipShape(RoundedRectangle(cornerRadius: 8 * zoomScale))
     }
@@ -309,6 +325,12 @@ struct PermissionCenterView: View {
             return item.canPrompt ? String(localized: "permission.recheck") : String(localized: "permission.open_settings")
         }
         return item.canPrompt ? String(localized: "permission.allow") : String(localized: "permission.open_settings")
+    }
+
+    private func statusTitle(granted: Bool, manual: Bool) -> String {
+        if granted { return String(localized: "permission.granted") }
+        if manual { return String(localized: "permission.manual_review") }
+        return String(localized: "permission.required")
     }
     
     // MARK: - Bottom Bar
@@ -365,12 +387,13 @@ struct PermissionOnboardingView: View {
     @ObservedObject var service: PermissionCenterService
     @ObservedObject private var prefs = PreferencesManager.shared
     @State private var step = 0
+    @State private var setupPermissions: [PermissionItemInfo] = []
     var onComplete: () -> Void
     
     private var zoomScale: CGFloat { CGFloat(prefs.preferences.windowZoomScale) }
     
     private var pendingPermissions: [PermissionItemInfo] {
-        service.allPermissions.filter { service.statuses[$0.type]?.isGranted != true }
+        setupPermissions
     }
     
     var body: some View {
@@ -479,6 +502,12 @@ struct PermissionOnboardingView: View {
             .padding(20 * zoomScale)
         }
         .frame(minWidth: 420 * zoomScale, minHeight: 320 * zoomScale)
+        .onAppear {
+            setupPermissions = service.allPermissions.filter {
+                $0.type.isRecommendedForSetup && service.statuses[$0.type]?.isGranted != true
+            }
+            step = 0
+        }
     }
     
     private func onboardingStep(_ item: PermissionItemInfo, index: Int, total: Int) -> some View {

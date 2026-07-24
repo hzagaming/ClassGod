@@ -6,17 +6,18 @@
 //
 
 import SwiftUI
+import AppKit
 
 // MARK: - Animation Helper
 
 enum Anim {
     static var enabled: Bool {
-        !PreferencesManager.shared.preferences.useInstantAnimations && PreferencesManager.shared.preferences.animationSpeed.isEnabled
+        duration > 0
     }
     
     static var duration: Double {
         let prefs = PreferencesManager.shared.preferences
-        if prefs.useInstantAnimations { return 0 }
+        if prefs.useInstantAnimations || NSWorkspace.shared.accessibilityDisplayShouldReduceMotion { return 0 }
         return prefs.animationSpeed.duration
     }
     
@@ -61,7 +62,7 @@ struct BounceModifier: ViewModifier {
                 withAnimation(.easeOut(duration: dur * 2)) {
                     scale = intensity
                 }
-                DispatchQueue.main.asyncAfter(deadline: .now() + dur) {
+                DispatchQueue.main.asyncAfter(deadline: .now() + dur * 2) {
                     guard dur > 0 else { return }
                     withAnimation(.easeOut(duration: dur * 2)) {
                         scale = 1.0
@@ -108,6 +109,11 @@ struct ShakeModifier: ViewModifier {
                         offset = 0
                     }
                 }
+            }
+            .onDisappear {
+                for item in workItems { item.cancel() }
+                workItems.removeAll()
+                offset = 0
             }
     }
 }

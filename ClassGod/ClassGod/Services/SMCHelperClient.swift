@@ -58,6 +58,11 @@ nonisolated final class SMCHelperClient: @unchecked Sendable {
         return res?["success"] as? Bool == true
     }
 
+    func rescan() {
+        guard isHelperAvailable else { return }
+        _ = sendCommand(["cmd": "rescan"])
+    }
+
     func disconnect() {
         lock.lock()
         defer { lock.unlock() }
@@ -82,10 +87,7 @@ nonisolated final class SMCHelperClient: @unchecked Sendable {
         payload.append(contentsOf: withUnsafeBytes(of: &header) { Array($0) })
         payload.append(request)
 
-        let sent = payload.withUnsafeBytes { ptr in
-            send(fd, ptr.baseAddress, payload.count, 0)
-        }
-        guard sent == payload.count else {
+        guard sendAll(fd: fd, data: payload) else {
             disconnectLocked()
             return nil
         }
@@ -130,8 +132,10 @@ nonisolated final class SMCHelperClient: @unchecked Sendable {
 
         // Short timeout so a dead helper fails fast instead of blocking the UI.
         var tv = timeval(tv_sec: 1, tv_usec: 0)
+        var noSigPipe: Int32 = 1
         setsockopt(newFd, SOL_SOCKET, SO_RCVTIMEO, &tv, socklen_t(MemoryLayout<timeval>.size))
         setsockopt(newFd, SOL_SOCKET, SO_SNDTIMEO, &tv, socklen_t(MemoryLayout<timeval>.size))
+        setsockopt(newFd, SOL_SOCKET, SO_NOSIGPIPE, &noSigPipe, socklen_t(MemoryLayout<Int32>.size))
 
         fd = newFd
         return true
@@ -141,6 +145,20 @@ nonisolated final class SMCHelperClient: @unchecked Sendable {
         if fd >= 0 {
             close(fd)
             fd = -1
+        }
+    }
+
+    private func sendAll(fd: Int32, data: Data) -> Bool {
+        data.withUnsafeBytes { bytes in
+            guard let baseAddress = bytes.baseAddress else { return false }
+            var offset = 0
+            while offset < bytes.count {
+                let sent = send(fd, baseAddress.advanced(by: offset), bytes.count - offset, 0)
+                if sent < 0, errno == EINTR { continue }
+                guard sent > 0 else { return false }
+                offset += sent
+            }
+            return true
         }
     }
 

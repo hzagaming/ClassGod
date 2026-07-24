@@ -12,7 +12,8 @@ let package = Package(
             ]
         ),
         .testTarget(
-            name: "ClassGodHelperTests"
+            name: "ClassGodHelperTests",
+            dependencies: ["ClassGodHelper"]
         )
     ]
 )

@@ -71,8 +71,7 @@ final class SoundEffectManager {
         PreferencesManager.shared.preferences.enableSoundEffects
     }
 
-    private let audioQueue = DispatchQueue(label: "com.hanazar.classgod.sfx", qos: .userInitiated)
-    nonisolated(unsafe) private var sounds: [String: NSSound] = [:]
+    private var sounds: [String: NSSound] = [:]
     
     private init() {}
 
@@ -82,12 +81,6 @@ final class SoundEffectManager {
     }
 
     private func playSound(named name: String) {
-        audioQueue.async { [weak self] in
-            self?.playSoundOnAudioQueue(named: name)
-        }
-    }
-
-    nonisolated private func playSoundOnAudioQueue(named name: String) {
         let sound: NSSound
         if let cached = sounds[name] {
             sound = cached
@@ -102,7 +95,7 @@ final class SoundEffectManager {
         sound.play()
     }
 
-    nonisolated private func makeToneData(named name: String) -> Data {
+    private func makeToneData(named name: String) -> Data {
         let parameters: (frequency: Double, duration: Double) = switch name {
         case "Basso":     (220, 0.14)
         case "Blow":      (170, 0.10)
@@ -151,7 +144,7 @@ final class SoundEffectManager {
         return data
     }
 
-    nonisolated private func appendLittleEndian<T: FixedWidthInteger>(_ value: T, to data: inout Data) {
+    private func appendLittleEndian<T: FixedWidthInteger>(_ value: T, to data: inout Data) {
         var littleEndian = value.littleEndian
         withUnsafeBytes(of: &littleEndian) { bytes in
             data.append(contentsOf: bytes)

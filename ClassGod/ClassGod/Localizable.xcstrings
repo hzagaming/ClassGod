@@ -1036,7 +1036,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "能耗值以 proc_pid_rusage 返回的纳焦耳为单位显示"
+            "value" : "Energy values are shown in nanojoules from proc_pid_rusage"
           }
         },
         "zh-Hans" : {
@@ -1052,7 +1052,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "强制退出"
+            "value" : "Force Quit"
           }
         },
         "zh-Hans" : {
@@ -1068,7 +1068,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "内存压力"
+            "value" : "Memory Pressure"
           }
         },
         "zh-Hans" : {
@@ -1084,7 +1084,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "通过 nettop 实时获取的每进程网络数据"
+            "value" : "Real-time per-process network data from nettop"
           }
         },
         "zh-Hans" : {
@@ -1100,7 +1100,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "未检测到电池"
+            "value" : "No battery detected"
           }
         },
         "zh-Hans" : {
@@ -1116,7 +1116,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "进程可见性受限。要查看所有系统进程，请在 系统设置 > 隐私与安全性 中为 ClassGod 授予完全磁盘访问权限。"
+            "value" : "Process visibility is limited. To see all system processes, grant ClassGod Full Disk Access in System Settings > Privacy & Security."
           }
         },
         "zh-Hans" : {
@@ -1132,7 +1132,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "%1$lld 个进程"
+            "value" : "%1$lld processes"
           }
         },
         "zh-Hans" : {
@@ -1148,7 +1148,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "退出"
+            "value" : "Quit"
           }
         },
         "zh-Hans" : {
@@ -1164,7 +1164,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "搜索"
+            "value" : "Search"
           }
         },
         "zh-Hans" : {
@@ -1180,7 +1180,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "系统进程 – 无法终止"
+            "value" : "System process – cannot terminate"
           }
         },
         "zh-Hans" : {
@@ -1191,6 +1191,13 @@
         }
       }
     },
+    "activity.subtitle" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "System processes and resource usage" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "系统进程与资源使用情况" } } } },
+    "activity.tab.cpu" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "CPU" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "CPU" } } } },
+    "activity.tab.disk" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Disk" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "磁盘" } } } },
+    "activity.tab.energy" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Energy" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "能耗" } } } },
+    "activity.tab.memory" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Memory" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "内存" } } } },
+    "activity.tab.network" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Network" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "网络" } } } },
+    "activity.title" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Activity Monitor" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "活动监视器" } } } },
     "alert.error" : {
       "localizations" : {
         "en" : {
@@ -2300,7 +2307,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "附加信息"
+            "value" : "Additional Information"
           }
         },
         "zh-Hans" : {
@@ -2316,7 +2323,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "又名:"
+            "value" : "Also known as:"
           }
         },
         "zh-Hans" : {
@@ -2332,7 +2339,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "未找到应用: %@"
+            "value" : "App not found: %@"
           }
         },
         "zh-Hans" : {
@@ -2348,7 +2355,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Apple 文档:"
+            "value" : "Apple Documentation:"
           }
         },
         "zh-Hans" : {
@@ -2364,7 +2371,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "代码示例"
+            "value" : "Code Examples"
           }
         },
         "zh-Hans" : {
@@ -2380,7 +2387,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "已复制!"
+            "value" : "Copied!"
           }
         },
         "zh-Hans" : {
@@ -2396,7 +2403,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "复制修复"
+            "value" : "Copy Fix"
           }
         },
         "zh-Hans" : {
@@ -2412,7 +2419,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "描述"
+            "value" : "Description"
           }
         },
         "zh-Hans" : {
@@ -2428,7 +2435,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "修复后代码"
+            "value" : "Fixed Code"
           }
         },
         "zh-Hans" : {
@@ -2444,7 +2451,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "没有记录相关错误。"
+            "value" : "No related errors documented."
           }
         },
         "zh-Hans" : {
@@ -2460,7 +2467,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "在百科中打开"
+            "value" : "Open in Encyclopedia"
           }
         },
         "zh-Hans" : {
@@ -2476,7 +2483,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "问题代码"
+            "value" : "Problematic Code"
           }
         },
         "zh-Hans" : {
@@ -2492,7 +2499,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "相关错误"
+            "value" : "Related Errors"
           }
         },
         "zh-Hans" : {
@@ -2508,7 +2515,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "根本原因"
+            "value" : "Root Cause"
           }
         },
         "zh-Hans" : {
@@ -2524,7 +2531,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "解决方案 (%1$lld)"
+            "value" : "Solutions (%1$lld)"
           }
         },
         "zh-Hans" : {
@@ -2535,12 +2542,78 @@
         }
       }
     },
+    "fan.access.apple_silicon_restricted" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Apple Silicon restricts fan access to system processes. Run ClassGodHelper as root to enable full fan monitoring and control." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Apple Silicon 会限制用户进程访问风扇。请以 root 运行 ClassGodHelper，以启用完整的风扇监测与控制。" } }
+      }
+    },
+    "fan.access.helper_no_data" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "The Helper socket is available but returned no hardware data. Restart ClassGodHelper, then rescan." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Helper 套接字可用，但未返回硬件数据。请重启 ClassGodHelper 后重新扫描。" } }
+      }
+    },
+    "fan.access.helper_present" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "The privileged Helper is connected. If hardware still shows N/A, restart the Helper and rescan." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "特权 Helper 已连接。如果硬件仍显示 N/A，请重启 Helper 并重新扫描。" } }
+      }
+    },
+    "fan.access.no_fans" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "SMC is connected but reported no controllable fans. This Mac may be fanless." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "SMC 已连接，但未报告可控制的风扇。这台 Mac 可能是无风扇机型。" } }
+      }
+    },
+    "fan.access.smc_unavailable" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Could not connect to SMC. Confirm that App Sandbox is disabled, then rescan." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "无法连接 SMC。请确认 App Sandbox 已关闭，然后重新扫描。" } }
+      }
+    },
+    "button.retry" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Retry" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "重试" } } } },
+    "error.category.all" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "All Errors" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "全部错误" } } } },
+    "error.category.audio_video" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Audio / Video" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "音频 / 视频" } } } },
+    "error.category.code_signing" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Code Signing" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "代码签名" } } } },
+    "error.category.concurrency" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Concurrency / Thread" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "并发 / 线程" } } } },
+    "error.category.file_system" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "File System" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "文件系统" } } } },
+    "error.category.general" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "General" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "通用" } } } },
+    "error.category.localization" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Localization" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "本地化" } } } },
+    "error.category.memory" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Memory" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "内存" } } } },
+    "error.category.network" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Network / URL" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "网络 / URL" } } } },
+    "error.category.notifications" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Notifications" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "通知" } } } },
+    "error.category.packages" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "SPM / Packages" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "SPM / 软件包" } } } },
+    "error.category.permissions" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Permissions / Sandbox" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "权限 / 沙盒" } } } },
+    "error.category.security" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Security / Keychain" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "安全 / 钥匙串" } } } },
+    "error.category.swift_compile" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Swift Compile" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Swift 编译" } } } },
+    "error.category.swift_runtime" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Swift Runtime" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Swift 运行时" } } } },
+    "error.category.testing" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Testing / XCTest" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "测试 / XCTest" } } } },
+    "error.category.xcode_build" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Xcode Build" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Xcode 构建" } } } },
+    "error.code_label" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "ERROR CODE:" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "错误代码：" } } } },
+    "error.common_in" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Common in:" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "常见于：" } } } },
+    "error.detail_title" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Error Detail" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "错误详情" } } } },
+    "error.documented_count" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "%1$lld errors documented" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已收录 %1$lld 个错误" } } } },
+    "error.hub_title" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Error Encyclopedia" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "错误百科" } } } },
+    "error.load_failed" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Failed to load encyclopedia" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "百科加载失败" } } } },
+    "error.loading" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Loading error encyclopedia..." } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "正在加载错误百科..." } } } },
+    "error.result_count" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "%1$lld errors" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%1$lld 个错误" } } } },
+    "error.search_placeholder" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Search by name, code, or keyword..." } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "按名称、代码或关键词搜索..." } } } },
+    "error.searching" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Searching: \"%1$@\"" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "正在搜索：“%1$@”" } } } },
+    "error.severity.critical" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Critical" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "严重" } } } },
+    "error.severity.high" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "High" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "高" } } } },
+    "error.severity.info" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Info" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "信息" } } } },
+    "error.severity.low" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Low" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "低" } } } },
+    "error.severity.medium" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Medium" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "中" } } } },
+    "error.severity_label" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Severity:" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "严重程度：" } } } },
+    "error.tag_filter" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Tag: #%1$@" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "标签：#%1$@" } } } },
+    "error.tags" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Tags:" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "标签：" } } } },
     "fan.about.elevated" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "在某些 Mac 上，尤其是 Apple Silicon 机型，直接风扇控制可能需要提升权限，甚至可能不可用。"
+            "value" : "On some Macs, especially Apple Silicon models, direct fan control may require elevated privileges and may be unavailable."
           }
         },
         "zh-Hans" : {
@@ -2556,7 +2629,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "如果传感器显示 N/A，则可能是你的设备限制了 SMC 访问。"
+            "value" : "If sensors show N/A, SMC access may be restricted on this device."
           }
         },
         "zh-Hans" : {
@@ -2572,7 +2645,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "风扇控制通过系统管理控制器 (SMC) 读取硬件传感器。"
+            "value" : "Fan Control reads hardware sensors through the System Management Controller (SMC)."
           }
         },
         "zh-Hans" : {
@@ -2588,7 +2661,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "激活: %@"
+            "value" : "Active: %@"
           }
         },
         "zh-Hans" : {
@@ -2604,7 +2677,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "提升"
+            "value" : "Boost"
           }
         },
         "zh-Hans" : {
@@ -2620,7 +2693,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "提升中"
+            "value" : "Boosting"
           }
         },
         "zh-Hans" : {
@@ -2636,7 +2709,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "复制命令"
+            "value" : "Copy Command"
           }
         },
         "zh-Hans" : {
@@ -2647,12 +2720,18 @@
         }
       }
     },
+    "fan.copy_sensor_data" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Copy Sensor Data" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "复制传感器数据" } }
+      }
+    },
     "fan.diagnostic.fans" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "风扇"
+            "value" : "Fans"
           }
         },
         "zh-Hans" : {
@@ -2668,7 +2747,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "风扇工作正常"
+            "value" : "Fans operating normally"
           }
         },
         "zh-Hans" : {
@@ -2684,7 +2763,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "特权 Helper"
+            "value" : "Privileged Helper"
           }
         },
         "zh-Hans" : {
@@ -2700,7 +2779,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "无风扇数据"
+            "value" : "No fan data"
           }
         },
         "zh-Hans" : {
@@ -2716,7 +2795,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "无传感器数据"
+            "value" : "No sensor data"
           }
         },
         "zh-Hans" : {
@@ -2732,7 +2811,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "温度传感器"
+            "value" : "Temperature Sensors"
           }
         },
         "zh-Hans" : {
@@ -2748,7 +2827,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "%1$lld 个传感器活跃"
+            "value" : "%1$lld sensors active"
           }
         },
         "zh-Hans" : {
@@ -2764,7 +2843,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "诊断"
+            "value" : "Diagnostics"
           }
         },
         "zh-Hans" : {
@@ -2775,12 +2854,20 @@
         }
       }
     },
+    "fan.error.helper_exit" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Helper launch was cancelled or failed (exit %1$d)." } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Helper 启动已取消或失败（退出码 %1$d）。" } } } },
+    "fan.error.helper_launch" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Failed to launch Helper: %1$@" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Helper 启动失败：%1$@" } } } },
+    "fan.error.mode_set_failed" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Failed to set fan mode. Elevated privileges may be required." } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "风扇模式设置失败，可能需要提升权限。" } } } },
+    "fan.filter.other" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Other" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "其他" } } } },
+    "fan.manual_override" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Manual" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "手动" } } } },
+    "fan.no_sensor_matches" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "No sensors match \"%1$@\"" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "没有匹配“%1$@”的传感器" } } } },
+    "fan.no_sensors" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "No sensors available" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "没有可用传感器" } } } },
+    "fan.set" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Set" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "设置" } } } },
     "fan.header.summary" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "平均: %1$@ ・ CPU: %2$@ ・ 风扇: %3$lld RPM"
+            "value" : "Average: %1$@ ・ CPU: %2$@ ・ Fans: %3$lld RPM"
           }
         },
         "zh-Hans" : {
@@ -2796,7 +2883,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "最高: %@"
+            "value" : "Highest: %@"
           }
         },
         "zh-Hans" : {
@@ -2812,7 +2899,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "自动最大"
+            "value" : "Auto Max"
           }
         },
         "zh-Hans" : {
@@ -2828,7 +2915,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "自定义"
+            "value" : "Custom"
           }
         },
         "zh-Hans" : {
@@ -2844,7 +2931,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "手动"
+            "value" : "Manual"
           }
         },
         "zh-Hans" : {
@@ -2860,7 +2947,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "最大"
+            "value" : "Maximum"
           }
         },
         "zh-Hans" : {
@@ -2876,7 +2963,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "系统"
+            "value" : "System"
           }
         },
         "zh-Hans" : {
@@ -2887,12 +2974,30 @@
         }
       }
     },
+    "fan.no_fans" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No fans detected" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "未检测到风扇" } }
+      }
+    },
+    "fan.no_thermal_data" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No thermal data" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "暂无温度数据" } }
+      }
+    },
+    "fan.rescan" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Rescan" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "重新扫描" } }
+      }
+    },
     "fan.sensor_fan_count" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "%1$lld 个传感器 · %2$lld 个风扇"
+            "value" : "%1$lld sensors · %2$lld fans"
           }
         },
         "zh-Hans" : {
@@ -2908,7 +3013,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "启动 Helper"
+            "value" : "Start Helper"
           }
         },
         "zh-Hans" : {
@@ -2924,7 +3029,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "温度"
+            "value" : "Temperatures"
           }
         },
         "zh-Hans" : {
@@ -2935,12 +3040,24 @@
         }
       }
     },
+    "fan.thermal_sensors" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Thermal Sensors" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "温度传感器" } }
+      }
+    },
+    "fan.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Fan Control" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "风扇控制" } }
+      }
+    },
     "fan.toast.boost_active" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "提升已激活 %lld 秒"
+            "value" : "Boost active for %lld seconds"
           }
         },
         "zh-Hans" : {
@@ -2956,7 +3073,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "提升结束 — 已恢复 %@"
+            "value" : "Boost ended — restored %@"
           }
         },
         "zh-Hans" : {
@@ -2972,7 +3089,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Helper 命令已复制"
+            "value" : "Helper command copied"
           }
         },
         "zh-Hans" : {
@@ -2988,7 +3105,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Helper 已启动，3 秒后重新扫描..."
+            "value" : "Helper launched. Rescanning in 3 seconds..."
           }
         },
         "zh-Hans" : {
@@ -3004,7 +3121,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "最高温度已重置"
+            "value" : "Maximum temperatures reset"
           }
         },
         "zh-Hans" : {
@@ -3020,7 +3137,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "风扇模式已设为 %@"
+            "value" : "Fan mode set to %@"
           }
         },
         "zh-Hans" : {
@@ -3036,7 +3153,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "硬件重新扫描完成"
+            "value" : "Hardware rescan complete"
           }
         },
         "zh-Hans" : {
@@ -3052,7 +3169,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "传感器数据已复制到剪贴板"
+            "value" : "Sensor data copied to the clipboard"
           }
         },
         "zh-Hans" : {
@@ -3623,12 +3740,36 @@
         }
       }
     },
+    "permission.center.subtitle" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Control what ClassGod can access on your Mac" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "管理 ClassGod 可访问的 Mac 权限" } }
+      }
+    },
+    "permission.center.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Permission Center" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "权限中心" } }
+      }
+    },
+    "permission.first_time_setup" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "First-Time Setup" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "首次设置" } }
+      }
+    },
+    "permission.status" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Permission Status" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "权限状态" } }
+      }
+    },
     "permission.all_set" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "全部完成"
+            "value" : "All Set"
           }
         },
         "zh-Hans" : {
@@ -3644,7 +3785,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "所有请求的权限已查看。你可以随时在权限中心更改这些设置。"
+            "value" : "All requested permissions have been reviewed. You can change them anytime in Permission Center."
           }
         },
         "zh-Hans" : {
@@ -3660,7 +3801,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "允许"
+            "value" : "Allow"
           }
         },
         "zh-Hans" : {
@@ -3676,7 +3817,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "允许并继续"
+            "value" : "Allow & Continue"
           }
         },
         "zh-Hans" : {
@@ -3692,7 +3833,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "全部"
+            "value" : "All"
           }
         },
         "zh-Hans" : {
@@ -3708,7 +3849,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "浏览器自动化"
+            "value" : "Browser Automation"
           }
         },
         "zh-Hans" : {
@@ -3724,7 +3865,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "核心访问"
+            "value" : "Core Access"
           }
         },
         "zh-Hans" : {
@@ -3740,7 +3881,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "硬件传感器"
+            "value" : "Hardware Sensors"
           }
         },
         "zh-Hans" : {
@@ -3756,7 +3897,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "可选"
+            "value" : "Optional"
           }
         },
         "zh-Hans" : {
@@ -3772,7 +3913,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "系统信息"
+            "value" : "System Information"
           }
         },
         "zh-Hans" : {
@@ -3788,7 +3929,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "正在检查权限…"
+            "value" : "Checking permissions..."
           }
         },
         "zh-Hans" : {
@@ -3799,12 +3940,60 @@
         }
       }
     },
+    "permission.feature.appControl" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "App management" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "应用管理" } }
+      }
+    },
+    "permission.feature.globalShortcuts" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Global shortcuts" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "全局快捷键" } }
+      }
+    },
+    "permission.feature.mediaFeatures" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Media integrations" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "媒体集成" } }
+      }
+    },
+    "permission.feature.networkDiscovery" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Local device discovery" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "本地设备发现" } }
+      }
+    },
+    "permission.feature.processInspection" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Protected process inspection" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "受保护进程检查" } }
+      }
+    },
+    "permission.feature.userFiles" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "User files" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "用户文件" } }
+      }
+    },
+    "permission.feature.voiceFeatures" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Voice features" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "语音功能" } }
+      }
+    },
+    "permission.feature.wallpaperLibrary" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Wallpaper library" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "壁纸图库" } }
+      }
+    },
     "permission.feature.activityMonitor" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "活动监视器"
+            "value" : "Activity Monitor"
           }
         },
         "zh-Hans" : {
@@ -3820,7 +4009,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "提醒"
+            "value" : "Alerts"
           }
         },
         "zh-Hans" : {
@@ -3852,7 +4041,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "音频功能"
+            "value" : "Audio features"
           }
         },
         "zh-Hans" : {
@@ -3868,7 +4057,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Safari/Chrome/Edge 控制"
+            "value" : "Safari/Chrome/Edge control"
           }
         },
         "zh-Hans" : {
@@ -3884,7 +4073,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "浏览器检测"
+            "value" : "Browser detection"
           }
         },
         "zh-Hans" : {
@@ -3900,7 +4089,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "浏览器标签切换"
+            "value" : "Browser tab switching"
           }
         },
         "zh-Hans" : {
@@ -3916,7 +4105,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "焦点保护"
+            "value" : "Focus Guard"
           }
         },
         "zh-Hans" : {
@@ -3932,7 +4121,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "未来集成"
+            "value" : "Future integrations"
           }
         },
         "zh-Hans" : {
@@ -3948,7 +4137,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "地理功能"
+            "value" : "Location-aware features"
           }
         },
         "zh-Hans" : {
@@ -3964,7 +4153,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "外设"
+            "value" : "Peripherals"
           }
         },
         "zh-Hans" : {
@@ -3980,7 +4169,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "进程操作"
+            "value" : "Process actions"
           }
         },
         "zh-Hans" : {
@@ -3996,7 +4185,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "课程表集成"
+            "value" : "Schedule integrations"
           }
         },
         "zh-Hans" : {
@@ -4012,7 +4201,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "状态更新"
+            "value" : "Status updates"
           }
         },
         "zh-Hans" : {
@@ -4028,7 +4217,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "系统事件"
+            "value" : "System Events"
           }
         },
         "zh-Hans" : {
@@ -4044,7 +4233,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "系统文件"
+            "value" : "System files"
           }
         },
         "zh-Hans" : {
@@ -4060,7 +4249,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "任务集成"
+            "value" : "Task integrations"
           }
         },
         "zh-Hans" : {
@@ -4076,7 +4265,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "视频功能"
+            "value" : "Video features"
           }
         },
         "zh-Hans" : {
@@ -4092,7 +4281,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "窗口捕获"
+            "value" : "Window capture"
           }
         },
         "zh-Hans" : {
@@ -4108,7 +4297,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "已授权"
+            "value" : "Granted"
           }
         },
         "zh-Hans" : {
@@ -4124,7 +4313,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "上次检查: %@"
+            "value" : "Last checked: %@"
           }
         },
         "zh-Hans" : {
@@ -4140,7 +4329,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "macOS 将打开系统设置，以便你手动开启此权限。"
+            "value" : "macOS will open System Settings so you can enable this permission manually."
           }
         },
         "zh-Hans" : {
@@ -4151,12 +4340,18 @@
         }
       }
     },
+    "permission.manual_review" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Manual review" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "手动检查" } }
+      }
+    },
     "permission.never" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "从未"
+            "value" : "Never"
           }
         },
         "zh-Hans" : {
@@ -4172,7 +4367,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "打开设置"
+            "value" : "Open Settings"
           }
         },
         "zh-Hans" : {
@@ -4188,7 +4383,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "打开设置并继续"
+            "value" : "Open Settings & Continue"
           }
         },
         "zh-Hans" : {
@@ -4199,12 +4394,18 @@
         }
       }
     },
+    "permission.progress_format" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%1$lld/%2$lld granted • %3$lld manual" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已授权 %1$lld/%2$lld • 手动检查 %3$lld 项" } }
+      }
+    },
     "permission.recheck" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "重新检查"
+            "value" : "Recheck"
           }
         },
         "zh-Hans" : {
@@ -4220,7 +4421,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "刷新状态"
+            "value" : "Refresh Status"
           }
         },
         "zh-Hans" : {
@@ -4236,7 +4437,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "需授权"
+            "value" : "Required"
           }
         },
         "zh-Hans" : {
@@ -4252,7 +4453,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "用于:"
+            "value" : "Required for:"
           }
         },
         "zh-Hans" : {
@@ -4268,7 +4469,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "第 %1$lld 步，共 %2$lld 步"
+            "value" : "Step %1$lld of %2$lld"
           }
         },
         "zh-Hans" : {
@@ -4279,12 +4480,108 @@
         }
       }
     },
+    "permission.type.appManagement.description" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Optional. Allows reserved features to manage other apps when explicitly enabled." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "可选。用于明确启用后需要管理其他应用的预留功能。" } }
+      }
+    },
+    "permission.type.appManagement.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "App Management" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "应用管理" } }
+      }
+    },
+    "permission.type.developerTools.description" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Optional. Allows inspection of developer-protected processes when a feature requires it." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "可选。功能需要时用于检查受开发者工具保护的进程。" } }
+      }
+    },
+    "permission.type.developerTools.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Developer Tools" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "开发者工具" } }
+      }
+    },
+    "permission.type.filesAndFolders.description" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Shows macOS access to protected Desktop, Documents, Downloads, and removable-volume folders." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "显示 macOS 对桌面、文稿、下载及可移动宗卷等受保护文件夹的授权。" } }
+      }
+    },
+    "permission.type.filesAndFolders.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Files and Folders" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "文件与文件夹" } }
+      }
+    },
+    "permission.type.inputMonitoring.description" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Allows system-wide keyboard event monitoring for emergency shortcuts that require it." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "用于需要监听系统级键盘事件的应急快捷键。" } }
+      }
+    },
+    "permission.type.inputMonitoring.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Input Monitoring" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "输入监控" } }
+      }
+    },
+    "permission.type.localNetwork.description" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Optional. Allows local-network device discovery for network-aware features." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "可选。用于网络相关功能发现本地网络设备。" } }
+      }
+    },
+    "permission.type.localNetwork.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Local Network" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "本地网络" } }
+      }
+    },
+    "permission.type.mediaLibrary.description" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Optional. Reserved for media-library integrations; review this permission in System Settings." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "可选。为媒体资料库集成功能预留，请在系统设置中手动检查。" } }
+      }
+    },
+    "permission.type.mediaLibrary.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Media & Apple Music" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "媒体与 Apple Music" } }
+      }
+    },
+    "permission.type.photos.description" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Allows selecting photos for wallpapers and other image-based features." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "用于从照片图库选择壁纸及其他图像内容。" } }
+      }
+    },
+    "permission.type.photos.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Photos" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "照片" } }
+      }
+    },
+    "permission.type.speechRecognition.description" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Optional. Enables speech-to-text for future voice-driven features." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "可选。用于未来语音功能中的语音转文字。" } }
+      }
+    },
+    "permission.type.speechRecognition.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Speech Recognition" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "语音识别" } }
+      }
+    },
     "permission.type.accessibility.description" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "需要查询最前端应用、模拟按键事件以及与窗口交互，用于 AssessPrepHack 和浏览器切换。"
+            "value" : "Allows ClassGod to identify the frontmost app, send keyboard events, and interact with windows for AssessPrepHack and browser switching."
           }
         },
         "zh-Hans" : {
@@ -4300,7 +4597,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "辅助功能"
+            "value" : "Accessibility"
           }
         },
         "zh-Hans" : {
@@ -4316,7 +4613,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "需要通过 AppleScript 控制 Safari、Chrome、Edge 等浏览器。"
+            "value" : "Allows ClassGod to control Safari, Chrome, Edge, and System Events through AppleScript."
           }
         },
         "zh-Hans" : {
@@ -4332,7 +4629,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "自动化 (AppleEvents)"
+            "value" : "Automation (Apple Events)"
           }
         },
         "zh-Hans" : {
@@ -4348,7 +4645,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "可选。可能用于未来的外设检测功能。"
+            "value" : "Optional. Reserved for future peripheral-detection features."
           }
         },
         "zh-Hans" : {
@@ -4364,7 +4661,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "蓝牙"
+            "value" : "Bluetooth"
           }
         },
         "zh-Hans" : {
@@ -4380,7 +4677,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "可选。可能用于未来的课程表集成。"
+            "value" : "Optional. Reserved for future schedule integrations."
           }
         },
         "zh-Hans" : {
@@ -4396,7 +4693,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "日历"
+            "value" : "Calendars"
           }
         },
         "zh-Hans" : {
@@ -4412,7 +4709,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "用于未来更新中可能启用的视频相关功能。"
+            "value" : "Optional. Reserved for video features that may be enabled in a future update."
           }
         },
         "zh-Hans" : {
@@ -4428,7 +4725,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "摄像头"
+            "value" : "Camera"
           }
         },
         "zh-Hans" : {
@@ -4444,7 +4741,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "可选。可能用于未来与通讯录集成的功能。"
+            "value" : "Optional. Reserved for future Contacts integrations."
           }
         },
         "zh-Hans" : {
@@ -4460,7 +4757,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "通讯录"
+            "value" : "Contacts"
           }
         },
         "zh-Hans" : {
@@ -4476,7 +4773,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "允许读取活动监视器的完整进程信息并访问受保护文件。"
+            "value" : "Allows Activity Monitor to read complete process information and access protected files."
           }
         },
         "zh-Hans" : {
@@ -4492,7 +4789,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "完全磁盘访问权限"
+            "value" : "Full Disk Access"
           }
         },
         "zh-Hans" : {
@@ -4508,7 +4805,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "可选。可能用于未来基于地理位置的功能。"
+            "value" : "Optional. Reserved for future location-aware features."
           }
         },
         "zh-Hans" : {
@@ -4524,7 +4821,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "定位服务"
+            "value" : "Location Services"
           }
         },
         "zh-Hans" : {
@@ -4540,7 +4837,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "用于声音检测或静音控制等音频相关功能。"
+            "value" : "Optional. Reserved for audio features such as sound detection or mute control."
           }
         },
         "zh-Hans" : {
@@ -4556,7 +4853,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "麦克风"
+            "value" : "Microphone"
           }
         },
         "zh-Hans" : {
@@ -4572,7 +4869,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "可选。用于发送状态提醒和权限提示。"
+            "value" : "Optional. Allows ClassGod to send status alerts and permission reminders."
           }
         },
         "zh-Hans" : {
@@ -4588,7 +4885,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "通知"
+            "value" : "Notifications"
           }
         },
         "zh-Hans" : {
@@ -4604,7 +4901,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "可选。可能用于未来的任务或提醒集成。"
+            "value" : "Optional. Reserved for future task and Reminders integrations."
           }
         },
         "zh-Hans" : {
@@ -4620,7 +4917,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "提醒事项"
+            "value" : "Reminders"
           }
         },
         "zh-Hans" : {
@@ -4636,7 +4933,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "用于浏览器检测、窗口捕获和屏幕共享功能。"
+            "value" : "Allows browser detection, window capture, and screen-sharing features."
           }
         },
         "zh-Hans" : {
@@ -4652,7 +4949,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "屏幕录制"
+            "value" : "Screen Recording"
           }
         },
         "zh-Hans" : {
@@ -4668,7 +4965,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "用于:"
+            "value" : "Used by:"
           }
         },
         "zh-Hans" : {
@@ -6156,7 +6453,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "删除壁纸?"
+            "value" : "Delete Wallpaper?"
           }
         },
         "zh-Hans" : {
@@ -6172,7 +6469,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "%1$lld 个项目"
+            "value" : "%1$lld items"
           }
         },
         "zh-Hans" : {
@@ -6188,7 +6485,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "库"
+            "value" : "Library"
           }
         },
         "zh-Hans" : {
@@ -6204,7 +6501,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "列表循环"
+            "value" : "Playlist Loop"
           }
         },
         "zh-Hans" : {
@@ -6220,7 +6517,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "随机"
+            "value" : "Shuffle"
           }
         },
         "zh-Hans" : {
@@ -6236,7 +6533,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "单曲循环"
+            "value" : "Single Loop"
           }
         },
         "zh-Hans" : {
@@ -6252,7 +6549,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "无壁纸"
+            "value" : "No Wallpaper"
           }
         },
         "zh-Hans" : {
@@ -6268,7 +6565,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "未选择壁纸"
+            "value" : "No Wallpaper Selected"
           }
         },
         "zh-Hans" : {
@@ -6284,7 +6581,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "待机"
+            "value" : "Idle"
           }
         },
         "zh-Hans" : {
@@ -6300,7 +6597,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "运行中"
+            "value" : "Live"
           }
         },
         "zh-Hans" : {
@@ -6316,7 +6613,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "关闭"
+            "value" : "Off"
           }
         },
         "zh-Hans" : {
@@ -6332,7 +6629,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "已暂停"
+            "value" : "Paused"
           }
         },
         "zh-Hans" : {
@@ -6343,6 +6640,16 @@
         }
       }
     },
+    "sort.browser" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Browser" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "浏览器" } } } },
+    "sort.manual" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Manual" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "手动" } } } },
+    "sort.recent" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Recent" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "最近使用" } } } },
+    "status.off" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "OFF" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "关闭" } } } },
+    "status.on" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "ON" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "开启" } } } },
+    "wallpaper.desktop" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "DESKTOP" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "桌面" } } } },
+    "wallpaper.drop_hint" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Drop images or videos" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "拖入图片或视频" } } } },
+    "wallpaper.title" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Wallpaper Engine" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "壁纸引擎" } } } },
+    "widget.no_note" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "No note saved yet." } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "尚未保存笔记。" } } } },
+    "widget.no_quote" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "No quote saved yet." } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "尚未保存名言。" } } } },
     "widget.battery" : {
       "localizations" : {
         "en" : {
@@ -7787,9 +8094,7 @@
     "Back" : {
 
     },
-    "Battery" : {
-
-    },
+    "Battery" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "电池" } } } },
     "Boost" : {
 
     },
@@ -9381,9 +9686,7 @@
     "Cancel" : {
 
     },
-    "Charging" : {
-
-    },
+    "Charging" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "充电中" } } } },
     "Checking permissions..." : {
 
     },
@@ -9533,9 +9836,7 @@
     "Click to open in Encyclopedia →" : {
 
     },
-    "Clock" : {
-
-    },
+    "Clock" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "时钟" } } } },
     "Clock City" : {
 
     },
@@ -9925,15 +10226,11 @@
     "Diagnostics" : {
 
     },
-    "Discharging" : {
-
-    },
+    "Discharging" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "放电中" } } } },
     "Disguise ClassGod as another app in the Dock. The icon change takes effect immediately." : {
 
     },
-    "Disk" : {
-
-    },
+    "Disk" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "磁盘" } } } },
     "divider.dashed" : {
 
     },
@@ -11403,9 +11700,7 @@
         }
       }
     },
-    "File" : {
-
-    },
+    "File" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "文件" } } } },
     "First-Time Setup" : {
 
     },
@@ -12249,48 +12544,32 @@
     "maximize.none" : {
 
     },
-    "Mem" : {
-
-    },
-    "Memory" : {
-
-    },
+    "Mem" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "内存" } } } },
+    "Memory" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "内存" } } } },
     "Memory Pressure" : {
 
     },
     "Name" : {
 
     },
-    "Network" : {
-
-    },
-    "No Battery" : {
-
-    },
+    "Network" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "网络" } } } },
+    "No Battery" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "无电池" } } } },
     "No battery detected" : {
 
     },
     "No bypass rules" : {
 
     },
-    "No disk data" : {
-
-    },
+    "No disk data" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "无磁盘数据" } } } },
     "No fans detected" : {
 
     },
-    "No file set" : {
-
-    },
+    "No file set" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "未设置文件" } } } },
     "No panic apps configured" : {
 
     },
-    "No process data" : {
-
-    },
-    "No quote saved yet." : {
-
-    },
+    "No process data" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "无进程数据" } } } },
+    "No quote saved yet." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "尚未保存名言。" } } } },
     "No related errors documented." : {
 
     },
@@ -12303,15 +12582,11 @@
     "No targets configured" : {
 
     },
-    "No terminal logs yet." : {
-
-    },
+    "No terminal logs yet." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "暂无终端日志。" } } } },
     "No thermal data" : {
 
     },
-    "No todos yet." : {
-
-    },
+    "No todos yet." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "暂无待办事项。" } } } },
     "No widgets or tabs. Add one below." : {
 
     },
@@ -13079,9 +13354,7 @@
     "Problematic Code" : {
 
     },
-    "Process" : {
-
-    },
+    "Process" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "进程" } } } },
     "Process: ClassGod [%lld]" : {
 
     },
@@ -17579,9 +17852,7 @@
     "switch.always_new_tab" : {
 
     },
-    "System" : {
-
-    },
+    "System" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "系统" } } } },
     "System data is automatically collected every 5 seconds and synced to Desk Widgets via App Group." : {
 
     },
@@ -18185,9 +18456,7 @@
         }
       }
     },
-    "Thermal" : {
-
-    },
+    "Thermal" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "温度" } } } },
     "Thermal Sensors" : {
 
     },
@@ -18866,9 +19135,7 @@
         }
       }
     },
-    "Top Processes" : {
-
-    },
+    "Top Processes" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "进程排行" } } } },
     "Total: %@ ↓  %@ ↑" : {
       "localizations" : {
         "zh-Hans" : {
@@ -18882,15 +19149,11 @@
     "Unpin" : {
 
     },
-    "Uptime" : {
-
-    },
+    "Uptime" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "运行时间" } } } },
     "URL Pattern" : {
 
     },
-    "used" : {
-
-    },
+    "used" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已用" } } } },
     "Used by:" : {
 
     },
