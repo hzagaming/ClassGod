@@ -67,7 +67,7 @@ struct FanThermalWidgetContent: View {
     private func sensorRow(_ sensor: TemperatureSensor) -> some View {
         HStack(spacing: 4) {
             Circle()
-                .fill(sensorColor(sensor.value))
+                .fill(sensor.isEstimated ? Color.gray : sensorColor(sensor.value))
                 .frame(width: 6, height: 6)
 
             Text(sensor.name)
@@ -77,9 +77,9 @@ struct FanThermalWidgetContent: View {
 
             Spacer(minLength: 4)
 
-            Text(unit.formatted(sensor.value))
+            Text(sensor.isEstimated ? "--" : unit.formatted(sensor.value))
                 .font(.system(size: 10, weight: .bold, design: .monospaced))
-                .foregroundStyle(sensorColor(sensor.value))
+                .foregroundStyle(sensor.isEstimated ? Color.gray : sensorColor(sensor.value))
         }
     }
 
@@ -110,7 +110,10 @@ struct FanThermalWidgetContent: View {
             let newSensors = SMCService.shared.readTemperatures()
             await MainActor.run {
                 defer { refreshGate.end() }
-                sensors = newSensors.sorted { $0.value > $1.value }
+                sensors = newSensors.sorted {
+                    if $0.isEstimated != $1.isEstimated { return !$0.isEstimated }
+                    return $0.value > $1.value
+                }
                 fanAccessReason = SMCService.shared.fanAccessReason
                 isLoading = false
             }
@@ -126,8 +129,10 @@ struct FanControlDashboardWidgetContent: View {
     @State private var fanAccessReason: String? = SMCService.shared.fanAccessReason
     @State private var timer: Timer? = nil
     @State private var refreshGate = FanRefreshGate()
+    @State private var isChangingMode = false
 
     private var mode: FanControlMode { prefs.preferences.fanControlMode }
+    private var hasControllableFans: Bool { fans.contains(where: \.canControl) }
 
     var body: some View {
         VStack(spacing: 6) {
@@ -179,9 +184,8 @@ struct FanControlDashboardWidgetContent: View {
             }
 
             HStack(spacing: 4) {
-                modeButton(.system, label: "Sys")
-                modeButton(.max, label: "Max")
-                modeButton(.autoMax, label: "Auto")
+                modeButton(.system)
+                modeButton(.max)
             }
             .frame(height: 24)
         }
@@ -199,38 +203,40 @@ struct FanControlDashboardWidgetContent: View {
                     .font(.system(size: 9, weight: .medium, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.7))
                 Spacer()
-                Text("\(Int(fan.actualRPM)) RPM")
+                Text(fan.hasPlausibleLiveRPM ? "\(Int(fan.actualRPM)) RPM" : "-- RPM")
                     .font(.system(size: 10, weight: .bold, design: .monospaced))
-                    .foregroundStyle(.cyan)
+                    .foregroundStyle(fan.hasPlausibleLiveRPM ? .cyan : .white.opacity(0.35))
             }
 
-            GeometryReader { geo in
-                ZStack(alignment: .leading) {
-                    RoundedRectangle(cornerRadius: 3)
-                        .fill(Color.white.opacity(0.08))
-                    RoundedRectangle(cornerRadius: 3)
-                        .fill(fanRPMColor(fan))
-                        .frame(width: max(2, geo.size.width * fanRatio(fan)))
+            if fan.hasPlausibleLiveRPM, fan.maximumRPM > fan.minimumRPM {
+                GeometryReader { geo in
+                    ZStack(alignment: .leading) {
+                        RoundedRectangle(cornerRadius: 3)
+                            .fill(Color.white.opacity(0.08))
+                        RoundedRectangle(cornerRadius: 3)
+                            .fill(fanRPMColor(fan))
+                            .frame(width: geo.size.width * fanRatio(fan))
+                    }
                 }
-            }
-            .frame(height: 6)
+                .frame(height: 6)
 
-            HStack {
-                Text("\(Int(fan.minimumRPM))")
-                    .font(.system(size: 7, design: .monospaced))
-                    .foregroundStyle(.white.opacity(0.3))
-                Spacer()
-                Text("\(Int(fan.maximumRPM))")
-                    .font(.system(size: 7, design: .monospaced))
-                    .foregroundStyle(.white.opacity(0.3))
+                HStack {
+                    Text("\(Int(fan.minimumRPM))")
+                        .font(.system(size: 7, design: .monospaced))
+                        .foregroundStyle(.white.opacity(0.3))
+                    Spacer()
+                    Text("\(Int(fan.maximumRPM))")
+                        .font(.system(size: 7, design: .monospaced))
+                        .foregroundStyle(.white.opacity(0.3))
+                }
             }
         }
     }
 
     private func fanRatio(_ fan: FanInfo) -> CGFloat {
         let range = fan.maximumRPM - fan.minimumRPM
-        guard range > 0 else { return 0 }
-        return CGFloat((fan.actualRPM - fan.minimumRPM) / range)
+        guard fan.hasPlausibleLiveRPM, range > 0 else { return 0 }
+        return CGFloat(min(1, max(0, (fan.actualRPM - fan.minimumRPM) / range)))
     }
 
     private func fanRPMColor(_ fan: FanInfo) -> Color {
@@ -250,12 +256,11 @@ struct FanControlDashboardWidgetContent: View {
         }
     }
 
-    private func modeButton(_ target: FanControlMode, label: String) -> some View {
+    private func modeButton(_ target: FanControlMode) -> some View {
         Button(action: {
-            _ = SMCService.shared.setFanMode(target)
-            prefs.preferences.fanControlMode = target
+            setMode(target)
         }) {
-            Text(label)
+            Text(target.displayName)
                 .font(.system(size: 9, weight: .bold, design: .monospaced))
                 .foregroundStyle(mode == target ? .white : .white.opacity(0.6))
                 .frame(maxWidth: .infinity)
@@ -264,6 +269,39 @@ struct FanControlDashboardWidgetContent: View {
                 .clipShape(RoundedRectangle(cornerRadius: 6))
         }
         .buttonStyle(.plain)
+        .disabled(isChangingMode || target != .system && !hasControllableFans)
+        .opacity(target == .system || hasControllableFans ? 1 : 0.4)
+    }
+
+    private func setMode(_ target: FanControlMode) {
+        let fanIDs = FanControlRouting.controllableIDs(in: fans)
+        guard target == .system || !fanIDs.isEmpty else { return }
+        SoundEffectManager.shared.playButtonClick()
+        HapticManager.shared.generic()
+        isChangingMode = true
+        Task.detached(priority: .userInitiated) {
+            var success = true
+            if target == .system, fanIDs.isEmpty {
+                SMCService.shared.restoreSystemFanControl()
+            }
+            for fanID in fanIDs where !SMCService.shared.setFanMode(target, fanIndex: fanID) {
+                success = false
+            }
+            if !success {
+                SMCService.shared.restoreSystemFanControl()
+            }
+            let didSucceed = success
+            await MainActor.run {
+                isChangingMode = false
+                prefs.preferences.fanControlMode = didSucceed ? target : .system
+                if !didSucceed {
+                    SoundEffectManager.shared.playSwitchFailure()
+                    HapticManager.shared.warning()
+                    fanAccessReason = String(localized: "fan.error.mode_set_failed")
+                }
+                refresh()
+            }
+        }
     }
 
     private func startPolling() {

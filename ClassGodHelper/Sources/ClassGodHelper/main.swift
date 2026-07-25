@@ -3,10 +3,6 @@
 //
 //  Privileged helper tool for reading/writing SMC fan & temperature data
 //  on Apple Silicon Macs where the main app lacks direct access.
-//
-//  Run as root, e.g.:
-//    sudo /path/to/ClassGodHelper
-//
 //  Listens on a Unix domain socket and speaks length-prefixed JSON.
 //
 
@@ -17,6 +13,7 @@ private let SOCKET_PATH = "/tmp/com.hanazar.classgod.helper.sock"
 private let KERNEL_INDEX_SMC: UInt32 = 2
 private var listen_fd: Int32 = -1
 private var allowedPeerUID: uid_t?
+private var terminationSources: [DispatchSourceSignal] = []
 
 // MARK: - SMC primitives
 
@@ -26,7 +23,11 @@ final class SMCHelper {
     private var isConnected = false
     private let lock = NSLock()
     private let discoveryLock = NSLock()
+    private let controlStateLock = NSLock()
     private var cachedSMCKeys: [(key: String, type: String)]?
+    private var cachedFanControlCapabilities: [Int: Bool] = [:]
+    private var controlledFanIDs = Set<Int>()
+    private var didLogFanKeyDiagnostics = false
 
     private init() {
         connect()
@@ -61,17 +62,16 @@ final class SMCHelper {
         }
     }
 
-    private func smcCall(input: inout [UInt8], output: inout [UInt8]) -> kern_return_t {
-        let inputSize = input.count
-        var outputSize = output.count
-        return input.withUnsafeMutableBytes { inputPtr in
-            output.withUnsafeMutableBytes { outputPtr in
-                guard let iAddr = inputPtr.baseAddress, let oAddr = outputPtr.baseAddress else {
-                    return KERN_INVALID_ADDRESS
-                }
-                return IOConnectCallStructMethod(conn, KERNEL_INDEX_SMC, iAddr, inputSize, oAddr, &outputSize)
-            }
-        }
+    private func smcCall(input: inout SMCKeyData, output: inout SMCKeyData) -> kern_return_t {
+        var outputSize = MemoryLayout<SMCKeyData>.size
+        return IOConnectCallStructMethod(
+            conn,
+            KERNEL_INDEX_SMC,
+            &input,
+            MemoryLayout<SMCKeyData>.size,
+            &output,
+            &outputSize
+        )
     }
 
     func readBytes(key: String) -> [UInt8]? {
@@ -79,20 +79,18 @@ final class SMCHelper {
         defer { lock.unlock() }
         guard isConnected, key.count == 4 else { return nil }
         let code = fourCC(key)
-        var input = [UInt8](repeating: 0, count: 56)
-        var output = [UInt8](repeating: 0, count: 56)
-        input[0] = UInt8((code >> 24) & 0xFF)
-        input[1] = UInt8((code >> 16) & 0xFF)
-        input[2] = UInt8((code >> 8) & 0xFF)
-        input[3] = UInt8(code & 0xFF)
-        for cmd in [5, 6, 10] {
-            input[16] = UInt8(cmd)
-            let kr = smcCall(input: &input, output: &output)
-            if kr == KERN_SUCCESS && output[14] == 0 {
-                return Array(output[24..<56])
-            }
-        }
-        return nil
+        guard let keyInfo = readKeyInfo(code: code) else { return nil }
+        let size = Int(keyInfo.dataSize)
+        guard (1...32).contains(size) else { return nil }
+
+        var input = SMCKeyData()
+        var output = SMCKeyData()
+        input.key = code
+        input.keyInfo.dataSize = keyInfo.dataSize
+        input.data8 = SMCCommand.readBytes.rawValue
+        guard smcCall(input: &input, output: &output) == KERN_SUCCESS,
+              output.result == 0 else { return nil }
+        return Array(output.bytes.array.prefix(size))
     }
 
     func writeBytes(key: String, bytes: [UInt8]) -> Bool {
@@ -100,23 +98,35 @@ final class SMCHelper {
         defer { lock.unlock() }
         guard isConnected, key.count == 4 else { return false }
         let code = fourCC(key)
-        var input = [UInt8](repeating: 0, count: 56)
-        var output = [UInt8](repeating: 0, count: 56)
-        input[0] = UInt8((code >> 24) & 0xFF)
-        input[1] = UInt8((code >> 16) & 0xFF)
-        input[2] = UInt8((code >> 8) & 0xFF)
-        input[3] = UInt8(code & 0xFF)
-        for (i, b) in bytes.prefix(32).enumerated() {
-            input[24 + i] = b
-        }
-        for cmd in [6, 7, 11] {
-            input[16] = UInt8(cmd)
-            let kr = smcCall(input: &input, output: &output)
-            if kr == KERN_SUCCESS && output[14] == 0 {
-                return true
-            }
-        }
-        return false
+        guard let keyInfo = readKeyInfo(code: code),
+              (1...32).contains(Int(keyInfo.dataSize)),
+              bytes.count >= Int(keyInfo.dataSize) else { return false }
+
+        var input = SMCKeyData()
+        var output = SMCKeyData()
+        input.key = code
+        input.keyInfo.dataSize = keyInfo.dataSize
+        input.bytes = SMCBytes(Array(bytes.prefix(Int(keyInfo.dataSize))))
+        input.data8 = SMCCommand.writeBytes.rawValue
+        return smcCall(input: &input, output: &output) == KERN_SUCCESS && output.result == 0
+    }
+
+    private func dataType(key: String) -> String? {
+        lock.lock()
+        defer { lock.unlock() }
+        guard isConnected, key.count == 4,
+              let keyInfo = readKeyInfo(code: fourCC(key)) else { return nil }
+        return fourCCString(keyInfo.dataType).lowercased()
+    }
+
+    private func readKeyInfo(code: UInt32) -> SMCKeyInfo? {
+        var input = SMCKeyData()
+        var output = SMCKeyData()
+        input.key = code
+        input.data8 = SMCCommand.readKeyInfo.rawValue
+        guard smcCall(input: &input, output: &output) == KERN_SUCCESS,
+              output.result == 0 else { return nil }
+        return output.keyInfo
     }
 
     private func fourCC(_ s: String) -> UInt32 {
@@ -181,17 +191,25 @@ final class SMCHelper {
         lock.lock()
         defer { lock.unlock() }
         guard isConnected else { return nil }
-        var input = [UInt8](repeating: 0, count: 56)
-        var output = [UInt8](repeating: 0, count: 56)
-        input[0] = UInt8((index >> 24) & 0xFF)
-        input[1] = UInt8((index >> 16) & 0xFF)
-        input[2] = UInt8((index >> 8) & 0xFF)
-        input[3] = UInt8(index & 0xFF)
-        input[16] = 8
-        guard smcCall(input: &input, output: &output) == KERN_SUCCESS, output[14] == 0 else { return nil }
-        let key = String(bytes: output[0..<4], encoding: .ascii) ?? ""
-        let type = String(bytes: output[4..<8], encoding: .ascii) ?? ""
+        var input = SMCKeyData()
+        var output = SMCKeyData()
+        input.data32 = UInt32(index)
+        input.data8 = SMCCommand.readIndex.rawValue
+        guard smcCall(input: &input, output: &output) == KERN_SUCCESS,
+              output.result == 0,
+              let keyInfo = readKeyInfo(code: output.key) else { return nil }
+        let key = fourCCString(output.key)
+        let type = fourCCString(keyInfo.dataType)
         return (key, type)
+    }
+
+    private func fourCCString(_ value: UInt32) -> String {
+        String(bytes: [
+            UInt8((value >> 24) & 0xFF),
+            UInt8((value >> 16) & 0xFF),
+            UInt8((value >> 8) & 0xFF),
+            UInt8(value & 0xFF),
+        ], encoding: .ascii) ?? ""
     }
 
     func enumerateSMCKeys(matchingPrefixes prefixes: [String] = ["T", "F"]) -> [(key: String, type: String)] {
@@ -208,6 +226,7 @@ final class SMCHelper {
     func rescan() {
         discoveryLock.lock()
         cachedSMCKeys = nil
+        cachedFanControlCapabilities.removeAll()
         discoveryLock.unlock()
 
         lock.lock()
@@ -224,36 +243,69 @@ final class SMCHelper {
 
     func readFans() -> [[String: Any]] {
         var indexes = Set<Int>()
+        let fanEntries = enumerateSMCKeys(matchingPrefixes: ["F"])
+        let typeByKey = Dictionary(uniqueKeysWithValues: fanEntries.map { ($0.key, $0.type) })
+        if ProcessInfo.processInfo.environment["CLASSGOD_DIAGNOSTIC_SMC"] == "1",
+           !didLogFanKeyDiagnostics {
+            didLogFanKeyDiagnostics = true
+            for entry in fanEntries.sorted(by: { $0.key < $1.key }) {
+                print("[Helper] SMC fan key \(entry.key) [\(entry.type)] = \(readBytes(key: entry.key) ?? [])")
+            }
+        }
 
         if let numBytes = readBytes(key: "FNum"), numBytes.count >= 1, numBytes[0] > 0 {
             let count = min(Int(numBytes[0]), 16)
             indexes.formUnion(0..<count)
         }
 
-        for entry in enumerateSMCKeys(matchingPrefixes: ["F"]) {
+        for entry in fanEntries {
             if let fanKey = FanSMCKey(entry.key) {
                 indexes.insert(fanKey.index)
             }
         }
 
-        return indexes.sorted().compactMap { index in
+        return indexes.sorted().map { index in
+            let detected: [String: Any] = [
+                "id": index,
+                "name": fanName(index),
+                "hasLiveRPM": false,
+                "isControllable": false,
+            ]
             guard let actualKey = FanSMCKey.actualRPMKey(for: index),
                   let fanKey = FanSMCKey(actualKey),
-                  let actualBytes = readBytes(key: actualKey) else { return nil }
+                  let minimumKey = fanKey.key(suffix: "Mn"),
+                  let maximumKey = fanKey.key(suffix: "Mx"),
+                  typeByKey[actualKey] == "fpe2",
+                  typeByKey[minimumKey] == "fpe2",
+                  typeByKey[maximumKey] == "fpe2",
+                  let actualBytes = readBytes(key: actualKey),
+                  let minimumBytes = readBytes(key: minimumKey),
+                  let maximumBytes = readBytes(key: maximumKey) else { return detected }
+            let actualRPM = decodeFPE2(actualBytes)
+            let minimumRPM = decodeFPE2(minimumBytes)
+            let maximumRPM = decodeFPE2(maximumBytes)
+            guard FanReadingValidity.isPlausible(
+                actual: actualRPM,
+                minimum: minimumRPM,
+                maximum: maximumRPM
+            ) else { return detected }
             var fan: [String: Any] = [
                 "id": index,
                 "name": fanName(index),
-                "actualRPM": decodeFPE2(actualBytes)
+                "actualRPM": actualRPM,
+                "minimumRPM": minimumRPM,
+                "maximumRPM": maximumRPM,
+                "hasLiveRPM": true,
             ]
-            if let key = fanKey.key(suffix: "Mn"), let bytes = readBytes(key: key) {
-                fan["minimumRPM"] = decodeFPE2(bytes)
-            }
-            if let key = fanKey.key(suffix: "Mx"), let bytes = readBytes(key: key) {
-                fan["maximumRPM"] = decodeFPE2(bytes)
-            }
-            if let key = fanKey.key(suffix: "Tg"), let bytes = readBytes(key: key) {
+            var hasTargetKey = false
+            if let key = fanKey.key(suffix: "Tg"),
+               typeByKey[key] == "fpe2",
+               let bytes = readBytes(key: key) {
                 fan["targetRPM"] = decodeFPE2(bytes)
+                hasTargetKey = true
             }
+            fan["isControllable"] = hasTargetKey
+                && supportsFanControl(fanIndex: index, targetKey: fanKey.key(suffix: "Tg"))
             return fan
         }
     }
@@ -301,7 +353,7 @@ final class SMCHelper {
         for (name, key, max) in keys {
             guard let b = readBytes(key: key), b.count >= 2 else { continue }
             let v = decodeSP78(b)
-            if v > -50 && v < 150 {
+            if v > 1 && v < 150 {
                 out.append(["name": name, "key": key, "value": v, "maxValue": max])
                 seenKeys.insert(key)
             }
@@ -314,7 +366,7 @@ final class SMCHelper {
             guard key.count == 4, key.hasPrefix("T"), !seenKeys.contains(key) else { continue }
             if let b = readBytes(key: key) {
                 let v = decodeTemperature(b, type: entry.type)
-                if v > -50 && v < 150 {
+                if v > 1 && v < 150 {
                     out.append(["name": key, "key": key, "value": v, "maxValue": 100])
                 }
             }
@@ -345,25 +397,116 @@ final class SMCHelper {
     func setFanMode(_ mode: String, fanIndex: Int) -> Bool {
         guard let actualKey = FanSMCKey.actualRPMKey(for: fanIndex),
               let fanKey = FanSMCKey(actualKey),
-              let targetKey = fanKey.key(suffix: "Tg") else { return false }
-        switch mode {
-        case "system":
-            return writeBytes(key: targetKey, bytes: [0, 0])
-        case "max":
+              let transition = FanControlModeTransition(mode: mode) else { return false }
+        let success: Bool
+        switch transition {
+        case .releaseToSystem:
+            success = setForcedControl(false, fanIndex: fanIndex)
+        case .forceMaximum:
             guard let maxKey = fanKey.key(suffix: "Mx"),
+                  let targetKey = fanKey.key(suffix: "Tg"),
+                  dataType(key: maxKey) == "fpe2",
+                  dataType(key: targetKey) == "fpe2",
                   let bytes = readBytes(key: maxKey), bytes.count >= 2 else { return false }
-            return writeBytes(key: targetKey, bytes: Array(bytes.prefix(2)))
-        case "autoMax", "manual", "custom":
-            return true
-        default:
-            return false
+            success = writeBytes(key: targetKey, bytes: Array(bytes.prefix(2)))
+                && readBytes(key: targetKey).map { abs(decodeFPE2($0) - decodeFPE2(bytes)) <= 1 } == true
+                && setForcedControl(true, fanIndex: fanIndex)
+            if !success { releaseAfterFailedTarget(fanIndex: fanIndex) }
         }
+        if success { updateControlledFan(fanIndex, forced: transition == .forceMaximum) }
+        return success
     }
 
     func setFanRPM(_ rpm: Double, fanIndex: Int) -> Bool {
         guard let actualKey = FanSMCKey.actualRPMKey(for: fanIndex),
-              let targetKey = FanSMCKey(actualKey)?.key(suffix: "Tg") else { return false }
-        return writeBytes(key: targetKey, bytes: encodeFPE2(rpm))
+              let fanKey = FanSMCKey(actualKey),
+              let minimumKey = fanKey.key(suffix: "Mn"),
+              let maximumKey = fanKey.key(suffix: "Mx"),
+              let targetKey = fanKey.key(suffix: "Tg"),
+              dataType(key: minimumKey) == "fpe2",
+              dataType(key: maximumKey) == "fpe2",
+              dataType(key: targetKey) == "fpe2",
+              let minimumBytes = readBytes(key: minimumKey),
+              let maximumBytes = readBytes(key: maximumKey),
+              let target = FanControlTarget.clamped(
+                  rpm,
+                  minimum: decodeFPE2(minimumBytes),
+                  maximum: decodeFPE2(maximumBytes)
+              ) else { return false }
+        let success = writeBytes(key: targetKey, bytes: encodeFPE2(target))
+            && readBytes(key: targetKey).map { abs(decodeFPE2($0) - target) <= 1 } == true
+            && setForcedControl(true, fanIndex: fanIndex)
+        guard success else {
+            releaseAfterFailedTarget(fanIndex: fanIndex)
+            return false
+        }
+        updateControlledFan(fanIndex, forced: true)
+        return true
+    }
+
+    func restoreSystemFanControl() {
+        let fanIDs = controlStateLock.withLock { Array(controlledFanIDs) }
+        for fanID in fanIDs {
+            _ = setFanMode("system", fanIndex: fanID)
+        }
+    }
+
+    private func supportsFanControl(fanIndex: Int, targetKey: String?) -> Bool {
+        if let cached = cachedFanControlCapabilities[fanIndex] { return cached }
+        guard let targetKey else { return false }
+        let supported = canWriteCurrentValue(key: targetKey)
+            && supportsForcedControl(fanIndex: fanIndex)
+        cachedFanControlCapabilities[fanIndex] = supported
+        return supported
+    }
+
+    private func supportsForcedControl(fanIndex: Int) -> Bool {
+        guard let actualKey = FanSMCKey.actualRPMKey(for: fanIndex),
+              let modeKey = FanSMCKey(actualKey)?.key(suffix: "Md") else { return false }
+        return canWriteCurrentValue(key: modeKey) || canWriteCurrentValue(key: "FS! ")
+    }
+
+    private func canWriteCurrentValue(key: String) -> Bool {
+        guard let current = readBytes(key: key), !current.isEmpty,
+              writeBytes(key: key, bytes: current) else { return false }
+        return FanControlWriteVerification.matches(
+            expected: current,
+            actual: readBytes(key: key)
+        )
+    }
+
+    private func setForcedControl(_ forced: Bool, fanIndex: Int) -> Bool {
+        guard let actualKey = FanSMCKey.actualRPMKey(for: fanIndex),
+              let modeKey = FanSMCKey(actualKey)?.key(suffix: "Md") else { return false }
+        let expectedMode: UInt8 = forced ? 1 : 0
+        if readBytes(key: modeKey) != nil,
+           writeBytes(key: modeKey, bytes: [expectedMode]),
+           readBytes(key: modeKey)?.first == expectedMode {
+            return true
+        }
+        guard let bytes = readBytes(key: "FS! "),
+              let updated = FanControlForceMask.updated(bytes, fanIndex: fanIndex, forced: forced) else { return false }
+        guard writeBytes(key: "FS! ", bytes: updated),
+              let confirmed = readBytes(key: "FS! "), confirmed.count >= 2 else { return false }
+        let mask = UInt16(confirmed[0]) << 8 | UInt16(confirmed[1])
+        let bitIsSet = mask & (UInt16(1) << UInt16(fanIndex)) != 0
+        return bitIsSet == forced
+    }
+
+    private func releaseAfterFailedTarget(fanIndex: Int) {
+        if setForcedControl(false, fanIndex: fanIndex) {
+            updateControlledFan(fanIndex, forced: false)
+        }
+    }
+
+    private func updateControlledFan(_ fanIndex: Int, forced: Bool) {
+        controlStateLock.withLock {
+            if forced {
+                _ = controlledFanIDs.insert(fanIndex)
+            } else {
+                controlledFanIDs.remove(fanIndex)
+            }
+        }
     }
 
     private func fanName(_ index: Int) -> String {
@@ -389,6 +532,8 @@ final class PowerMetricsSampler {
     private var isSamplerUnsupported = false
     private var needsFans = false
     private var needsTemps = false
+    private var consecutiveMisses = 0
+    private var prefersThermalFallback = false
 
     private init() {}
 
@@ -420,6 +565,7 @@ final class PowerMetricsSampler {
         }
         self.needsFans = needsFans
         self.needsTemps = needsTemps
+        consecutiveMisses = 0
         let timer = DispatchSource.makeTimerSource(queue: queue)
         timer.schedule(deadline: .now(), repeating: .milliseconds(Int(interval * 1000)))
         timer.setEventHandler { [weak self] in
@@ -436,19 +582,25 @@ final class PowerMetricsSampler {
     }
 
     private func sample() {
-        let result = Self.runOnce()
+        let result = Self.runOnce(useThermalFallback: prefersThermalFallback)
+        if result.usedThermalFallback {
+            prefersThermalFallback = true
+        }
         if let error = result.error,
            error.lowercased().contains("unrecognized sampler") {
             print("[Helper] PowerMetricsSampler: SMC sampler unsupported, stopping")
             self.isSamplerUnsupported = true
             self.stop()
         }
-        if result.error == nil,
-           !PowerMetricsSamplingPolicy.shouldContinue(
+        let hasRequiredFans = !needsFans || !result.fans.isEmpty
+        let hasRequiredTemps = !needsTemps || !result.temps.isEmpty
+        consecutiveMisses = hasRequiredFans && hasRequiredTemps ? 0 : consecutiveMisses + 1
+        if !PowerMetricsSamplingPolicy.shouldContinue(
                needsFans: needsFans,
                needsTemps: needsTemps,
                sampledFans: result.fans.count,
-               sampledTemps: result.temps.count
+               sampledTemps: result.temps.count,
+               consecutiveMisses: consecutiveMisses
            ) {
             print("[Helper] PowerMetricsSampler found no required fallback data, stopping")
             accessQueue.async {
@@ -458,14 +610,37 @@ final class PowerMetricsSampler {
             return
         }
         accessQueue.async {
-            self._latest = result
+            self._latest = (result.temps, result.fans, result.error)
         }
     }
 
-    private static func runOnce() -> (temps: [[String: Any]], fans: [[String: Any]], error: String?) {
+    private static func runOnce(
+        useThermalFallback: Bool
+    ) -> (temps: [[String: Any]], fans: [[String: Any]], error: String?, usedThermalFallback: Bool) {
+        if useThermalFallback {
+            let fallback = runPowerMetrics(arguments: [
+                "-n", "1", "-i", "500", "--samplers", "thermal", "--show-extra-power-info",
+            ])
+            let parsed = parsePowerMetrics(output: fallback.output, error: fallback.error)
+            return (parsed.temps, parsed.fans, parsed.error, true)
+        }
+
+        let primary = runPowerMetrics(arguments: ["-n", "1", "-i", "500", "--samplers", "smc"])
+        if PowerMetricsSamplerSelection.shouldUseThermalFallback(error: primary.error) {
+            let fallback = runPowerMetrics(arguments: [
+                "-n", "1", "-i", "500", "--samplers", "thermal", "--show-extra-power-info",
+            ])
+            let parsed = parsePowerMetrics(output: fallback.output, error: fallback.error)
+            return (parsed.temps, parsed.fans, parsed.error, true)
+        }
+        let parsed = parsePowerMetrics(output: primary.output, error: primary.error)
+        return (parsed.temps, parsed.fans, parsed.error, false)
+    }
+
+    private static func runPowerMetrics(arguments: [String]) -> (output: String?, error: String?) {
         let task = Process()
         task.launchPath = "/usr/bin/powermetrics"
-        task.arguments = ["-n", "1", "-i", "500", "--samplers", "smc"]
+        task.arguments = arguments
         let pipe = Pipe()
         task.standardOutput = pipe
         task.standardError = pipe  // powermetrics writes errors to stderr
@@ -473,7 +648,7 @@ final class PowerMetricsSampler {
         do {
             try task.run()
         } catch {
-            return ([], [], "powermetrics launch failed: \(error.localizedDescription)")
+            return (nil, "powermetrics launch failed: \(error.localizedDescription)")
         }
 
         let data = pipe.fileHandleForReading.readDataToEndOfFile()
@@ -481,43 +656,22 @@ final class PowerMetricsSampler {
 
         guard task.terminationStatus == 0 else {
             let err = String(data: data, encoding: .utf8) ?? ""
-            return ([], [], "powermetrics exited \(task.terminationStatus): \(err.prefix(200))")
+            return (nil, "powermetrics exited \(task.terminationStatus): \(err.prefix(200))")
         }
 
-        guard let output = String(data: data, encoding: .utf8), !output.isEmpty else {
-            return ([], [], "powermetrics produced no output")
-        }
+        return (String(data: data, encoding: .utf8), nil)
+    }
 
-        if output.lowercased().contains("unrecognized sampler") {
-            return ([], [], "powermetrics SMC sampler unavailable on this machine")
-        }
+    private static func parsePowerMetrics(
+        output: String?,
+        error: String?
+    ) -> (temps: [[String: Any]], fans: [[String: Any]], error: String?) {
+        if let error { return ([], [], error) }
+        guard let output, !output.isEmpty else { return ([], [], "powermetrics produced no output") }
 
-        var temps: [[String: Any]] = []
-        var fans: [[String: Any]] = []
-
-        // CPU die temperature
-        if let cpu = matchDouble(in: output, pattern: #"CPU die temperature:\s*([\d.]+)\s*C"#) {
-            temps.append(["name": "CPU Die", "key": "PMCPU", "value": cpu, "maxValue": 100])
-        }
-        // GPU die temperature
-        if let gpu = matchDouble(in: output, pattern: #"GPU die temperature:\s*([\d.]+)\s*C"#) {
-            temps.append(["name": "GPU Die", "key": "PMGPU", "value": gpu, "maxValue": 100])
-        }
-        // IO die temperature (present on some Apple Silicon machines)
-        if let io = matchDouble(in: output, pattern: #"IO die temperature:\s*([\d.]+)\s*C"#) {
-            temps.append(["name": "IO Die", "key": "PMIO", "value": io, "maxValue": 100])
-        }
-
-        // Fans: there may be multiple "Fan: <rpm> rpm" lines
-        let fanRegex = try? NSRegularExpression(pattern: #"Fan:\s*([\d.]+)\s*rpm"#, options: .caseInsensitive)
-        let nsRange = NSRange(output.startIndex..., in: output)
-        let matches = fanRegex?.matches(in: output, options: [], range: nsRange) ?? []
-        for (idx, match) in matches.enumerated() {
-            guard let range = Range(match.range(at: 1), in: output) else { continue }
-            if let rpm = Double(output[range]) {
-                fans.append(["id": idx, "name": "Fan \(idx + 1)", "actualRPM": rpm, "minimumRPM": 0, "maximumRPM": 8000])
-            }
-        }
+        let readings = PowerMetricsParser.parse(output)
+        let temps = readings.temps
+        let fans = readings.fans
 
         if temps.isEmpty && fans.isEmpty {
             return ([], [], "powermetrics output contained no parseable SMC data")
@@ -526,23 +680,6 @@ final class PowerMetricsSampler {
         return (temps, fans, nil)
     }
 
-    private static func matchDouble(in text: String, pattern: String) -> Double? {
-        guard let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive) else { return nil }
-        let range = NSRange(text.startIndex..., in: text)
-        guard let match = regex.firstMatch(in: text, options: [], range: range),
-              let r = Range(match.range(at: 1), in: text),
-              let v = Double(text[r]) else { return nil }
-        return v
-    }
-
-    private static func matchInt(in text: String, pattern: String) -> Int? {
-        guard let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive) else { return nil }
-        let range = NSRange(text.startIndex..., in: text)
-        guard let match = regex.firstMatch(in: text, options: [], range: range),
-              let r = Range(match.range(at: 1), in: text),
-              let v = Int(text[r]) else { return nil }
-        return v
-    }
 }
 
 // MARK: - HID temperature reader (Apple Silicon PMU sensors)
@@ -688,42 +825,12 @@ private func refreshPowerMetricsFallback(
     let hidTemps = discoveredHIDTemps ?? HIDTemperatureReader.shared.readTemperatures()
     PowerMetricsSampler.shared.start(
         interval: 0.5,
-        needsFans: fans.isEmpty,
+        needsFans: !fans.contains { $0["hasLiveRPM"] as? Bool == true },
         needsTemps: smcTemps.isEmpty && hidTemps.isEmpty
     )
 }
 
 // MARK: - Socket server
-
-/// Kill any other ClassGodHelper processes so a freshly-built helper can take
-/// over the socket even if an older instance is still running.
-private func cleanupStaleHelpers() {
-    let myPID = getpid()
-    let task = Process()
-    task.launchPath = "/bin/ps"
-    task.arguments = ["-eo", "pid,comm"]
-    let pipe = Pipe()
-    task.standardOutput = pipe
-    do {
-        try task.run()
-        let data = pipe.fileHandleForReading.readDataToEndOfFile()
-        task.waitUntilExit()
-        guard let output = String(data: data, encoding: .utf8) else { return }
-        for line in output.split(separator: "\n") {
-            let parts = line.split(separator: " ", omittingEmptySubsequences: true)
-            guard parts.count >= 2 else { continue }
-            let command = String(parts[1])
-            guard command == "ClassGodHelper" || command.hasSuffix("/ClassGodHelper") else { continue }
-            guard let pid = pid_t(parts[0]), pid != myPID else { continue }
-            print("[Helper] Terminating stale helper pid=\(pid)")
-            kill(pid, SIGTERM)
-        }
-        // Give the old helper a moment to release the socket.
-        Thread.sleep(forTimeInterval: 0.5)
-    } catch {
-        print("[Helper] cleanupStaleHelpers failed: \(error)")
-    }
-}
 
 private func setupSocket() -> Int32 {
     var addr = sockaddr_un()
@@ -759,8 +866,14 @@ private func setupSocket() -> Int32 {
         return -1
     }
 
-    // Allow any user to connect to the socket (not just root)
-    chmod(path, 0o666)
+    guard let peerUID = allowedPeerUID,
+          chown(path, peerUID, gid_t.max) == 0,
+          chmod(path, 0o600) == 0 else {
+        print("[Helper] failed to secure socket ownership: \(errno)")
+        close(fd)
+        unlink(path)
+        return -1
+    }
 
     print("[Helper] Listening on \(path)")
     return fd
@@ -802,7 +915,12 @@ private func sendAll(fd: Int32, data: Data) -> Bool {
 }
 
 private func handleClient(fd: Int32) {
-    defer { close(fd) }
+    let smc = SMCHelper.shared
+    defer {
+        PowerMetricsSampler.shared.stop()
+        smc.restoreSystemFanControl()
+        close(fd)
+    }
 
     var noSigPipe: Int32 = 1
     setsockopt(fd, SOL_SOCKET, SO_NOSIGPIPE, &noSigPipe, socklen_t(MemoryLayout<Int32>.size))
@@ -820,10 +938,12 @@ private func handleClient(fd: Int32) {
         return
     }
 
+    refreshPowerMetricsFallback(using: smc)
+
     while true {
         guard let header = readN(fd: fd, n: 4),
               header.count == 4 else { break }
-        let length = header.withUnsafeBytes { $0.load(as: UInt32.self).bigEndian }
+        let length = header.withUnsafeBytes { $0.loadUnaligned(as: UInt32.self).bigEndian }
         guard length > 0, length < 1024 * 1024,
               let payload = readN(fd: fd, n: Int(length)),
               payload.count == Int(length),
@@ -834,8 +954,9 @@ private func handleClient(fd: Int32) {
             continue
         }
 
-        let smc = SMCHelper.shared
         switch cmd {
+        case "ping":
+            sendJSON(fd: fd, ["success": true])
         case "readFans":
             sendJSON(fd: fd, ["success": true, "data": smc.readFans()])
         case "readTemps":
@@ -865,15 +986,26 @@ private func cleanupSocket() {
     if listen_fd >= 0 { close(listen_fd) }
 }
 
-private func signalHandler(_ sig: Int32) {
-    cleanupSocket()
-    exit(0)
+private func installTerminationHandlers() {
+    for signalNumber in [SIGINT, SIGTERM] {
+        signal(signalNumber, SIG_IGN)
+        let source = DispatchSource.makeSignalSource(
+            signal: signalNumber,
+            queue: .global(qos: .userInitiated)
+        )
+        source.setEventHandler {
+            SMCHelper.shared.restoreSystemFanControl()
+            cleanupSocket()
+            exit(0)
+        }
+        source.resume()
+        terminationSources.append(source)
+    }
 }
 
 // MARK: - Entry
 
-signal(SIGINT) { _ in signalHandler(SIGINT) }
-signal(SIGTERM) { _ in signalHandler(SIGTERM) }
+installTerminationHandlers()
 
 guard let peerUID = HelperPeerPolicy.allowedUID(
     arguments: CommandLine.arguments,
@@ -884,10 +1016,6 @@ guard let peerUID = HelperPeerPolicy.allowedUID(
 }
 allowedPeerUID = peerUID
 print("[Helper] Allowed peer UID: \(peerUID)")
-
-// Clean up stale helpers first, before doing any expensive work, so we can
-// take over the socket as soon as possible.
-cleanupStaleHelpers()
 
 // Pre-flight sensor discovery so user can see what this machine exposes.
 let smc = SMCHelper.shared
@@ -911,15 +1039,6 @@ if hidTemps.count > 15 {
     print("[Helper]   ... and \(hidTemps.count - 15) more")
 }
 
-// Start powermetrics sampler in parallel. It runs independent of SMC reads
-// and provides a fallback data path on modern Apple Silicon.
-refreshPowerMetricsFallback(
-    using: smc,
-    fans: discoveredFans,
-    smcTemps: discoveredTemps,
-    hidTemps: hidTemps
-)
-
 listen_fd = setupSocket()
 guard listen_fd >= 0 else {
     exit(1)
@@ -929,9 +1048,7 @@ DispatchQueue.global(qos: .background).async {
     while true {
         let client = accept(listen_fd, nil, nil)
         guard client >= 0 else { continue }
-        DispatchQueue.global(qos: .utility).async {
-            handleClient(fd: client)
-        }
+        handleClient(fd: client)
     }
 }
 

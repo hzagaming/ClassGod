@@ -15,7 +15,8 @@ nonisolated final class SMCHelperClient: @unchecked Sendable {
     static let socketPath = "/tmp/com.hanazar.classgod.helper.sock"
 
     var isHelperAvailable: Bool {
-        FileManager.default.fileExists(atPath: Self.socketPath)
+        guard FileManager.default.fileExists(atPath: Self.socketPath) else { return false }
+        return sendCommand(["cmd": "ping"])?["success"] as? Bool == true
     }
 
     private var fd: Int32 = -1
@@ -26,40 +27,41 @@ nonisolated final class SMCHelperClient: @unchecked Sendable {
     // MARK: - Public API
 
     func readFans() -> [[String: Any]]? {
-        guard isHelperAvailable else { return nil }
+        guard FileManager.default.fileExists(atPath: Self.socketPath) else { return nil }
         let res = sendCommand(["cmd": "readFans"])
         return res?["data"] as? [[String: Any]]
     }
 
     func readTemps() -> [[String: Any]]? {
-        guard isHelperAvailable else { return nil }
+        guard FileManager.default.fileExists(atPath: Self.socketPath) else { return nil }
         let res = sendCommand(["cmd": "readTemps"])
         return res?["data"] as? [[String: Any]]
     }
 
     /// Combined read: returns both fans and temps from a single helper round-trip.
     func readAll() -> (fans: [[String: Any]], temps: [[String: Any]])? {
-        guard isHelperAvailable else { return nil }
-        guard let res = sendCommand(["cmd": "readAll"]) else { return nil }
+        guard FileManager.default.fileExists(atPath: Self.socketPath) else { return nil }
+        guard let res = sendCommand(["cmd": "readAll"]),
+              res["success"] as? Bool == true else { return nil }
         let fans = res["fans"] as? [[String: Any]] ?? []
         let temps = res["temps"] as? [[String: Any]] ?? []
         return (fans: fans, temps: temps)
     }
 
     func setFanMode(_ mode: String, fanIndex: Int) -> Bool {
-        guard isHelperAvailable else { return false }
+        guard FileManager.default.fileExists(atPath: Self.socketPath) else { return false }
         let res = sendCommand(["cmd": "setFanMode", "mode": mode, "fanIndex": fanIndex])
         return res?["success"] as? Bool == true
     }
 
     func setFanRPM(_ rpm: Double, fanIndex: Int) -> Bool {
-        guard isHelperAvailable else { return false }
+        guard FileManager.default.fileExists(atPath: Self.socketPath) else { return false }
         let res = sendCommand(["cmd": "setFanRPM", "rpm": rpm, "fanIndex": fanIndex])
         return res?["success"] as? Bool == true
     }
 
     func rescan() {
-        guard isHelperAvailable else { return }
+        guard FileManager.default.fileExists(atPath: Self.socketPath) else { return }
         _ = sendCommand(["cmd": "rescan"])
     }
 
@@ -96,7 +98,7 @@ nonisolated final class SMCHelperClient: @unchecked Sendable {
             disconnectLocked()
             return nil
         }
-        let length = respHeader.withUnsafeBytes { $0.load(as: UInt32.self).bigEndian }
+        let length = respHeader.withUnsafeBytes { $0.loadUnaligned(as: UInt32.self).bigEndian }
         guard length > 0, length < 1024 * 1024,
               let respBody = readN(fd: fd, n: Int(length)),
               respBody.count == Int(length),

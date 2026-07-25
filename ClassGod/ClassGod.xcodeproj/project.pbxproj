@@ -344,16 +344,20 @@
 			inputFileListPaths = (
 			);
 			inputPaths = (
+				"$(SRCROOT)/../ClassGodHelper/Package.swift",
+				"$(SRCROOT)/../ClassGodHelper/Sources",
+				"$(SRCROOT)/../ClassGodHelper/com.hanazar.classgod.helper.plist",
 			);
 			name = "Build ClassGodHelper";
 			outputFileListPaths = (
 			);
 			outputPaths = (
-				"$(BUILT_PRODUCTS_DIR)/$(EXECUTABLE_FOLDER_PATH)/ClassGodHelper",
+				"$(BUILT_PRODUCTS_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/ClassGodHelper",
+				"$(BUILT_PRODUCTS_DIR)/$(CONTENTS_FOLDER_PATH)/Library/LaunchDaemons/com.hanazar.classgod.helper.plist",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "cd \"$SRCROOT/../ClassGodHelper\"\nswift build --disable-sandbox -c release\ncp -f \".build/release/ClassGodHelper\" \"$BUILT_PRODUCTS_DIR/$EXECUTABLE_FOLDER_PATH/ClassGodHelper\"\nchmod +x \"$BUILT_PRODUCTS_DIR/$EXECUTABLE_FOLDER_PATH/ClassGodHelper\"\n";
+			shellScript = "cd \"$SRCROOT/../ClassGodHelper\"\nHELPER_BUILD_DIR=\"$DERIVED_FILE_DIR/ClassGodHelperBuild\"\nHELPER_CACHE_DIR=\"$DERIVED_FILE_DIR/ClassGodHelperModuleCache\"\nCLANG_MODULE_CACHE_PATH=\"$HELPER_CACHE_DIR\" SWIFTPM_MODULECACHE_OVERRIDE=\"$HELPER_CACHE_DIR\" swift build --disable-sandbox -c release --scratch-path \"$HELPER_BUILD_DIR\"\nHELPER_RESOURCES=\"$BUILT_PRODUCTS_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH\"\nDAEMON_DIRECTORY=\"$BUILT_PRODUCTS_DIR/$CONTENTS_FOLDER_PATH/Library/LaunchDaemons\"\nmkdir -p \"$HELPER_RESOURCES\" \"$DAEMON_DIRECTORY\"\ncp -f \"$HELPER_BUILD_DIR/release/ClassGodHelper\" \"$HELPER_RESOURCES/ClassGodHelper\"\ncp -f \"$SRCROOT/../ClassGodHelper/com.hanazar.classgod.helper.plist\" \"$DAEMON_DIRECTORY/com.hanazar.classgod.helper.plist\"\nchmod +x \"$HELPER_RESOURCES/ClassGodHelper\"\nif [ \"$CODE_SIGNING_ALLOWED\" = \"YES\" ]; then\n  if [ -n \"$EXPANDED_CODE_SIGN_IDENTITY\" ]; then\n    /usr/bin/codesign --force --identifier com.hanazar.classgod.helper --sign \"$EXPANDED_CODE_SIGN_IDENTITY\" --timestamp=none \"$HELPER_RESOURCES/ClassGodHelper\"\n  else\n    /usr/bin/codesign --force --identifier com.hanazar.classgod.helper --sign - --timestamp=none \"$HELPER_RESOURCES/ClassGodHelper\"\n  fi\nfi\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -621,6 +625,7 @@
 				CURRENT_PROJECT_VERSION = 36;
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				ENABLE_USER_SELECTED_FILES = readwrite;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_LSUIElement = YES;
@@ -667,6 +672,7 @@
 				CURRENT_PROJECT_VERSION = 36;
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				ENABLE_USER_SELECTED_FILES = readwrite;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_LSUIElement = YES;

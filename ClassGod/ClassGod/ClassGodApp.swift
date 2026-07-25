@@ -1653,6 +1653,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         statusItemTimer?.invalidate()
         statusItemUpdateTask?.cancel()
         statusItemUpdateTask = nil
+        SMCService.shared.restoreSystemFanControl()
         SMCHelperClient.shared.disconnect()
         DesktopWallpaperController.shared.hideWallpapers()
         DesktopWidgetManager.shared.setEnabled(false)
@@ -1797,10 +1798,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                     // Only use real hardware sensors for the menu-bar summary; estimates would be misleading.
                     let realTemps = all.sensors.filter { !$0.isEstimated }
                     let highestTemp = realTemps.map(\.value).max() ?? 0
-                    let avgRPM = all.fans.isEmpty ? 0 : all.fans.map(\.actualRPM).reduce(0, +) / Double(all.fans.count)
+                    let avgRPM = FanControlRouting.averageLiveRPM(in: all.fans)
                     let unit = prefs.fanControlTemperatureUnit
                     let tempStr = realTemps.isEmpty ? "--" : unit.formatted(highestTemp)
-                    let rpmStr = all.fans.isEmpty ? "-- RPM" : "\(Int(avgRPM)) RPM"
+                    let rpmStr = avgRPM.map { "\(Int($0)) RPM" } ?? "-- RPM"
                     let title = " \(tempStr) / \(rpmStr)"
                     await MainActor.run {
                         defer { self.statusItemRefreshGate.end() }

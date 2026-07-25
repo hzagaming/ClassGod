@@ -4,36 +4,79 @@
 //
 
 import SwiftUI
+import AppKit
 
 struct FanControlView: View {
     @StateObject private var viewModel = FanControlViewModel()
     @ObservedObject private var prefs = PreferencesManager.shared
+    @ObservedObject private var helper = PrivilegedHelperManager.shared
 
     var onClose: () -> Void
 
     private var zoomScale: CGFloat { CGFloat(prefs.preferences.windowZoomScale) }
     private var unit: TemperatureUnit { prefs.preferences.fanControlTemperatureUnit }
-
-    private var helperStatusMessage: String {
-        if SMCService.shared.isHelperAvailable {
-            return String(localized: "helper.status.running")
-        }
-        if SMCService.shared.isAppleSilicon {
-            return String(localized: "helper.status.restricted")
-        }
-        return String(localized: "helper.status.optional")
+    private var hasControllableFans: Bool { viewModel.fans.contains(where: \.canControl) }
+    private var hasLiveFans: Bool { viewModel.fans.contains(where: \.hasPlausibleLiveRPM) }
+    private var hasRealTemperatures: Bool { viewModel.sensors.contains { !$0.isEstimated } }
+    private var realTemperatureCount: Int { viewModel.sensors.filter { !$0.isEstimated }.count }
+    private var averageTemperatureText: String {
+        hasRealTemperatures ? unit.formatted(viewModel.averageComputerTemp) : "--"
+    }
+    private var averageCPUTemperatureText: String {
+        viewModel.sensors.contains { !$0.isEstimated && ($0.name.contains("CPU") || $0.name.contains("Cluster")) }
+            ? unit.formatted(viewModel.averageCPUTemp)
+            : "--"
+    }
+    private var averageFanRPMText: String {
+        FanControlRouting.averageLiveRPM(in: viewModel.fans).map { "\(Int($0)) RPM" } ?? "-- RPM"
+    }
+    private var helperRequired: Bool {
+        SMCService.shared.isAppleSilicon || !hasControllableFans
+    }
+    private var helperHealthy: Bool {
+        viewModel.helperAvailable || !helperRequired
     }
 
-    private func copyHelperCommand() {
-        let helperPath = Bundle.main.bundleURL
-            .appendingPathComponent("Contents/MacOS/ClassGodHelper")
-            .path
-        // Shell-safe single-quote wrapping: close quote, insert escaped quote, reopen.
-        let escaped = helperPath.replacingOccurrences(of: "'", with: "'\\''")
-        let command = "sudo '\(escaped)'"
-        NSPasteboard.general.clearContents()
-        NSPasteboard.general.setString(command, forType: .string)
-        viewModel.showToast(message: String(localized: "fan.toast.helper_copied"))
+    private var helperAuthorizationButton: some View {
+        Button(action: {
+            SoundEffectManager.shared.playButtonClick()
+            HapticManager.shared.generic()
+            viewModel.requestPrivilegedHelperAuthorization()
+        }) {
+            HStack(spacing: 4 * zoomScale) {
+                Image(systemName: helper.status == .requiresApproval ? "gearshape.fill" : "checkmark.shield.fill")
+                    .font(.system(size: 9 * zoomScale))
+                Text(helper.status == .requiresApproval
+                     ? String(localized: "fan.open_helper_settings")
+                     : String(localized: "fan.authorize_helper"))
+                    .font(.system(size: 10 * zoomScale, weight: .medium, design: .monospaced))
+            }
+            .foregroundStyle(.green.opacity(0.9))
+            .padding(.horizontal, 8 * zoomScale)
+            .padding(.vertical, 4 * zoomScale)
+        }
+        .buttonStyle(.plain)
+        .disabled(helper.status == .notFound)
+        .opacity(helper.status == .notFound ? 0.4 : 1)
+    }
+
+    private var helperStatusMessage: String {
+        if viewModel.helperAvailable {
+            return String(localized: "helper.status.running")
+        }
+        if !helperRequired {
+            return String(localized: "helper.status.optional")
+        }
+        switch helper.status {
+        case .enabled:
+            return String(localized: "helper.status.starting")
+        case .requiresApproval:
+            return String(localized: "helper.status.requires_approval")
+        case .notRegistered:
+            return String(localized: "helper.status.not_registered")
+        case .notFound:
+            return String(localized: "helper.status.not_found")
+        }
     }
 
     var body: some View {
@@ -62,6 +105,7 @@ struct FanControlView: View {
                 .allowsHitTesting(false)
         )
         .onAppear {
+            helper.refreshStatus()
             viewModel.startMonitoring()
         }
         .onDisappear {
@@ -69,6 +113,12 @@ struct FanControlView: View {
         }
         .onChange(of: prefs.preferences.fanControlUpdateInterval) { _, _ in
             viewModel.startMonitoring()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+            helper.refreshStatus()
+            if helper.status == .enabled, !viewModel.helperAvailable {
+                viewModel.rescanHardware()
+            }
         }
         .alert(String(localized: "alert.error"), isPresented: $viewModel.showError) {
             Button(String(localized: "button.ok"), role: .cancel) {}
@@ -89,7 +139,7 @@ struct FanControlView: View {
             HStack(spacing: 10 * zoomScale) {
                 Button(action: {
                     SoundEffectManager.shared.playButtonClick()
-                        HapticManager.shared.generic()
+                    HapticManager.shared.generic()
                     onClose()
                 }) {
                     Image(systemName: "xmark")
@@ -106,7 +156,12 @@ struct FanControlView: View {
                         .font(.system(size: 14 * zoomScale, weight: .semibold, design: .monospaced))
                         .foregroundStyle(.white)
 
-                    Text(String(format: String(localized: "fan.header.summary"), unit.formatted(viewModel.averageComputerTemp), unit.formatted(viewModel.averageCPUTemp), Int(viewModel.averageFanRPM)))
+                    Text(String(
+                        format: String(localized: "fan.header.summary"),
+                        averageTemperatureText,
+                        averageCPUTemperatureText,
+                        averageFanRPMText
+                    ))
                         .font(.system(size: 9 * zoomScale, design: .monospaced))
                         .foregroundStyle(.white.opacity(0.4))
                 }
@@ -117,7 +172,7 @@ struct FanControlView: View {
                     ForEach(FanControlMode.allCases) { mode in
                         Button(action: {
                             SoundEffectManager.shared.playButtonClick()
-                        HapticManager.shared.generic()
+                            HapticManager.shared.generic()
                             viewModel.setFanMode(mode)
                         }) {
                             Text(mode.displayName)
@@ -132,6 +187,8 @@ struct FanControlView: View {
                                 )
                         }
                         .buttonStyle(.plain)
+                        .disabled(mode != .system && !hasControllableFans)
+                        .opacity(mode == .system || hasControllableFans ? 1 : 0.4)
                     }
                 }
                 .background(Color.white.opacity(0.05))
@@ -140,7 +197,7 @@ struct FanControlView: View {
                 // Boost button
                 Button(action: {
                     SoundEffectManager.shared.playButtonClick()
-                        HapticManager.shared.generic()
+                    HapticManager.shared.generic()
                     if viewModel.isBoostActive {
                         viewModel.cancelBoost()
                     } else {
@@ -153,7 +210,7 @@ struct FanControlView: View {
                         Text(viewModel.isBoostActive ? String(localized: "fan.boosting") : String(localized: "fan.boost"))
                             .font(.system(size: 9 * zoomScale, weight: .bold, design: .monospaced))
                     }
-                    .opacity(viewModel.fans.isEmpty ? 0.4 : 1.0)
+                    .opacity(hasControllableFans ? 1.0 : 0.4)
                     .foregroundStyle(viewModel.isBoostActive ? .black : .yellow.opacity(0.8))
                     .padding(.horizontal, 8 * zoomScale)
                     .padding(.vertical, 4 * zoomScale)
@@ -169,7 +226,7 @@ struct FanControlView: View {
                     )
                 }
                 .buttonStyle(.plain)
-                .disabled(viewModel.fans.isEmpty)
+                .disabled(!hasControllableFans)
             }
             .padding(.horizontal)
             .padding(.vertical, 10 * zoomScale)
@@ -178,7 +235,7 @@ struct FanControlView: View {
             HStack(spacing: 8) {
                 HStack(spacing: 4) {
                     let statusColor: Color = {
-                        if viewModel.smcConnected && !viewModel.usingIORegistry {
+                        if viewModel.helperAvailable || viewModel.smcConnected && !viewModel.usingIORegistry {
                             return Color.green
                         } else if viewModel.smcConnected && viewModel.usingIORegistry {
                             return Color.yellow
@@ -190,7 +247,9 @@ struct FanControlView: View {
                     }()
                     
                     let statusText: String = {
-                        if viewModel.smcConnected && !viewModel.usingIORegistry {
+                        if viewModel.helperAvailable {
+                            return String(localized: "status.helper_connected")
+                        } else if viewModel.smcConnected && !viewModel.usingIORegistry {
                             return String(localized: "status.smc_connected")
                         } else if viewModel.smcConnected && viewModel.usingIORegistry {
                             return String(localized: "status.smc_limited")
@@ -236,7 +295,10 @@ struct FanControlView: View {
                 Spacer()
 
                 HStack(spacing: 8) {
-                    Text(String(format: String(localized: "fan.highest_temp"), unit.formatted(viewModel.highestTemperature)))
+                    Text(String(
+                        format: String(localized: "fan.highest_temp"),
+                        hasRealTemperatures ? unit.formatted(viewModel.highestTemperature) : "--"
+                    ))
                         .font(.system(size: 10 * zoomScale, design: .monospaced))
                         .foregroundStyle(.white.opacity(0.5))
 
@@ -271,7 +333,7 @@ struct FanControlView: View {
                     ForEach(SensorFilter.allCases) { filter in
                         Button(action: {
                             SoundEffectManager.shared.playButtonClick()
-                        HapticManager.shared.generic()
+                            HapticManager.shared.generic()
                             viewModel.sensorFilter = filter
                         }) {
                             Text(filter.displayName)
@@ -368,7 +430,7 @@ struct FanControlView: View {
                 // Rescan button
                 Button(action: {
                     SoundEffectManager.shared.playButtonClick()
-                        HapticManager.shared.generic()
+                    HapticManager.shared.generic()
                     viewModel.rescanHardware()
                 }) {
                     HStack(spacing: 3 * zoomScale) {
@@ -397,19 +459,24 @@ struct FanControlView: View {
             .padding(.horizontal)
 
             // Fan access reason / permission hint
-            if viewModel.fans.isEmpty, let reason = viewModel.fanAccessReason {
-                HStack(spacing: 6 * zoomScale) {
-                    Image(systemName: "exclamationmark.triangle.fill")
-                        .font(.system(size: 9 * zoomScale))
-                        .foregroundStyle(.yellow)
-                    
-                    Text(reason)
-                        .font(.system(size: 9 * zoomScale, design: .monospaced))
-                        .foregroundStyle(.white.opacity(0.5))
-                        .fixedSize(horizontal: false, vertical: true)
-                        .lineLimit(nil)
-                    
-                    Spacer()
+            if let reason = viewModel.fanAccessReason {
+                VStack(alignment: .leading, spacing: 5 * zoomScale) {
+                    HStack(spacing: 6 * zoomScale) {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .font(.system(size: 9 * zoomScale))
+                            .foregroundStyle(.yellow)
+
+                        Text(reason)
+                            .font(.system(size: 9 * zoomScale, design: .monospaced))
+                            .foregroundStyle(.white.opacity(0.5))
+                            .fixedSize(horizontal: false, vertical: true)
+
+                        Spacer()
+                    }
+
+                    if !viewModel.helperAvailable, helperRequired {
+                        helperAuthorizationButton
+                    }
                 }
                 .padding(.horizontal)
                 .padding(.vertical, 6 * zoomScale)
@@ -451,14 +518,14 @@ struct FanControlView: View {
             }
 
             VStack(spacing: 10 * zoomScale) {
-                ForEach(Array(viewModel.fans.enumerated()), id: \.element.id) { index, fan in
+                ForEach(viewModel.fans) { fan in
                     FanRow(
                         fan: fan,
                         mode: viewModel.fanMode,
                         zoomScale: zoomScale,
-                        history: viewModel.historyForFan(index: index),
+                        history: viewModel.historyForFan(id: fan.id),
                         onRPMChange: { newRPM in
-                            viewModel.setFanRPM(newRPM, fanIndex: index, debounce: true)
+                            viewModel.setFanRPM(newRPM, fanID: fan.id, debounce: true)
                         }
                     )
                 }
@@ -484,65 +551,33 @@ struct FanControlView: View {
                 DiagnosticRow(
                     icon: "checkmark.circle.fill",
                     title: "fan.diagnostic.fans",
-                    message: viewModel.fans.isEmpty ? String(localized: "fan.diagnostic.no_fan_data") : String(localized: "fan.diagnostic.fans_ok"),
-                    isGood: !viewModel.fans.isEmpty,
+                    message: viewModel.fans.isEmpty
+                        ? String(localized: "fan.diagnostic.no_fan_data")
+                        : String(localized: hasLiveFans ? "fan.diagnostic.fans_ok" : "fan.diagnostic.fans_detected"),
+                    isGood: hasLiveFans,
                     zoomScale: zoomScale
                 )
 
                 DiagnosticRow(
                     icon: "checkmark.circle.fill",
                     title: "fan.diagnostic.sensors",
-                    message: viewModel.sensors.isEmpty ? String(localized: "fan.diagnostic.no_sensor_data") : String(format: String(localized: "fan.diagnostic.sensors_active"), viewModel.sensors.count),
-                    isGood: !viewModel.sensors.isEmpty,
+                    message: viewModel.sensors.isEmpty
+                        ? String(localized: "fan.diagnostic.no_sensor_data")
+                        : hasRealTemperatures
+                            ? String(format: String(localized: "fan.diagnostic.sensors_active"), realTemperatureCount)
+                            : String(localized: "fan.diagnostic.sensors_estimated"),
+                    isGood: hasRealTemperatures,
                     zoomScale: zoomScale
                 )
 
                 // Privileged helper status
                 DiagnosticRow(
-                    icon: SMCService.shared.isHelperAvailable ? "checkmark.shield.fill" : "lock.shield.fill",
+                    icon: helperHealthy ? "checkmark.shield.fill" : "lock.shield.fill",
                     title: "fan.diagnostic.helper",
                     message: helperStatusMessage,
-                    isGood: SMCService.shared.isHelperAvailable,
+                    isGood: helperHealthy,
                     zoomScale: zoomScale
                 )
-
-                if !SMCService.shared.isHelperAvailable, SMCService.shared.isAppleSilicon {
-                    HStack(spacing: 8 * zoomScale) {
-                        Button(action: {
-                            SoundEffectManager.shared.playButtonClick()
-                        HapticManager.shared.generic()
-                            viewModel.launchPrivilegedHelper()
-                        }) {
-                            HStack(spacing: 4 * zoomScale) {
-                                Image(systemName: "play.fill")
-                                    .font(.system(size: 9 * zoomScale))
-                                Text(String(localized: "fan.start_helper"))
-                                    .font(.system(size: 10 * zoomScale, weight: .medium, design: .monospaced))
-                            }
-                            .foregroundStyle(.green.opacity(0.9))
-                            .padding(.horizontal, 8 * zoomScale)
-                            .padding(.vertical, 4 * zoomScale)
-                        }
-                        .buttonStyle(.plain)
-                        
-                        Button(action: {
-                            SoundEffectManager.shared.playButtonClick()
-                        HapticManager.shared.generic()
-                            copyHelperCommand()
-                        }) {
-                            HStack(spacing: 4 * zoomScale) {
-                                Image(systemName: "doc.on.doc")
-                                    .font(.system(size: 9 * zoomScale))
-                                Text(String(localized: "fan.copy_command"))
-                                    .font(.system(size: 10 * zoomScale, weight: .medium, design: .monospaced))
-                            }
-                            .foregroundStyle(.yellow.opacity(0.8))
-                            .padding(.horizontal, 8 * zoomScale)
-                            .padding(.vertical, 4 * zoomScale)
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
 
                 if !viewModel.sensors.isEmpty {
                     Button(action: {
@@ -766,17 +801,40 @@ struct FanRow: View {
 
 
     private var progress: Double {
-        guard fan.maximumRPM > fan.minimumRPM else { return 0 }
-        return (fan.actualRPM - fan.minimumRPM) / (fan.maximumRPM - fan.minimumRPM)
+        guard fan.hasPlausibleLiveRPM, fan.maximumRPM > fan.minimumRPM else { return 0 }
+        return min(1, max(0, (fan.actualRPM - fan.minimumRPM) / (fan.maximumRPM - fan.minimumRPM)))
+    }
+
+    private var availabilityColor: Color {
+        switch fan.availability {
+        case .controllable: return .green
+        case .readOnly: return .yellow
+        case .detected: return .cyan
+        }
+    }
+
+    private var availabilityKey: String {
+        switch fan.availability {
+        case .controllable: return "fan.control.realtime"
+        case .readOnly: return "fan.control.read_only"
+        case .detected: return "fan.control.detected"
+        }
     }
 
     private var barColor: Color {
+        guard fan.maximumRPM > fan.minimumRPM else { return .cyan }
         if fan.actualRPM > fan.maximumRPM * 0.9 {
             return .red
         } else if fan.actualRPM > fan.maximumRPM * 0.6 {
             return .yellow
         }
         return .green
+    }
+
+    private var displayTargetRPM: Double {
+        guard fan.canControl else { return 0 }
+        let target = fan.targetRPM > 0 ? fan.targetRPM : fan.actualRPM
+        return min(fan.maximumRPM, max(fan.minimumRPM, target))
     }
 
     var body: some View {
@@ -786,21 +844,31 @@ struct FanRow: View {
                     .font(.system(size: 11 * zoomScale, weight: .medium, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.85))
 
+                Text(String(localized: String.LocalizationValue(availabilityKey)))
+                    .font(.system(size: 8 * zoomScale, weight: .bold, design: .monospaced))
+                    .foregroundStyle(availabilityColor)
+                    .padding(.horizontal, 4 * zoomScale)
+                    .padding(.vertical, 1 * zoomScale)
+                    .background(availabilityColor.opacity(0.1))
+                    .clipShape(RoundedRectangle(cornerRadius: 3 * zoomScale))
+
                 Spacer()
 
-                Text("\(Int(fan.actualRPM)) RPM")
+                Text(fan.hasPlausibleLiveRPM ? "\(Int(fan.actualRPM)) RPM" : "-- RPM")
                     .font(.system(size: 11 * zoomScale, weight: .bold, design: .monospaced))
                     .foregroundStyle(.white)
 
                 let pct = fan.maximumRPM > fan.minimumRPM
-                    ? Int((fan.actualRPM - fan.minimumRPM) / (fan.maximumRPM - fan.minimumRPM) * 100)
+                    ? Int(progress * 100)
                     : 0
-                Text("(\(pct)%)")
-                    .font(.system(size: 10 * zoomScale, design: .monospaced))
-                    .foregroundStyle(.white.opacity(0.4))
-                    .frame(width: 36 * zoomScale, alignment: .trailing)
+                if fan.hasPlausibleLiveRPM, fan.maximumRPM > fan.minimumRPM {
+                    Text("(\(pct)%)")
+                        .font(.system(size: 10 * zoomScale, design: .monospaced))
+                        .foregroundStyle(.white.opacity(0.4))
+                        .frame(width: 36 * zoomScale, alignment: .trailing)
+                }
 
-                if fan.targetRPM > 0 && mode == .autoMax {
+                if fan.targetRPM > 0 && (mode == .autoMax || mode == .custom || mode == .manual) {
                     Text("/ \(Int(fan.targetRPM))")
                         .font(.system(size: 10 * zoomScale, design: .monospaced))
                         .foregroundStyle(.white.opacity(0.4))
@@ -829,20 +897,30 @@ struct FanRow: View {
                 .frame(height: 10 * zoomScale)
             }
 
-            HStack {
-                Text("\(Int(fan.minimumRPM))")
-                    .font(.system(size: 9 * zoomScale, design: .monospaced))
-                    .foregroundStyle(.white.opacity(0.3))
+            if fan.maximumRPM > fan.minimumRPM {
+                HStack {
+                    Text("\(Int(fan.minimumRPM))")
+                        .font(.system(size: 9 * zoomScale, design: .monospaced))
+                        .foregroundStyle(.white.opacity(0.3))
 
-                Spacer()
+                    Spacer()
 
-                Text("\(Int(fan.maximumRPM))")
-                    .font(.system(size: 9 * zoomScale, design: .monospaced))
-                    .foregroundStyle(.white.opacity(0.3))
+                    Text("\(Int(fan.maximumRPM))")
+                        .font(.system(size: 9 * zoomScale, design: .monospaced))
+                        .foregroundStyle(.white.opacity(0.3))
+                }
+            } else {
+                Text(String(localized: String.LocalizationValue(
+                    fan.hasPlausibleLiveRPM
+                        ? "fan.control.read_only_detail"
+                        : "fan.control.unavailable_detail"
+                )))
+                    .font(.system(size: 8 * zoomScale, design: .monospaced))
+                    .foregroundStyle(.yellow.opacity(0.65))
             }
 
             // Manual RPM slider (shown in Auto Max mode for override and Manual mode for direct control)
-            if mode == .autoMax || mode == .manual {
+            if fan.canControl && (mode == .autoMax || mode == .manual) {
                 HStack(spacing: 8 * zoomScale) {
                     Text(mode == .manual ? String(localized: "fan.set") : String(localized: "fan.manual_override"))
                         .font(.system(size: 9 * zoomScale, design: .monospaced))
@@ -852,8 +930,7 @@ struct FanRow: View {
                     Slider(
                         value: Binding(
                             get: {
-                                guard fan.maximumRPM > fan.minimumRPM else { return 0 }
-                                return (fan.targetRPM - fan.minimumRPM) / (fan.maximumRPM - fan.minimumRPM)
+                                (displayTargetRPM - fan.minimumRPM) / (fan.maximumRPM - fan.minimumRPM)
                             },
                             set: { newValue in
                                 let rpm = fan.minimumRPM + (fan.maximumRPM - fan.minimumRPM) * newValue
@@ -864,7 +941,7 @@ struct FanRow: View {
                     )
                     .frame(height: 14 * zoomScale)
 
-                    Text("\(Int(fan.targetRPM))")
+                    Text("\(Int(displayTargetRPM))")
                         .font(.system(size: 9 * zoomScale, design: .monospaced))
                         .foregroundStyle(.white.opacity(0.5))
                         .frame(width: 40 * zoomScale, alignment: .trailing)

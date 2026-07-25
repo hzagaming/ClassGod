@@ -2544,32 +2544,36 @@
     },
     "fan.access.apple_silicon_restricted" : {
       "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Apple Silicon restricts fan access to system processes. Run ClassGodHelper as root to enable full fan monitoring and control." } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Apple Silicon 会限制用户进程访问风扇。请以 root 运行 ClassGodHelper，以启用完整的风扇监测与控制。" } }
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Apple Silicon restricts fan access to approved system services. Authorize the fan control Helper, then rescan." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Apple Silicon 仅允许获批的系统服务访问风扇。请授权风扇控制 Helper，然后重新扫描。" } }
       }
     },
+    "fan.access.detected_no_rpm" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Fan hardware was detected, but no live RPM reading is available. Approve the privileged Helper, then rescan." } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已识别风扇硬件，但当前没有实时 RPM 读数。请批准特权 Helper，然后重新扫描。" } } } },
+    "fan.access.hardware_read_only" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "The approved Helper is reporting live RPM, but this hardware did not accept verified safe write controls." } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已批准的 Helper 正在报告实时 RPM，但此硬件未通过安全写入验证，当前仅可读取。" } } } },
+    "fan.access.helper_detected_no_rpm" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "The approved Helper detected fan hardware, but macOS has not exposed a trustworthy live RPM reading yet." } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已批准的 Helper 识别到风扇硬件，但 macOS 暂未开放可信的实时 RPM 读数。" } } } },
     "fan.access.helper_no_data" : {
       "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "The Helper socket is available but returned no hardware data. Restart ClassGodHelper, then rescan." } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Helper 套接字可用，但未返回硬件数据。请重启 ClassGodHelper 后重新扫描。" } }
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "The approved Helper is connected but returned no hardware data. Wait briefly, then rescan." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已批准的 Helper 已连接，但未返回硬件数据。请稍候片刻再重新扫描。" } }
       }
     },
     "fan.access.helper_present" : {
       "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "The privileged Helper is connected. If hardware still shows N/A, restart the Helper and rescan." } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "特权 Helper 已连接。如果硬件仍显示 N/A，请重启 Helper 并重新扫描。" } }
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "The approved Helper is connected. Supported hardware readings are updating live." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已批准的 Helper 已连接，硬件支持的读数正在实时更新。" } }
       }
     },
     "fan.access.no_fans" : {
       "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "SMC is connected but reported no controllable fans. This Mac may be fanless." } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "SMC 已连接，但未报告可控制的风扇。这台 Mac 可能是无风扇机型。" } }
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No fan hardware was reported. This Mac may be fanless, or macOS may not expose fan telemetry." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "未报告风扇硬件。这台 Mac 可能是无风扇机型，或 macOS 未开放风扇遥测。" } }
       }
     },
+    "fan.access.read_only" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Live fan speed is available, but this source is read-only. Authorize the privileged Helper to enable supported controls." } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已获得实时风扇转速，但当前来源仅可读取。请授权特权 Helper 以启用硬件支持的调速功能。" } } } },
     "fan.access.smc_unavailable" : {
       "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Could not connect to SMC. Confirm that App Sandbox is disabled, then rescan." } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "无法连接 SMC。请确认 App Sandbox 已关闭，然后重新扫描。" } }
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Direct SMC access is unavailable. Authorize the fan control Helper, then rescan." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "SMC 直连不可用。请授权风扇控制 Helper，然后重新扫描。" } }
       }
     },
     "button.retry" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Retry" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "重试" } } } },
@@ -2704,22 +2708,12 @@
         }
       }
     },
-    "fan.copy_command" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Copy Command"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "复制命令"
-          }
-        }
-      }
-    },
+    "fan.authorize_helper" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Authorize Fan Control" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "授权风扇控制" } } } },
+    "fan.control.detected" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "DETECTED · NO RPM" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已识别 · 暂无转速" } } } },
+    "fan.control.read_only" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "LIVE · READ ONLY" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "实时 · 只读" } } } },
+    "fan.control.read_only_detail" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "RPM updates live; this hardware path does not expose safe write controls." } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "RPM 会实时更新；当前硬件路径未开放安全写入控制。" } } } },
+    "fan.control.realtime" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "LIVE · CONTROLLABLE" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "实时 · 可调" } } } },
+    "fan.control.unavailable_detail" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Fan hardware is present, but a trustworthy live RPM range is not available yet." } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已发现风扇硬件，但暂未获得可信的实时 RPM 与转速范围。" } } } },
     "fan.copy_sensor_data" : {
       "localizations" : {
         "en" : { "stringUnit" : { "state" : "translated", "value" : "Copy Sensor Data" } },
@@ -2742,6 +2736,7 @@
         }
       }
     },
+    "fan.diagnostic.fans_detected" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Fan hardware detected; waiting for a trustworthy live RPM reading." } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已识别风扇硬件，正在等待可信的实时 RPM 读数。" } } } },
     "fan.diagnostic.fans_ok" : {
       "localizations" : {
         "en" : {
@@ -2822,6 +2817,7 @@
         }
       }
     },
+    "fan.diagnostic.sensors_estimated" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Only estimated thermal placeholders are available." } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "当前仅有估算温度占位值。" } } } },
     "fan.diagnostic.sensors_active" : {
       "localizations" : {
         "en" : {
@@ -2854,26 +2850,29 @@
         }
       }
     },
-    "fan.error.helper_exit" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Helper launch was cancelled or failed (exit %1$d)." } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Helper 启动已取消或失败（退出码 %1$d）。" } } } },
-    "fan.error.helper_launch" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Failed to launch Helper: %1$@" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Helper 启动失败：%1$@" } } } },
+    "fan.error.helper_authorization" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Fan control authorization failed: %1$@" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "风扇控制授权失败：%1$@" } } } },
+    "fan.error.helper_not_found" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "The privileged Helper is missing from this app build. Reinstall the latest signed version." } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "此应用版本缺少特权 Helper，请重新安装最新的已签名版本。" } } } },
     "fan.error.mode_set_failed" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Failed to set fan mode. Elevated privileges may be required." } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "风扇模式设置失败，可能需要提升权限。" } } } },
+    "fan.error.read_only" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "No writable fan control is available. Complete macOS approval for the Helper, then rescan." } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "当前没有可写的风扇控制。请先在 macOS 中批准 Helper，然后重新扫描。" } } } },
+    "fan.error.rpm_set_failed" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "The hardware rejected this RPM target. System fan control remains available." } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "硬件拒绝了该 RPM 目标；系统风扇控制仍保持可用。" } } } },
     "fan.filter.other" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Other" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "其他" } } } },
     "fan.manual_override" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Manual" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "手动" } } } },
     "fan.no_sensor_matches" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "No sensors match \"%1$@\"" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "没有匹配“%1$@”的传感器" } } } },
     "fan.no_sensors" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "No sensors available" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "没有可用传感器" } } } },
     "fan.set" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Set" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "设置" } } } },
+    "fan.open_helper_settings" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Open Approval Settings" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "打开授权设置" } } } },
     "fan.header.summary" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Average: %1$@ ・ CPU: %2$@ ・ Fans: %3$lld RPM"
+            "value" : "Average: %1$@ ・ CPU: %2$@ ・ Fans: %3$@"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "平均: %1$@ ・ CPU: %2$@ ・ 风扇: %3$lld RPM"
+            "value" : "平均: %1$@ ・ CPU: %2$@ ・ 风扇: %3$@"
           }
         }
       }
@@ -3008,22 +3007,6 @@
         }
       }
     },
-    "fan.start_helper" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Start Helper"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "启动 Helper"
-          }
-        }
-      }
-    },
     "fan.temperatures" : {
       "localizations" : {
         "en" : {
@@ -3084,38 +3067,8 @@
         }
       }
     },
-    "fan.toast.helper_copied" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Helper command copied"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Helper 命令已复制"
-          }
-        }
-      }
-    },
-    "fan.toast.helper_launched" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Helper launched. Rescanning in 3 seconds..."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Helper 已启动，3 秒后重新扫描..."
-          }
-        }
-      }
-    },
+    "fan.toast.helper_approval_required" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Approve ClassGod in Login Items & Extensions, then return to rescan." } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "请在“登录项与扩展”中批准 ClassGod，然后返回并重新扫描。" } } } },
+    "fan.toast.helper_enabled" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Fan control Helper is approved. Detecting hardware now…" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "风扇控制 Helper 已获批准，正在检测硬件…" } } } },
     "fan.toast.max_temps_reset" : {
       "localizations" : {
         "en" : {
@@ -3228,50 +3181,23 @@
         }
       }
     },
-    "helper.status.optional" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "在 Intel Mac 上，特权 Helper 为可选。"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "在 Intel Mac 上，特权 Helper 为可选。"
-          }
-        }
-      }
-    },
-    "helper.status.restricted" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Apple Silicon 限制 SMC 访问。以 root 运行 Helper 以解锁风扇控制。"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Apple Silicon 限制 SMC 访问。以 root 运行 Helper 以解锁风扇控制。"
-          }
-        }
-      }
-    },
+    "helper.status.not_found" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "The signed Helper is missing from this app bundle." } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "应用包中缺少已签名的 Helper。" } } } },
+    "helper.status.not_registered" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Fan control Helper has not requested macOS approval." } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "风扇控制 Helper 尚未请求 macOS 授权。" } } } },
+    "helper.status.optional" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Verified direct SMC control is active; the privileged Helper is not required on this Mac." } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已启用通过验证的 SMC 直连控制；此 Mac 无需特权 Helper。" } } } },
+    "helper.status.requires_approval" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Administrator approval is required in Login Items & Extensions." } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "需要管理员在“登录项与扩展”中批准。" } } } },
+    "helper.status.starting" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Helper is approved; waiting for the live hardware service." } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Helper 已获批准，正在等待实时硬件服务启动。" } } } },
     "helper.status.running" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "ClassGodHelper 正以 root 运行。完整 SMC 读/写已启用。"
+            "state" : "translated",
+            "value" : "The approved Helper is connected. Supported live hardware paths are active."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "ClassGodHelper 正以 root 运行。完整 SMC 读/写已启用。"
+            "state" : "translated",
+            "value" : "已批准的 Helper 已连接，硬件支持的实时读写路径已启用。"
           }
         }
       }
@@ -6272,6 +6198,7 @@
         }
       }
     },
+    "status.helper_connected" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "HELPER CONNECTED" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "HELPER 已连接" } } } },
     "status.no_hardware" : {
       "localizations" : {
         "en" : {

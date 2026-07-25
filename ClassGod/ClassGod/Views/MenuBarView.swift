@@ -303,14 +303,14 @@ struct MenuBarView: View {
             // PMU/thermal-state placeholders inflating the display.
             let realSensors = all.sensors.filter { !$0.isEstimated }
             let temp = realSensors.map(\.value).max() ?? 0
-            let rpm = all.fans.isEmpty ? 0 : all.fans.map(\.actualRPM).reduce(0, +) / Double(all.fans.count)
+            let liveRPM = FanControlRouting.averageLiveRPM(in: all.fans)
             await MainActor.run {
                 defer { self.refreshGate.end() }
                 guard self.isActive else { return }
                 self.fanSummaryTemp = temp
-                self.fanSummaryRPM = rpm
+                self.fanSummaryRPM = liveRPM ?? 0
                 self.hasFanSummaryTemp = !realSensors.isEmpty
-                self.hasFanSummaryRPM = !all.fans.isEmpty
+                self.hasFanSummaryRPM = liveRPM != nil
             }
         }
     }
