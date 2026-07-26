@@ -135,7 +135,6 @@ struct ErrorHubView: View {
     private var titleBar: some View {
         HStack(spacing: 0) {
             Button(action: {
-                SoundEffectManager.shared.playButtonClick()
                 onClose()
             }) {
                 Image(systemName: "xmark")

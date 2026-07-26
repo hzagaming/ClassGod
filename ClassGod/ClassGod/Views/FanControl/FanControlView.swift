@@ -138,7 +138,6 @@ struct FanControlView: View {
         VStack(spacing: 0) {
             HStack(spacing: 10 * zoomScale) {
                 Button(action: {
-                    SoundEffectManager.shared.playButtonClick()
                     HapticManager.shared.generic()
                     onClose()
                 }) {

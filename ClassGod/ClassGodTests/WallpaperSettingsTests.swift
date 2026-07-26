@@ -47,4 +47,23 @@ struct WallpaperSettingsTests {
         #expect(WallpaperLoopPolicy.action(mode: .random, isEnabled: false, isPlaying: true) == .stop)
         #expect(WallpaperLoopPolicy.action(mode: .singleLoop, isEnabled: true, isPlaying: false) == .stop)
     }
+
+    @Test("Animated images respect playback state and safe frame timing")
+    func resolvesAnimatedImagePlayback() {
+        #expect(AnimatedImagePlaybackPolicy.shouldAnimate(isEnabled: true, isPlaying: true))
+        #expect(!AnimatedImagePlaybackPolicy.shouldAnimate(isEnabled: false, isPlaying: true))
+        #expect(!AnimatedImagePlaybackPolicy.shouldAnimate(isEnabled: true, isPlaying: false))
+        #expect(AnimatedImagePlaybackPolicy.frameDelay(nil) == 0.1)
+        #expect(AnimatedImagePlaybackPolicy.frameDelay(0.001) == 0.02)
+        #expect(AnimatedImagePlaybackPolicy.frameDelay(0.08) == 0.08)
+    }
+
+    @Test("Managed wallpaper deletion stays inside its exact directory")
+    func validatesManagedWallpaperPaths() {
+        let directory = URL(fileURLWithPath: "/tmp/ClassGod/Wallpapers", isDirectory: true)
+
+        #expect(WallpaperFilePolicy.isManaged(URL(fileURLWithPath: "/tmp/ClassGod/Wallpapers/item.mov"), in: directory))
+        #expect(!WallpaperFilePolicy.isManaged(URL(fileURLWithPath: "/tmp/ClassGod/WallpapersBackup/item.mov"), in: directory))
+        #expect(!WallpaperFilePolicy.isManaged(directory, in: directory))
+    }
 }

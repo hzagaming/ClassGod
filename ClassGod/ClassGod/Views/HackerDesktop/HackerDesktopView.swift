@@ -39,7 +39,6 @@ struct HackerDesktopView: View {
             // Title bar
             HStack(spacing: 0 * zoomScale) {
                 Button(action: {
-                    SoundEffectManager.shared.playButtonClick()
                     onClose()
                 }) {
                     Image(systemName: "xmark")

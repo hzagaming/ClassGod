@@ -62,7 +62,6 @@ struct GhostProtocolView: View {
     private var header: some View {
         HStack(spacing: 10 * zoomScale) {
             Button {
-                SoundEffectManager.shared.playButtonClick()
                 onClose()
             } label: {
                 Image(systemName: "xmark")

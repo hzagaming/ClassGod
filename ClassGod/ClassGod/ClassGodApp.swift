@@ -2125,7 +2125,6 @@ struct SettingsContainerView: View {
             // Hacker title bar
             HStack(spacing: 0) {
                 Button(action: {
-                    SoundEffectManager.shared.playButtonClick()
                     onClose()
                 }) {
                     Image(systemName: "xmark")

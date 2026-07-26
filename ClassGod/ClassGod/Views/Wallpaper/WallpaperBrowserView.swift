@@ -74,7 +74,6 @@ struct WallpaperBrowserView: View {
     private var headerBar: some View {
         HStack(spacing: 0) {
             Button(action: {
-                SoundEffectManager.shared.playButtonClick()
                 onClose()
             }) {
                 Image(systemName: "xmark")
@@ -271,6 +270,7 @@ struct WallpaperBrowserView: View {
                         ))
                         .toggleStyle(.switch)
                         .controlSize(.small)
+                        .accessibilityLabel(Text("wallpaper.desktop"))
                     }
                     .disabled(!engine.isEnabled)
                     
@@ -288,6 +288,7 @@ struct WallpaperBrowserView: View {
                         ))
                         .toggleStyle(.switch)
                         .controlSize(.small)
+                        .accessibilityLabel(Text("wallpaper.power"))
                     }
                 }
                 .padding(.horizontal, 4 * zoomScale)
@@ -333,7 +334,7 @@ struct WallpaperBrowserView: View {
                     HStack(spacing: 4 * zoomScale) {
                         Image(systemName: "plus")
                             .font(.system(size: 10 * zoomScale, weight: .bold))
-                        Text(String(localized: "button.import"))
+                        Text(String(localized: "wallpaper.import"))
                             .font(.system(size: 11 * zoomScale, weight: .bold, design: .monospaced))
                     }
                     .padding(.horizontal, 10 * zoomScale)

@@ -186,7 +186,6 @@ struct DestinTabView: View {
     private var header: some View {
         HStack(spacing: 10 * zoomScale) {
             Button(action: {
-                SoundEffectManager.shared.playButtonClick()
                 onClose()
             }) {
                 Image(systemName: "xmark")
@@ -530,12 +529,12 @@ struct DestinTabView: View {
                     NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
                 }
 
-                footerButton(title: "button.import", icon: "square.and.arrow.down") {
+                footerButton(title: "destintab.import_tabs", icon: "square.and.arrow.down") {
                     SoundEffectManager.shared.playButtonClick()
                     showImportPanel = true
                 }
 
-                footerButton(title: "button.export", icon: "square.and.arrow.up") {
+                footerButton(title: "destintab.export_tabs", icon: "square.and.arrow.up") {
                     SoundEffectManager.shared.playButtonClick()
                     showExportPanel = true
                 }

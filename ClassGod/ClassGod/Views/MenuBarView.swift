@@ -134,7 +134,6 @@ struct MenuBarView: View {
                     
                     HStack(spacing: 12 * zoomScale) {
                         Button(action: {
-                            SoundEffectManager.shared.playButtonClick()
                             HapticManager.shared.generic()
                             onOpenSettings()
                         }) {
@@ -251,7 +250,6 @@ struct MenuBarView: View {
     }
 
     private func openFanControl() {
-        SoundEffectManager.shared.playButtonClick()
         HapticManager.shared.generic()
         onOpenFanControl()
     }
@@ -364,7 +362,6 @@ struct MenuBarView: View {
     }
 
     private func close() {
-        SoundEffectManager.shared.playButtonClick()
         onClose()
     }
 }
@@ -457,7 +454,6 @@ struct FeatureButton: View {
 
     private func performAction() {
         guard isEnabled else { return }
-        SoundEffectManager.shared.playButtonClick()
         HapticManager.shared.generic()
         action()
     }

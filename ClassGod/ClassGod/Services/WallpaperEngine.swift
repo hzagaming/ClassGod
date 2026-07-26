@@ -29,6 +29,12 @@ enum WallpaperLoopPolicy {
     }
 }
 
+enum WallpaperFilePolicy {
+    static func isManaged(_ fileURL: URL, in directoryURL: URL) -> Bool {
+        fileURL.standardizedFileURL.deletingLastPathComponent() == directoryURL.standardizedFileURL
+    }
+}
+
 @MainActor
 final class WallpaperEngine: ObservableObject {
     static let shared = WallpaperEngine()
@@ -145,10 +151,10 @@ final class WallpaperEngine: ObservableObject {
     }
     
     private func deleteWallpaperFileIfManaged(path: String) {
-        guard let dir = wallpapersDirectory()?.path else { return }
-        if path.hasPrefix(dir) {
-            try? FileManager.default.removeItem(atPath: path)
-        }
+        guard let directory = wallpapersDirectory() else { return }
+        let fileURL = URL(fileURLWithPath: path)
+        guard WallpaperFilePolicy.isManaged(fileURL, in: directory) else { return }
+        try? FileManager.default.removeItem(at: fileURL)
     }
     
     func selectWallpaper(_ item: WallpaperItem) {

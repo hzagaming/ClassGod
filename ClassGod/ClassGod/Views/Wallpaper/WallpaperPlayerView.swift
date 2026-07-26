@@ -55,6 +55,17 @@ struct ImageWallpaperView: View {
 
 // MARK: - Animated Image (GIF) NSView
 
+enum AnimatedImagePlaybackPolicy {
+    static func shouldAnimate(isEnabled: Bool, isPlaying: Bool) -> Bool {
+        isEnabled && isPlaying
+    }
+
+    static func frameDelay(_ delay: Double?) -> TimeInterval {
+        guard let delay, delay.isFinite, delay > 0 else { return 0.1 }
+        return max(0.02, delay)
+    }
+}
+
 struct AnimatedImageView: NSViewRepresentable {
     let imageSource: CGImageSource
     let identifier: URL
@@ -81,6 +92,7 @@ final class AnimatedImageNSView: NSView {
     private var currentFrame = 0
     private var imageView: NSImageView?
     private var currentIdentifier: URL?
+    private var stateObserverToken: NSObjectProtocol?
     
     override func layout() {
         super.layout()
@@ -88,7 +100,10 @@ final class AnimatedImageNSView: NSView {
     }
     
     func loadAnimatedImage(_ source: CGImageSource, identifier: URL) {
-        guard currentIdentifier != identifier else { return }
+        guard currentIdentifier != identifier else {
+            syncPlaybackState()
+            return
+        }
         currentIdentifier = identifier
         
         // Clean up old timer and view
@@ -116,8 +131,7 @@ final class AnimatedImageNSView: NSView {
                 let gifProps = properties?[kCGImagePropertyGIFDictionary as String] as? [String: Any]
                 let delay = gifProps?[kCGImagePropertyGIFUnclampedDelayTime as String] as? Double
                     ?? gifProps?[kCGImagePropertyGIFDelayTime as String] as? Double
-                    ?? 0.1
-                delays.append(delay > 0 ? delay : 0.1)
+                delays.append(AnimatedImagePlaybackPolicy.frameDelay(delay))
             }
         }
         
@@ -130,20 +144,47 @@ final class AnimatedImageNSView: NSView {
         imageView = iv
         iv.image = images[0]
         currentFrame = 0
-        
-        scheduleNextFrame()
+
+        observePlaybackState()
+        syncPlaybackState()
     }
-    
-    private func scheduleNextFrame() {
-        guard !images.isEmpty, !delays.isEmpty else { return }
-        let delay = delays[currentFrame]
-        timer = Timer.scheduledTimer(withTimeInterval: delay, repeats: false) { [weak self] _ in
-            self?.advanceFrame()
+
+    private func observePlaybackState() {
+        guard stateObserverToken == nil else { return }
+        stateObserverToken = NotificationCenter.default.addObserver(
+            forName: .wallpaperStateDidChange,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.syncPlaybackState()
         }
     }
-    
+
+    private func syncPlaybackState() {
+        let engine = WallpaperEngine.shared
+        if AnimatedImagePlaybackPolicy.shouldAnimate(isEnabled: engine.isEnabled, isPlaying: engine.isPlaying) {
+            scheduleNextFrame()
+        } else {
+            timer?.invalidate()
+            timer = nil
+        }
+    }
+
+    private func scheduleNextFrame() {
+        guard timer == nil, !images.isEmpty, !delays.isEmpty else { return }
+        let delay = delays[currentFrame]
+        let nextTimer = Timer(timeInterval: delay, repeats: false) { [weak self] _ in
+            self?.advanceFrame()
+        }
+        timer = nextTimer
+        RunLoop.main.add(nextTimer, forMode: .common)
+    }
+
     func advanceFrame() {
-        guard !images.isEmpty else { return }
+        timer = nil
+        let engine = WallpaperEngine.shared
+        guard !images.isEmpty,
+              AnimatedImagePlaybackPolicy.shouldAnimate(isEnabled: engine.isEnabled, isPlaying: engine.isPlaying) else { return }
         currentFrame = (currentFrame + 1) % images.count
         imageView?.image = images[currentFrame]
         scheduleNextFrame()
@@ -152,10 +193,14 @@ final class AnimatedImageNSView: NSView {
     func stopAnimation() {
         timer?.invalidate()
         timer = nil
+        if let token = stateObserverToken {
+            NotificationCenter.default.removeObserver(token)
+            stateObserverToken = nil
+        }
     }
-    
+
     deinit {
-        timer?.invalidate()
+        stopAnimation()
     }
 }
 

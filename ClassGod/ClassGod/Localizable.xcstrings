@@ -1458,8 +1458,8 @@
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "返回"
+            "state" : "translated",
+            "value" : "Back"
           }
         },
         "zh-Hans" : {
@@ -2154,6 +2154,38 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "退出批量模式"
+          }
+        }
+      }
+    },
+    "destintab.export_tabs" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Export Tabs…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导出标签…"
+          }
+        }
+      }
+    },
+    "destintab.import_tabs" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Import Tabs…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导入标签…"
           }
         }
       }
@@ -6439,6 +6471,22 @@
         }
       }
     },
+    "wallpaper.import" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Import Wallpaper…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导入壁纸…"
+          }
+        }
+      }
+    },
     "wallpaper.mode.playlist_loop" : {
       "localizations" : {
         "en" : {
@@ -6590,6 +6638,7 @@
     "status.on" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "ON" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "开启" } } } },
     "wallpaper.desktop" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "DESKTOP" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "桌面" } } } },
     "wallpaper.drop_hint" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Drop images or videos" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "拖入图片或视频" } } } },
+    "wallpaper.power" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Wallpaper Power" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "壁纸开关" } } } },
     "wallpaper.title" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Wallpaper Engine" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "壁纸引擎" } } } },
     "widget.no_note" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "No note saved yet." } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "尚未保存笔记。" } } } },
     "widget.no_quote" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "No quote saved yet." } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "尚未保存名言。" } } } },

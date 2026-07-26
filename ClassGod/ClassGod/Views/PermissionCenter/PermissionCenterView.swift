@@ -69,7 +69,6 @@ struct PermissionCenterView: View {
     private var headerBar: some View {
         HStack(spacing: 12 * zoomScale) {
             Button(action: {
-                SoundEffectManager.shared.playButtonClick()
                 onClose()
             }) {
                 Image(systemName: "xmark")

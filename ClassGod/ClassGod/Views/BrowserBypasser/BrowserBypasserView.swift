@@ -93,7 +93,6 @@ struct BrowserBypasserView: View {
     private var header: some View {
         HStack(spacing: 10 * zoomScale) {
             Button(action: {
-                SoundEffectManager.shared.playButtonClick()
                 onClose()
             }) {
                 Image(systemName: "xmark")
