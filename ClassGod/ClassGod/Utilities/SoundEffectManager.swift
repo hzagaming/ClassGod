@@ -33,6 +33,8 @@ enum SoundEffect: String, CaseIterable {
     case dragStart = "DragStart"
     case resizeStart = "ResizeStart"
     case temperatureWarning = "TemperatureWarning"
+    case ghostDeploy = "GhostDeploy"
+    case ghostRestore = "GhostRestore"
     
     var systemSoundName: String {
         switch self {
@@ -60,6 +62,8 @@ enum SoundEffect: String, CaseIterable {
         case .dragStart:          return "Pop"
         case .resizeStart:        return "Pop"
         case .temperatureWarning: return "Basso"
+        case .ghostDeploy:        return "Submarine"
+        case .ghostRestore:       return "Glass"
         }
     }
 }
@@ -182,6 +186,14 @@ final class SoundEffectManager {
     func playButtonClick() {
         play(.buttonClick)
     }
+
+    func playGhostDeploy() {
+        play(.ghostDeploy)
+    }
+
+    func playGhostRestore() {
+        play(.ghostRestore)
+    }
     
     // MARK: - Glitch SFX (chaos launch animation)
     
@@ -254,6 +266,8 @@ final class SoundEffectManager {
             playSound(named: "Glass")
         case "errorhub":
             playSound(named: "Basso")
+        case "ghostprotocol":
+            playSound(named: "Submarine")
         default:
             playPopoverOpen()
         }
@@ -263,7 +277,7 @@ final class SoundEffectManager {
         guard isEnabled else { return }
         switch feature {
         case "destintab", "superswitch", "browserbypasser", "assessprephack", "hackerdesktop",
-             "fancontrol", "activitymonitor", "permissioncenter", "errorhub":
+             "fancontrol", "activitymonitor", "permissioncenter", "errorhub", "ghostprotocol":
             playSound(named: "Tink")
         default:
             playPopoverClose()

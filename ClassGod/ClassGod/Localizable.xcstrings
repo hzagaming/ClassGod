@@ -19358,6 +19358,222 @@
         }
       }
     },
+    "button.refresh" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Refresh" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "刷新" } }
+      }
+    },
+    "button.close" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Close" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "关闭" } }
+      }
+    },
+    "ghost.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Ghost Protocol" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "幽灵协议" } }
+      }
+    },
+    "ghost.subtitle" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "ONE-KEY REVERSIBLE COVER WORKSPACE" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "一键部署 · 随时恢复的伪装工作区" } }
+      }
+    },
+    "ghost.status.ready" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Protocol ready" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "协议已就绪" } }
+      }
+    },
+    "ghost.status.deploying" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Activating cover application…" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "正在激活掩护应用…" } }
+      }
+    },
+    "ghost.status.deployed_format" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%@ active · %d/%d applications hidden" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%@ 已接管 · 已隐藏 %d/%d 个应用" } }
+      }
+    },
+    "ghost.status.restoring" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Restoring workspace…" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "正在恢复工作区…" } }
+      }
+    },
+    "ghost.status.restored_format" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Workspace restored · %d applications returned" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "工作区已恢复 · %d 个应用已返回" } }
+      }
+    },
+    "ghost.error.target_unavailable" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Cover application is unavailable" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "掩护应用不可用" } }
+      }
+    },
+    "ghost.error.activation_failed" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Cover activation failed; no applications were hidden" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "掩护应用激活失败，未隐藏任何应用" } }
+      }
+    },
+    "ghost.error.restore_partial_format" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%d workspace items could not be restored; trigger restore again" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%d 个工作区项目未能恢复，请再次触发恢复" } }
+      }
+    },
+    "ghost.cover_title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Cover Application" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "掩护应用" } }
+      }
+    },
+    "ghost.target_available" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Available" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "可用" } }
+      }
+    },
+    "ghost.target_unavailable" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Not installed" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "未安装" } }
+      }
+    },
+    "ghost.target_source" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Built-ins + SuperSwitch" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "内置 + SuperSwitch" } }
+      }
+    },
+    "ghost.behavior_title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Deployment Behavior" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "部署行为" } }
+      }
+    },
+    "ghost.behavior_locked" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Deployment settings are locked until the workspace is restored" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "恢复工作区前，部署设置保持锁定" } }
+      }
+    },
+    "ghost.hide_others" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Hide other visible applications" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "隐藏其他可见应用" } }
+      }
+    },
+    "ghost.hide_others_hint" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Applications remain running and can be restored instantly" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "应用保持运行，可立即恢复" } }
+      }
+    },
+    "ghost.preview_format" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Current preview: %d applications will be hidden" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "当前预览：将隐藏 %d 个应用" } }
+      }
+    },
+    "ghost.shortcut_title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Deploy / Restore Shortcut" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "部署 / 恢复快捷键" } }
+      }
+    },
+    "ghost.shortcut_ready" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Global shortcut registered" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "全局快捷键已注册" } }
+      }
+    },
+    "ghost.shortcut_conflict" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Shortcut unavailable or conflicts; record another" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "快捷键不可用或冲突，请重新录制" } }
+      }
+    },
+    "ghost.safety_note" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "The cover is activated before anything is hidden. Ghost Protocol never quits applications, requests extra permissions, or persists a workspace snapshot." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "协议会先激活掩护应用，再执行隐藏；不会退出应用、索取额外权限，也不会持久化工作区快照。" } }
+      }
+    },
+    "ghost.state.ready" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "READY" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "待命" } }
+      }
+    },
+    "ghost.state.deploying" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "DEPLOYING" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "部署中" } }
+      }
+    },
+    "ghost.state.active" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "COVER ACTIVE" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "伪装生效" } }
+      }
+    },
+    "ghost.state.restoring" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "RESTORING" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "恢复中" } }
+      }
+    },
+    "ghost.action.deploy" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "DEPLOY GHOST PROTOCOL" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "部署幽灵协议" } }
+      }
+    },
+    "ghost.action.deploying" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "DEPLOYING…" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "部署中…" } }
+      }
+    },
+    "ghost.action.restore" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "RESTORE WORKSPACE" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "恢复原工作区" } }
+      }
+    },
+    "ghost.action.restoring" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "RESTORING…" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "恢复中…" } }
+      }
+    },
+    "ghost.action.hint" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Activates the selected cover or restores the captured workspace" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "激活所选掩护应用，或恢复已记录的工作区" } }
+      }
+    },
+    "ghost.action.unavailable_hint" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Choose an installed cover application before deploying" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "请先选择已安装的掩护应用" } }
+      }
+    },
+    "menu.ghost_protocol.description" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Deploy a reversible cover workspace" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "一键部署并恢复伪装工作区" } }
+      }
+    },
     "field.bundle_identifier" : {
       "localizations" : {
         "zh-Hans" : {

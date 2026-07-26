@@ -58,6 +58,12 @@ struct ShortcutPicker: View {
         .onDisappear {
             stopRecording()
         }
+        .onChange(of: isRecording) { _, recording in
+            if !recording, let monitor = localMonitor {
+                NSEvent.removeMonitor(monitor)
+                localMonitor = nil
+            }
+        }
     }
 
     private var displayString: String {

@@ -21,6 +21,7 @@ struct MenuBarView: View {
     var onClose: () -> Void
     var onOpenDestinTab: () -> Void
     var onOpenSuperSwitch: () -> Void
+    var onOpenGhostProtocol: () -> Void
     var onOpenBrowserBypasser: () -> Void
     var onOpenAssessPrepHack: () -> Void
     var onOpenSettings: () -> Void
@@ -57,6 +58,13 @@ struct MenuBarView: View {
                             title: "SuperSwitch",
                             description: "menu.superswitch.description",
                             action: onOpenSuperSwitch
+                        )
+
+                        FeatureButton(
+                            icon: "eye.slash.circle.fill",
+                            title: "ghost.title",
+                            description: "menu.ghost_protocol.description",
+                            action: onOpenGhostProtocol
                         )
                         
                         FeatureButton(
@@ -448,5 +456,5 @@ struct FeatureButton: View {
 }
 
 #Preview {
-    MenuBarView(onClose: {}, onOpenDestinTab: {}, onOpenSuperSwitch: {}, onOpenBrowserBypasser: {}, onOpenAssessPrepHack: {}, onOpenSettings: {}, onOpenWallpaper: {}, onOpenHackerDesktop: {}, onOpenFanControl: {}, onOpenErrorHub: {}, onOpenActivityMonitor: {}, onOpenPermissionCenter: {})
+    MenuBarView(onClose: {}, onOpenDestinTab: {}, onOpenSuperSwitch: {}, onOpenGhostProtocol: {}, onOpenBrowserBypasser: {}, onOpenAssessPrepHack: {}, onOpenSettings: {}, onOpenWallpaper: {}, onOpenHackerDesktop: {}, onOpenFanControl: {}, onOpenErrorHub: {}, onOpenActivityMonitor: {}, onOpenPermissionCenter: {})
 }

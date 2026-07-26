@@ -41,8 +41,10 @@ final class SuperSwitchViewModel: ObservableObject {
     }
     
     func saveTargets() {
+        GhostProtocolController.shared.prepareForShortcutChanges()
         StorageManager.shared.saveSwitchTargets(targets)
         refreshShortcuts()
+        GhostProtocolController.shared.reconcileShortcutAfterChanges()
     }
     
     func addTarget(_ target: SwitchTarget) {

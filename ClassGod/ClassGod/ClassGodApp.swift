@@ -28,6 +28,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var mainWindow: NSWindow?
     var destinTabWindow: NSWindow?
     var superSwitchWindow: NSWindow?
+    var ghostProtocolWindow: NSWindow?
     var browserBypasserWindow: NSWindow?
     var assessPrepHackWindow: NSWindow?
     var settingsWindow: NSWindow?
@@ -42,6 +43,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     var splashWindow: NSWindow?
     private var clickOutsideMonitor: Any?
+    private var ghostProtocolWindowTransition: UInt = 0
 
     private var targetWindowAlpha: CGFloat {
         CGFloat(PreferencesManager.shared.preferences.windowOpacity)
@@ -225,6 +227,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             self?.showDestinTabWindow()
         }, onOpenSuperSwitch: { [weak self] in
             self?.showSuperSwitchWindow()
+        }, onOpenGhostProtocol: { [weak self] in
+            self?.showGhostProtocolWindow()
         }, onOpenBrowserBypasser: { [weak self] in
             self?.showBrowserBypasserWindow()
         }, onOpenAssessPrepHack: { [weak self] in
@@ -456,6 +460,108 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             hideSuperSwitchWindow()
         } else {
             showSuperSwitchWindow(animated: true)
+        }
+    }
+
+    // MARK: - Ghost Protocol Window
+
+    private func setupGhostProtocolWindow() {
+        let prefs = PreferencesManager.shared.preferences
+        let zoom = CGFloat(prefs.windowZoomScale)
+        let size = constrainedWindowSize(
+            base: NSSize(width: prefs.panelWidth, height: prefs.panelMaxHeight),
+            zoom: zoom
+        )
+
+        let window = DraggableWindow(
+            contentRect: NSRect(origin: .zero, size: size),
+            styleMask: [.borderless],
+            backing: .buffered,
+            defer: false
+        )
+        window.level = windowLevel
+        window.backgroundColor = .clear
+        window.hasShadow = true
+        window.isMovableByWindowBackground = false
+        window.isReleasedWhenClosed = false
+        window.isOpaque = false
+        window.contentView?.wantsLayer = true
+        window.contentView?.layer?.cornerRadius = prefs.panelCornerRadius * zoom
+        window.contentView?.layer?.masksToBounds = true
+
+        if let main = mainWindow {
+            window.setFrameOrigin(NSPoint(x: main.frame.minX + 24, y: main.frame.minY + 24))
+        } else if let screen = NSScreen.main {
+            let frame = screen.visibleFrame
+            window.setFrameOrigin(NSPoint(x: frame.midX - size.width / 2, y: frame.midY - size.height / 2))
+        }
+        constrainWindowToVisibleScreen(window)
+
+        let rootView = GhostProtocolWindowView(onClose: { [weak self] in
+            self?.hideGhostProtocolWindow()
+        })
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Color.clear)
+            .overlay(WindowResizeHandles())
+        window.contentView = NSHostingView(rootView: rootView)
+        ghostProtocolWindow = window
+    }
+
+    func showGhostProtocolWindow(animated: Bool = true) {
+        guard let window = ghostProtocolWindow else {
+            setupGhostProtocolWindow()
+            showGhostProtocolWindow(animated: animated)
+            return
+        }
+        GhostProtocolController.shared.refresh()
+        SoundEffectManager.shared.playWindowOpen(feature: "ghostprotocol")
+        ghostProtocolWindowTransition &+= 1
+
+        if animated && Anim.enabled {
+            window.alphaValue = 0
+            window.makeKeyAndOrderFront(nil)
+            NSAnimationContext.runAnimationGroup { context in
+                context.duration = Anim.duration
+                context.timingFunction = .init(name: .easeOut)
+                window.animator().alphaValue = targetWindowAlpha
+            }
+        } else {
+            window.alphaValue = targetWindowAlpha
+            window.makeKeyAndOrderFront(nil)
+        }
+    }
+
+    func hideGhostProtocolWindow() {
+        guard let window = ghostProtocolWindow, window.isVisible else { return }
+        NotificationCenter.default.post(name: .ghostProtocolWindowWillHide, object: nil)
+        SoundEffectManager.shared.playWindowClose(feature: "ghostprotocol")
+        ghostProtocolWindowTransition &+= 1
+        let transition = ghostProtocolWindowTransition
+        guard Anim.enabled else {
+            window.alphaValue = 0
+            window.orderOut(nil)
+            return
+        }
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = Anim.duration
+            context.timingFunction = .init(name: .easeIn)
+            window.animator().alphaValue = 0
+        } completionHandler: { [weak self, weak window] in
+            guard let self, self.ghostProtocolWindowTransition == transition else { return }
+            window?.orderOut(nil)
+        }
+    }
+
+    @objc func toggleGhostProtocolWindow() {
+        guard let window = ghostProtocolWindow else {
+            setupGhostProtocolWindow()
+            showGhostProtocolWindow(animated: true)
+            return
+        }
+        if window.isVisible && window.alphaValue > 0 {
+            hideGhostProtocolWindow()
+        } else {
+            showGhostProtocolWindow(animated: true)
         }
     }
     
@@ -1484,6 +1590,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         mainWindow?.level = level
         destinTabWindow?.level = level
         superSwitchWindow?.level = level
+        ghostProtocolWindow?.level = level
         browserBypasserWindow?.level = level
         assessPrepHackWindow?.level = level
         settingsWindow?.level = level
@@ -1513,6 +1620,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         // superSwitchWindow
         if let w = superSwitchWindow {
+            w.setContentSize(constrainedWindowSize(base: NSSize(width: prefs.panelWidth, height: prefs.panelMaxHeight), zoom: zoom, screen: w.screen))
+        }
+
+        // ghostProtocolWindow
+        if let w = ghostProtocolWindow {
             w.setContentSize(constrainedWindowSize(base: NSSize(width: prefs.panelWidth, height: prefs.panelMaxHeight), zoom: zoom, screen: w.screen))
         }
 
@@ -1560,7 +1672,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         let windows = [
-            mainWindow, destinTabWindow, superSwitchWindow, browserBypasserWindow,
+            mainWindow, destinTabWindow, superSwitchWindow, ghostProtocolWindow, browserBypasserWindow,
             assessPrepHackWindow, settingsWindow, wallpaperBrowserWindow,
             hackerDesktopWindow, errorHubWindow, fanControlWindow,
             activityMonitorWindow, permissionCenterWindow
@@ -1592,6 +1704,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             (mainWindow, { [weak self] in self?.hideMainWindow() }),
             (destinTabWindow, { [weak self] in self?.hideDestinTabWindow() }),
             (superSwitchWindow, { [weak self] in self?.hideSuperSwitchWindow() }),
+            (ghostProtocolWindow, { [weak self] in self?.hideGhostProtocolWindow() }),
             (browserBypasserWindow, { [weak self] in self?.hideBrowserBypasserWindow() }),
             (assessPrepHackWindow, { [weak self] in self?.hideAssessPrepHackWindow() }),
             (settingsWindow, { [weak self] in self?.hideSettingsWindow() }),
@@ -1661,6 +1774,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // Resume any suspended proctoring processes before quitting so the
         // system is not left in a broken state.
         AssessPrepHackViewModel.shared.stopAllBypasses()
+        GhostProtocolController.shared.shutdown()
         
         if let id = showPopoverCustomHotKeyID {
             ShortcutManager.shared.unregisterCustomHotKey(id: id)
@@ -1689,6 +1803,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             window.orderOut(nil)
         }
         if let window = superSwitchWindow {
+            window.orderOut(nil)
+        }
+        if let window = ghostProtocolWindow {
             window.orderOut(nil)
         }
         if let window = browserBypasserWindow {
@@ -1822,6 +1939,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     // MARK: - Global Shortcut
 
     private func setupShowPopoverShortcut() {
+        let ghostProtocol = GhostProtocolController.shared
+        ghostProtocol.prepareForShortcutChanges()
+        defer { ghostProtocol.reconcileShortcutAfterChanges() }
+
         // Unregister previous custom hotkey if any
         if let id = showPopoverCustomHotKeyID {
             ShortcutManager.shared.unregisterCustomHotKey(id: id)
@@ -1914,6 +2035,7 @@ struct MenuBarWindowView: View {
     var onClose: () -> Void
     var onOpenDestinTab: () -> Void
     var onOpenSuperSwitch: () -> Void
+    var onOpenGhostProtocol: () -> Void
     var onOpenBrowserBypasser: () -> Void
     var onOpenAssessPrepHack: () -> Void
     var onOpenSettings: () -> Void
@@ -1925,7 +2047,7 @@ struct MenuBarWindowView: View {
     var onOpenPermissionCenter: () -> Void = {}
 
     var body: some View {
-        MenuBarView(onClose: onClose, onOpenDestinTab: onOpenDestinTab, onOpenSuperSwitch: onOpenSuperSwitch, onOpenBrowserBypasser: onOpenBrowserBypasser, onOpenAssessPrepHack: onOpenAssessPrepHack, onOpenSettings: onOpenSettings, onOpenWallpaper: onOpenWallpaper, onOpenHackerDesktop: onOpenHackerDesktop, onOpenFanControl: onOpenFanControl, onOpenErrorHub: onOpenErrorHub, onOpenActivityMonitor: onOpenActivityMonitor, onOpenPermissionCenter: onOpenPermissionCenter)
+        MenuBarView(onClose: onClose, onOpenDestinTab: onOpenDestinTab, onOpenSuperSwitch: onOpenSuperSwitch, onOpenGhostProtocol: onOpenGhostProtocol, onOpenBrowserBypasser: onOpenBrowserBypasser, onOpenAssessPrepHack: onOpenAssessPrepHack, onOpenSettings: onOpenSettings, onOpenWallpaper: onOpenWallpaper, onOpenHackerDesktop: onOpenHackerDesktop, onOpenFanControl: onOpenFanControl, onOpenErrorHub: onOpenErrorHub, onOpenActivityMonitor: onOpenActivityMonitor, onOpenPermissionCenter: onOpenPermissionCenter)
     }
 }
 
@@ -1946,6 +2068,16 @@ struct SuperSwitchWindowView: View {
     
     var body: some View {
         SuperSwitchView(onClose: onClose)
+    }
+}
+
+// MARK: - Ghost Protocol Window View
+
+struct GhostProtocolWindowView: View {
+    var onClose: () -> Void
+
+    var body: some View {
+        GhostProtocolView(onClose: onClose)
     }
 }
 

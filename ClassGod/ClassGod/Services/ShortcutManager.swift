@@ -39,8 +39,7 @@ final class ShortcutManager {
         
         guard tab.isValidShortcut else { return false }
         
-        let keyCode = keyCodeForCharacter(tab.shortcutKey)
-        guard keyCode != UInt32.max else {
+        guard let keyCode = keyCode(for: tab.shortcutKey) else {
             print("[ShortcutManager] Unsupported key: \(tab.shortcutKey)")
             return false
         }
@@ -78,8 +77,7 @@ final class ShortcutManager {
         
         guard target.isValidShortcut else { return false }
         
-        let keyCode = keyCodeForCharacter(target.shortcutKey)
-        guard keyCode != UInt32.max else {
+        guard let keyCode = keyCode(for: target.shortcutKey) else {
             print("[ShortcutManager] Unsupported key: \(target.shortcutKey)")
             return false
         }
@@ -272,7 +270,7 @@ final class ShortcutManager {
     
     // MARK: - Key Code Mapping
     
-    private func keyCodeForCharacter(_ character: String) -> UInt32 {
+    func keyCode(for character: String) -> UInt32? {
         let upper = character.uppercased()
         
         let map: [String: UInt32] = [
@@ -294,6 +292,6 @@ final class ShortcutManager {
             "F10": 0x6D, "F11": 0x67, "F12": 0x6F
         ]
         
-        return map[upper] ?? UInt32.max
+        return map[upper]
     }
 }

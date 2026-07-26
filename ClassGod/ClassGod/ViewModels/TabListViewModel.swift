@@ -132,8 +132,10 @@ final class TabListViewModel: ObservableObject {
     }
     
     func saveTabs() {
+        GhostProtocolController.shared.prepareForShortcutChanges()
         StorageManager.shared.saveTabs(tabs)
         refreshShortcuts()
+        GhostProtocolController.shared.reconcileShortcutAfterChanges()
         NotificationCenter.default.post(name: .classGodTabsDidChange, object: nil)
     }
     

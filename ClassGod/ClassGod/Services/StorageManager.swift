@@ -14,6 +14,7 @@ final class StorageManager {
     private let switchTargetsKey = "com.hanazar.classgod.switchTargets"
     private let bypassRulesKey = "com.hanazar.classgod.bypassRules"
     private let panicAppsKey = "com.hanazar.classgod.panicApps"
+    private let ghostProtocolSettingsKey = "com.hanazar.classgod.ghostProtocolSettings"
     private let encoder = JSONEncoder()
     private let decoder = JSONDecoder()
     
@@ -137,6 +138,28 @@ final class StorageManager {
             return []
         }
     }
+
+    // MARK: - Ghost Protocol
+
+    func saveGhostProtocolSettings(_ settings: GhostProtocolSettings) {
+        do {
+            UserDefaults.standard.set(try encoder.encode(settings), forKey: ghostProtocolSettingsKey)
+        } catch {
+            print("[StorageManager] Failed to save Ghost Protocol settings: \(error)")
+        }
+    }
+
+    func loadGhostProtocolSettings() -> GhostProtocolSettings {
+        guard let data = UserDefaults.standard.data(forKey: ghostProtocolSettingsKey) else {
+            return .default
+        }
+        do {
+            return try decoder.decode(GhostProtocolSettings.self, from: data)
+        } catch {
+            print("[StorageManager] Failed to load Ghost Protocol settings: \(error)")
+            return .default
+        }
+    }
 }
 
 extension Notification.Name {
@@ -153,4 +176,5 @@ extension Notification.Name {
     static let assessPrepHackWindowDidShow = Notification.Name("assessPrepHackWindowDidShow")
     static let assessPrepHackWindowWillHide = Notification.Name("assessPrepHackWindowWillHide")
     static let permissionCenterWindowDidShow = Notification.Name("permissionCenterWindowDidShow")
+    static let ghostProtocolWindowWillHide = Notification.Name("ghostProtocolWindowWillHide")
 }
