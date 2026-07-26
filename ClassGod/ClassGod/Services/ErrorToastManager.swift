@@ -12,12 +12,39 @@ import Combine
 
 // MARK: - Toast Item
 struct ErrorToastItem: Identifiable {
-    let id = UUID()
+    let id: UUID
     let title: String
     let message: String
     let severity: ErrorSeverity
     let entry: ErrorEntry?
     let timestamp: Date
+
+    init(
+        id: UUID = UUID(),
+        title: String,
+        message: String,
+        severity: ErrorSeverity,
+        entry: ErrorEntry?,
+        timestamp: Date
+    ) {
+        self.id = id
+        self.title = title
+        self.message = message
+        self.severity = severity
+        self.entry = entry
+        self.timestamp = timestamp
+    }
+
+    func enriched(with entry: ErrorEntry?) -> ErrorToastItem {
+        ErrorToastItem(
+            id: id,
+            title: title,
+            message: message,
+            severity: severity,
+            entry: entry,
+            timestamp: timestamp
+        )
+    }
 }
 
 // MARK: - Error Toast Manager
@@ -26,27 +53,19 @@ final class ErrorToastManager: ObservableObject {
     
     @Published private(set) var toasts: [ErrorToastItem] = []
     private var windows: [UUID: NSWindow] = [:]
-    private let queue = DispatchQueue(label: "com.classgod.errorToast", qos: .userInitiated)
-    private var cancellables = Set<AnyCancellable>()
     
     private init() {}
     
     // MARK: - Show Toast
-    func show(title: String, message: String, severity: ErrorSeverity = .high, entry: ErrorEntry? = nil) {
-        queue.async { [weak self] in
-            guard let self = self else { return }
-            let toast = ErrorToastItem(title: title, message: message, severity: severity, entry: entry, timestamp: Date())
-            
-            DispatchQueue.main.async {
-                self.toasts.append(toast)
-                self.presentToastWindow(toast)
-                
-                // Auto dismiss after 8 seconds
-                DispatchQueue.main.asyncAfter(deadline: .now() + 8) { [weak self] in
-                    self?.dismiss(id: toast.id)
-                }
-            }
+    @discardableResult
+    func show(title: String, message: String, severity: ErrorSeverity = .high, entry: ErrorEntry? = nil) -> UUID {
+        let toast = ErrorToastItem(title: title, message: message, severity: severity, entry: entry, timestamp: Date())
+        toasts.append(toast)
+        presentToastWindow(toast)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 8) { [weak self] in
+            self?.dismiss(id: toast.id)
         }
+        return toast.id
     }
     
     // MARK: - Show from Error Entry
@@ -61,29 +80,28 @@ final class ErrorToastManager: ObservableObject {
         let message = "Domain: \(nsError.domain) | Code: \(nsError.code)"
         
         // Present toast immediately, then enrich with knowledge-base match on background
-        show(title: title, message: message, severity: .high, entry: nil)
+        let toastID = show(title: title, message: message, severity: .high, entry: nil)
         
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             ErrorKnowledgeBase.shared.ensureLoaded()
             let matching = ErrorKnowledgeBase.shared.search(query: "\(nsError.domain) \(nsError.code)")
             guard let entry = matching.first?.entry else { return }
             DispatchQueue.main.async {
-                self?.enrichLatestToast(with: entry)
+                self?.enrichToast(id: toastID, with: entry)
             }
         }
     }
     
-    private func enrichLatestToast(with entry: ErrorEntry) {
-        guard let lastIndex = toasts.indices.last else { return }
-        let last = toasts[lastIndex]
-        guard last.entry == nil else { return }
-        toasts[lastIndex] = ErrorToastItem(
-            title: last.title,
-            message: last.message,
-            severity: last.severity,
-            entry: entry,
-            timestamp: last.timestamp
-        )
+    private func enrichToast(id: UUID, with entry: ErrorEntry) {
+        guard let index = toasts.firstIndex(where: { $0.id == id && $0.entry == nil }) else { return }
+        let enriched = toasts[index].enriched(with: entry)
+        toasts[index] = enriched
+        if let window = windows[id] {
+            window.contentView = NSHostingView(
+                rootView: toastView(for: enriched)
+                    .frame(width: window.frame.width, height: window.frame.height)
+            )
+        }
     }
     
     // MARK: - Dismiss
@@ -138,18 +156,11 @@ final class ErrorToastManager: ObservableObject {
         window.hasShadow = true
         window.isReleasedWhenClosed = false
         
-        let view = ErrorToastView(item: toast, onTap: { [weak self] in
-            if let entry = toast.entry {
-                self?.navigateToEncyclopedia(entry)
-            }
-            self?.dismiss(id: toast.id)
-        }, onDismiss: { [weak self] in
-            self?.dismiss(id: toast.id)
-        })
-        .frame(width: width, height: height)
-        
+        let view = toastView(for: toast)
+            .frame(width: width, height: height)
+
         window.contentView = NSHostingView(rootView: view)
-        
+
         // Position in top-right corner
         if let screen = NSScreen.main {
             let padding: CGFloat = 20
@@ -157,17 +168,28 @@ final class ErrorToastManager: ObservableObject {
             let y = screen.visibleFrame.maxY - height - padding - CGFloat(windows.count * 130)
             window.setFrameOrigin(NSPoint(x: x, y: y))
         }
-        
+
         window.alphaValue = 0
         window.orderFront(nil)
-        
+
         NSAnimationContext.runAnimationGroup { ctx in
             ctx.duration = 0.3
             ctx.timingFunction = .init(name: .easeOut)
             window.animator().alphaValue = 1
         }
-        
+
         windows[toast.id] = window
+    }
+
+    private func toastView(for toast: ErrorToastItem) -> ErrorToastView {
+        ErrorToastView(item: toast, onTap: { [weak self] in
+            if let entry = toast.entry {
+                self?.navigateToEncyclopedia(entry)
+            }
+            self?.dismiss(id: toast.id)
+        }, onDismiss: { [weak self] in
+            self?.dismiss(id: toast.id)
+        })
     }
     
     // MARK: - Show Detail Window
@@ -205,60 +227,63 @@ struct ErrorToastView: View {
     @State private var isHovered = false
     
     var body: some View {
-        Button(action: onTap) {
-            HStack(spacing: 12) {
-                // Severity icon
-                ZStack {
-                    Circle()
-                        .fill(Color(hex: item.severity.colorHex).opacity(0.15))
-                        .frame(width: 40, height: 40)
-                    
-                    Image(systemName: item.severity.icon)
-                        .font(.system(size: 18, weight: .medium))
-                        .foregroundStyle(Color(hex: item.severity.colorHex))
-                }
-                
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(item.title)
-                        .font(.system(size: 12, weight: .bold, design: .monospaced))
-                        .foregroundStyle(.white)
-                        .lineLimit(2)
-                    
-                    Text(item.message)
-                        .font(.system(size: 10, design: .monospaced))
-                        .foregroundStyle(.white.opacity(0.6))
-                        .lineLimit(2)
-                    
-                    if item.entry != nil {
-                        Text("Click to open in Encyclopedia →")
-                            .font(.system(size: 9, weight: .bold, design: .monospaced))
-                            .foregroundStyle(Color(hex: "#007AFF"))
+        HStack(spacing: 12) {
+            Button(action: onTap) {
+                HStack(spacing: 12) {
+                    ZStack {
+                        Circle()
+                            .fill(Color(hex: item.severity.colorHex).opacity(0.15))
+                            .frame(width: 40, height: 40)
+
+                        Image(systemName: item.severity.icon)
+                            .font(.system(size: 18, weight: .medium))
+                            .foregroundStyle(Color(hex: item.severity.colorHex))
                     }
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(item.title)
+                            .font(.system(size: 12, weight: .bold, design: .monospaced))
+                            .foregroundStyle(.white)
+                            .lineLimit(2)
+
+                        Text(item.message)
+                            .font(.system(size: 10, design: .monospaced))
+                            .foregroundStyle(.white.opacity(0.6))
+                            .lineLimit(2)
+
+                        if item.entry != nil {
+                            Text("Click to open in Encyclopedia →")
+                                .font(.system(size: 9, weight: .bold, design: .monospaced))
+                                .foregroundStyle(Color(hex: "#007AFF"))
+                        }
+                    }
+
+                    Spacer(minLength: 0)
                 }
-                
-                Spacer()
-                
-                Button(action: onDismiss) {
-                    Image(systemName: "xmark")
-                        .font(.system(size: 10, weight: .bold))
-                        .foregroundStyle(.white.opacity(0.4))
-                        .frame(width: 20, height: 20)
-                }
-                .buttonStyle(.plain)
+                .contentShape(Rectangle())
             }
-            .padding(12)
-            .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(Color(white: 0.08))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(Color(hex: item.severity.colorHex).opacity(0.3), lineWidth: 1)
-                    )
-            )
-            .shadow(color: Color.black.opacity(0.4), radius: 12, x: 0, y: 4)
-            .scaleEffect(isHovered ? 1.02 : 1.0)
+            .buttonStyle(.plain)
+
+            Button(action: onDismiss) {
+                Image(systemName: "xmark")
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundStyle(.white.opacity(0.4))
+                    .frame(width: 20, height: 20)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(Text("button.close"))
         }
-        .buttonStyle(.plain)
+        .padding(12)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color(white: 0.08))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(Color(hex: item.severity.colorHex).opacity(0.3), lineWidth: 1)
+                )
+        )
+        .shadow(color: Color.black.opacity(0.4), radius: 12, x: 0, y: 4)
+        .scaleEffect(isHovered ? 1.02 : 1.0)
         .onHover { hovering in
             isHovered = hovering
         }
@@ -306,5 +331,3 @@ struct ErrorToastOverlay: View {
         }
     }
 }
-
-

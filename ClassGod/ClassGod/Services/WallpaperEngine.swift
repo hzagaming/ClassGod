@@ -12,6 +12,23 @@ extension Notification.Name {
     static let wallpaperStateDidChange = Notification.Name("com.hanazar.classgod.wallpaperStateDidChange")
 }
 
+enum WallpaperLoopAction: Equatable {
+    case restart
+    case advance
+    case stop
+}
+
+enum WallpaperLoopPolicy {
+    static func action(
+        mode: WallpaperPlaybackMode,
+        isEnabled: Bool,
+        isPlaying: Bool
+    ) -> WallpaperLoopAction {
+        guard isEnabled, isPlaying else { return .stop }
+        return mode == .singleLoop ? .restart : .advance
+    }
+}
+
 @MainActor
 final class WallpaperEngine: ObservableObject {
     static let shared = WallpaperEngine()

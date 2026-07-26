@@ -179,8 +179,13 @@ struct ShortcutsSettingsView: View {
         let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
         guard event.type == .keyDown else { return nil }
 
+        if event.keyCode == 0x35 {
+            stopRecording()
+            return nil
+        }
+
         let specialKeyCodes: Set<UInt16> = [
-            0x24, 0x30, 0x31, 0x33, 0x35, 0x37, 0x38, 0x39, 0x3A, 0x3B, 0x3F,
+            0x24, 0x30, 0x31, 0x33, 0x37, 0x38, 0x39, 0x3A, 0x3B, 0x3F,
             0x7B, 0x7C, 0x7D, 0x7E
         ]
 

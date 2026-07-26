@@ -27,4 +27,24 @@ struct WallpaperSettingsTests {
         #expect(!restored.isPlaying)
         #expect(restored.currentWallpaperId == original.currentWallpaperId)
     }
+
+    @Test("Wallpaper deletion confirmation is localized")
+    func localizesDeletionConfirmation() {
+        let value = String(
+            localized: "wallpaper.delete_message",
+            bundle: .main,
+            locale: Locale(identifier: "en")
+        )
+
+        #expect(value != "wallpaper.delete_message")
+        #expect(value.contains("%@"))
+    }
+
+    @Test("Video loop respects playback state and mode")
+    func resolvesVideoLoopAction() {
+        #expect(WallpaperLoopPolicy.action(mode: .singleLoop, isEnabled: true, isPlaying: true) == .restart)
+        #expect(WallpaperLoopPolicy.action(mode: .listLoop, isEnabled: true, isPlaying: true) == .advance)
+        #expect(WallpaperLoopPolicy.action(mode: .random, isEnabled: false, isPlaying: true) == .stop)
+        #expect(WallpaperLoopPolicy.action(mode: .singleLoop, isEnabled: true, isPlaying: false) == .stop)
+    }
 }

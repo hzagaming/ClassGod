@@ -6375,6 +6375,22 @@
         }
       }
     },
+    "wallpaper.delete_message" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete “%@” from the wallpaper library?"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "确定要从壁纸库中删除“%@”吗？"
+          }
+        }
+      }
+    },
     "wallpaper.delete_title" : {
       "localizations" : {
         "en" : {

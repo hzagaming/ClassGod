@@ -241,11 +241,22 @@ final class VideoWallpaperNSView: NSView {
             object: item,
             queue: .main
         ) { [weak player] _ in
-            player?.seek(to: .zero)
-            player?.play()
-            Task { @MainActor in
-                if WallpaperEngine.shared.playbackMode != .singleLoop {
+            Task { @MainActor [weak player] in
+                guard let player else { return }
+                let engine = WallpaperEngine.shared
+                switch WallpaperLoopPolicy.action(
+                    mode: engine.playbackMode,
+                    isEnabled: engine.isEnabled,
+                    isPlaying: engine.isPlaying
+                ) {
+                case .restart:
+                    player.seek(to: .zero)
+                    player.play()
+                case .advance:
                     NotificationCenter.default.post(name: .wallpaperVideoDidLoop, object: nil)
+                case .stop:
+                    player.seek(to: .zero)
+                    player.pause()
                 }
             }
         }

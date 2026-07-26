@@ -45,6 +45,7 @@ struct ShortcutPicker: View {
             Button(action: {
                 SoundEffectManager.shared.playButtonClick()
                 HapticManager.shared.generic()
+                stopRecording()
                 key = ""
                 modifiers = 0
             }) {
@@ -91,12 +92,16 @@ struct ShortcutPicker: View {
             let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
 
             if event.type == .keyDown {
+                if event.keyCode == 0x35 {
+                    self.stopRecording()
+                    return nil
+                }
+
                 let specialKeyCodes: Set<UInt16> = [
                     0x24, // Return
                     0x30, // Tab
                     0x31, // Space
                     0x33, // Delete
-                    0x35, // Escape
                     0x37, // Command
                     0x38, // Shift
                     0x39, // CapsLock

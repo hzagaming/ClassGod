@@ -226,11 +226,7 @@ struct MenuBarView: View {
 
             Spacer()
 
-            Button(action: {
-                SoundEffectManager.shared.playButtonClick()
-                HapticManager.shared.generic()
-                onOpenFanControl()
-            }) {
+            Button(action: openFanControl) {
                 Text("button.open")
                     .font(.system(size: 9 * zoomScale, weight: .bold, design: .monospaced))
                     .foregroundStyle(.cyan)
@@ -243,6 +239,7 @@ struct MenuBarView: View {
                     )
             }
             .buttonStyle(.plain)
+            .accessibilityLabel(Text("fan.title"))
         }
         .padding()
         .background(Color.white.opacity(0.02))
@@ -251,6 +248,12 @@ struct MenuBarView: View {
                 .stroke(Color.white.opacity(0.08), lineWidth: 1 * zoomScale)
                 .allowsHitTesting(false)
         )
+    }
+
+    private func openFanControl() {
+        SoundEffectManager.shared.playButtonClick()
+        HapticManager.shared.generic()
+        onOpenFanControl()
     }
 
     private func activate() {
@@ -328,10 +331,7 @@ struct MenuBarView: View {
     private var titleBar: some View {
         HStack(spacing: 0 * zoomScale) {
             // Close button
-            Button(action: {
-                SoundEffectManager.shared.playButtonClick()
-                onClose()
-            }) {
+            Button(action: close) {
                 Image(systemName: "minus")
                     .font(.system(size: 12 * zoomScale, weight: .bold))
                     .foregroundStyle(.white.opacity(0.6))
@@ -340,6 +340,7 @@ struct MenuBarView: View {
                     .clipShape(Circle())
             }
             .buttonStyle(.plain)
+            .accessibilityLabel(Text("button.close"))
             .padding(.leading, 12 * zoomScale)
             
             Spacer()
@@ -361,6 +362,11 @@ struct MenuBarView: View {
         .padding(.vertical, 8 * zoomScale)
         .background(Color(white: 0.03))
     }
+
+    private func close() {
+        SoundEffectManager.shared.playButtonClick()
+        onClose()
+    }
 }
 
 // MARK: - Feature Button
@@ -378,13 +384,7 @@ struct FeatureButton: View {
     @State private var isPressed = false
     
     var body: some View {
-        Button(action: {
-            if isEnabled {
-                SoundEffectManager.shared.playButtonClick()
-                HapticManager.shared.generic()
-                action()
-            }
-        }) {
+        Button(action: performAction) {
             HStack(spacing: 12 * zoomScale) {
                 ZStack {
                     RoundedRectangle(cornerRadius: 8 * zoomScale)
@@ -427,6 +427,7 @@ struct FeatureButton: View {
         }
         .buttonStyle(.plain)
         .disabled(!isEnabled)
+        .accessibilityLabel(title)
         .accessibilityHint(description)
         .onHover { hovering in
             isHovered = hovering && isEnabled
@@ -452,6 +453,13 @@ struct FeatureButton: View {
                 release()
             }
         }
+    }
+
+    private func performAction() {
+        guard isEnabled else { return }
+        SoundEffectManager.shared.playButtonClick()
+        HapticManager.shared.generic()
+        action()
     }
 }
 
