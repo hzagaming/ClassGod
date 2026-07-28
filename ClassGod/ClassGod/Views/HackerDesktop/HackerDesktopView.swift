@@ -6,17 +6,19 @@
 //
 
 import SwiftUI
+import AppKit
+import UniformTypeIdentifiers
 
 struct HackerDesktopView: View {
     var onClose: () -> Void
     
     @State private var todoItems: [TodoItem] = []
     @State private var noteContent: String = ""
-    @State private var clockCity: String = "Beijing"
-    @State private var weatherCity: String = "Beijing"
+    @State private var clockCity = String(localized: "hackerdesktop.default_city")
+    @State private var weatherCity = String(localized: "hackerdesktop.default_city")
     @State private var cryptoBTC: String = "$64,230 ▲2.4%"
     @State private var cryptoETH: String = "$3,450 ▼0.8%"
-    @State private var quoteText: String = "The only truly secure system is one that is powered off."
+    @State private var quoteText = String(localized: "hackerdesktop.default_quote")
     @State private var quoteAuthor: String = "Gene Spafford"
     @State private var asciiArt: String = "  .--.\n /  o \\n|   __|\n \\__/"
     @State private var terminalLogs: [String] = [
@@ -84,7 +86,7 @@ struct HackerDesktopView: View {
                     case 0: dataTab
                     case 1: toolsTab
                     case 2: funTab
-                    case 3: DesktopWidgetEditor()
+                    case 3: officialWidgetsTab
                     default: aboutTab
                     }
                 }
@@ -132,7 +134,11 @@ struct HackerDesktopView: View {
                 HStack(spacing: 12 * zoomScale) {
                     StatBadge(label: "CPU", value: "\(Int(SystemMonitor.shared.cpu.total))%", color: .cyan)
                     StatBadge(label: "RAM", value: "\(Int(SystemMonitor.shared.memory.usedPercent * 100))%", color: .green)
-                    StatBadge(label: "Battery", value: "\(Int(SystemMonitor.shared.battery.level))%", color: .orange)
+                    StatBadge(
+                        label: "Battery",
+                        value: "\(Int(WidgetMetricNormalization.batteryPercent(from: SystemMonitor.shared.battery.level)))%",
+                        color: .orange
+                    )
                 }
             }
             
@@ -234,6 +240,28 @@ struct HackerDesktopView: View {
                     .frame(height: 100 * zoomScale)
                     .onChange(of: noteContent) { _, _ in saveData() }
             }
+
+            ConfigSection(title: "hackerdesktop.files", icon: "doc.on.doc") {
+                ForEach(filePaths) { file in
+                    removableWidgetItem(title: file.name, subtitle: file.path) {
+                        filePaths.removeAll { $0.id == file.id }
+                        saveData(immediate: true)
+                    }
+                }
+                Button("hackerdesktop.add_files", systemImage: "plus") { selectFiles() }
+                    .widgetDataButtonStyle(zoomScale: zoomScale)
+            }
+
+            ConfigSection(title: "hackerdesktop.apps", icon: "app.badge") {
+                ForEach(appItems) { app in
+                    removableWidgetItem(title: app.name, subtitle: app.bundleID) {
+                        appItems.removeAll { $0.id == app.id }
+                        saveData(immediate: true)
+                    }
+                }
+                Button("hackerdesktop.add_apps", systemImage: "plus") { selectApplications() }
+                    .widgetDataButtonStyle(zoomScale: zoomScale)
+            }
         }
     }
     
@@ -307,6 +335,87 @@ struct HackerDesktopView: View {
                 }
                 .onChange(of: terminalLogs) { _, _ in saveData() }
             }
+        }
+    }
+
+    private var officialWidgetsTab: some View {
+        VStack(spacing: 14 * zoomScale) {
+            ConfigSection(title: "hackerdesktop.native_widgets.title", icon: "square.grid.2x2") {
+                HStack(spacing: 8 * zoomScale) {
+                    Image(systemName: "checkmark.seal.fill")
+                        .foregroundStyle(.green)
+                    VStack(alignment: .leading, spacing: 2 * zoomScale) {
+                        Text("hackerdesktop.native_widgets.active")
+                            .font(.system(size: 11 * zoomScale, weight: .bold, design: .monospaced))
+                        Text("hackerdesktop.native_widgets.description")
+                            .font(.system(size: 9 * zoomScale, design: .monospaced))
+                            .foregroundStyle(.white.opacity(0.4))
+                    }
+                }
+
+                if !WidgetDataStore.shared.usesSharedContainer {
+                    Label("hackerdesktop.native_widgets.local_warning", systemImage: "exclamationmark.triangle.fill")
+                        .font(.system(size: 9 * zoomScale, design: .monospaced))
+                        .foregroundStyle(.orange.opacity(0.8))
+                }
+
+                VStack(alignment: .leading, spacing: 7 * zoomScale) {
+                    instructionRow(number: 1, text: "hackerdesktop.native_widgets.step1")
+                    instructionRow(number: 2, text: "hackerdesktop.native_widgets.step2")
+                    instructionRow(number: 3, text: "hackerdesktop.native_widgets.step3")
+                }
+                .padding(10 * zoomScale)
+                .background(Color.white.opacity(0.025))
+                .clipShape(RoundedRectangle(cornerRadius: 8 * zoomScale))
+
+                Button {
+                    saveSystemData()
+                    SoundEffectManager.shared.playButtonClick()
+                } label: {
+                    Label("hackerdesktop.native_widgets.refresh", systemImage: "arrow.clockwise")
+                        .font(.system(size: 10 * zoomScale, weight: .bold, design: .monospaced))
+                        .foregroundStyle(.cyan)
+                        .padding(.horizontal, 10 * zoomScale)
+                        .padding(.vertical, 7 * zoomScale)
+                        .background(Color.cyan.opacity(0.1))
+                        .clipShape(RoundedRectangle(cornerRadius: 6 * zoomScale))
+                }
+                .buttonStyle(.plain)
+            }
+
+            ConfigSection(title: "hackerdesktop.available_widgets", icon: "square.grid.3x3") {
+                let widgets: [(id: String, category: LocalizedStringKey, list: LocalizedStringKey)] = [
+                    ("system", "hackerdesktop.widgets.system", "hackerdesktop.widgets.system_list"),
+                    ("info", "hackerdesktop.widgets.info", "hackerdesktop.widgets.info_list"),
+                    ("tools", "hackerdesktop.widgets.tools", "hackerdesktop.widgets.tools_list"),
+                    ("hacker", "hackerdesktop.widgets.hacker", "hackerdesktop.widgets.hacker_list")
+                ]
+                ForEach(widgets, id: \.id) { item in
+                    HStack(alignment: .top, spacing: 8 * zoomScale) {
+                        Text(item.category)
+                            .font(.system(size: 10 * zoomScale, weight: .bold, design: .monospaced))
+                            .foregroundStyle(.cyan.opacity(0.75))
+                            .frame(width: 52 * zoomScale, alignment: .leading)
+                        Text(item.list)
+                            .font(.system(size: 10 * zoomScale, design: .monospaced))
+                            .foregroundStyle(.white.opacity(0.5))
+                    }
+                }
+            }
+        }
+    }
+
+    private func instructionRow(number: Int, text: LocalizedStringKey) -> some View {
+        HStack(spacing: 8 * zoomScale) {
+            Text("\(number)")
+                .font(.system(size: 9 * zoomScale, weight: .bold, design: .monospaced))
+                .foregroundStyle(.black)
+                .frame(width: 18 * zoomScale, height: 18 * zoomScale)
+                .background(Color.cyan)
+                .clipShape(Circle())
+            Text(text)
+                .font(.system(size: 10 * zoomScale, design: .monospaced))
+                .foregroundStyle(.white.opacity(0.65))
         }
     }
     
@@ -398,7 +507,7 @@ struct HackerDesktopView: View {
             diskTotal: Double(disk?.total ?? 0) / 1024 / 1024 / 1024,
             netDown: SystemMonitor.shared.network.downloadSpeedKBs / 1024,
             netUp: SystemMonitor.shared.network.uploadSpeedKBs / 1024,
-            battery: SystemMonitor.shared.battery.level,
+            battery: WidgetMetricNormalization.batteryPercent(from: SystemMonitor.shared.battery.level),
             isCharging: SystemMonitor.shared.battery.isCharging,
             uptime: Date().timeIntervalSince(SystemMonitor.shared.system.bootTime ?? Date())
         )
@@ -436,15 +545,15 @@ struct HackerDesktopView: View {
     
     private func loadData() {
         let store = WidgetDataStore.shared
-        clockCity = store.string(forKey: .clockCity) ?? "Beijing"
-        weatherCity = store.string(forKey: .weatherCity) ?? "Beijing"
+        clockCity = store.string(forKey: .clockCity) ?? String(localized: "hackerdesktop.default_city")
+        weatherCity = store.string(forKey: .weatherCity) ?? String(localized: "hackerdesktop.default_city")
         todoItems = store.array(forKey: .todoItems, type: TodoItem.self)
         noteContent = store.string(forKey: .noteContent) ?? ""
         filePaths = store.array(forKey: .filePaths, type: FileItem.self)
         appItems = store.array(forKey: .appBundleIDs, type: AppLauncherItem.self)
         cryptoBTC = store.string(forKey: .cryptoBTC) ?? "$64,230 ▲2.4%"
         cryptoETH = store.string(forKey: .cryptoETH) ?? "$3,450 ▼0.8%"
-        quoteText = store.string(forKey: .quoteText) ?? "The only truly secure system is one that is powered off."
+        quoteText = store.string(forKey: .quoteText) ?? String(localized: "hackerdesktop.default_quote")
         quoteAuthor = store.string(forKey: .quoteAuthor) ?? "Gene Spafford"
         terminalLogs = store.stringArray(forKey: .terminalLogs)
         if terminalLogs.isEmpty {
@@ -455,6 +564,59 @@ struct HackerDesktopView: View {
             ]
         }
         asciiArt = store.string(forKey: .asciiArt) ?? "  .--.\n /  o \\n|   __|\n \\__/"
+    }
+
+    private func removableWidgetItem(title: String, subtitle: String, onRemove: @escaping () -> Void) -> some View {
+        HStack(spacing: 8 * zoomScale) {
+            VStack(alignment: .leading, spacing: 2 * zoomScale) {
+                Text(title)
+                    .font(.system(size: 10 * zoomScale, weight: .medium, design: .monospaced))
+                    .lineLimit(1)
+                Text(subtitle)
+                    .font(.system(size: 8 * zoomScale, design: .monospaced))
+                    .foregroundStyle(.white.opacity(0.35))
+                    .lineLimit(1)
+            }
+            Spacer()
+            Button(action: onRemove) {
+                Image(systemName: "trash")
+                    .foregroundStyle(.red.opacity(0.7))
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(Text("button.delete"))
+        }
+        .padding(7 * zoomScale)
+        .background(Color.white.opacity(0.03))
+        .clipShape(RoundedRectangle(cornerRadius: 6 * zoomScale))
+    }
+
+    private func selectFiles() {
+        let panel = NSOpenPanel()
+        panel.canChooseFiles = true
+        panel.canChooseDirectories = false
+        panel.allowsMultipleSelection = true
+        guard panel.runModal() == .OK else { return }
+        let existing = Set(filePaths.map(\.path))
+        filePaths.append(contentsOf: panel.urls.compactMap { url in
+            guard !existing.contains(url.path) else { return nil }
+            return FileItem(id: UUID(), path: url.path, name: url.lastPathComponent)
+        })
+        saveData(immediate: true)
+    }
+
+    private func selectApplications() {
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = [.application]
+        panel.canChooseDirectories = false
+        panel.allowsMultipleSelection = true
+        guard panel.runModal() == .OK else { return }
+        let existing = Set(appItems.map(\.bundleID))
+        appItems.append(contentsOf: panel.urls.compactMap { url in
+            guard let bundleID = Bundle(url: url)?.bundleIdentifier,
+                  !existing.contains(bundleID) else { return nil }
+            return AppLauncherItem(id: UUID(), bundleID: bundleID, name: url.deletingPathExtension().lastPathComponent)
+        })
+        saveData(immediate: true)
     }
 }
 
@@ -544,6 +706,18 @@ private struct StatBadge: View {
         .padding(.vertical, 8 * zoomScale)
         .background(Color(white: 0.05))
         .clipShape(RoundedRectangle(cornerRadius: 6 * zoomScale))
+    }
+}
+
+private extension View {
+    func widgetDataButtonStyle(zoomScale: CGFloat) -> some View {
+        buttonStyle(.plain)
+            .font(.system(size: 9 * zoomScale, weight: .bold, design: .monospaced))
+            .foregroundStyle(.cyan)
+            .padding(.horizontal, 9 * zoomScale)
+            .padding(.vertical, 6 * zoomScale)
+            .background(Color.cyan.opacity(0.1))
+            .clipShape(RoundedRectangle(cornerRadius: 6 * zoomScale))
     }
 }
 

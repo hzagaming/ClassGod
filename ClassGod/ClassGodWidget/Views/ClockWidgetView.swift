@@ -51,7 +51,7 @@ struct ClockWidgetView: View {
                     Text(dayString)
                         .font(.system(size: 14, weight: .bold, design: .monospaced))
                         .foregroundStyle(.cyan.opacity(0.8))
-                    Text(secondsString)
+                    Text(entry.clockCity)
                         .font(.system(size: 12, design: .monospaced))
                         .foregroundStyle(.white.opacity(0.35))
                 }
@@ -65,12 +65,6 @@ struct ClockWidgetView: View {
     private var timeString: String {
         let f = DateFormatter()
         f.dateFormat = "HH:mm"
-        return f.string(from: entry.date)
-    }
-    
-    private var secondsString: String {
-        let f = DateFormatter()
-        f.dateFormat = ":ss"
         return f.string(from: entry.date)
     }
     

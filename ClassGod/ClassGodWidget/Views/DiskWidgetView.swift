@@ -74,10 +74,10 @@ struct DiskWidgetView: View {
                     Text("STORAGE")
                         .font(.system(size: 9, weight: .bold, design: .monospaced))
                         .foregroundStyle(.white.opacity(0.4))
-                    Text("\(Int(entry.diskFree))G free")
+                    Text(String(format: String(localized: "WIDGET_DISK_FREE"), Int(entry.diskFree)))
                         .font(.system(size: 12, weight: .medium, design: .monospaced))
                         .foregroundStyle(.white.opacity(0.85))
-                    Text("/ \(Int(entry.diskTotal))G total")
+                    Text(String(format: String(localized: "WIDGET_DISK_TOTAL"), Int(entry.diskTotal)))
                         .font(.system(size: 9, design: .monospaced))
                         .foregroundStyle(.white.opacity(0.35))
                 }

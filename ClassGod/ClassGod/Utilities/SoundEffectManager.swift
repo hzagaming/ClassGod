@@ -84,7 +84,11 @@ final class SoundEffectManager {
         playSound(named: effect.systemSoundName)
     }
 
-    private func playSound(named name: String) {
+    private func playSound(named name: String, allowsOverlap: Bool = false) {
+        if !allowsOverlap {
+            sounds.values.forEach { $0.stop() }
+        }
+
         let sound: NSSound
         if let cached = sounds[name] {
             sound = cached
@@ -212,7 +216,7 @@ final class SoundEffectManager {
     func playGlitchSound() {
         guard isEnabled else { return }
         guard let soundName = glitchSoundNames.randomElement() else { return }
-        playSound(named: soundName)
+        playSound(named: soundName, allowsOverlap: true)
     }
     
     func playGlitchBurst(count: Int) {

@@ -31,7 +31,7 @@ struct AppLauncherWidgetView: View {
                 
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
                     ForEach(entry.appItems.prefix(4)) { app in
-                        if let url = URL(string: "classgod://launch?bundle=\(app.bundleID)") {
+                        if let url = WidgetDeepLink.launchURL(bundleIdentifier: app.bundleID) {
                             Link(destination: url) {
                                 VStack(spacing: 3) {
                                     Image(systemName: "app.fill")
@@ -68,7 +68,7 @@ struct AppLauncherWidgetView: View {
                 
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
                     ForEach(entry.appItems.prefix(6)) { app in
-                        if let url = URL(string: "classgod://launch?bundle=\(app.bundleID)") {
+                        if let url = WidgetDeepLink.launchURL(bundleIdentifier: app.bundleID) {
                             Link(destination: url) {
                                 VStack(spacing: 4) {
                                     Image(systemName: "app.fill")

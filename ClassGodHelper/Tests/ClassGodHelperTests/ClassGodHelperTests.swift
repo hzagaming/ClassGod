@@ -102,6 +102,23 @@ func fanReadingValidity() {
     #expect(!FanReadingValidity.isPlausible(actual: 25_000, minimum: 1_200, maximum: 6_000))
 }
 
+@Test("Fan count decoding respects the declared unsigned SMC type")
+func fanCountDecoding() {
+    #expect(FanCountReading.decode([2], dataType: "ui8 ") == 2)
+    #expect(FanCountReading.decode([0, 2], dataType: "ui16") == 2)
+    #expect(FanCountReading.decode([0, 0, 0, 2], dataType: "ui32") == 2)
+    #expect(FanCountReading.decode([0, 2], dataType: "fpe2") == nil)
+    #expect(FanCountReading.decode([0, 17], dataType: "ui16") == nil)
+}
+
+@Test("Temperature readings require an explicit supported SMC type")
+func temperatureReadingValidity() {
+    #expect(TemperatureReadingValidity.supports(dataType: "sp78"))
+    #expect(TemperatureReadingValidity.supports(dataType: "SP7A"))
+    #expect(!TemperatureReadingValidity.supports(dataType: "fpe2"))
+    #expect(!TemperatureReadingValidity.supports(dataType: "flt "))
+}
+
 @Test("Power metrics parses current fan output variants")
 func powerMetricsFanParsing() {
     let readings = PowerMetricsParser.parse("""

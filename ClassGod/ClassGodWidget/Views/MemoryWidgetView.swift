@@ -80,13 +80,19 @@ struct MemoryWidgetView: View {
                 .frame(height: 10)
                 
                 HStack(spacing: 12) {
-                    Label("Used: \(Int(usedGB))G", systemImage: "memorychip")
-                        .font(.system(size: 9, design: .monospaced))
-                        .foregroundStyle(.white.opacity(0.45))
-                    Label("Free: \(Int(freeGB))G", systemImage: "memorychip.fill")
-                        .font(.system(size: 9, design: .monospaced))
-                        .foregroundStyle(.white.opacity(0.45))
+                    Label {
+                        Text(String(format: String(localized: "WIDGET_MEMORY_USED"), Int(usedGB)))
+                    } icon: {
+                        Image(systemName: "memorychip")
+                    }
+                    Label {
+                        Text(String(format: String(localized: "WIDGET_MEMORY_FREE"), Int(freeGB)))
+                    } icon: {
+                        Image(systemName: "memorychip.fill")
+                    }
                 }
+                .font(.system(size: 9, design: .monospaced))
+                .foregroundStyle(.white.opacity(0.45))
             }
             .padding(12)
         }

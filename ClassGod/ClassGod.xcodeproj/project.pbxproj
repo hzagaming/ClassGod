@@ -25,6 +25,7 @@
 		769FB4940B9B56DC00D23E23 /* WidgetProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 801D7EDB041A172A4B4375C6 /* WidgetProvider.swift */; };
 		7A2D2540BE019A658A904ACA /* WidgetEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5AE60636E0D4FE2399EA2FCF /* WidgetEntry.swift */; };
 		AAE000000000000000000001 /* ClassGodWidget.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 7B9F77485B9CA75A1B081397 /* ClassGodWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		AAE000000000000000000005 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = AAE000000000000000000006 /* Localizable.xcstrings */; };
 		93AE47A74702DF949735BB1F /* TodoWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CECE49CA245F96FBCA3F07F /* TodoWidgetView.swift */; };
 		93C784CFE846C8888228B3F4 /* SystemInfoWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BE0498D5636BDD3C7BDC4B2 /* SystemInfoWidgetView.swift */; };
 		94BFAD6F3FB5F52E1E0F3E70 /* ClockWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A656A14BDC89DA0021C9939F /* ClockWidgetView.swift */; };
@@ -88,6 +89,7 @@
 		9CECE49CA245F96FBCA3F07F /* TodoWidgetView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TodoWidgetView.swift; path = ClassGodWidget/Views/TodoWidgetView.swift; sourceTree = "<group>"; };
 		A656A14BDC89DA0021C9939F /* ClockWidgetView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ClockWidgetView.swift; path = ClassGodWidget/Views/ClockWidgetView.swift; sourceTree = "<group>"; };
 		A94A4408A7C631388DC79E77 /* FileWidgetView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = FileWidgetView.swift; path = ClassGodWidget/Views/FileWidgetView.swift; sourceTree = "<group>"; };
+		AAE000000000000000000006 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; name = Localizable.xcstrings; path = ClassGodWidget/Localizable.xcstrings; sourceTree = "<group>"; };
 		B37C3AD31B92AB52B8279694 /* AsciiArtWidgetView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = AsciiArtWidgetView.swift; path = ClassGodWidget/Views/AsciiArtWidgetView.swift; sourceTree = "<group>"; };
 		C0B4D8267F5968526D4E800C /* NotesWidgetView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = NotesWidgetView.swift; path = ClassGodWidget/Views/NotesWidgetView.swift; sourceTree = "<group>"; };
 		CA8B143F344F8F5831C0BFA9 /* WidgetDataStore.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = WidgetDataStore.swift; path = ClassGod/Shared/WidgetDataStore.swift; sourceTree = "<group>"; };
@@ -185,6 +187,7 @@
 				5AE60636E0D4FE2399EA2FCF /* WidgetEntry.swift */,
 				801D7EDB041A172A4B4375C6 /* WidgetProvider.swift */,
 				E4A308726928F4CCF88BFE8C /* Info.plist */,
+				AAE000000000000000000006 /* Localizable.xcstrings */,
 				CA8B143F344F8F5831C0BFA9 /* WidgetDataStore.swift */,
 			);
 			sourceTree = "<group>";
@@ -322,6 +325,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AAE000000000000000000005 /* Localizable.xcstrings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -463,8 +467,8 @@
 				ENABLE_APP_SANDBOX = YES;
 				INFOPLIST_FILE = ClassGodWidget/Info.plist;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				CURRENT_PROJECT_VERSION = 38;
-				MARKETING_VERSION = 1.5.13;
+				CURRENT_PROJECT_VERSION = 39;
+				MARKETING_VERSION = 1.5.14;
 				PRODUCT_BUNDLE_IDENTIFIER = com.hanazar.classgod.ClassGodWidget;
 				PRODUCT_NAME = ClassGodWidget;
 				SDKROOT = macosx;
@@ -485,8 +489,8 @@
 				ENABLE_APP_SANDBOX = YES;
 				INFOPLIST_FILE = ClassGodWidget/Info.plist;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				CURRENT_PROJECT_VERSION = 38;
-				MARKETING_VERSION = 1.5.13;
+				CURRENT_PROJECT_VERSION = 39;
+				MARKETING_VERSION = 1.5.14;
 				PRODUCT_BUNDLE_IDENTIFIER = com.hanazar.classgod.ClassGodWidget;
 				PRODUCT_NAME = ClassGodWidget;
 				SDKROOT = macosx;
@@ -622,7 +626,7 @@
 				CODE_SIGN_ENTITLEMENTS = ClassGod/ClassGod.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 38;
+				CURRENT_PROJECT_VERSION = 39;
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
@@ -649,7 +653,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.5.13;
+				MARKETING_VERSION = 1.5.14;
 				PRODUCT_BUNDLE_IDENTIFIER = com.hanazar.classgod;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -669,7 +673,7 @@
 				CODE_SIGN_ENTITLEMENTS = ClassGod/ClassGod.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 38;
+				CURRENT_PROJECT_VERSION = 39;
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
@@ -696,7 +700,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.5.13;
+				MARKETING_VERSION = 1.5.14;
 				PRODUCT_BUNDLE_IDENTIFIER = com.hanazar.classgod;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;

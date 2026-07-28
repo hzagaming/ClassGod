@@ -485,8 +485,7 @@ final class SystemMonitor: ObservableObject, @unchecked Sendable {
         
         guard let info = IOPSGetPowerSourceDescription(snapshot, source)?.takeUnretainedValue() as? [String: Any] else { return }
         
-        let state = info[kIOPSPowerSourceStateKey] as? String
-        let isCharging = state == kIOPSBatteryPowerValue
+        let isCharging = info[kIOPSIsChargingKey] as? Bool ?? false
         let capacity = info[kIOPSCurrentCapacityKey] as? Int ?? 0
         let maxCapacity = info[kIOPSMaxCapacityKey] as? Int ?? 100
         let time = info[kIOPSTimeToEmptyKey] as? Int ?? -1

@@ -27,6 +27,7 @@ struct MenuBarView: View {
     var onOpenSettings: () -> Void
     var onOpenWallpaper: () -> Void
     var onOpenHackerDesktop: () -> Void
+    var onOpenClipo: () -> Void
     var onOpenFanControl: () -> Void
     var onOpenErrorHub: () -> Void
     var onOpenActivityMonitor: () -> Void
@@ -51,6 +52,13 @@ struct MenuBarView: View {
                             title: "DestinTab",
                             description: "menu.destintab.description",
                             action: onOpenDestinTab
+                        )
+
+                        FeatureButton(
+                            icon: "clipboard.fill",
+                            title: "Clipo",
+                            description: "menu.clipo.description",
+                            action: onOpenClipo
                         )
                         
                         FeatureButton(
@@ -460,5 +468,5 @@ struct FeatureButton: View {
 }
 
 #Preview {
-    MenuBarView(onClose: {}, onOpenDestinTab: {}, onOpenSuperSwitch: {}, onOpenGhostProtocol: {}, onOpenBrowserBypasser: {}, onOpenAssessPrepHack: {}, onOpenSettings: {}, onOpenWallpaper: {}, onOpenHackerDesktop: {}, onOpenFanControl: {}, onOpenErrorHub: {}, onOpenActivityMonitor: {}, onOpenPermissionCenter: {})
+    MenuBarView(onClose: {}, onOpenDestinTab: {}, onOpenSuperSwitch: {}, onOpenGhostProtocol: {}, onOpenBrowserBypasser: {}, onOpenAssessPrepHack: {}, onOpenSettings: {}, onOpenWallpaper: {}, onOpenHackerDesktop: {}, onOpenClipo: {}, onOpenFanControl: {}, onOpenErrorHub: {}, onOpenActivityMonitor: {}, onOpenPermissionCenter: {})
 }

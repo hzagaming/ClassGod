@@ -50,3 +50,26 @@ enum FanReadingValidity {
             && minimum >= 0 && maximum > minimum && maximum <= 20_000
     }
 }
+
+enum FanCountReading {
+    static func decode(_ bytes: [UInt8], dataType: String) -> Int? {
+        let expectedCount: Int
+        switch dataType.lowercased() {
+        case "ui8 ": expectedCount = 1
+        case "ui16": expectedCount = 2
+        case "ui32": expectedCount = 4
+        default: return nil
+        }
+        guard bytes.count >= expectedCount else { return nil }
+        let value = bytes.prefix(expectedCount).reduce(0) { ($0 << 8) | Int($1) }
+        return (1...16).contains(value) ? value : nil
+    }
+}
+
+enum TemperatureReadingValidity {
+    private static let supportedTypes = Set(["sp78", "sp79", "sp7a", "sp5a", "si8c"])
+
+    static func supports(dataType: String) -> Bool {
+        supportedTypes.contains(dataType.lowercased())
+    }
+}

@@ -26,7 +26,7 @@ struct BatteryWidgetView: View {
                     Image(systemName: entry.batteryIsCharging ? "bolt.fill" : "battery.100")
                         .font(.system(size: 10))
                         .foregroundStyle(batteryColor)
-                    Text("\(Int(entry.batteryLevel))%")
+                    Text("\(Int(batteryLevel))%")
                         .font(.system(size: 16, weight: .bold, design: .monospaced))
                         .foregroundStyle(.white)
                 }
@@ -38,7 +38,7 @@ struct BatteryWidgetView: View {
                             .frame(height: 10)
                         RoundedRectangle(cornerRadius: 2)
                             .fill(batteryColor)
-                            .frame(width: geo.size.width * CGFloat(entry.batteryLevel / 100), height: 10)
+                            .frame(width: geo.size.width * CGFloat(batteryLevel / 100), height: 10)
                     }
                 }
                 .frame(height: 10)
@@ -57,19 +57,19 @@ struct BatteryWidgetView: View {
                         .frame(width: 36, height: 20)
                     RoundedRectangle(cornerRadius: 2)
                         .fill(batteryColor)
-                        .frame(width: 32 * CGFloat(entry.batteryLevel / 100), height: 16)
+                        .frame(width: 32 * CGFloat(batteryLevel / 100), height: 16)
                         .padding(.horizontal, 2)
-                    Text("\(Int(entry.batteryLevel))")
+                    Text("\(Int(batteryLevel))")
                         .font(.system(size: 9, weight: .bold, design: .monospaced))
                         .foregroundStyle(.white)
                 }
                 .frame(width: 40, height: 24)
                 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(entry.batteryIsCharging ? "CHARGING" : "BATTERY")
+                    Text(entry.batteryIsCharging ? String(localized: "CHARGING") : String(localized: "BATTERY"))
                         .font(.system(size: 9, weight: .bold, design: .monospaced))
                         .foregroundStyle(.white.opacity(0.4))
-                    Text("\(Int(entry.batteryLevel))% remaining")
+                    Text(String(format: String(localized: "BATTERY_REMAINING"), Int(batteryLevel)))
                         .font(.system(size: 11, design: .monospaced))
                         .foregroundStyle(.white.opacity(0.7))
                 }
@@ -81,9 +81,13 @@ struct BatteryWidgetView: View {
     }
     
     private var batteryColor: Color {
-        if entry.batteryLevel < 20 { return .red }
-        if entry.batteryLevel < 50 { return .orange }
+        if batteryLevel < 20 { return .red }
+        if batteryLevel < 50 { return .orange }
         if entry.batteryIsCharging { return .green }
         return .cyan
+    }
+
+    private var batteryLevel: Double {
+        min(100, max(0, entry.batteryLevel))
     }
 }

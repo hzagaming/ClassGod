@@ -66,6 +66,12 @@ enum AnimatedImagePlaybackPolicy {
     }
 }
 
+enum WallpaperAudioPolicy {
+    static func isAvailable(for type: WallpaperType?) -> Bool {
+        type == .video
+    }
+}
+
 struct AnimatedImageView: NSViewRepresentable {
     let imageSource: CGImageSource
     let identifier: URL
@@ -380,6 +386,7 @@ struct WallpaperQuickAccessBar: View {
     @ObservedObject var engine = WallpaperEngine.shared
     @ObservedObject private var prefs = PreferencesManager.shared
     private var zoomScale: CGFloat { CGFloat(prefs.preferences.windowZoomScale) }
+    private var hasVideoAudio: Bool { WallpaperAudioPolicy.isAvailable(for: engine.currentWallpaper?.type) }
     @State private var isHovered = false
     
     var body: some View {
@@ -394,6 +401,7 @@ struct WallpaperQuickAccessBar: View {
             .buttonStyle(.plain)
             .foregroundStyle(.white.opacity(0.7))
             .disabled(engine.playlist.isEmpty)
+            .accessibilityLabel(Text("wallpaper.previous"))
             
             Button(action: {
                 SoundEffectManager.shared.playWallpaperPlayPause()
@@ -405,6 +413,7 @@ struct WallpaperQuickAccessBar: View {
             .buttonStyle(.plain)
             .foregroundStyle(.white)
             .disabled(engine.currentWallpaper == nil)
+            .accessibilityLabel(engine.isPlaying ? Text("wallpaper.pause") : Text("wallpaper.play"))
             
             Button(action: {
                 SoundEffectManager.shared.playWallpaperSwitched()
@@ -416,6 +425,7 @@ struct WallpaperQuickAccessBar: View {
             .buttonStyle(.plain)
             .foregroundStyle(.white.opacity(0.7))
             .disabled(engine.playlist.isEmpty)
+            .accessibilityLabel(Text("wallpaper.next"))
             
             Divider()
                 .background(Color.white.opacity(0.15))
@@ -430,6 +440,9 @@ struct WallpaperQuickAccessBar: View {
             }
             .buttonStyle(.plain)
             .foregroundStyle(.white.opacity(0.5))
+            .disabled(!hasVideoAudio)
+            .opacity(hasVideoAudio ? 1 : 0.35)
+            .accessibilityLabel(engine.isMuted ? Text("wallpaper.unmute") : Text("wallpaper.mute"))
             
             Text(engine.currentWallpaper?.name ?? String(localized: "wallpaper.none"))
                 .font(.system(size: 9 * zoomScale, design: .monospaced))

@@ -47,7 +47,7 @@ struct CPUWidgetConfig: Widget {
     
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: WidgetProvider()) { entry in
-            CPUWidgetView(entry: entry)
+            CPUWidgetView(entry: entry).classGodWidgetBackground()
         }
         .configurationDisplayName("CPU Monitor")
         .description("Real-time CPU usage with hacker-style gauge.")
@@ -60,7 +60,7 @@ struct MemoryWidgetConfig: Widget {
     
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: WidgetProvider()) { entry in
-            MemoryWidgetView(entry: entry)
+            MemoryWidgetView(entry: entry).classGodWidgetBackground()
         }
         .configurationDisplayName("Memory")
         .description("RAM usage bar with color thresholds.")
@@ -73,7 +73,7 @@ struct DiskWidgetConfig: Widget {
     
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: WidgetProvider()) { entry in
-            DiskWidgetView(entry: entry)
+            DiskWidgetView(entry: entry).classGodWidgetBackground()
         }
         .configurationDisplayName("Disk Usage")
         .description("Storage ring chart with free space.")
@@ -86,7 +86,7 @@ struct NetworkWidgetConfig: Widget {
     
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: WidgetProvider()) { entry in
-            NetworkWidgetView(entry: entry)
+            NetworkWidgetView(entry: entry).classGodWidgetBackground()
         }
         .configurationDisplayName("Network")
         .description("Upload / download speed monitor.")
@@ -99,7 +99,7 @@ struct BatteryWidgetConfig: Widget {
     
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: WidgetProvider()) { entry in
-            BatteryWidgetView(entry: entry)
+            BatteryWidgetView(entry: entry).classGodWidgetBackground()
         }
         .configurationDisplayName("Battery")
         .description("Battery level and charging status.")
@@ -112,7 +112,7 @@ struct UptimeWidgetConfig: Widget {
     
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: WidgetProvider()) { entry in
-            UptimeWidgetView(entry: entry)
+            UptimeWidgetView(entry: entry).classGodWidgetBackground()
         }
         .configurationDisplayName("Uptime")
         .description("System uptime in hacker monospace.")
@@ -127,7 +127,7 @@ struct ClockWidgetConfig: Widget {
     
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: WidgetProvider()) { entry in
-            ClockWidgetView(entry: entry)
+            ClockWidgetView(entry: entry).classGodWidgetBackground()
         }
         .configurationDisplayName("Clock")
         .description("Digital clock with date.")
@@ -140,7 +140,7 @@ struct WorldClockWidgetConfig: Widget {
     
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: WidgetProvider()) { entry in
-            WorldClockWidgetView(entry: entry)
+            WorldClockWidgetView(entry: entry).classGodWidgetBackground()
         }
         .configurationDisplayName("World Clock")
         .description("Multi-city time zones.")
@@ -153,7 +153,7 @@ struct CalendarWidgetConfig: Widget {
     
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: WidgetProvider()) { entry in
-            CalendarWidgetView(entry: entry)
+            CalendarWidgetView(entry: entry).classGodWidgetBackground()
         }
         .configurationDisplayName("Calendar")
         .description("Monthly calendar with today highlighted.")
@@ -166,7 +166,7 @@ struct WeatherWidgetConfig: Widget {
     
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: WidgetProvider()) { entry in
-            WeatherWidgetView(entry: entry)
+            WeatherWidgetView(entry: entry).classGodWidgetBackground()
         }
         .configurationDisplayName("Weather")
         .description("Temperature and condition icon.")
@@ -179,7 +179,7 @@ struct SystemInfoWidgetConfig: Widget {
     
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: WidgetProvider()) { entry in
-            SystemInfoWidgetView(entry: entry)
+            SystemInfoWidgetView(entry: entry).classGodWidgetBackground()
         }
         .configurationDisplayName("System Info")
         .description("macOS version and hostname.")
@@ -194,7 +194,7 @@ struct TodoWidgetConfig: Widget {
     
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: WidgetProvider()) { entry in
-            TodoWidgetView(entry: entry)
+            TodoWidgetView(entry: entry).classGodWidgetBackground()
         }
         .configurationDisplayName("Todo List")
         .description("Checklist with hacker checkbox style.")
@@ -207,7 +207,7 @@ struct NotesWidgetConfig: Widget {
     
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: WidgetProvider()) { entry in
-            NotesWidgetView(entry: entry)
+            NotesWidgetView(entry: entry).classGodWidgetBackground()
         }
         .configurationDisplayName("Notes")
         .description("Quick note preview.")
@@ -220,7 +220,7 @@ struct FileWidgetConfig: Widget {
     
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: WidgetProvider()) { entry in
-            FileWidgetView(entry: entry)
+            FileWidgetView(entry: entry).classGodWidgetBackground()
         }
         .configurationDisplayName("Recent Files")
         .description("Recently accessed files.")
@@ -233,7 +233,7 @@ struct AppLauncherWidgetConfig: Widget {
     
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: WidgetProvider()) { entry in
-            AppLauncherWidgetView(entry: entry)
+            AppLauncherWidgetView(entry: entry).classGodWidgetBackground()
         }
         .configurationDisplayName("App Launcher")
         .description("Launch apps directly from desktop.")
@@ -248,7 +248,7 @@ struct TerminalLogWidgetConfig: Widget {
     
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: WidgetProvider()) { entry in
-            TerminalLogWidgetView(entry: entry)
+            TerminalLogWidgetView(entry: entry).classGodWidgetBackground()
         }
         .configurationDisplayName("Terminal Log")
         .description("Hacker-style system log stream.")
@@ -261,7 +261,7 @@ struct AsciiArtWidgetConfig: Widget {
     
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: WidgetProvider()) { entry in
-            AsciiArtWidgetView(entry: entry)
+            AsciiArtWidgetView(entry: entry).classGodWidgetBackground()
         }
         .configurationDisplayName("ASCII Art")
         .description("Random hacker ASCII art.")
@@ -274,7 +274,7 @@ struct CryptoWidgetConfig: Widget {
     
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: WidgetProvider()) { entry in
-            CryptoWidgetView(entry: entry)
+            CryptoWidgetView(entry: entry).classGodWidgetBackground()
         }
         .configurationDisplayName("Crypto")
         .description("BTC / ETH prices with trend arrows.")
@@ -287,10 +287,18 @@ struct QuoteWidgetConfig: Widget {
     
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: WidgetProvider()) { entry in
-            QuoteWidgetView(entry: entry)
+            QuoteWidgetView(entry: entry).classGodWidgetBackground()
         }
         .configurationDisplayName("Hacker Quote")
         .description("Daily hacker / tech quote.")
         .supportedFamilies([.systemSmall, .systemMedium])
+    }
+}
+
+private extension View {
+    func classGodWidgetBackground() -> some View {
+        containerBackground(for: .widget) {
+            Color.black
+        }
     }
 }

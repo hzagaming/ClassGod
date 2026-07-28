@@ -253,8 +253,9 @@ final class SMCHelper {
             }
         }
 
-        if let numBytes = readBytes(key: "FNum"), numBytes.count >= 1, numBytes[0] > 0 {
-            let count = min(Int(numBytes[0]), 16)
+        if let dataType = dataType(key: "FNum"),
+           let numBytes = readBytes(key: "FNum"),
+           let count = FanCountReading.decode(numBytes, dataType: dataType) {
             indexes.formUnion(0..<count)
         }
 
@@ -351,8 +352,10 @@ final class SMCHelper {
         var out: [[String: Any]] = []
         var seenKeys = Set<String>()
         for (name, key, max) in keys {
-            guard let b = readBytes(key: key), b.count >= 2 else { continue }
-            let v = decodeSP78(b)
+            guard let type = dataType(key: key),
+                  TemperatureReadingValidity.supports(dataType: type),
+                  let b = readBytes(key: key), b.count >= 2 else { continue }
+            let v = decodeTemperature(b, type: type)
             if v > 1 && v < 150 {
                 out.append(["name": name, "key": key, "value": v, "maxValue": max])
                 seenKeys.insert(key)
@@ -363,7 +366,8 @@ final class SMCHelper {
         let dynamicTemps = enumerateSMCKeys(matchingPrefixes: ["T"])
         for entry in dynamicTemps {
             let key = entry.key
-            guard key.count == 4, key.hasPrefix("T"), !seenKeys.contains(key) else { continue }
+            guard key.count == 4, key.hasPrefix("T"), !seenKeys.contains(key),
+                  TemperatureReadingValidity.supports(dataType: entry.type) else { continue }
             if let b = readBytes(key: key) {
                 let v = decodeTemperature(b, type: entry.type)
                 if v > 1 && v < 150 {

@@ -18,19 +18,19 @@ struct WidgetProvider: TimelineProvider {
     }
     
     func getTimeline(in context: Context, completion: @escaping (Timeline<WidgetEntry>) -> ()) {
-        let entry = loadEntry()
-        // Refresh every 15 minutes (WidgetKit minimum for desk widgets)
-        let nextUpdate = Calendar.current.date(byAdding: .minute, value: 15, to: entry.date) ?? entry.date.addingTimeInterval(900)
-        let timeline = Timeline(entries: [entry], policy: .after(nextUpdate))
+        let now = Date()
+        let entries = WidgetRefreshPolicy.timelineDates(startingAt: now).map(loadEntry(date:))
+        let nextUpdate = WidgetRefreshPolicy.nextUpdate(after: now)
+        let timeline = Timeline(entries: entries, policy: .after(nextUpdate))
         completion(timeline)
     }
     
     // MARK: - Data Loading
     
-    private func loadEntry() -> WidgetEntry {
+    private func loadEntry(date: Date = Date()) -> WidgetEntry {
         let store = WidgetExtensionStore()
         return WidgetEntry(
-            date: store.date(forKey: .lastUpdate) ?? Date(),
+            date: date,
             cpuUsage: store.double(forKey: .cpuUsage),
             memoryUsage: store.double(forKey: .memoryUsage),
             memoryTotal: store.double(forKey: .memoryTotal),
@@ -41,7 +41,7 @@ struct WidgetProvider: TimelineProvider {
             batteryLevel: store.double(forKey: .batteryLevel),
             batteryIsCharging: store.bool(forKey: .batteryIsCharging),
             uptimeSeconds: store.double(forKey: .uptimeSeconds),
-            clockCity: store.string(forKey: .clockCity) ?? "Local",
+            clockCity: store.string(forKey: .clockCity) ?? String(localized: "Local"),
             weatherCity: store.string(forKey: .weatherCity) ?? "",
             weatherTemp: store.string(forKey: .weatherTemp) ?? "--",
             weatherCondition: store.string(forKey: .weatherCondition) ?? "questionmark",
@@ -62,7 +62,17 @@ struct WidgetProvider: TimelineProvider {
 // MARK: - Extension-Specific Store
 
 struct WidgetExtensionStore {
-    private let defaults = UserDefaults(suiteName: widgetAppGroupID) ?? .standard
+    private let defaults: UserDefaults
+
+    init() {
+        if WidgetAppGroupAccess.currentProcessIsEntitled,
+           FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: widgetAppGroupID) != nil,
+           let sharedDefaults = UserDefaults(suiteName: widgetAppGroupID) {
+            defaults = sharedDefaults
+        } else {
+            defaults = .standard
+        }
+    }
     
     func string(forKey key: WidgetDataKey) -> String? {
         defaults.string(forKey: key.rawValue)

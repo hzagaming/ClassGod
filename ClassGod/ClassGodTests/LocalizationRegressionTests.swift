@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+@testable import ClassGod
 
 @Suite("Localization regressions")
 struct LocalizationRegressionTests {
@@ -12,4 +13,17 @@ struct LocalizationRegressionTests {
         #expect(String(localized: "destintab.export_tabs", bundle: .main, locale: locale) == "Export Tabs…")
         #expect(String(localized: "button.back", bundle: .main, locale: locale) == "Back")
     }
+
+    @Test("Wallpaper controls and widget states are localized")
+    func validatesMediaAndWidgetLabels() throws {
+        let english = Locale(identifier: "en")
+        let chineseURL = try #require(Bundle.main.url(forResource: "zh-Hans", withExtension: "lproj"))
+        let chinese = try #require(Bundle(url: chineseURL))
+
+        #expect(String(localized: "wallpaper.mute", bundle: .main, locale: english) == "Mute Wallpaper Audio")
+        #expect(String(localized: "wallpaper.play", bundle: .main, locale: english) == "Play Wallpaper")
+        #expect(chinese.localizedString(forKey: "widget.charging", value: nil, table: nil) == "充电中")
+        #expect(chinese.localizedString(forKey: "widget.no_process_data", value: nil, table: nil) == "暂无进程数据")
+    }
+
 }

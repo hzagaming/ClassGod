@@ -58,6 +58,13 @@ struct WallpaperSettingsTests {
         #expect(AnimatedImagePlaybackPolicy.frameDelay(0.08) == 0.08)
     }
 
+    @Test("Wallpaper audio controls are available only for video")
+    func resolvesWallpaperAudioAvailability() {
+        #expect(WallpaperAudioPolicy.isAvailable(for: .video))
+        #expect(!WallpaperAudioPolicy.isAvailable(for: .image))
+        #expect(!WallpaperAudioPolicy.isAvailable(for: nil))
+    }
+
     @Test("Managed wallpaper deletion stays inside its exact directory")
     func validatesManagedWallpaperPaths() {
         let directory = URL(fileURLWithPath: "/tmp/ClassGod/Wallpapers", isDirectory: true)

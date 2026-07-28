@@ -54,16 +54,16 @@ struct WidgetEntry: TimelineEntry {
             batteryLevel: 87.0,
             batteryIsCharging: true,
             uptimeSeconds: 86400 * 3 + 3600 * 5,
-            clockCity: "Beijing",
-            weatherCity: "Beijing",
+            clockCity: String(localized: "Beijing"),
+            weatherCity: String(localized: "Beijing"),
             weatherTemp: "24°",
             weatherCondition: "cloud.sun.fill",
             todoItems: [
-                TodoItem(id: UUID(), text: "Review code", isDone: true),
-                TodoItem(id: UUID(), text: "Deploy update", isDone: false),
-                TodoItem(id: UUID(), text: "Write docs", isDone: false)
+                TodoItem(id: UUID(), text: String(localized: "Review code"), isDone: true),
+                TodoItem(id: UUID(), text: String(localized: "Deploy update"), isDone: false),
+                TodoItem(id: UUID(), text: String(localized: "Write docs"), isDone: false)
             ],
-            noteContent: "Remember to check system logs before pushing to production.",
+            noteContent: String(localized: "Remember to check system logs before pushing to production."),
             filePaths: [
                 FileItem(id: UUID(), path: "/Users/Desktop/project", name: "project"),
                 FileItem(id: UUID(), path: "/Users/Desktop/report.pdf", name: "report.pdf")
@@ -74,7 +74,7 @@ struct WidgetEntry: TimelineEntry {
             ],
             cryptoBTC: "$64,230 ▲2.4%",
             cryptoETH: "$3,450 ▼0.8%",
-            quoteText: "The only truly secure system is one that is powered off.",
+            quoteText: String(localized: "The only truly secure system is one that is powered off."),
             quoteAuthor: "Gene Spafford",
             terminalLogs: [
                 "[14:02:01] kernel: system boot",
@@ -103,7 +103,7 @@ struct WidgetEntry: TimelineEntry {
             batteryLevel: 100,
             batteryIsCharging: false,
             uptimeSeconds: 0,
-            clockCity: "Local",
+            clockCity: String(localized: "Local"),
             weatherCity: "",
             weatherTemp: "--",
             weatherCondition: "questionmark",
@@ -113,7 +113,7 @@ struct WidgetEntry: TimelineEntry {
             appItems: [],
             cryptoBTC: "--",
             cryptoETH: "--",
-            quoteText: "Loading...",
+            quoteText: String(localized: "Loading..."),
             quoteAuthor: "",
             terminalLogs: [],
             asciiArt: "..."

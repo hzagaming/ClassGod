@@ -60,7 +60,11 @@ struct TodoWidgetView: View {
                         .font(.system(size: 10, weight: .bold, design: .monospaced))
                         .foregroundStyle(.white.opacity(0.5))
                     Spacer()
-                    Text("\(entry.todoItems.filter(\.isDone).count)/\(entry.todoItems.count) done")
+                    Text(String(
+                        format: String(localized: "WIDGET_TODO_DONE"),
+                        entry.todoItems.filter(\.isDone).count,
+                        entry.todoItems.count
+                    ))
                         .font(.system(size: 9, design: .monospaced))
                         .foregroundStyle(.cyan.opacity(0.6))
                 }

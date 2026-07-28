@@ -34,12 +34,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var settingsWindow: NSWindow?
     var wallpaperBrowserWindow: NSWindow?
     var hackerDesktopWindow: NSWindow?
+    var clipoWindow: NSWindow?
     var errorHubWindow: NSWindow?
     var fanControlWindow: NSWindow?
     var activityMonitorWindow: NSWindow?
     var permissionCenterWindow: NSWindow?
     var showPopoverCustomHotKeyID: UInt32?
     var panicHotKeyID: UInt32?
+    var clipoHotKeyIDs: [UInt32] = []
 
     var splashWindow: NSWindow?
     private var clickOutsideMonitor: Any?
@@ -54,9 +56,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        // Initialize desktop wallpaper controller and widget manager early
+        // Initialize the wallpaper controller early. Widgets are provided by WidgetKit.
         _ = DesktopWallpaperController.shared
-        _ = DesktopWidgetManager.shared
         
         showSplashScreen()
 
@@ -68,6 +69,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             self.setupShowPopoverShortcut()
             self.setupPanicShortcut()
             self.setupGlobalHotKeyHandler()
+            ClipoService.shared.start()
+            self.clipoHotKeyIDs = ClipoService.shared.registerDefaultHotKeys { [weak self] in
+                self?.toggleClipoWindow()
+            }
 
             PreferencesManager.shared.onPreferencesChanged = { [weak self] _ in
                 self?.setupShowPopoverShortcut()
@@ -83,11 +88,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             AppIconManager.shared.refreshIcon()
             self.updateClickOutsideMonitor()
             
-            // Restore desktop widgets if previously enabled
-            if DesktopWidgetManager.shared.isEnabled {
-                DesktopWidgetManager.shared.setEnabled(true)
-            }
-
             NotificationCenter.default.addObserver(
                 self,
                 selector: #selector(self.tabsDidChange),
@@ -106,6 +106,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 self,
                 selector: #selector(self.showErrorHubFromNotification(_:)),
                 name: .classGodShowErrorHubEntry,
+                object: nil
+            )
+
+            NotificationCenter.default.addObserver(
+                self,
+                selector: #selector(self.hideClipoForPaste),
+                name: .clipoWillPaste,
                 object: nil
             )
 
@@ -239,6 +246,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             self?.showWallpaperBrowserWindow()
         }, onOpenHackerDesktop: { [weak self] in
             self?.showHackerDesktopWindow()
+        }, onOpenClipo: { [weak self] in
+            self?.showClipoWindow()
         }, onOpenFanControl: { [weak self] in
             self?.showFanControlWindow()
         }, onOpenErrorHub: { [weak self] in
@@ -1065,6 +1074,99 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
+    // MARK: - Clipo Window
+
+    private func setupClipoWindow() {
+        let prefs = PreferencesManager.shared.preferences
+        let zoom = CGFloat(prefs.windowZoomScale)
+        let size = constrainedWindowSize(
+            base: NSSize(width: 760, height: 620),
+            zoom: zoom,
+            margin: 80,
+            screen: NSScreen.main
+        )
+
+        let window = DraggableWindow(
+            contentRect: NSRect(origin: .zero, size: size),
+            styleMask: [.borderless],
+            backing: .buffered,
+            defer: false
+        )
+        window.level = windowLevel
+        window.backgroundColor = .clear
+        window.hasShadow = true
+        window.isMovableByWindowBackground = false
+        window.isReleasedWhenClosed = false
+        window.isOpaque = false
+        window.contentView?.wantsLayer = true
+        window.contentView?.layer?.cornerRadius = prefs.panelCornerRadius * zoom
+        window.contentView?.layer?.masksToBounds = true
+
+        if let screen = NSScreen.main {
+            let frame = screen.visibleFrame
+            window.setFrameOrigin(NSPoint(x: frame.midX - size.width / 2, y: frame.midY - size.height / 2))
+        }
+
+        window.contentView = NSHostingView(
+            rootView: ClipoWindowView(onClose: { [weak self] in
+                self?.hideClipoWindow()
+            })
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Color.clear)
+            .overlay(WindowResizeHandles())
+        )
+        clipoWindow = window
+    }
+
+    func showClipoWindow(animated: Bool = true) {
+        guard let window = clipoWindow else {
+            setupClipoWindow()
+            guard clipoWindow != nil else { return }
+            showClipoWindow(animated: animated)
+            return
+        }
+
+        SoundEffectManager.shared.playWindowOpen(feature: "clipo")
+        ClipoService.shared.rememberPasteTarget()
+        NSApplication.shared.activate(ignoringOtherApps: true)
+        if animated {
+            window.alphaValue = 0
+            window.makeKeyAndOrderFront(nil)
+            NSAnimationContext.runAnimationGroup { context in
+                context.duration = 0.18
+                context.timingFunction = .init(name: .easeOut)
+                window.animator().alphaValue = targetWindowAlpha
+            }
+        } else {
+            window.makeKeyAndOrderFront(nil)
+        }
+    }
+
+    func hideClipoWindow() {
+        guard let window = clipoWindow else { return }
+        SoundEffectManager.shared.playWindowClose(feature: "clipo")
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = 0.12
+            context.timingFunction = .init(name: .easeIn)
+            window.animator().alphaValue = 0
+        } completionHandler: { [weak self] in
+            self?.clipoWindow?.orderOut(nil)
+        }
+    }
+
+    @objc func toggleClipoWindow() {
+        guard let window = clipoWindow else {
+            setupClipoWindow()
+            showClipoWindow(animated: true)
+            return
+        }
+        window.isVisible && window.alphaValue > 0 ? hideClipoWindow() : showClipoWindow(animated: true)
+    }
+
+    @objc private func hideClipoForPaste() {
+        hideClipoWindow()
+    }
+
     // MARK: - Error Hub Window
 
     private func setupErrorHubWindow() {
@@ -1596,6 +1698,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         settingsWindow?.level = level
         wallpaperBrowserWindow?.level = level
         hackerDesktopWindow?.level = level
+        clipoWindow?.level = level
         errorHubWindow?.level = level
         fanControlWindow?.level = level
         activityMonitorWindow?.level = level
@@ -1671,10 +1774,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             w.setContentSize(constrainedWindowSize(base: NSSize(width: 900, height: 600), zoom: zoom, margin: 100, screen: screen))
         }
 
+        if let w = clipoWindow {
+            w.setContentSize(constrainedWindowSize(base: NSSize(width: 760, height: 620), zoom: zoom, margin: 80, screen: w.screen))
+        }
+
         let windows = [
             mainWindow, destinTabWindow, superSwitchWindow, ghostProtocolWindow, browserBypasserWindow,
             assessPrepHackWindow, settingsWindow, wallpaperBrowserWindow,
-            hackerDesktopWindow, errorHubWindow, fanControlWindow,
+            hackerDesktopWindow, clipoWindow, errorHubWindow, fanControlWindow,
             activityMonitorWindow, permissionCenterWindow
         ]
         for window in windows.compactMap({ $0 }) {
@@ -1700,6 +1807,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         guard PreferencesManager.shared.preferences.closeOnClickOutside else { return }
 
         let mouseLoc = NSEvent.mouseLocation
+        if let statusItemFrame = statusItem.button?.window?.frame,
+           statusItemFrame.contains(mouseLoc) {
+            return
+        }
         let windows: [(NSWindow?, () -> Void)] = [
             (mainWindow, { [weak self] in self?.hideMainWindow() }),
             (destinTabWindow, { [weak self] in self?.hideDestinTabWindow() }),
@@ -1710,6 +1821,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             (settingsWindow, { [weak self] in self?.hideSettingsWindow() }),
             (wallpaperBrowserWindow, { [weak self] in self?.hideWallpaperBrowserWindow() }),
             (hackerDesktopWindow, { [weak self] in self?.hideHackerDesktopWindow() }),
+            (clipoWindow, { [weak self] in self?.hideClipoWindow() }),
             (errorHubWindow, { [weak self] in self?.hideErrorHubWindow() }),
             (activityMonitorWindow, { [weak self] in self?.hideActivityMonitorWindow() }),
             (permissionCenterWindow, { [weak self] in self?.hidePermissionCenterWindow() }),
@@ -1769,12 +1881,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         SMCService.shared.restoreSystemFanControl()
         SMCHelperClient.shared.disconnect()
         DesktopWallpaperController.shared.hideWallpapers()
-        DesktopWidgetManager.shared.setEnabled(false)
         
         // Resume any suspended proctoring processes before quitting so the
         // system is not left in a broken state.
         AssessPrepHackViewModel.shared.stopAllBypasses()
         GhostProtocolController.shared.shutdown()
+        ClipoService.shared.stop()
         
         if let id = showPopoverCustomHotKeyID {
             ShortcutManager.shared.unregisterCustomHotKey(id: id)
@@ -1782,6 +1894,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         if let id = panicHotKeyID {
             ShortcutManager.shared.unregisterCustomHotKey(id: id)
         }
+        for id in clipoHotKeyIDs {
+            ShortcutManager.shared.unregisterCustomHotKey(id: id)
+        }
+        clipoHotKeyIDs.removeAll()
         if let item = statusItem {
             NSStatusBar.system.removeStatusItem(item)
         }
@@ -1823,6 +1939,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         if let window = hackerDesktopWindow {
             window.orderOut(nil)
         }
+        if let window = clipoWindow {
+            window.orderOut(nil)
+        }
         if let window = errorHubWindow {
             window.orderOut(nil)
         }
@@ -1834,6 +1953,28 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
         if let window = permissionCenterWindow {
             window.orderOut(nil)
+        }
+    }
+
+    func application(_ application: NSApplication, open urls: [URL]) {
+        for url in urls {
+            guard let bundleIdentifier = WidgetDeepLink.launchBundleIdentifier(from: url) else { continue }
+            guard let applicationURL = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleIdentifier) else {
+                ErrorToastManager.shared.show(
+                    title: String(localized: "widget.launch_failed"),
+                    message: String(format: String(localized: "widget.app_not_found"), bundleIdentifier)
+                )
+                continue
+            }
+            NSWorkspace.shared.openApplication(
+                at: applicationURL,
+                configuration: NSWorkspace.OpenConfiguration()
+            ) { _, error in
+                guard let error else { return }
+                DispatchQueue.main.async {
+                    ErrorToastManager.shared.show(error: error)
+                }
+            }
         }
     }
 
@@ -2041,13 +2182,14 @@ struct MenuBarWindowView: View {
     var onOpenSettings: () -> Void
     var onOpenWallpaper: () -> Void
     var onOpenHackerDesktop: () -> Void
+    var onOpenClipo: () -> Void = {}
     var onOpenFanControl: () -> Void = {}
     var onOpenErrorHub: () -> Void = {}
     var onOpenActivityMonitor: () -> Void = {}
     var onOpenPermissionCenter: () -> Void = {}
 
     var body: some View {
-        MenuBarView(onClose: onClose, onOpenDestinTab: onOpenDestinTab, onOpenSuperSwitch: onOpenSuperSwitch, onOpenGhostProtocol: onOpenGhostProtocol, onOpenBrowserBypasser: onOpenBrowserBypasser, onOpenAssessPrepHack: onOpenAssessPrepHack, onOpenSettings: onOpenSettings, onOpenWallpaper: onOpenWallpaper, onOpenHackerDesktop: onOpenHackerDesktop, onOpenFanControl: onOpenFanControl, onOpenErrorHub: onOpenErrorHub, onOpenActivityMonitor: onOpenActivityMonitor, onOpenPermissionCenter: onOpenPermissionCenter)
+        MenuBarView(onClose: onClose, onOpenDestinTab: onOpenDestinTab, onOpenSuperSwitch: onOpenSuperSwitch, onOpenGhostProtocol: onOpenGhostProtocol, onOpenBrowserBypasser: onOpenBrowserBypasser, onOpenAssessPrepHack: onOpenAssessPrepHack, onOpenSettings: onOpenSettings, onOpenWallpaper: onOpenWallpaper, onOpenHackerDesktop: onOpenHackerDesktop, onOpenClipo: onOpenClipo, onOpenFanControl: onOpenFanControl, onOpenErrorHub: onOpenErrorHub, onOpenActivityMonitor: onOpenActivityMonitor, onOpenPermissionCenter: onOpenPermissionCenter)
     }
 }
 
@@ -2078,6 +2220,14 @@ struct GhostProtocolWindowView: View {
 
     var body: some View {
         GhostProtocolView(onClose: onClose)
+    }
+}
+
+struct ClipoWindowView: View {
+    var onClose: () -> Void
+
+    var body: some View {
+        ClipoView(onClose: onClose)
     }
 }
 

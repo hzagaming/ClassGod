@@ -94,7 +94,7 @@ struct CPUWidgetView: View {
         return .cyan
     }
     
-    private var statusText: String {
+    private var statusText: LocalizedStringKey {
         if entry.cpuUsage > 80 { return "CRITICAL" }
         if entry.cpuUsage > 50 { return "HEAVY" }
         return "NORMAL"

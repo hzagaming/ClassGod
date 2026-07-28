@@ -29,19 +29,17 @@ struct CalendarWidgetView: View {
                     Spacer()
                 }
                 
-                // Day headers
                 HStack(spacing: 0) {
-                    ForEach(["S","M","T","W","T","F","S"], id: \.self) { d in
-                        Text(d)
+                    ForEach(Array(weekdaySymbols.enumerated()), id: \.offset) { _, symbol in
+                        Text(symbol)
                             .font(.system(size: 8, weight: .bold, design: .monospaced))
                             .foregroundStyle(.white.opacity(0.3))
                             .frame(maxWidth: .infinity)
                     }
                 }
                 
-                // Calendar grid
                 let days = daysInMonth()
-                let today = Calendar.current.component(.day, from: entry.date)
+                let today = calendar.component(.day, from: entry.date)
                 LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 7), spacing: 4) {
                     ForEach(days, id: \.self) { day in
                         if day > 0 {
@@ -62,7 +60,16 @@ struct CalendarWidgetView: View {
     }
     
     private var largeView: some View {
-        mediumView // Same layout, more space
+        mediumView
+    }
+
+    private var calendar: Calendar { .autoupdatingCurrent }
+
+    private var weekdaySymbols: [String] {
+        WidgetCalendarLayout.orderedWeekdaySymbols(
+            calendar.veryShortStandaloneWeekdaySymbols,
+            firstWeekday: calendar.firstWeekday
+        )
     }
     
     private var monthYearString: String {
@@ -72,14 +79,18 @@ struct CalendarWidgetView: View {
     }
     
     private func daysInMonth() -> [Int] {
-        let cal = Calendar.current
+        let cal = calendar
         let date = entry.date
         guard let range = cal.range(of: .day, in: .month, for: date),
               let firstDay = cal.date(from: cal.dateComponents([.year, .month], from: date)) else {
             return []
         }
         let weekday = cal.component(.weekday, from: firstDay)
-        var days = Array(repeating: 0, count: weekday - 1)
+        let leadingCount = WidgetCalendarLayout.leadingPlaceholderCount(
+            weekday: weekday,
+            firstWeekday: cal.firstWeekday
+        )
+        var days = Array(repeating: 0, count: leadingCount)
         days.append(contentsOf: Array(range))
         while days.count % 7 != 0 {
             days.append(0)

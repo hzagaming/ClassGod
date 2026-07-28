@@ -6,13 +6,81 @@
 //
 
 import Foundation
+import Security
 
 #if canImport(WidgetKit)
 import WidgetKit
 #endif
 
 /// App Group identifier for data sharing between main app and widgets.
-let widgetAppGroupID = "group.com.hanazar.classgod"
+nonisolated let widgetAppGroupID = "group.com.hanazar.classgod"
+
+nonisolated enum WidgetRefreshPolicy {
+    static func nextUpdate(after date: Date) -> Date {
+        date.addingTimeInterval(15 * 60)
+    }
+
+    static func timelineDates(startingAt date: Date) -> [Date] {
+        (0..<15).map { date.addingTimeInterval(Double($0) * 60) }
+    }
+}
+
+nonisolated enum WidgetMetricNormalization {
+    static func batteryPercent(from fraction: Double) -> Double {
+        min(100, max(0, fraction * 100))
+    }
+}
+
+nonisolated enum WidgetCalendarLayout {
+    static func orderedWeekdaySymbols(_ symbols: [String], firstWeekday: Int) -> [String] {
+        guard !symbols.isEmpty else { return [] }
+        let offset = max(0, min(symbols.count - 1, firstWeekday - 1))
+        return Array(symbols[offset...] + symbols[..<offset])
+    }
+
+    static func leadingPlaceholderCount(weekday: Int, firstWeekday: Int) -> Int {
+        (weekday - firstWeekday + 7) % 7
+    }
+}
+
+nonisolated enum WidgetDeepLink {
+    static func launchURL(bundleIdentifier: String) -> URL? {
+        guard isValidBundleIdentifier(bundleIdentifier) else { return nil }
+        var components = URLComponents()
+        components.scheme = "classgod"
+        components.host = "launch"
+        components.queryItems = [URLQueryItem(name: "bundle", value: bundleIdentifier)]
+        return components.url
+    }
+
+    static func launchBundleIdentifier(from url: URL) -> String? {
+        guard url.scheme?.lowercased() == "classgod", url.host?.lowercased() == "launch",
+              let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
+              let bundleIdentifier = components.queryItems?.first(where: { $0.name == "bundle" })?.value,
+              isValidBundleIdentifier(bundleIdentifier) else { return nil }
+        return bundleIdentifier
+    }
+
+    private static func isValidBundleIdentifier(_ value: String) -> Bool {
+        value.range(of: #"^[A-Za-z0-9][A-Za-z0-9.-]*$"#, options: .regularExpression) != nil
+    }
+}
+
+nonisolated enum WidgetAppGroupAccess {
+    static func isEntitled(groups: [String]?) -> Bool {
+        groups?.contains(widgetAppGroupID) == true
+    }
+
+    static var currentProcessIsEntitled: Bool {
+        guard let task = SecTaskCreateFromSelf(nil),
+              let groups = SecTaskCopyValueForEntitlement(
+                task,
+                "com.apple.security.application-groups" as CFString,
+                nil
+              ) as? [String] else { return false }
+        return isEntitled(groups: groups)
+    }
+}
 
 // MARK: - Data Keys
 
@@ -54,7 +122,9 @@ final class WidgetDataStore {
     let usesSharedContainer: Bool
     
     private init() {
-        if let sharedDefaults = UserDefaults(suiteName: widgetAppGroupID) {
+        if WidgetAppGroupAccess.currentProcessIsEntitled,
+           FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: widgetAppGroupID) != nil,
+           let sharedDefaults = UserDefaults(suiteName: widgetAppGroupID) {
             defaults = sharedDefaults
             usesSharedContainer = true
         } else {

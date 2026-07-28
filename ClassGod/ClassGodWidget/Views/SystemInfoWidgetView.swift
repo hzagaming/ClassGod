@@ -32,7 +32,10 @@ struct SystemInfoWidgetView: View {
                 Text(osVersion)
                     .font(.system(size: 9, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.4))
-                Text("CPU: \(ProcessInfo.processInfo.processorCount) cores")
+                Text(String(
+                    format: String(localized: "WIDGET_CPU_CORES"),
+                    ProcessInfo.processInfo.processorCount
+                ))
                     .font(.system(size: 9, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.4))
             }
@@ -55,7 +58,13 @@ struct SystemInfoWidgetView: View {
                     VStack(alignment: .leading, spacing: 3) {
                         infoRow(label: "HOST", value: hostName)
                         infoRow(label: "OS", value: osVersion)
-                        infoRow(label: "CPU", value: "\(ProcessInfo.processInfo.processorCount) cores")
+                        infoRow(
+                            label: "CPU",
+                            value: String(
+                                format: String(localized: "WIDGET_CORES_VALUE"),
+                                ProcessInfo.processInfo.processorCount
+                            )
+                        )
                     }
                     
                     VStack(alignment: .leading, spacing: 3) {
@@ -69,11 +78,14 @@ struct SystemInfoWidgetView: View {
         }
     }
     
-    private func infoRow(label: String, value: String) -> some View {
+    private func infoRow(label: LocalizedStringKey, value: String) -> some View {
         HStack(spacing: 6) {
-            Text(label + ":")
-                .font(.system(size: 9, weight: .bold, design: .monospaced))
-                .foregroundStyle(.white.opacity(0.35))
+            HStack(spacing: 0) {
+                Text(label)
+                Text(":")
+            }
+            .font(.system(size: 9, weight: .bold, design: .monospaced))
+            .foregroundStyle(.white.opacity(0.35))
             Text(value)
                 .font(.system(size: 9, design: .monospaced))
                 .foregroundStyle(.white.opacity(0.75))

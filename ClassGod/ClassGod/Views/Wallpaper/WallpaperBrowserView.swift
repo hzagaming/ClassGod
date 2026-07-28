@@ -16,6 +16,7 @@ struct WallpaperBrowserView: View {
     
     @ObservedObject private var prefs = PreferencesManager.shared
     private var zoomScale: CGFloat { CGFloat(prefs.preferences.windowZoomScale) }
+    private var hasVideoAudio: Bool { WallpaperAudioPolicy.isAvailable(for: engine.currentWallpaper?.type) }
     
     private var gridColumns: [GridItem] {
         [
@@ -172,7 +173,7 @@ struct WallpaperBrowserView: View {
             
             // Transport controls pill
             HStack(spacing: 16 * zoomScale) {
-                ControlButton(icon: "backward.fill", size: 14) {
+                ControlButton(icon: "backward.fill", size: 14, accessibilityLabel: "wallpaper.previous") {
                     engine.previousWallpaper()
                     SoundEffectManager.shared.playWallpaperSwitched()
                 }
@@ -189,8 +190,9 @@ struct WallpaperBrowserView: View {
                 }
                 .buttonStyle(.plain)
                 .disabled(engine.currentWallpaper == nil)
+                .accessibilityLabel(engine.isPlaying ? Text("wallpaper.pause") : Text("wallpaper.play"))
                 
-                ControlButton(icon: "forward.fill", size: 14) {
+                ControlButton(icon: "forward.fill", size: 14, accessibilityLabel: "wallpaper.next") {
                     engine.nextWallpaper()
                     SoundEffectManager.shared.playWallpaperSwitched()
                 }
@@ -213,6 +215,7 @@ struct WallpaperBrowserView: View {
                         ControlButton(
                             icon: engine.isMuted ? "speaker.slash.fill" : "speaker.wave.2.fill",
                             size: 12,
+                            accessibilityLabel: engine.isMuted ? "wallpaper.unmute" : "wallpaper.mute",
                             color: engine.isMuted ? .white.opacity(0.3) : .white.opacity(0.6)
                         ) {
                             SoundEffectManager.shared.playButtonClick()
@@ -225,9 +228,10 @@ struct WallpaperBrowserView: View {
                         ), in: 0...1)
                         .controlSize(.mini)
                         .frame(width: 80 * zoomScale)
-                        .opacity(engine.currentWallpaper?.type == .video ? 1 : 0.35)
-                        .disabled(engine.currentWallpaper?.type != .video)
+                        .accessibilityLabel(Text("wallpaper.volume"))
                     }
+                    .opacity(hasVideoAudio ? 1 : 0.35)
+                    .disabled(!hasVideoAudio)
                     
                     Divider()
                         .background(Color.white.opacity(0.08))
@@ -255,6 +259,7 @@ struct WallpaperBrowserView: View {
                         )
                     }
                     .buttonStyle(.plain)
+                    .accessibilityLabel(Text("wallpaper.playback_mode"))
                     
                     // Desktop toggle pill
                     HStack(spacing: 6 * zoomScale) {
@@ -542,6 +547,7 @@ struct ControlButton: View {
     private var zoomScale: CGFloat { CGFloat(prefs.preferences.windowZoomScale) }
     let icon: String
     let size: CGFloat
+    let accessibilityLabel: LocalizedStringKey
     var color: Color = .white.opacity(0.7)
     let action: () -> Void
     
@@ -559,6 +565,7 @@ struct ControlButton: View {
                 .scaleEffect(isPressed ? 0.88 : 1.0)
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(Text(accessibilityLabel))
         .onHover { isHovered = $0 }
         .pressEvents {
             Anim.with { isPressed = true }

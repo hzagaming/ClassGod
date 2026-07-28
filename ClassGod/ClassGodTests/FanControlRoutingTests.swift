@@ -1,8 +1,97 @@
 import Testing
+import Foundation
 @testable import ClassGod
 
 @Suite("Fan control routing")
 struct FanControlRoutingTests {
+    @Test("Direct SMC fan readings only decode the declared fpe2 format")
+    func validatesFanRPMDataType() {
+        #expect(FanRecognition.supportsSMCRPMDataType("fpe2"))
+        #expect(!FanRecognition.supportsSMCRPMDataType("flt "))
+        #expect(!FanRecognition.supportsSMCRPMDataType("sp78"))
+    }
+
+    @Test("Direct SMC temperatures reject unrelated byte formats")
+    func validatesTemperatureDataType() {
+        #expect(SMCReadingFormat.supportsTemperature("sp78"))
+        #expect(SMCReadingFormat.supportsTemperature("SP7A"))
+        #expect(!SMCReadingFormat.supportsTemperature("fpe2"))
+        #expect(!SMCReadingFormat.supportsTemperature("flt "))
+    }
+
+    @Test("Partial fan sources merge into one complete hardware record")
+    func mergesFanRecognitionSources() {
+        var helperFan = FanInfo(id: 0, name: "Left Side")
+        helperFan.isControllable = true
+
+        var directFan = FanInfo(id: 0, name: "Left Fan")
+        directFan.actualRPM = 2_150
+        directFan.minimumRPM = 1_200
+        directFan.maximumRPM = 6_100
+        directFan.targetRPM = 2_200
+        directFan.hasLiveRPM = true
+
+        let merged = FanRecognition.merge(primary: [helperFan], supplementary: [directFan])
+
+        #expect(merged.count == 1)
+        #expect(merged[0].actualRPM == 2_150)
+        #expect(merged[0].minimumRPM == 1_200)
+        #expect(merged[0].maximumRPM == 6_100)
+        #expect(merged[0].targetRPM == 2_200)
+        #expect(merged[0].canControl)
+    }
+
+    @Test("A supplementary source never replaces a valid live RPM")
+    func preservesPreferredFanReading() {
+        var helperFan = FanInfo(id: 1, name: "Right Side")
+        helperFan.actualRPM = 2_400
+        helperFan.hasLiveRPM = true
+
+        var fallbackFan = FanInfo(id: 1, name: "Fan 2")
+        fallbackFan.actualRPM = 2_100
+        fallbackFan.minimumRPM = 1_100
+        fallbackFan.maximumRPM = 5_900
+        fallbackFan.hasLiveRPM = true
+
+        let merged = FanRecognition.merge(primary: [helperFan], supplementary: [fallbackFan])
+
+        #expect(merged[0].actualRPM == 2_400)
+        #expect(merged[0].minimumRPM == 1_100)
+        #expect(merged[0].maximumRPM == 5_900)
+    }
+
+    @Test("A valid supplementary RPM range replaces an invalid primary range")
+    func repairsInvalidFanRange() {
+        var primary = FanInfo(id: 0, name: "Left", minimumRPM: 9_000, maximumRPM: 5_000)
+        primary.isControllable = true
+        let supplementary = FanInfo(id: 0, name: "Left", minimumRPM: 1_200, maximumRPM: 6_100)
+
+        let merged = FanRecognition.merge(primary: [primary], supplementary: [supplementary])
+
+        #expect(merged[0].minimumRPM == 1_200)
+        #expect(merged[0].maximumRPM == 6_100)
+    }
+
+    @Test("Duplicate fan identifiers prefer a plausible live reading")
+    func handlesDuplicatePrimaryFanIDs() {
+        let detected = FanInfo(id: 0, name: "Detected")
+        let live = FanInfo(id: 0, name: "Left", actualRPM: 2_200, hasLiveRPM: true)
+
+        let merged = FanRecognition.merge(primary: [detected, live], supplementary: [])
+
+        #expect(merged.count == 1)
+        #expect(merged[0].actualRPM == 2_200)
+        #expect(merged[0].hasLiveRPM)
+    }
+
+    @Test("IORegistry does not guess units for opaque sensor bytes")
+    func rejectsUntypedRegistrySensorBytes() {
+        #expect(IORegistrySensorReading.rpm(from: Data([0x00, 0x70])) == nil)
+        #expect(IORegistrySensorReading.temperature(from: Data([0x64, 0x00])) == nil)
+        #expect(IORegistrySensorReading.rpm(from: NSNumber(value: 2_300)) == 2_300)
+        #expect(IORegistrySensorReading.temperature(from: NSNumber(value: 52.5)) == 52.5)
+    }
+
     @Test("App SMC protocol matches the AppleSMC ABI")
     func smcProtocolLayout() {
         #expect(MemoryLayout<SMCKeyData>.size == 80)
