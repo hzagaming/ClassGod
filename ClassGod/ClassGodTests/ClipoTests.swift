@@ -10,12 +10,39 @@ struct ClipoTests {
         var settings = ClipoSettings()
         settings.maxHistoryItems = 9_999
         settings.pasteDelay = -1
+        settings.sensitiveBundleIdentifiers = [
+            " com.example.Secret ",
+            "COM.EXAMPLE.SECRET",
+            "",
+            "com.example.Other",
+        ]
 
         let normalized = settings.normalized
 
         #expect(normalized.maxHistoryItems == 2_000)
         #expect(normalized.pasteDelay == 0)
+        #expect(normalized.sensitiveBundleIdentifiers == ["com.example.Secret", "com.example.Other"])
         #expect(normalized.normalized == normalized)
+    }
+
+    @Test("UTF-16 clipboard text decodes without data loss")
+    func decodesUTF16ClipboardText() throws {
+        let text = "ClassGod 剪贴板"
+        let data = try #require(text.data(using: .utf16))
+        let payload = ClipoPayload(items: [
+            ClipoPayloadItem(representations: [
+                ClipoRepresentation(type: "public.utf16-external-plain-text", data: data)
+            ])
+        ])
+
+        #expect(payload.plainText == text)
+        #expect(payload.preview == text)
+    }
+
+    @Test("Clipboard restoration never overwrites a newer user copy")
+    func guardsClipboardRestoration() {
+        #expect(ClipoClipboardRestorePolicy.shouldRestore(expectedChangeCount: 10, currentChangeCount: 10))
+        #expect(!ClipoClipboardRestorePolicy.shouldRestore(expectedChangeCount: 10, currentChangeCount: 11))
     }
 
     @Test("Clipo panel shortcut does not conflict with the main panel shortcut")
@@ -41,6 +68,14 @@ struct ClipoTests {
             pasteTarget: sensitiveBundleID,
             ownBundleIdentifier: ownBundleID
         ) == "com.apple.Safari")
+        #expect(ClipoSourcePolicy.shouldRememberTarget(
+            candidateBundleIdentifier: "com.apple.Safari",
+            ownBundleIdentifier: ownBundleID
+        ))
+        #expect(!ClipoSourcePolicy.shouldRememberTarget(
+            candidateBundleIdentifier: ownBundleID,
+            ownBundleIdentifier: ownBundleID
+        ))
     }
 
     @Test("Clipo enum labels resolve through the string catalog")

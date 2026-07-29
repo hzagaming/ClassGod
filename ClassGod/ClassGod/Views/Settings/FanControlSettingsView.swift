@@ -343,6 +343,7 @@ struct AutoMaxRuleRow: View {
                     .foregroundStyle(.white.opacity(0.3))
             }
             .buttonStyle(.plain)
+            .accessibilityLabel(Text("button.delete"))
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 6)

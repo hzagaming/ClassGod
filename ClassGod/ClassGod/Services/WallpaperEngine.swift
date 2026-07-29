@@ -35,6 +35,13 @@ enum WallpaperFilePolicy {
     }
 }
 
+enum WallpaperVolumePolicy {
+    static func normalized(_ value: Double) -> Double {
+        guard value.isFinite else { return 0 }
+        return max(0, min(1, value))
+    }
+}
+
 @MainActor
 final class WallpaperEngine: ObservableObject {
     static let shared = WallpaperEngine()
@@ -222,7 +229,7 @@ final class WallpaperEngine: ObservableObject {
     }
     
     func setVolume(_ value: Double) {
-        volume = max(0, min(1, value))
+        volume = WallpaperVolumePolicy.normalized(value)
         saveSettings()
         NotificationCenter.default.post(name: .wallpaperStateDidChange, object: nil)
     }
@@ -318,7 +325,7 @@ final class WallpaperEngine: ObservableObject {
             isPlaying = settings.isPlaying
             isMuted = settings.isMuted
             playbackMode = settings.playbackMode
-            volume = max(0, min(1, settings.volume))
+            volume = WallpaperVolumePolicy.normalized(settings.volume)
             if let currentId = settings.currentWallpaperId,
                let item = playlist.first(where: { $0.id == currentId }) {
                 currentWallpaper = item

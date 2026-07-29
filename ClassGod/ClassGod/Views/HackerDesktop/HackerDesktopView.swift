@@ -51,6 +51,7 @@ struct HackerDesktopView: View {
                         .clipShape(Circle())
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel(Text("button.close"))
                 .padding(.leading, 12 * zoomScale)
                 
                 Spacer()
@@ -208,6 +209,7 @@ struct HackerDesktopView: View {
                                     .foregroundStyle(.red.opacity(0.6))
                             }
                             .buttonStyle(.plain)
+                            .accessibilityLabel(Text("button.delete"))
                         }
                     }
                 }

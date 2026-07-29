@@ -59,10 +59,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // Initialize the wallpaper controller early. Widgets are provided by WidgetKit.
         _ = DesktopWallpaperController.shared
         
-        showSplashScreen()
+        let launchAnimationDuration = Anim.duration
+        if AnimationDurationPolicy.shouldRunLaunchEffects(duration: launchAnimationDuration) {
+            showSplashScreen()
+        }
 
         // Phase 1: Splash (2s) -> Phase 2: Chaos Animation -> Phase 3: Main Window
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
+        let launchDelay = AnimationDurationPolicy.launchDelay(preferred: 2, duration: launchAnimationDuration)
+        DispatchQueue.main.asyncAfter(deadline: .now() + launchDelay) { [weak self] in
             guard let self = self else { return }
             self.closeSplashScreen()
             self.setupStatusItem()
@@ -168,7 +172,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func closeSplashScreen() {
         guard let window = splashWindow else { return }
         NSAnimationContext.runAnimationGroup { ctx in
-            ctx.duration = 0.25
+            ctx.duration = Anim.duration
             window.animator().alphaValue = 0
         } completionHandler: { [weak self] in
             window.orderOut(nil)
@@ -335,7 +339,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             window.makeKeyAndOrderFront(nil)
             
             NSAnimationContext.runAnimationGroup { context in
-                context.duration = 0.18
+                context.duration = Anim.duration
                 context.timingFunction = .init(name: .easeOut)
                 window.animator().alphaValue = targetWindowAlpha
             }
@@ -349,7 +353,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         SoundEffectManager.shared.playWindowClose(feature: "destintab")
         
         NSAnimationContext.runAnimationGroup { context in
-            context.duration = 0.12
+            context.duration = Anim.duration
             context.timingFunction = .init(name: .easeIn)
             window.animator().alphaValue = 0
         } completionHandler: { [weak self] in
@@ -436,7 +440,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             window.makeKeyAndOrderFront(nil)
             
             NSAnimationContext.runAnimationGroup { context in
-                context.duration = 0.18
+                context.duration = Anim.duration
                 context.timingFunction = .init(name: .easeOut)
                 window.animator().alphaValue = targetWindowAlpha
             }
@@ -450,7 +454,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         SoundEffectManager.shared.playWindowClose(feature: "superswitch")
         
         NSAnimationContext.runAnimationGroup { context in
-            context.duration = 0.12
+            context.duration = Anim.duration
             context.timingFunction = .init(name: .easeIn)
             window.animator().alphaValue = 0
         } completionHandler: { [weak self] in
@@ -639,7 +643,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             window.makeKeyAndOrderFront(nil)
             
             NSAnimationContext.runAnimationGroup { context in
-                context.duration = 0.18
+                context.duration = Anim.duration
                 context.timingFunction = .init(name: .easeOut)
                 window.animator().alphaValue = targetWindowAlpha
             }
@@ -653,7 +657,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         SoundEffectManager.shared.playWindowClose(feature: "browserbypasser")
         
         NSAnimationContext.runAnimationGroup { context in
-            context.duration = 0.12
+            context.duration = Anim.duration
             context.timingFunction = .init(name: .easeIn)
             window.animator().alphaValue = 0
         } completionHandler: { [weak self] in
@@ -741,7 +745,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             window.makeKeyAndOrderFront(nil)
             
             NSAnimationContext.runAnimationGroup { context in
-                context.duration = 0.18
+                context.duration = Anim.duration
                 context.timingFunction = .init(name: .easeOut)
                 window.animator().alphaValue = targetWindowAlpha
             }
@@ -756,7 +760,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         NotificationCenter.default.post(name: .assessPrepHackWindowWillHide, object: nil)
         
         NSAnimationContext.runAnimationGroup { context in
-            context.duration = 0.12
+            context.duration = Anim.duration
             context.timingFunction = .init(name: .easeIn)
             window.animator().alphaValue = 0
         } completionHandler: { [weak self] in
@@ -839,7 +843,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             window.makeKeyAndOrderFront(nil)
             
             NSAnimationContext.runAnimationGroup { context in
-                context.duration = 0.18
+                context.duration = Anim.duration
                 context.timingFunction = .init(name: .easeOut)
                 window.animator().alphaValue = targetWindowAlpha
             }
@@ -853,7 +857,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         SoundEffectManager.shared.playWindowClose()
         
         NSAnimationContext.runAnimationGroup { context in
-            context.duration = 0.12
+            context.duration = Anim.duration
             context.timingFunction = .init(name: .easeIn)
             window.animator().alphaValue = 0
         } completionHandler: { [weak self] in
@@ -936,7 +940,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             window.makeKeyAndOrderFront(nil)
 
             NSAnimationContext.runAnimationGroup { context in
-                context.duration = 0.18
+                context.duration = Anim.duration
                 context.timingFunction = .init(name: .easeOut)
                 window.animator().alphaValue = targetWindowAlpha
             }
@@ -950,7 +954,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         SoundEffectManager.shared.playWindowClose()
 
         NSAnimationContext.runAnimationGroup { context in
-            context.duration = 0.12
+            context.duration = Anim.duration
             context.timingFunction = .init(name: .easeIn)
             window.animator().alphaValue = 0
         } completionHandler: { [weak self] in
@@ -1037,7 +1041,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             window.makeKeyAndOrderFront(nil)
 
             NSAnimationContext.runAnimationGroup { context in
-                context.duration = 0.18
+                context.duration = Anim.duration
                 context.timingFunction = .init(name: .easeOut)
                 window.animator().alphaValue = targetWindowAlpha
             }
@@ -1052,7 +1056,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         NotificationCenter.default.post(name: .hackerDesktopWindowWillHide, object: nil)
 
         NSAnimationContext.runAnimationGroup { context in
-            context.duration = 0.12
+            context.duration = Anim.duration
             context.timingFunction = .init(name: .easeIn)
             window.animator().alphaValue = 0
         } completionHandler: { [weak self] in
@@ -1133,7 +1137,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             window.alphaValue = 0
             window.makeKeyAndOrderFront(nil)
             NSAnimationContext.runAnimationGroup { context in
-                context.duration = 0.18
+                context.duration = Anim.duration
                 context.timingFunction = .init(name: .easeOut)
                 window.animator().alphaValue = targetWindowAlpha
             }
@@ -1142,11 +1146,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    func hideClipoWindow() {
+    func hideClipoWindow(playSound: Bool = true) {
         guard let window = clipoWindow else { return }
-        SoundEffectManager.shared.playWindowClose(feature: "clipo")
+        if playSound {
+            SoundEffectManager.shared.playWindowClose(feature: "clipo")
+        }
         NSAnimationContext.runAnimationGroup { context in
-            context.duration = 0.12
+            context.duration = Anim.duration
             context.timingFunction = .init(name: .easeIn)
             window.animator().alphaValue = 0
         } completionHandler: { [weak self] in
@@ -1164,7 +1170,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func hideClipoForPaste() {
-        hideClipoWindow()
+        hideClipoWindow(playSound: false)
     }
 
     // MARK: - Error Hub Window
@@ -1228,7 +1234,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             window.makeKeyAndOrderFront(nil)
 
             NSAnimationContext.runAnimationGroup { context in
-                context.duration = 0.18
+                context.duration = Anim.duration
                 context.timingFunction = .init(name: .easeOut)
                 window.animator().alphaValue = targetWindowAlpha
             }
@@ -1242,7 +1248,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         SoundEffectManager.shared.playWindowClose(feature: "errorhub")
 
         NSAnimationContext.runAnimationGroup { context in
-            context.duration = 0.12
+            context.duration = Anim.duration
             context.timingFunction = .init(name: .easeIn)
             window.animator().alphaValue = 0
         } completionHandler: { [weak self] in
@@ -1333,7 +1339,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             window.makeKeyAndOrderFront(nil)
 
             NSAnimationContext.runAnimationGroup { context in
-                context.duration = 0.18
+                context.duration = Anim.duration
                 context.timingFunction = .init(name: .easeOut)
                 window.animator().alphaValue = targetWindowAlpha
             }
@@ -1348,7 +1354,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         NotificationCenter.default.post(name: .fanControlWindowWillHide, object: nil)
 
         NSAnimationContext.runAnimationGroup { context in
-            context.duration = 0.12
+            context.duration = Anim.duration
             context.timingFunction = .init(name: .easeIn)
             window.animator().alphaValue = 0
         } completionHandler: { [weak self] in
@@ -1434,7 +1440,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             window.makeKeyAndOrderFront(nil)
 
             NSAnimationContext.runAnimationGroup { context in
-                context.duration = 0.18
+                context.duration = Anim.duration
                 context.timingFunction = .init(name: .easeOut)
                 window.animator().alphaValue = targetWindowAlpha
             }
@@ -1449,7 +1455,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         NotificationCenter.default.post(name: .activityMonitorWindowWillHide, object: nil)
 
         NSAnimationContext.runAnimationGroup { context in
-            context.duration = 0.12
+            context.duration = Anim.duration
             context.timingFunction = .init(name: .easeIn)
             window.animator().alphaValue = 0
         } completionHandler: { [weak self] in
@@ -1534,7 +1540,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             window.makeKeyAndOrderFront(nil)
 
             NSAnimationContext.runAnimationGroup { context in
-                context.duration = 0.18
+                context.duration = Anim.duration
                 context.timingFunction = .init(name: .easeOut)
                 window.animator().alphaValue = targetWindowAlpha
             }
@@ -1549,7 +1555,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         SoundEffectManager.shared.playWindowClose(feature: "permissioncenter")
 
         NSAnimationContext.runAnimationGroup { context in
-            context.duration = 0.12
+            context.duration = Anim.duration
             context.timingFunction = .init(name: .easeIn)
             window.animator().alphaValue = 0
         } completionHandler: { [weak self] in
@@ -1632,7 +1638,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             window.makeKeyAndOrderFront(nil)
 
             NSAnimationContext.runAnimationGroup { context in
-                context.duration = 0.18
+                context.duration = Anim.duration
                 context.timingFunction = .init(name: .easeOut)
                 window.animator().alphaValue = targetWindowAlpha
             }
@@ -1658,7 +1664,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         if PreferencesManager.shared.preferences.showPopoverAnimation {
             NSAnimationContext.runAnimationGroup { context in
-                context.duration = 0.12
+                context.duration = Anim.duration
                 context.timingFunction = .init(name: .easeIn)
                 window.animator().alphaValue = 0
             } completionHandler: { [weak self] in
@@ -1852,7 +1858,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         if isMaximized {
             // Restore
             if let originalFrame = windowFramesBeforeMaximize[id] {
-                window.setFrame(originalFrame, display: true, animate: true)
+                window.setFrame(originalFrame, display: true, animate: Anim.enabled)
             }
             maximizedWindows.remove(id)
             windowFramesBeforeMaximize.removeValue(forKey: id)
@@ -1867,7 +1873,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             } else {
                 screenFrame = NSScreen.main?.visibleFrame ?? window.frame
             }
-            window.setFrame(screenFrame, display: true, animate: true)
+            window.setFrame(screenFrame, display: true, animate: Anim.enabled)
             maximizedWindows.insert(id)
         }
     }

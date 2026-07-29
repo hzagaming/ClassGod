@@ -10,6 +10,20 @@ import AppKit
 
 // MARK: - Animation Helper
 
+nonisolated enum AnimationDurationPolicy {
+    static func duration(preferred: Double, useInstant: Bool, reduceMotion: Bool) -> Double {
+        useInstant || reduceMotion ? 0 : preferred
+    }
+
+    static func shouldRunLaunchEffects(duration: Double) -> Bool {
+        duration > 0
+    }
+
+    static func launchDelay(preferred: Double, duration: Double) -> Double {
+        shouldRunLaunchEffects(duration: duration) ? preferred : 0
+    }
+}
+
 enum Anim {
     static var enabled: Bool {
         duration > 0
@@ -17,8 +31,11 @@ enum Anim {
     
     static var duration: Double {
         let prefs = PreferencesManager.shared.preferences
-        if prefs.useInstantAnimations || NSWorkspace.shared.accessibilityDisplayShouldReduceMotion { return 0 }
-        return prefs.animationSpeed.duration
+        return AnimationDurationPolicy.duration(
+            preferred: prefs.animationSpeed.duration,
+            useInstant: prefs.useInstantAnimations,
+            reduceMotion: NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
+        )
     }
     
     static func with(_ body: @escaping () -> Void) {

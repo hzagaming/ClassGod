@@ -77,7 +77,10 @@ struct CPUWidgetView: View {
                             .foregroundStyle(.white.opacity(0.8))
                     }
                     
-                    Text("cores: \(ProcessInfo.processInfo.processorCount)")
+                    Text(String(
+                        format: String(localized: "WIDGET_CORES_VALUE"),
+                        ProcessInfo.processInfo.processorCount
+                    ))
                         .font(.system(size: 9, design: .monospaced))
                         .foregroundStyle(.white.opacity(0.35))
                 }

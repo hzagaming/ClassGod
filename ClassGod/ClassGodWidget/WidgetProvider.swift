@@ -29,6 +29,7 @@ struct WidgetProvider: TimelineProvider {
     
     private func loadEntry(date: Date = Date()) -> WidgetEntry {
         let store = WidgetExtensionStore()
+        let snapshotDate = store.date(forKey: .lastUpdate) ?? date
         return WidgetEntry(
             date: date,
             cpuUsage: store.double(forKey: .cpuUsage),
@@ -40,7 +41,11 @@ struct WidgetProvider: TimelineProvider {
             networkUp: store.double(forKey: .networkUp),
             batteryLevel: store.double(forKey: .batteryLevel),
             batteryIsCharging: store.bool(forKey: .batteryIsCharging),
-            uptimeSeconds: store.double(forKey: .uptimeSeconds),
+            uptimeSeconds: WidgetMetricNormalization.uptime(
+                storedSeconds: store.double(forKey: .uptimeSeconds),
+                snapshotDate: snapshotDate,
+                entryDate: date
+            ),
             clockCity: store.string(forKey: .clockCity) ?? String(localized: "Local"),
             weatherCity: store.string(forKey: .weatherCity) ?? "",
             weatherTemp: store.string(forKey: .weatherTemp) ?? "--",

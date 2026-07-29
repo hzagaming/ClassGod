@@ -26,4 +26,14 @@ struct LocalizationRegressionTests {
         #expect(chinese.localizedString(forKey: "widget.no_process_data", value: nil, table: nil) == "暂无进程数据")
     }
 
+    @Test("Clipo timing values use localized units")
+    func validatesClipoTimingFormat() throws {
+        let english = Locale(identifier: "en")
+        let chineseURL = try #require(Bundle.main.url(forResource: "zh-Hans", withExtension: "lproj"))
+        let chinese = try #require(Bundle(url: chineseURL))
+
+        #expect(String(localized: "clipo.seconds_format", bundle: .main, locale: english) == "%.2fs")
+        #expect(chinese.localizedString(forKey: "clipo.seconds_format", value: nil, table: nil) == "%.2f 秒")
+    }
+
 }

@@ -35,10 +35,16 @@ struct SplashScreenView: View {
             }
         }
         .onAppear {
-            withAnimation(.easeOut(duration: 0.4)) {
+            let duration = Anim.duration
+            guard duration > 0 else {
+                opacity = 1
+                subtitleOpacity = 1
+                return
+            }
+            withAnimation(.easeOut(duration: duration)) {
                 opacity = 1
             }
-            withAnimation(.easeOut(duration: 0.4).delay(0.2)) {
+            withAnimation(.easeOut(duration: duration).delay(duration / 2)) {
                 subtitleOpacity = 1
             }
         }

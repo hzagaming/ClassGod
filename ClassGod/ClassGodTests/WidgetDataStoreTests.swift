@@ -36,6 +36,22 @@ struct WidgetDataStoreTests {
         #expect(WidgetMetricNormalization.batteryPercent(from: 2) == 100)
     }
 
+    @Test("Uptime advances with each generated timeline entry")
+    func advancesUptimeAcrossTimeline() {
+        let snapshot = Date(timeIntervalSince1970: 1_000)
+
+        #expect(WidgetMetricNormalization.uptime(
+            storedSeconds: 3_600,
+            snapshotDate: snapshot,
+            entryDate: snapshot.addingTimeInterval(120)
+        ) == 3_720)
+        #expect(WidgetMetricNormalization.uptime(
+            storedSeconds: 3_600,
+            snapshotDate: snapshot,
+            entryDate: snapshot.addingTimeInterval(-120)
+        ) == 3_600)
+    }
+
     @Test("App Launcher deep links round-trip safe bundle identifiers")
     func validatesWidgetLaunchDeepLink() {
         let bundleID = "com.apple.TextEdit"
@@ -45,5 +61,8 @@ struct WidgetDataStoreTests {
         #expect(url.flatMap(WidgetDeepLink.launchBundleIdentifier(from:)) == bundleID)
         #expect(WidgetDeepLink.launchBundleIdentifier(from: URL(string: "https://example.com")!) == nil)
         #expect(WidgetDeepLink.launchURL(bundleIdentifier: "invalid bundle") == nil)
+        #expect(WidgetDeepLink.launchURL(bundleIdentifier: "com..example") == nil)
+        #expect(WidgetDeepLink.launchURL(bundleIdentifier: "com.example.") == nil)
+        #expect(WidgetDeepLink.launchURL(bundleIdentifier: String(repeating: "a", count: 256)) == nil)
     }
 }

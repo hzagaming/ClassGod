@@ -41,7 +41,10 @@ struct ClipoRepresentation: Codable, Equatable, Sendable {
     let data: Data
 
     var stringValue: String? {
-        String(data: data, encoding: .utf8)
+        if type.lowercased().contains("utf16") {
+            return String(data: data, encoding: .utf16)
+        }
+        return String(data: data, encoding: .utf8)
     }
 }
 
@@ -235,7 +238,19 @@ struct ClipoSettings: Codable, Equatable, Sendable {
         var value = self
         value.maxHistoryItems = max(0, min(value.maxHistoryItems, 2_000))
         value.pasteDelay = max(0, min(value.pasteDelay, 1))
+        var seenBundleIdentifiers = Set<String>()
+        value.sensitiveBundleIdentifiers = value.sensitiveBundleIdentifiers.compactMap { identifier in
+            let trimmed = identifier.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmed.isEmpty, trimmed.count <= 255 else { return nil }
+            return seenBundleIdentifiers.insert(trimmed.lowercased()).inserted ? trimmed : nil
+        }
         return value
+    }
+}
+
+enum ClipoClipboardRestorePolicy {
+    static func shouldRestore(expectedChangeCount: Int, currentChangeCount: Int) -> Bool {
+        expectedChangeCount == currentChangeCount
     }
 }
 
@@ -265,6 +280,13 @@ enum ClipoContentClassifier {
 }
 
 enum ClipoSourcePolicy {
+    static func shouldRememberTarget(
+        candidateBundleIdentifier: String?,
+        ownBundleIdentifier: String?
+    ) -> Bool {
+        candidateBundleIdentifier != ownBundleIdentifier
+    }
+
     static func effectiveBundleIdentifier(
         frontmost: String?,
         pasteTarget: String?,

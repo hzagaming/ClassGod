@@ -83,16 +83,26 @@ nonisolated enum FanRecognition {
         type.lowercased() == "fpe2"
     }
 
+    static func decodeFanCount(_ bytes: [UInt8], dataType: String) -> Int? {
+        let expectedCount: Int
+        switch dataType.lowercased() {
+        case "ui8 ": expectedCount = 1
+        case "ui16": expectedCount = 2
+        case "ui32": expectedCount = 4
+        default: return nil
+        }
+        guard bytes.count >= expectedCount else { return nil }
+        let value = bytes.prefix(expectedCount).reduce(0) { ($0 << 8) | Int($1) }
+        return (1...16).contains(value) ? value : nil
+    }
+
     static func needsSupplement(_ fans: [FanInfo]) -> Bool {
         fans.isEmpty || fans.contains { !$0.hasPlausibleLiveRPM || !$0.hasPlausibleRPMRange }
     }
 
     static func merge(primary: [FanInfo], supplementary: [FanInfo]) -> [FanInfo] {
-        var merged = Dictionary(primary.map { ($0.id, $0) }, uniquingKeysWith: { current, candidate in
-            current.hasPlausibleLiveRPM || !candidate.hasPlausibleLiveRPM ? current : candidate
-        })
-
-        for candidate in supplementary {
+        var merged: [Int: FanInfo] = [:]
+        for candidate in primary + supplementary {
             guard var current = merged[candidate.id] else {
                 merged[candidate.id] = candidate
                 continue
@@ -101,6 +111,9 @@ nonisolated enum FanRecognition {
             if !current.hasPlausibleLiveRPM, candidate.hasPlausibleLiveRPM {
                 current.actualRPM = candidate.actualRPM
                 current.hasLiveRPM = true
+                if current.name.isEmpty || current.name == "Detected" || current.name.hasPrefix("Fan ") {
+                    current.name = candidate.name
+                }
             }
             if !current.hasPlausibleRPMRange, candidate.hasPlausibleRPMRange {
                 current.minimumRPM = candidate.minimumRPM
@@ -676,8 +689,12 @@ nonisolated final class SMCService: @unchecked Sendable {
     }
 
     private func readDirectSMCFans() -> [FanInfo] {
-        guard let countBytes = readSMCBytes(key: "FNum"),
-              let fanCount = decodeFanCount(countBytes), fanCount > 0 else { return [] }
+        guard let keyInfo = readSMCKeyInfo(code: fourCC("FNum")),
+              let countBytes = readSMCBytes(key: "FNum"),
+              let fanCount = FanRecognition.decodeFanCount(
+                countBytes,
+                dataType: fourCCString(keyInfo.dataType)
+              ) else { return [] }
 
         return (0..<min(fanCount, 16)).map { index in
             var info = FanInfo(id: index, name: fanName(for: index))
@@ -717,11 +734,6 @@ nonisolated final class SMCService: @unchecked Sendable {
         guard SMCReadingFormat.supportsTemperature(type),
               let bytes = readSMCBytes(key: key) else { return nil }
         return decodeTemperature(bytes: bytes, type: type)
-    }
-
-    private func decodeFanCount(_ bytes: [UInt8]) -> Int? {
-        guard let value = bytes.last, value > 0 else { return nil }
-        return Int(value)
     }
 
     private func decodeRegistryRPM(_ value: Any?) -> Double? {

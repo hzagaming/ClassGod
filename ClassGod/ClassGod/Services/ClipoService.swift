@@ -42,7 +42,9 @@ final class ClipoService: ObservableObject {
     private var ignoredChangeCounts = Set<Int>()
     private var isLoading = false
     private var pasteTarget: NSRunningApplication?
+    private var isTrackingApplications = false
     private var selectionTasks: [Int: Task<Void, Never>] = [:]
+    private var saveTask: Task<Void, Never>?
     private let persistenceQueue = DispatchQueue(label: "com.hanazar.classgod.clipo.persistence", qos: .utility)
 
     private var storageDirectory: URL {
@@ -60,14 +62,19 @@ final class ClipoService: ObservableObject {
     }
 
     func start() {
+        startTrackingApplications()
+        rememberPasteTarget()
         if settings.monitorClipboard { startMonitoring() }
     }
 
     func stop() {
         stopMonitoring()
+        stopTrackingApplications()
         selectionTasks.values.forEach { $0.cancel() }
         selectionTasks.removeAll()
-        save()
+        saveTask?.cancel()
+        saveTask = nil
+        enqueueSave()
         persistenceQueue.sync {}
     }
 
@@ -91,10 +98,43 @@ final class ClipoService: ObservableObject {
     }
 
     func rememberPasteTarget() {
-        let app = NSWorkspace.shared.frontmostApplication
-        if app?.bundleIdentifier != Bundle.main.bundleIdentifier {
+        rememberPasteTarget(NSWorkspace.shared.frontmostApplication)
+    }
+
+    private func rememberPasteTarget(_ app: NSRunningApplication?) {
+        guard let app else { return }
+        if ClipoSourcePolicy.shouldRememberTarget(
+            candidateBundleIdentifier: app.bundleIdentifier,
+            ownBundleIdentifier: Bundle.main.bundleIdentifier
+        ) {
             pasteTarget = app
         }
+    }
+
+    private func startTrackingApplications() {
+        guard !isTrackingApplications else { return }
+        NSWorkspace.shared.notificationCenter.addObserver(
+            self,
+            selector: #selector(workspaceApplicationDidActivate(_:)),
+            name: NSWorkspace.didActivateApplicationNotification,
+            object: nil
+        )
+        isTrackingApplications = true
+    }
+
+    private func stopTrackingApplications() {
+        guard isTrackingApplications else { return }
+        NSWorkspace.shared.notificationCenter.removeObserver(
+            self,
+            name: NSWorkspace.didActivateApplicationNotification,
+            object: nil
+        )
+        isTrackingApplications = false
+    }
+
+    @objc private func workspaceApplicationDidActivate(_ notification: Notification) {
+        let app = notification.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication
+        rememberPasteTarget(app)
     }
 
     func copy(_ item: ClipoItem) {
@@ -111,6 +151,7 @@ final class ClipoService: ObservableObject {
 
         let snapshot = settings.restoreClipboardAfterPaste ? capturePayload() : nil
         guard write(item) else { return }
+        let writtenChangeCount = NSPasteboard.general.changeCount
         record(item)
         NotificationCenter.default.post(name: .clipoWillPaste, object: nil)
         if let target = pasteTarget, !target.isTerminated {
@@ -121,6 +162,10 @@ final class ClipoService: ObservableObject {
             self?.simulateKeyPress(keyCode: 9)
             guard let snapshot, self?.settings.restoreClipboardAfterPaste == true else { return }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { [weak self] in
+                guard ClipoClipboardRestorePolicy.shouldRestore(
+                    expectedChangeCount: writtenChangeCount,
+                    currentChangeCount: NSPasteboard.general.changeCount
+                ) else { return }
                 self?.write(snapshot)
             }
         }
@@ -154,10 +199,15 @@ final class ClipoService: ObservableObject {
                 guard !Task.isCancelled else { return }
                 guard NSPasteboard.general.changeCount != previousChangeCount else { continue }
                 guard let item = makeItem(sourceApp: source) else { return }
-                markChangeIgnored(NSPasteboard.general.changeCount)
+                let selectionChangeCount = NSPasteboard.general.changeCount
+                markChangeIgnored(selectionChangeCount)
                 save(item, to: slotNumber)
                 if let previous {
                     try? await Task.sleep(for: .milliseconds(50))
+                    guard ClipoClipboardRestorePolicy.shouldRestore(
+                        expectedChangeCount: selectionChangeCount,
+                        currentChangeCount: NSPasteboard.general.changeCount
+                    ) else { return }
                     write(previous)
                 }
                 return
@@ -427,6 +477,16 @@ final class ClipoService: ObservableObject {
 
     private func save() {
         guard !isLoading else { return }
+        saveTask?.cancel()
+        saveTask = Task { [weak self] in
+            try? await Task.sleep(for: .milliseconds(150))
+            guard !Task.isCancelled, let self else { return }
+            saveTask = nil
+            enqueueSave()
+        }
+    }
+
+    private func enqueueSave() {
         let directory = storageDirectory
         let url = storageURL
         let snapshot = ClipoStorageContainer(history: history, slots: slots, settings: settings)

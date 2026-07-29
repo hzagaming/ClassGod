@@ -149,6 +149,7 @@ struct FanControlView: View {
                         .clipShape(Circle())
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel(Text("button.close"))
 
                 VStack(alignment: .leading, spacing: 0) {
                     Text("fan.title")
@@ -348,6 +349,7 @@ struct FanControlView: View {
                                 .clipShape(Capsule())
                         }
                         .buttonStyle(.plain)
+                        .accessibilityLabel(Text("clipo.clear_search"))
                     }
                 }
 

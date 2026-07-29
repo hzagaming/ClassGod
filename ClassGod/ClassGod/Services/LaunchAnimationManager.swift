@@ -22,6 +22,11 @@ final class LaunchAnimationManager {
     private init() {}
     
     func startChaosAnimation(mainWindow: NSWindow, completion: @escaping () -> Void) {
+        guard AnimationDurationPolicy.shouldRunLaunchEffects(duration: Anim.duration) else {
+            mainWindow.alphaValue = 1
+            completion()
+            return
+        }
         guard !isAnimating else {
             completion()
             return
@@ -83,11 +88,6 @@ final class LaunchAnimationManager {
                         ctx.duration = 0.8
                         mainWindow.animator().alphaValue = 0.4
                     }
-                } else if showOrder == 80 {
-                    NSAnimationContext.runAnimationGroup { ctx in
-                        ctx.duration = 1.2
-                        mainWindow.animator().alphaValue = 0.6
-                    }
                 }
                 
                 // SFX: dense sound during spawn
@@ -95,12 +95,12 @@ final class LaunchAnimationManager {
                     SoundEffectManager.shared.playGlitchSound()
                 }
                 // Occasional burst
-                if showOrder == 25 || showOrder == 60 || showOrder == 110 || showOrder == 160 {
+                if showOrder == 25 {
                     SoundEffectManager.shared.playGlitchBurst(count: 4)
                 }
                 
                 // Occasional screen flash with sound
-                if showOrder == 40 || showOrder == 100 || showOrder == 160 {
+                if showOrder == 40 {
                     self.performScreenFlash(screenFrame: screenFrame, color: .red)
                     SoundEffectManager.shared.playScreenFlashSound()
                 }
@@ -116,7 +116,7 @@ final class LaunchAnimationManager {
             let closeDelay = 3.5 + Double(closeOrder) * Double.random(in: 0.012...0.022)
             
             DispatchQueue.main.asyncAfter(deadline: .now() + closeDelay) { [weak self] in
-                guard let self = self else { return }
+                guard let self, self.isAnimating else { return }
                 
                 NSAnimationContext.runAnimationGroup { ctx in
                     ctx.duration = 0.035
@@ -130,7 +130,7 @@ final class LaunchAnimationManager {
                     mainWindow.alphaValue = targetAlpha
                     
                     // SFX during close phase
-                    if closeOrder == 20 || closeOrder == 80 || closeOrder == 150 {
+                    if closeOrder == 20 {
                         SoundEffectManager.shared.playCloseBurst(count: 4)
                     }
                     

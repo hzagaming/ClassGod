@@ -367,7 +367,10 @@ struct ClipoView: View {
                     HStack {
                         Text("clipo.settings.paste_delay")
                         Slider(value: $service.settings.pasteDelay, in: 0...1, step: 0.05)
-                        Text(String(format: "%.2fs", service.settings.pasteDelay))
+                        Text(String(
+                            format: String(localized: "clipo.seconds_format"),
+                            service.settings.pasteDelay
+                        ))
                             .foregroundStyle(.cyan)
                             .frame(width: 48 * zoomScale)
                     }
@@ -394,6 +397,7 @@ struct ClipoView: View {
                             }
                             .buttonStyle(.plain)
                             .foregroundStyle(.red.opacity(0.7))
+                            .accessibilityLabel(Text("button.delete"))
                         }
                     }
                     HStack {
@@ -655,10 +659,10 @@ private struct ClipoSlotCard: View {
                     .lineLimit(3)
                     .frame(maxWidth: .infinity, minHeight: 38 * zoomScale, alignment: .topLeading)
                 HStack(spacing: 5 * zoomScale) {
-                    slotButton("doc.on.doc") { service.copy(item) }
-                    slotButton("return") { service.paste(item) }
+                    slotButton("doc.on.doc", label: "clipo.action.doc.on.doc") { service.copy(item) }
+                    slotButton("return", label: "clipo.action.return") { service.paste(item) }
                     Spacer()
-                    slotButton("trash", color: .red) { service.deleteSlot(number) }
+                    slotButton("trash", label: "clipo.action.trash", color: .red) { service.deleteSlot(number) }
                 }
             } else {
                 Text("clipo.empty_slot")
@@ -677,7 +681,12 @@ private struct ClipoSlotCard: View {
         .overlay(RoundedRectangle(cornerRadius: 9 * zoomScale).stroke(item == nil ? Color.white.opacity(0.06) : Color.cyan.opacity(0.18)))
     }
 
-    private func slotButton(_ icon: String, color: Color = .white, action: @escaping () -> Void) -> some View {
+    private func slotButton(
+        _ icon: String,
+        label: LocalizedStringKey,
+        color: Color = .white,
+        action: @escaping () -> Void
+    ) -> some View {
         Button(action: action) {
             Image(systemName: icon)
                 .font(.system(size: 9 * zoomScale))
@@ -687,6 +696,7 @@ private struct ClipoSlotCard: View {
                 .clipShape(RoundedRectangle(cornerRadius: 5 * zoomScale))
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(Text(label))
     }
 }
 

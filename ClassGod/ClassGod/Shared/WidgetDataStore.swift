@@ -29,6 +29,10 @@ nonisolated enum WidgetMetricNormalization {
     static func batteryPercent(from fraction: Double) -> Double {
         min(100, max(0, fraction * 100))
     }
+
+    static func uptime(storedSeconds: TimeInterval, snapshotDate: Date, entryDate: Date) -> TimeInterval {
+        max(0, storedSeconds) + max(0, entryDate.timeIntervalSince(snapshotDate))
+    }
 }
 
 nonisolated enum WidgetCalendarLayout {
@@ -62,7 +66,10 @@ nonisolated enum WidgetDeepLink {
     }
 
     private static func isValidBundleIdentifier(_ value: String) -> Bool {
-        value.range(of: #"^[A-Za-z0-9][A-Za-z0-9.-]*$"#, options: .regularExpression) != nil
+        value.count <= 255
+            && !value.hasSuffix(".")
+            && !value.contains("..")
+            && value.range(of: #"^[A-Za-z0-9][A-Za-z0-9.-]*$"#, options: .regularExpression) != nil
     }
 }
 

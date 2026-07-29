@@ -244,7 +244,7 @@ final class SMCHelper {
     func readFans() -> [[String: Any]] {
         var indexes = Set<Int>()
         let fanEntries = enumerateSMCKeys(matchingPrefixes: ["F"])
-        let typeByKey = Dictionary(uniqueKeysWithValues: fanEntries.map { ($0.key, $0.type) })
+        let typeByKey = Dictionary(fanEntries.map { ($0.key, $0.type) }, uniquingKeysWith: { current, _ in current })
         if ProcessInfo.processInfo.environment["CLASSGOD_DIAGNOSTIC_SMC"] == "1",
            !didLogFanKeyDiagnostics {
             didLogFanKeyDiagnostics = true

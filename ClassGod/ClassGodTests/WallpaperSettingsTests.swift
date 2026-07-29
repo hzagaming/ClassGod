@@ -65,6 +65,15 @@ struct WallpaperSettingsTests {
         #expect(!WallpaperAudioPolicy.isAvailable(for: nil))
     }
 
+    @Test("Wallpaper volume always remains finite and in range")
+    func normalizesWallpaperVolume() {
+        #expect(WallpaperVolumePolicy.normalized(-1) == 0)
+        #expect(WallpaperVolumePolicy.normalized(0.4) == 0.4)
+        #expect(WallpaperVolumePolicy.normalized(2) == 1)
+        #expect(WallpaperVolumePolicy.normalized(.nan) == 0)
+        #expect(WallpaperVolumePolicy.normalized(.infinity) == 0)
+    }
+
     @Test("Managed wallpaper deletion stays inside its exact directory")
     func validatesManagedWallpaperPaths() {
         let directory = URL(fileURLWithPath: "/tmp/ClassGod/Wallpapers", isDirectory: true)

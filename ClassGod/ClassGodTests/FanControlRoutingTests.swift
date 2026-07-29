@@ -11,6 +11,15 @@ struct FanControlRoutingTests {
         #expect(!FanRecognition.supportsSMCRPMDataType("sp78"))
     }
 
+    @Test("Direct SMC fan count respects the declared unsigned type")
+    func validatesFanCountDataType() {
+        #expect(FanRecognition.decodeFanCount([2], dataType: "ui8 ") == 2)
+        #expect(FanRecognition.decodeFanCount([0, 2], dataType: "ui16") == 2)
+        #expect(FanRecognition.decodeFanCount([0, 0, 0, 2], dataType: "ui32") == 2)
+        #expect(FanRecognition.decodeFanCount([0, 2], dataType: "fpe2") == nil)
+        #expect(FanRecognition.decodeFanCount([0, 17], dataType: "ui16") == nil)
+    }
+
     @Test("Direct SMC temperatures reject unrelated byte formats")
     func validatesTemperatureDataType() {
         #expect(SMCReadingFormat.supportsTemperature("sp78"))
@@ -74,13 +83,15 @@ struct FanControlRoutingTests {
 
     @Test("Duplicate fan identifiers prefer a plausible live reading")
     func handlesDuplicatePrimaryFanIDs() {
-        let detected = FanInfo(id: 0, name: "Detected")
+        let detected = FanInfo(id: 0, name: "Detected", minimumRPM: 1_200, maximumRPM: 6_100)
         let live = FanInfo(id: 0, name: "Left", actualRPM: 2_200, hasLiveRPM: true)
 
         let merged = FanRecognition.merge(primary: [detected, live], supplementary: [])
 
         #expect(merged.count == 1)
         #expect(merged[0].actualRPM == 2_200)
+        #expect(merged[0].minimumRPM == 1_200)
+        #expect(merged[0].maximumRPM == 6_100)
         #expect(merged[0].hasLiveRPM)
     }
 

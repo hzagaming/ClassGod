@@ -111,7 +111,7 @@ final class ErrorToastManager: ObservableObject {
             self.toasts.removeAll { $0.id == id }
             if let window = self.windows[id] {
                 NSAnimationContext.runAnimationGroup { ctx in
-                    ctx.duration = 0.2
+                    ctx.duration = Anim.duration
                     window.animator().alphaValue = 0
                 } completionHandler: {
                     window.orderOut(nil)
@@ -127,7 +127,7 @@ final class ErrorToastManager: ObservableObject {
             guard let self = self else { return }
             for (_, window) in self.windows {
                 NSAnimationContext.runAnimationGroup { ctx in
-                    ctx.duration = 0.2
+                    ctx.duration = Anim.duration
                     window.animator().alphaValue = 0
                 } completionHandler: {
                     window.orderOut(nil)
@@ -173,7 +173,7 @@ final class ErrorToastManager: ObservableObject {
         window.orderFront(nil)
 
         NSAnimationContext.runAnimationGroup { ctx in
-            ctx.duration = 0.3
+            ctx.duration = Anim.duration
             ctx.timingFunction = .init(name: .easeOut)
             window.animator().alphaValue = 1
         }
