@@ -17,4 +17,12 @@ struct AnimationPolicyTests {
         #expect(AnimationDurationPolicy.launchDelay(preferred: 2, duration: 0) == 0)
         #expect(AnimationDurationPolicy.launchDelay(preferred: 2, duration: 0.2) == 2)
     }
+
+    @Test("Overlapping sounds reuse idle channels and stay bounded")
+    func selectsSoundChannels() {
+        #expect(SoundPlaybackPolicy.channelIndex(isPlaying: [true, false], limit: 4) == 1)
+        #expect(SoundPlaybackPolicy.channelIndex(isPlaying: [true, true], limit: 4) == 2)
+        #expect(SoundPlaybackPolicy.channelIndex(isPlaying: [true, true, true, true], limit: 4) == nil)
+        #expect(SoundPlaybackPolicy.channelIndex(isPlaying: [false], limit: 0) == nil)
+    }
 }

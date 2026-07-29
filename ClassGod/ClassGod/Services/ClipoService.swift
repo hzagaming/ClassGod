@@ -263,15 +263,20 @@ final class ClipoService: ObservableObject {
 
     func importStore(from url: URL) throws {
         let fileSize = try url.resourceValues(forKeys: [.fileSizeKey]).fileSize ?? 0
-        guard fileSize <= 300 * 1_024 * 1_024 else { throw ClipoImportError.fileTooLarge }
+        guard fileSize <= ClipoPayloadPolicy.maximumArchiveSize else { throw ClipoImportError.fileTooLarge }
         let data = try Data(contentsOf: url)
+        guard data.count <= ClipoPayloadPolicy.maximumArchiveSize else { throw ClipoImportError.fileTooLarge }
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
         let container = try decoder.decode(ClipoStorageContainer.self, from: data)
+        guard container.history.allSatisfy(ClipoPayloadPolicy.accepts),
+              container.slots.values.allSatisfy(ClipoPayloadPolicy.accepts) else {
+            throw ClipoImportError.invalidPayload
+        }
         isLoading = true
         settings = container.settings
         history = ClipoHistoryPolicy.pruned(container.history, settings: settings, now: Date())
-        slots = container.slots.filter { (1...9).contains($0.key) }
+        slots = normalizedSlots(container.slots)
         isLoading = false
         settings.monitorClipboard ? startMonitoring() : stopMonitoring()
         save()
@@ -385,8 +390,6 @@ final class ClipoService: ObservableObject {
 
     private func capturePayload(from pasteboard: NSPasteboard = .general) -> ClipoPayload? {
         guard let pasteboardItems = pasteboard.pasteboardItems else { return nil }
-        let maximumRepresentationSize = 10 * 1_024 * 1_024
-        let maximumPayloadSize = 20 * 1_024 * 1_024
         var totalSize = 0
         var items: [ClipoPayloadItem] = []
 
@@ -394,8 +397,8 @@ final class ClipoService: ObservableObject {
             var representations: [ClipoRepresentation] = []
             for type in pasteboardItem.types {
                 guard let data = pasteboardItem.data(forType: type), !data.isEmpty,
-                      data.count <= maximumRepresentationSize,
-                      totalSize + data.count <= maximumPayloadSize else { continue }
+                      data.count <= ClipoPayloadPolicy.maximumRepresentationSize,
+                      data.count <= ClipoPayloadPolicy.maximumPayloadSize - totalSize else { continue }
                 representations.append(ClipoRepresentation(type: type.rawValue, data: data))
                 totalSize += data.count
             }
@@ -462,16 +465,29 @@ final class ClipoService: ObservableObject {
             let decoder = JSONDecoder()
             decoder.dateDecodingStrategy = .iso8601
             let container = try decoder.decode(ClipoStorageContainer.self, from: data)
+            guard container.history.allSatisfy(ClipoPayloadPolicy.accepts),
+                  container.slots.values.allSatisfy(ClipoPayloadPolicy.accepts) else {
+                throw ClipoImportError.invalidPayload
+            }
             isLoading = true
             settings = container.settings
             history = ClipoHistoryPolicy.pruned(container.history, settings: settings, now: Date())
-            slots = container.slots.filter { (1...9).contains($0.key) }
+            slots = normalizedSlots(container.slots)
             isLoading = false
         } catch {
             try? FileManager.default.createDirectory(at: storageDirectory, withIntermediateDirectories: true)
             let backup = storageDirectory.appendingPathComponent("clips-corrupted.json")
             try? FileManager.default.removeItem(at: backup)
             try? FileManager.default.copyItem(at: storageURL, to: backup)
+        }
+    }
+
+    private func normalizedSlots(_ source: [Int: ClipoItem]) -> [Int: ClipoItem] {
+        source.reduce(into: [:]) { result, entry in
+            guard (1...9).contains(entry.key) else { return }
+            var item = entry.value
+            item.slotNumber = entry.key
+            result[entry.key] = item
         }
     }
 

@@ -2291,6 +2291,7 @@ struct SettingsContainerView: View {
                         .clipShape(Circle())
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel(Text("button.close"))
                 .padding(.leading, 12 * zoomScale)
                 
                 Spacer()

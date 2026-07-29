@@ -122,6 +122,36 @@ struct ClipoPayload: Codable, Equatable, Sendable {
     }
 }
 
+enum ClipoPayloadPolicy {
+    static let maximumRepresentationSize = 10 * 1_024 * 1_024
+    static let maximumPayloadSize = 20 * 1_024 * 1_024
+    static let maximumArchiveSize = 300 * 1_024 * 1_024
+
+    static func isWithinBudget(
+        _ payload: ClipoPayload,
+        representationLimit: Int = maximumRepresentationSize,
+        payloadLimit: Int = maximumPayloadSize
+    ) -> Bool {
+        guard !payload.items.isEmpty, representationLimit >= 0, payloadLimit >= 0 else { return false }
+        var totalSize = 0
+        for item in payload.items {
+            guard !item.representations.isEmpty else { return false }
+            for representation in item.representations {
+                guard !representation.data.isEmpty,
+                      representation.data.count <= representationLimit,
+                      representation.data.count <= payloadLimit - totalSize else { return false }
+                totalSize += representation.data.count
+            }
+        }
+        return true
+    }
+
+    static func accepts(_ item: ClipoItem) -> Bool {
+        if let payload = item.payload { return isWithinBudget(payload) }
+        return item.estimatedStorageBytes <= maximumPayloadSize
+    }
+}
+
 struct ClipoItem: Identifiable, Codable, Equatable, Sendable {
     let id: UUID
     var content: String
@@ -189,9 +219,13 @@ struct ClipoItem: Identifiable, Codable, Equatable, Sendable {
 
 enum ClipoImportError: LocalizedError {
     case fileTooLarge
+    case invalidPayload
 
     var errorDescription: String? {
-        String(localized: "clipo.import_too_large")
+        switch self {
+        case .fileTooLarge: String(localized: "clipo.import_too_large")
+        case .invalidPayload: String(localized: "clipo.import_invalid")
+        }
     }
 }
 

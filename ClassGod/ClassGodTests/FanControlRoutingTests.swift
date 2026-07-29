@@ -81,6 +81,16 @@ struct FanControlRoutingTests {
         #expect(merged[0].maximumRPM == 6_100)
     }
 
+    @Test("A specific supplementary name replaces a generic detected name")
+    func improvesGenericFanNameWithoutLiveRPM() {
+        let primary = FanInfo(id: 0, name: "Detected")
+        let supplementary = FanInfo(id: 0, name: "Left Fan", minimumRPM: 1_200, maximumRPM: 6_100)
+
+        let merged = FanRecognition.merge(primary: [primary], supplementary: [supplementary])
+
+        #expect(merged[0].name == "Left Fan")
+    }
+
     @Test("Duplicate fan identifiers prefer a plausible live reading")
     func handlesDuplicatePrimaryFanIDs() {
         let detected = FanInfo(id: 0, name: "Detected", minimumRPM: 1_200, maximumRPM: 6_100)
@@ -179,5 +189,14 @@ struct FanControlRoutingTests {
         #expect(FanRuleSensorResolver.value(for: .highestCPU, specificKey: "CPU_EST", sensors: sensors) == nil)
         #expect(FanRuleSensorResolver.value(for: .highestCPU, sensors: sensors) == 65)
         #expect(FanRuleSensorResolver.value(for: .highestGPU, sensors: sensors) == nil)
+    }
+
+
+    @Test("Temperature sensor identity remains stable across refreshes")
+    func stableTemperatureSensorIdentity() {
+        let first = TemperatureSensor(name: "CPU Die", key: "CPU0", value: 50)
+        let refreshed = TemperatureSensor(name: "CPU Die", key: "CPU0", value: 51)
+
+        #expect(first.id == refreshed.id)
     }
 }

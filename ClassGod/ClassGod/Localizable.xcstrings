@@ -241,6 +241,8 @@
         }
       }
     },
+    "hackerdesktop.mark_done" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Mark as Done" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "标记为已完成" } } } },
+    "hackerdesktop.mark_pending" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Mark as Pending" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "标记为待办" } } } },
     "hackerdesktop.about_hint" : {
       "localizations" : {
         "en" : {
@@ -19726,6 +19728,7 @@
     "clipo.permission_description" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Clipboard capture works without it; saving selections and instant paste need permission." } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "剪贴板收录无需权限；保存选区和即时粘贴需要授权。" } } } },
     "clipo.permission_open" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Grant Access" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "授予权限" } } } },
     "clipo.save_failed" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Clipboard history could not be saved." } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "无法保存剪贴板历史。" } } } },
+    "clipo.import_invalid" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "The imported file contains an unsupported clipboard payload." } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "导入文件包含不受支持的剪贴板内容。" } } } },
     "clipo.import_too_large" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "This Clipo archive is too large to import safely." } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "该 Clipo 归档过大，无法安全导入。" } } } },
     "clipo.confirm.clear_title" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Clear Clipboard History?" } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "清空剪贴板历史？" } } } },
     "clipo.confirm.clear_message" : { "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Unpinned clips will be permanently deleted. Pinned clips are kept." } }, "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "未置顶的内容将被永久删除，已置顶内容会保留。" } } } },

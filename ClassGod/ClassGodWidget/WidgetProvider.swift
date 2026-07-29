@@ -13,13 +13,14 @@ struct WidgetProvider: TimelineProvider {
     }
     
     func getSnapshot(in context: Context, completion: @escaping (WidgetEntry) -> ()) {
-        let entry = loadEntry()
+        let entry = loadEntry(store: WidgetExtensionStore())
         completion(entry)
     }
     
     func getTimeline(in context: Context, completion: @escaping (Timeline<WidgetEntry>) -> ()) {
         let now = Date()
-        let entries = WidgetRefreshPolicy.timelineDates(startingAt: now).map(loadEntry(date:))
+        let store = WidgetExtensionStore()
+        let entries = WidgetRefreshPolicy.timelineDates(startingAt: now).map { loadEntry(date: $0, store: store) }
         let nextUpdate = WidgetRefreshPolicy.nextUpdate(after: now)
         let timeline = Timeline(entries: entries, policy: .after(nextUpdate))
         completion(timeline)
@@ -27,8 +28,7 @@ struct WidgetProvider: TimelineProvider {
     
     // MARK: - Data Loading
     
-    private func loadEntry(date: Date = Date()) -> WidgetEntry {
-        let store = WidgetExtensionStore()
+    private func loadEntry(date: Date = Date(), store: WidgetExtensionStore) -> WidgetEntry {
         let snapshotDate = store.date(forKey: .lastUpdate) ?? date
         return WidgetEntry(
             date: date,

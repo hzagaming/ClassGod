@@ -505,7 +505,7 @@ struct ClipoView: View {
 
     private var copiesToday: Int {
         let start = Calendar.current.startOfDay(for: Date())
-        return service.history.filter { $0.createdAt >= start }.count
+        return service.history.filter { $0.lastUsedAt >= start }.count
     }
 
     private var topSources: [(name: String, count: Int)] {

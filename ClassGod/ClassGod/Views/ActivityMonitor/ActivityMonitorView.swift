@@ -191,11 +191,14 @@ struct ActivityMonitorView: View {
             ScrollView(showsIndicators: true) {
                 LazyVStack(spacing: 0) {
                     ForEach(Array(viewModel.processes.enumerated()), id: \.element.id) { index, proc in
-                        processRow(proc, index: index)
-                            .contentShape(Rectangle())
-                            .onTapGesture {
-                                viewModel.selectedProcess = proc
-                            }
+                        Button {
+                            viewModel.selectedProcess = proc
+                        } label: {
+                            processRow(proc, index: index)
+                                .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel(Text(proc.name))
                     }
                 }
             }

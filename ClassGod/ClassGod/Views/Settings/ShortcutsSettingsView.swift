@@ -45,37 +45,37 @@ struct ShortcutsSettingsView: View {
 
                         Spacer()
 
-                        ZStack {
-                            RoundedRectangle(cornerRadius: 8 * zoomScale)
-                                .fill(isRecordingPopoverShortcut ? Color.white.opacity(0.12) : Color(white: 0.12))
-                                .frame(width: 120 * zoomScale, height: 36 * zoomScale)
-
-                            if isRecordingPopoverShortcut {
-                                RoundedRectangle(cornerRadius: 8 * zoomScale)
-                                    .stroke(Color.white.opacity(pulseOpacity), lineWidth: 1 * zoomScale)
-                                    .frame(width: 120 * zoomScale, height: 36 * zoomScale)
-                                    .scaleEffect(pulseScale)
-                            }
-
-                            Text(isRecordingPopoverShortcut ? String(localized: "shortcut.press_keys") : displayShortcut)
-                                .font(.system(size: 14 * zoomScale, weight: .medium, design: .monospaced))
-                                .foregroundStyle(isRecordingPopoverShortcut ? .white : .white.opacity(0.8))
-                                .lineLimit(1)
-                                .minimumScaleFactor(0.7)
-                        }
-                        .frame(width: 120, height: 36)
-                        .contentShape(Rectangle())
-                        .onTapGesture {
+                        Button {
                             SoundEffectManager.shared.playButtonClick()
                             if isRecordingPopoverShortcut {
                                 stopRecording()
                             } else {
                                 startRecording()
                             }
+                        } label: {
+                            ZStack {
+                                RoundedRectangle(cornerRadius: 8 * zoomScale)
+                                    .fill(isRecordingPopoverShortcut ? Color.white.opacity(0.12) : Color(white: 0.12))
+                                    .frame(width: 120 * zoomScale, height: 36 * zoomScale)
+
+                                if isRecordingPopoverShortcut {
+                                    RoundedRectangle(cornerRadius: 8 * zoomScale)
+                                        .stroke(Color.white.opacity(pulseOpacity), lineWidth: 1 * zoomScale)
+                                        .frame(width: 120 * zoomScale, height: 36 * zoomScale)
+                                        .scaleEffect(pulseScale)
+                                }
+
+                                Text(isRecordingPopoverShortcut ? String(localized: "shortcut.press_keys") : displayShortcut)
+                                    .font(.system(size: 14 * zoomScale, weight: .medium, design: .monospaced))
+                                    .foregroundStyle(isRecordingPopoverShortcut ? .white : .white.opacity(0.8))
+                                    .lineLimit(1)
+                                    .minimumScaleFactor(0.7)
+                            }
                         }
+                        .buttonStyle(.plain)
+                        .frame(width: 120 * zoomScale, height: 36 * zoomScale)
                         .accessibilityLabel(String(localized: "accessibility.record_global"))
                         .accessibilityHint(isRecordingPopoverShortcut ? String(localized: "accessibility.press_combination") : String(localized: "accessibility.tap_to_start"))
-                        .accessibilityAddTraits(.isButton)
 
                         Button(String(localized: "button.reset")) {
                             SoundEffectManager.shared.playButtonClick()
@@ -117,7 +117,7 @@ struct ShortcutsSettingsView: View {
         }
         .onChange(of: isRecordingPopoverShortcut) { _, recording in
             if recording && Anim.enabled {
-                withAnimation(.easeInOut(duration: 0.6).repeatForever(autoreverses: true)) {
+                withAnimation(.easeInOut(duration: Anim.duration).repeatForever(autoreverses: true)) {
                     pulseScale = 1.04
                     pulseOpacity = 0.4
                 }

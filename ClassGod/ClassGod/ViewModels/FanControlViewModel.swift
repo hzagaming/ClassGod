@@ -290,7 +290,7 @@ final class FanControlViewModel: ObservableObject {
     func refresh() {
         guard refreshGate.begin() else { return }
         // Save previous values for trend detection while still on MainActor
-        let previous = Dictionary(uniqueKeysWithValues: sensors.map { ($0.key, $0.value) })
+        let previous = sensors.reduce(into: [String: Double]()) { $0[$1.key] = $1.value }
 
         // Move the SMC / helper I/O off the main thread so the UI stays fluid.
         Task.detached(priority: .userInitiated) { [weak self] in

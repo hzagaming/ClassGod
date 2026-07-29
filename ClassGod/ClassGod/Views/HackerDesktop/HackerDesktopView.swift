@@ -183,15 +183,20 @@ struct HackerDesktopView: View {
                 VStack(spacing: 6 * zoomScale) {
                     ForEach($todoItems) { $item in
                         HStack(spacing: 8 * zoomScale) {
-                            Image(systemName: item.isDone ? "checkmark.square.fill" : "square")
-                                .font(.system(size: 12 * zoomScale))
-                                .foregroundStyle(item.isDone ? .green : .white.opacity(0.4))
-                                .onTapGesture {
-                                    SoundEffectManager.shared.playButtonClick()
-                                    HapticManager.shared.generic()
-                                    item.isDone.toggle()
-                                    saveData(immediate: true)
-                                }
+                            Button {
+                                SoundEffectManager.shared.playButtonClick()
+                                HapticManager.shared.generic()
+                                item.isDone.toggle()
+                                saveData(immediate: true)
+                            } label: {
+                                Image(systemName: item.isDone ? "checkmark.square.fill" : "square")
+                                    .font(.system(size: 12 * zoomScale))
+                                    .foregroundStyle(item.isDone ? .green : .white.opacity(0.4))
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityLabel(
+                                item.isDone ? Text("hackerdesktop.mark_pending") : Text("hackerdesktop.mark_done")
+                            )
                             TextField("hackerdesktop.task_placeholder", text: $item.text)
                                 .textFieldStyle(.plain)
                                 .font(.system(size: 11 * zoomScale, design: .monospaced))

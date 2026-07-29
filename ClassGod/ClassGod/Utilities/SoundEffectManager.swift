@@ -8,6 +8,14 @@
 import Foundation
 import AppKit
 
+nonisolated enum SoundPlaybackPolicy {
+    static func channelIndex(isPlaying: [Bool], limit: Int) -> Int? {
+        guard limit > 0 else { return nil }
+        if let idle = isPlaying.prefix(limit).firstIndex(of: false) { return idle }
+        return isPlaying.count < limit ? isPlaying.count : nil
+    }
+}
+
 enum SoundEffect: String, CaseIterable {
     case popoverOpen = "PopoverOpen"
     case popoverClose = "PopoverClose"
@@ -76,6 +84,9 @@ final class SoundEffectManager {
     }
 
     private var sounds: [String: NSSound] = [:]
+    private var overlapSounds: [String: [NSSound]] = [:]
+    private var glitchGeneration = 0
+    private let maximumOverlapChannels = 4
     
     private init() {}
 
@@ -85,9 +96,23 @@ final class SoundEffectManager {
     }
 
     private func playSound(named name: String, allowsOverlap: Bool = false) {
-        if !allowsOverlap {
-            sounds.values.forEach { $0.stop() }
+        if allowsOverlap {
+            var channels = overlapSounds[name] ?? []
+            guard let index = SoundPlaybackPolicy.channelIndex(
+                isPlaying: channels.map(\.isPlaying),
+                limit: maximumOverlapChannels
+            ) else { return }
+            if index == channels.count {
+                guard let sound = NSSound(data: makeToneData(named: name)) else { return }
+                channels.append(sound)
+                overlapSounds[name] = channels
+            }
+            channels[index].play()
+            return
         }
+
+        sounds.values.forEach { $0.stop() }
+        overlapSounds.values.flatMap { $0 }.forEach { $0.stop() }
 
         let sound: NSSound
         if let cached = sounds[name] {
@@ -221,8 +246,10 @@ final class SoundEffectManager {
     
     func playGlitchBurst(count: Int) {
         guard isEnabled else { return }
+        let generation = glitchGeneration
         for i in 0..<count {
-            DispatchQueue.main.asyncAfter(deadline: .now() + Double(i) * 0.05) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + Double(i) * 0.05) { [weak self] in
+                guard let self, self.glitchGeneration == generation else { return }
                 self.playGlitchSound()
             }
         }
@@ -230,11 +257,18 @@ final class SoundEffectManager {
     
     func playCloseBurst(count: Int) {
         guard isEnabled else { return }
+        let generation = glitchGeneration
         for i in 0..<count {
-            DispatchQueue.main.asyncAfter(deadline: .now() + Double(i) * 0.04) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + Double(i) * 0.04) { [weak self] in
+                guard let self, self.glitchGeneration == generation else { return }
                 self.playGlitchSound()
             }
         }
+    }
+
+    func cancelGlitchSounds() {
+        glitchGeneration &+= 1
+        overlapSounds.values.flatMap { $0 }.forEach { $0.stop() }
     }
     
     func playHackerRevealSound() {

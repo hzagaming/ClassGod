@@ -139,6 +139,25 @@ struct ClipoTests {
         #expect(result.count == 1)
     }
 
+    @Test("Clipboard payloads enforce per-representation and total budgets")
+    func validatesPayloadBudgets() {
+        let valid = ClipoPayload(items: [
+            ClipoPayloadItem(representations: [
+                ClipoRepresentation(type: "public.data", data: Data(repeating: 1, count: 4)),
+                ClipoRepresentation(type: "public.text", data: Data(repeating: 2, count: 4)),
+            ])
+        ])
+        let oversizedRepresentation = ClipoPayload(items: [
+            ClipoPayloadItem(representations: [
+                ClipoRepresentation(type: "public.data", data: Data(repeating: 1, count: 5))
+            ])
+        ])
+
+        #expect(ClipoPayloadPolicy.isWithinBudget(valid, representationLimit: 4, payloadLimit: 8))
+        #expect(!ClipoPayloadPolicy.isWithinBudget(valid, representationLimit: 4, payloadLimit: 7))
+        #expect(!ClipoPayloadPolicy.isWithinBudget(oversizedRepresentation, representationLimit: 4, payloadLimit: 8))
+    }
+
     @Test("Search combines query, fuzzy matching, and type filters")
     func filtersHistory() {
         let items = [

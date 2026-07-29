@@ -9,12 +9,13 @@ import IOKit
 // MARK: - Data Models
 
 nonisolated struct TemperatureSensor: Identifiable, Equatable {
-    let id = UUID()
     let name: String
     let key: String
     var value: Double
     var maxValue: Double = 100
     var isEstimated: Bool = false
+
+    var id: String { key }
 }
 
 nonisolated enum FanAvailability: Equatable {
@@ -79,6 +80,11 @@ nonisolated enum FanControlRouting {
 }
 
 nonisolated enum FanRecognition {
+    private static func isGenericName(_ name: String) -> Bool {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty || trimmed == "Detected" || trimmed.hasPrefix("Fan ")
+    }
+
     static func supportsSMCRPMDataType(_ type: String) -> Bool {
         type.lowercased() == "fpe2"
     }
@@ -111,9 +117,6 @@ nonisolated enum FanRecognition {
             if !current.hasPlausibleLiveRPM, candidate.hasPlausibleLiveRPM {
                 current.actualRPM = candidate.actualRPM
                 current.hasLiveRPM = true
-                if current.name.isEmpty || current.name == "Detected" || current.name.hasPrefix("Fan ") {
-                    current.name = candidate.name
-                }
             }
             if !current.hasPlausibleRPMRange, candidate.hasPlausibleRPMRange {
                 current.minimumRPM = candidate.minimumRPM
@@ -130,7 +133,8 @@ nonisolated enum FanRecognition {
             if current.targetRPM <= 0, candidate.targetRPM > 0 {
                 current.targetRPM = candidate.targetRPM
             }
-            if current.name.isEmpty || (current.name.hasPrefix("Fan ") && !candidate.name.hasPrefix("Fan ")) {
+            if current.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                || (isGenericName(current.name) && !isGenericName(candidate.name)) {
                 current.name = candidate.name
             }
             current.isControllable = current.isControllable || candidate.isControllable
@@ -619,16 +623,7 @@ nonisolated final class SMCService: @unchecked Sendable {
             sensors.append(contentsOf: thermalStateTemps)
         }
 
-        // 5. Deduplicate by key across helper/direct/IORegistry/thermal sources
-        var seenKeys = Set<String>()
-        sensors = sensors.filter { sensor in
-            let key = sensor.key
-            if seenKeys.contains(key) { return false }
-            seenKeys.insert(key)
-            return true
-        }
-
-        // 6. Final fallback: SystemMonitor estimates based on CPU load.
+        // 5. Final fallback: SystemMonitor estimates based on CPU load.
         // Always provide a CPU/GPU estimate if we don't have any real hardware readings
         // for those categories, so the UI isn't left with only coarse thermal-state sensors.
         let hasRealCPU = sensors.contains { !$0.isEstimated && ($0.name.contains("CPU") || $0.name.contains("Cluster")) }
@@ -640,6 +635,10 @@ nonisolated final class SMCService: @unchecked Sendable {
         if !hasRealGPU, est.gpu > 0 {
             sensors.append(TemperatureSensor(name: "GPU Estimated", key: "GPU", value: est.gpu, maxValue: 100, isEstimated: true))
         }
+
+        // 6. Deduplicate after every fallback so stable sensor IDs remain unique.
+        var seenKeys = Set<String>()
+        sensors = sensors.filter { seenKeys.insert($0.key).inserted }
 
         if fans.contains(where: { $0.availability == .controllable }) {
             fanAccessReason = nil

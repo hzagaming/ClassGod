@@ -156,6 +156,7 @@ final class LaunchAnimationManager {
     
     func cancelAnimation() {
         isAnimating = false
+        SoundEffectManager.shared.cancelGlitchSounds()
         // Force-close every window, including any stragglers
         for window in glitchWindows {
             window.alphaValue = 0
@@ -171,6 +172,7 @@ final class LaunchAnimationManager {
     
     private func finish() {
         isAnimating = false
+        SoundEffectManager.shared.cancelGlitchSounds()
         // Force-close any windows that might still be visible
         for window in glitchWindows {
             window.alphaValue = 0

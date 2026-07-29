@@ -19,28 +19,29 @@ struct ShortcutPicker: View {
 
     var body: some View {
         HStack {
-            Text(displayString)
-                .font(.system(size: 14 * zoomScale, weight: .medium, design: .monospaced))
-                .foregroundStyle(.white)
-                .frame(maxWidth: .infinity, minHeight: 28 * zoomScale, alignment: .center)
-                .background(isRecording ? Color.white.opacity(0.15) : Color(white: 0.1))
-                .overlay(
-                    Rectangle()
-                        .stroke(isRecording ? Color.white : Color.white.opacity(0.15), lineWidth: 1 * zoomScale)
-                
-                    .allowsHitTesting(false))
-                .onTapGesture {
-                    SoundEffectManager.shared.playButtonClick()
-                    HapticManager.shared.generic()
-                    if isRecording {
-                        stopRecording()
-                    } else {
-                        startRecording()
-                    }
+            Button {
+                SoundEffectManager.shared.playButtonClick()
+                HapticManager.shared.generic()
+                if isRecording {
+                    stopRecording()
+                } else {
+                    startRecording()
                 }
+            } label: {
+                Text(displayString)
+                    .font(.system(size: 14 * zoomScale, weight: .medium, design: .monospaced))
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity, minHeight: 28 * zoomScale, alignment: .center)
+                    .background(isRecording ? Color.white.opacity(0.15) : Color(white: 0.1))
+                    .overlay(
+                        Rectangle()
+                            .stroke(isRecording ? Color.white : Color.white.opacity(0.15), lineWidth: 1 * zoomScale)
+                            .allowsHitTesting(false)
+                    )
+                }
+                .buttonStyle(.plain)
                 .accessibilityLabel(String(localized: "accessibility.record_shortcut"))
                 .accessibilityHint(isRecording ? String(localized: "accessibility.press_combination") : String(localized: "accessibility.tap_to_record"))
-                .accessibilityAddTraits(.isButton)
 
             Button(action: {
                 SoundEffectManager.shared.playButtonClick()

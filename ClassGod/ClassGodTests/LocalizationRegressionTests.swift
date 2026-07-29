@@ -36,4 +36,15 @@ struct LocalizationRegressionTests {
         #expect(chinese.localizedString(forKey: "clipo.seconds_format", value: nil, table: nil) == "%.2f 秒")
     }
 
+    @Test("Clipo import and todo accessibility messages are localized")
+    func validatesNewSafetyAndAccessibilityLabels() throws {
+        let english = Locale(identifier: "en")
+        let chineseURL = try #require(Bundle.main.url(forResource: "zh-Hans", withExtension: "lproj"))
+        let chinese = try #require(Bundle(url: chineseURL))
+
+        #expect(String(localized: "clipo.import_invalid", bundle: .main, locale: english) == "The imported file contains an unsupported clipboard payload.")
+        #expect(chinese.localizedString(forKey: "hackerdesktop.mark_done", value: nil, table: nil) == "标记为已完成")
+        #expect(chinese.localizedString(forKey: "hackerdesktop.mark_pending", value: nil, table: nil) == "标记为待办")
+    }
+
 }
