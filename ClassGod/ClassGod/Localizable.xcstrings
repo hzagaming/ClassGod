@@ -2300,6 +2300,22 @@
         }
       }
     },
+    "destintab.selected_count" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld selected"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已选择 %lld 项"
+          }
+        }
+      }
+    },
     "destintab.sort_help" : {
       "localizations" : {
         "en" : {
@@ -2512,14 +2528,30 @@
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "Open in Encyclopedia"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "在百科中打开"
+          }
+        }
+      }
+    },
+    "error.toast.open_encyclopedia" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open in Encyclopedia →"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在错误百科中打开 →"
           }
         }
       }
@@ -9837,9 +9869,6 @@
       }
     },
     "Click a target to switch. Set shortcuts for instant access." : {
-
-    },
-    "Click to open in Encyclopedia →" : {
 
     },
     "Clock" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "时钟" } } } },

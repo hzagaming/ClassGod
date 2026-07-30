@@ -17,6 +17,32 @@ nonisolated enum ClipoShortcutDefaults {
     static let openModifiers = UInt32(NSEvent.ModifierFlags.command.union(.option).rawValue)
 }
 
+nonisolated struct ClipoPasteSession: Sendable {
+    private(set) var generation: UInt = 0
+    private(set) var isActive = false
+
+    mutating func begin() -> UInt {
+        generation &+= 1
+        isActive = true
+        return generation
+    }
+
+    mutating func cancel() {
+        generation &+= 1
+        isActive = false
+    }
+
+    func isCurrent(_ request: UInt) -> Bool {
+        request == generation
+    }
+
+    mutating func complete(_ request: UInt) -> Bool {
+        guard isActive, isCurrent(request) else { return false }
+        isActive = false
+        return true
+    }
+}
+
 @MainActor
 final class ClipoService: ObservableObject {
     static let shared = ClipoService()
@@ -44,6 +70,8 @@ final class ClipoService: ObservableObject {
     private var pasteTarget: NSRunningApplication?
     private var isTrackingApplications = false
     private var selectionTasks: [Int: Task<Void, Never>] = [:]
+    private var pasteSession = ClipoPasteSession()
+    private var pendingPasteSnapshot: ClipoPayload?
     private var saveTask: Task<Void, Never>?
     private let persistenceQueue = DispatchQueue(label: "com.hanazar.classgod.clipo.persistence", qos: .utility)
 
@@ -68,6 +96,7 @@ final class ClipoService: ObservableObject {
     }
 
     func stop() {
+        cancelPendingPaste()
         stopMonitoring()
         stopTrackingApplications()
         selectionTasks.values.forEach { $0.cancel() }
@@ -139,6 +168,7 @@ final class ClipoService: ObservableObject {
 
     func copy(_ item: ClipoItem) {
         guard write(item) else { return }
+        cancelPendingPaste()
         record(item)
         SoundEffectManager.shared.playButtonClick()
     }
@@ -149,8 +179,15 @@ final class ClipoService: ObservableObject {
             return
         }
 
-        let snapshot = settings.restoreClipboardAfterPaste ? capturePayload() : nil
+        let candidateSnapshot = settings.restoreClipboardAfterPaste ? capturePayload() : nil
+        let snapshot = ClipoPasteSnapshotPolicy.snapshot(
+            existing: pendingPasteSnapshot,
+            candidate: candidateSnapshot,
+            hasPendingPaste: pasteSession.isActive
+        )
         guard write(item) else { return }
+        let request = pasteSession.begin()
+        pendingPasteSnapshot = snapshot
         let writtenChangeCount = NSPasteboard.general.changeCount
         record(item)
         NotificationCenter.default.post(name: .clipoWillPaste, object: nil)
@@ -159,14 +196,28 @@ final class ClipoService: ObservableObject {
         }
         let delay = max(0.05, settings.pasteDelay)
         DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
-            self?.simulateKeyPress(keyCode: 9)
-            guard let snapshot, self?.settings.restoreClipboardAfterPaste == true else { return }
+            guard let self else { return }
+            guard ClipoDeferredPastePolicy.shouldExecute(
+                requestIsCurrent: self.pasteSession.isCurrent(request),
+                expectedChangeCount: writtenChangeCount,
+                currentChangeCount: NSPasteboard.general.changeCount
+            ) else {
+                if self.pasteSession.isCurrent(request) { self.cancelPendingPaste() }
+                return
+            }
+            self.simulateKeyPress(keyCode: 9)
+            guard let snapshot, self.settings.restoreClipboardAfterPaste else {
+                self.finishPendingPaste(request)
+                return
+            }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { [weak self] in
+                guard let self, self.pasteSession.isCurrent(request) else { return }
+                defer { self.finishPendingPaste(request) }
                 guard ClipoClipboardRestorePolicy.shouldRestore(
                     expectedChangeCount: writtenChangeCount,
                     currentChangeCount: NSPasteboard.general.changeCount
                 ) else { return }
-                self?.write(snapshot)
+                self.write(snapshot)
             }
         }
         SoundEffectManager.shared.playTabSaved()
@@ -186,8 +237,15 @@ final class ClipoService: ObservableObject {
             return
         }
 
-        let previous = settings.restoreClipboardAfterSave ? capturePayload() : nil
+        let previous = settings.restoreClipboardAfterSave
+            ? ClipoPasteSnapshotPolicy.snapshot(
+                existing: pendingPasteSnapshot,
+                candidate: capturePayload(),
+                hasPendingPaste: pasteSession.isActive
+            )
+            : nil
         let previousChangeCount = NSPasteboard.general.changeCount
+        cancelPendingPaste()
         simulateKeyPress(keyCode: 8)
 
         selectionTasks[slotNumber]?.cancel()
@@ -457,6 +515,17 @@ final class ClipoService: ObservableObject {
         up.flags = .maskCommand
         down.post(tap: .cghidEventTap)
         up.post(tap: .cghidEventTap)
+    }
+
+    private func cancelPendingPaste() {
+        pasteSession.cancel()
+        pendingPasteSnapshot = nil
+    }
+
+    private func finishPendingPaste(_ request: UInt) {
+        if pasteSession.complete(request) {
+            pendingPasteSnapshot = nil
+        }
     }
 
     private func load() {

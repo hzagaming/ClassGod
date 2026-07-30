@@ -86,6 +86,7 @@ struct WallpaperBrowserView: View {
             }
             .buttonStyle(.plain)
             .padding(.leading, 12 * zoomScale)
+            .accessibilityLabel(Text("button.close"))
             
             Spacer()
             
@@ -434,24 +435,6 @@ struct WallpaperBrowserView: View {
                         .clipShape(Circle())
                         .padding(5 * zoomScale)
                     
-                    // Delete button
-                    Button(action: {
-                        SoundEffectManager.shared.playButtonClick()
-                        itemToDelete = item
-                        showDeleteConfirmation = true
-                    }) {
-                        Image(systemName: "xmark")
-                            .font(.system(size: 7 * zoomScale, weight: .bold))
-                            .foregroundStyle(.white)
-                            .frame(width: 18 * zoomScale, height: 18 * zoomScale)
-                            .background(Color.red.opacity(0.85))
-                            .clipShape(Circle())
-                    }
-                    .buttonStyle(.plain)
-                    .padding(5 * zoomScale)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-                    .opacity(isHovered || isSelected ? 1 : 0)
-                    .animation(Anim.enabled ? .easeInOut(duration: Anim.duration) : nil, value: isHovered)
                 }
                 .aspectRatio(1, contentMode: .fit)
                 .clipShape(RoundedRectangle(cornerRadius: 8 * zoomScale))
@@ -480,6 +463,25 @@ struct WallpaperBrowserView: View {
             }
         }
         .buttonStyle(.plain)
+        .overlay(alignment: .topLeading) {
+            Button(action: {
+                SoundEffectManager.shared.playButtonClick()
+                itemToDelete = item
+                showDeleteConfirmation = true
+            }) {
+                Image(systemName: "xmark")
+                    .font(.system(size: 7 * zoomScale, weight: .bold))
+                    .foregroundStyle(.white)
+                    .frame(width: 18 * zoomScale, height: 18 * zoomScale)
+                    .background(Color.red.opacity(0.85))
+                    .clipShape(Circle())
+            }
+            .buttonStyle(.plain)
+            .padding(5 * zoomScale)
+            .opacity(isHovered || isSelected ? 1 : 0)
+            .animation(Anim.enabled ? .easeInOut(duration: Anim.duration) : nil, value: isHovered)
+            .accessibilityLabel(Text("button.delete"))
+        }
         .onHover { hovering in
             hoverItemID = hovering ? item.id : nil
         }

@@ -47,4 +47,16 @@ struct LocalizationRegressionTests {
         #expect(chinese.localizedString(forKey: "hackerdesktop.mark_pending", value: nil, table: nil) == "标记为待办")
     }
 
+    @Test("Toast navigation and selection counts are localized")
+    func validatesToastAndSelectionLabels() throws {
+        let english = Locale(identifier: "en")
+        let chineseURL = try #require(Bundle.main.url(forResource: "zh-Hans", withExtension: "lproj"))
+        let chinese = try #require(Bundle(url: chineseURL))
+
+        #expect(String(localized: "error.toast.open_encyclopedia", bundle: .main, locale: english) == "Open in Encyclopedia →")
+        #expect(chinese.localizedString(forKey: "error.toast.open_encyclopedia", value: nil, table: nil) == "在错误百科中打开 →")
+        #expect(chinese.localizedString(forKey: "error.open_in_encyclopedia", value: nil, table: nil) == "在百科中打开")
+        #expect(String(format: chinese.localizedString(forKey: "destintab.selected_count", value: nil, table: nil), 3) == "已选择 3 项")
+    }
+
 }

@@ -82,4 +82,24 @@ struct WallpaperSettingsTests {
         #expect(!WallpaperFilePolicy.isManaged(URL(fileURLWithPath: "/tmp/ClassGod/WallpapersBackup/item.mov"), in: directory))
         #expect(!WallpaperFilePolicy.isManaged(directory, in: directory))
     }
+
+    @Test("Stale video loads are rejected even when the URL is reused")
+    func rejectsStaleVideoLoads() {
+        let url = URL(fileURLWithPath: "/tmp/wallpaper.mov")
+        let staleRequest = UUID()
+        let currentRequest = UUID()
+
+        #expect(!WallpaperMediaLoadPolicy.shouldAccept(
+            requestURL: url,
+            requestID: staleRequest,
+            currentURL: url,
+            currentRequestID: currentRequest
+        ))
+        #expect(WallpaperMediaLoadPolicy.shouldAccept(
+            requestURL: url,
+            requestID: currentRequest,
+            currentURL: url,
+            currentRequestID: currentRequest
+        ))
+    }
 }

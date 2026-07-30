@@ -45,6 +45,68 @@ struct ClipoTests {
         #expect(!ClipoClipboardRestorePolicy.shouldRestore(expectedChangeCount: 10, currentChangeCount: 11))
     }
 
+    @Test("A newer paste supersedes pending paste callbacks")
+    func supersedesPendingPaste() {
+        var session = ClipoPasteSession()
+        let first = session.begin()
+        let second = session.begin()
+
+        #expect(session.isActive)
+        #expect(!session.isCurrent(first))
+        #expect(session.isCurrent(second))
+        let staleCompletion = session.complete(first)
+        let currentCompletion = session.complete(second)
+        #expect(!staleCompletion)
+        #expect(currentCompletion)
+        #expect(!session.isActive)
+        session.cancel()
+        #expect(!session.isCurrent(second))
+    }
+
+    @Test("Rapid paste keeps the original clipboard snapshot")
+    func preservesOriginalPasteSnapshot() {
+        let original = ClipoPayload(items: [
+            ClipoPayloadItem(representations: [
+                ClipoRepresentation(type: "public.text", data: Data("original".utf8))
+            ])
+        ])
+        let previousPaste = ClipoPayload(items: [
+            ClipoPayloadItem(representations: [
+                ClipoRepresentation(type: "public.text", data: Data("first paste".utf8))
+            ])
+        ])
+
+        #expect(ClipoPasteSnapshotPolicy.snapshot(
+            existing: original,
+            candidate: previousPaste,
+            hasPendingPaste: true
+        ) == original)
+        #expect(ClipoPasteSnapshotPolicy.snapshot(
+            existing: nil,
+            candidate: original,
+            hasPendingPaste: false
+        ) == original)
+    }
+
+    @Test("Deferred paste requires both the latest request and unchanged clipboard")
+    func validatesDeferredPasteOwnership() {
+        #expect(ClipoDeferredPastePolicy.shouldExecute(
+            requestIsCurrent: true,
+            expectedChangeCount: 10,
+            currentChangeCount: 10
+        ))
+        #expect(!ClipoDeferredPastePolicy.shouldExecute(
+            requestIsCurrent: false,
+            expectedChangeCount: 10,
+            currentChangeCount: 10
+        ))
+        #expect(!ClipoDeferredPastePolicy.shouldExecute(
+            requestIsCurrent: true,
+            expectedChangeCount: 10,
+            currentChangeCount: 11
+        ))
+    }
+
     @Test("Clipo panel shortcut does not conflict with the main panel shortcut")
     func usesDedicatedPanelShortcut() {
         let optionOnly = UInt32(NSEvent.ModifierFlags.option.rawValue)

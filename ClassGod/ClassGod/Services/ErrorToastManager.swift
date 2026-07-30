@@ -10,6 +10,21 @@ import SwiftUI
 import AppKit
 import Combine
 
+enum ErrorToastLayoutPolicy {
+    static func origin(
+        index: Int,
+        visibleFrame: NSRect,
+        size: NSSize,
+        padding: CGFloat = 20,
+        spacing: CGFloat = 10
+    ) -> NSPoint {
+        NSPoint(
+            x: visibleFrame.maxX - size.width - padding,
+            y: visibleFrame.maxY - size.height - padding - CGFloat(index) * (size.height + spacing)
+        )
+    }
+}
+
 // MARK: - Toast Item
 struct ErrorToastItem: Identifiable {
     let id: UUID
@@ -117,6 +132,7 @@ final class ErrorToastManager: ObservableObject {
                     window.orderOut(nil)
                 }
                 self.windows.removeValue(forKey: id)
+                self.relayoutWindows(animated: true)
             }
         }
     }
@@ -161,12 +177,13 @@ final class ErrorToastManager: ObservableObject {
 
         window.contentView = NSHostingView(rootView: view)
 
-        // Position in top-right corner
         if let screen = NSScreen.main {
-            let padding: CGFloat = 20
-            let x = screen.visibleFrame.maxX - width - padding
-            let y = screen.visibleFrame.maxY - height - padding - CGFloat(windows.count * 130)
-            window.setFrameOrigin(NSPoint(x: x, y: y))
+            let index = toasts.firstIndex(where: { $0.id == toast.id }) ?? windows.count
+            window.setFrameOrigin(ErrorToastLayoutPolicy.origin(
+                index: index,
+                visibleFrame: screen.visibleFrame,
+                size: NSSize(width: width, height: height)
+            ))
         }
 
         window.alphaValue = 0
@@ -179,6 +196,26 @@ final class ErrorToastManager: ObservableObject {
         }
 
         windows[toast.id] = window
+    }
+
+    private func relayoutWindows(animated: Bool) {
+        guard let visibleFrame = NSScreen.main?.visibleFrame else { return }
+        let updates = toasts.enumerated().compactMap { index, toast -> (NSWindow, NSPoint)? in
+            guard let window = windows[toast.id] else { return nil }
+            return (window, ErrorToastLayoutPolicy.origin(
+                index: index,
+                visibleFrame: visibleFrame,
+                size: window.frame.size
+            ))
+        }
+        guard animated else {
+            updates.forEach { $0.0.setFrameOrigin($0.1) }
+            return
+        }
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = Anim.duration
+            updates.forEach { $0.0.animator().setFrameOrigin($0.1) }
+        }
     }
 
     private func toastView(for toast: ErrorToastItem) -> ErrorToastView {
@@ -252,7 +289,7 @@ struct ErrorToastView: View {
                             .lineLimit(2)
 
                         if item.entry != nil {
-                            Text("Click to open in Encyclopedia →")
+                            Text("error.toast.open_encyclopedia")
                                 .font(.system(size: 9, weight: .bold, design: .monospaced))
                                 .foregroundStyle(Color(hex: "#007AFF"))
                         }

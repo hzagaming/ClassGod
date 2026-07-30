@@ -1,4 +1,5 @@
 import Foundation
+import AppKit
 import Testing
 @testable import ClassGod
 
@@ -26,5 +27,17 @@ struct ErrorToastTests {
 
         #expect(enriched.id == toast.id)
         #expect(enriched.entry?.id == entry.id)
+    }
+
+    @Test("Toast positions are compact and never overlap")
+    func laysOutToastStack() {
+        let frame = NSRect(x: 0, y: 0, width: 1_000, height: 800)
+        let size = NSSize(width: 380, height: 120)
+
+        let first = ErrorToastLayoutPolicy.origin(index: 0, visibleFrame: frame, size: size)
+        let second = ErrorToastLayoutPolicy.origin(index: 1, visibleFrame: frame, size: size)
+
+        #expect(first == NSPoint(x: 600, y: 660))
+        #expect(second == NSPoint(x: 600, y: 530))
     }
 }

@@ -72,6 +72,17 @@ enum WallpaperAudioPolicy {
     }
 }
 
+enum WallpaperMediaLoadPolicy {
+    static func shouldAccept(
+        requestURL: URL,
+        requestID: UUID,
+        currentURL: URL?,
+        currentRequestID: UUID
+    ) -> Bool {
+        requestURL == currentURL && requestID == currentRequestID
+    }
+}
+
 struct AnimatedImageView: NSViewRepresentable {
     let imageSource: CGImageSource
     let identifier: URL
@@ -233,6 +244,7 @@ struct VideoWallpaperView: NSViewRepresentable {
 final class VideoWallpaperNSView: NSView {
     private var playerLayer: AVPlayerLayer?
     private var currentURL: URL?
+    private var currentRequestID = UUID()
     private var endObserverToken: NSObjectProtocol?
     private var stateObserverToken: NSObjectProtocol?
     
@@ -247,6 +259,8 @@ final class VideoWallpaperNSView: NSView {
             return
         }
         currentURL = url
+        let requestID = UUID()
+        currentRequestID = requestID
         
         // Full cleanup of old player
         cleanupPlayer()
@@ -265,23 +279,36 @@ final class VideoWallpaperNSView: NSView {
         
         // Check playability asynchronously
         let asset = AVAsset(url: url)
-        Task { @MainActor in
+        Task { @MainActor [weak self] in
             do {
                 let isPlayable = try await asset.load(.isPlayable)
+                guard let self,
+                      WallpaperMediaLoadPolicy.shouldAccept(
+                          requestURL: url,
+                          requestID: requestID,
+                          currentURL: self.currentURL,
+                          currentRequestID: self.currentRequestID
+                      ) else { return }
                 guard isPlayable else {
                     print("[VideoWallpaper] Asset not playable: \(url.lastPathComponent)")
                     return
                 }
-                self.setupPlayer(with: asset, url: url)
+                self.setupPlayer(with: asset)
             } catch {
+                guard let self,
+                      !Task.isCancelled,
+                      WallpaperMediaLoadPolicy.shouldAccept(
+                          requestURL: url,
+                          requestID: requestID,
+                          currentURL: self.currentURL,
+                          currentRequestID: self.currentRequestID
+                      ) else { return }
                 print("[VideoWallpaper] Failed to load asset: \(error)")
             }
         }
     }
     
-    private func setupPlayer(with asset: AVAsset, url: URL) {
-        guard currentURL == url else { return } // Aborted if switched already
-        
+    private func setupPlayer(with asset: AVAsset) {
         let item = AVPlayerItem(asset: asset)
         let player = AVPlayer(playerItem: item)
         player.actionAtItemEnd = .none
@@ -355,6 +382,7 @@ final class VideoWallpaperNSView: NSView {
 
     func stopPlayback() {
         currentURL = nil
+        currentRequestID = UUID()
         cleanupPlayer()
     }
     

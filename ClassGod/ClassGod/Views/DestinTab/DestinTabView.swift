@@ -333,7 +333,7 @@ struct DestinTabView: View {
             // Bulk action bar
             if viewModel.isBulkMode {
                 HStack(spacing: 8) {
-                    Text("\(viewModel.selectedTabIDs.count) selected")
+                    Text(String(format: String(localized: "destintab.selected_count"), viewModel.selectedTabIDs.count))
                         .font(.system(size: 10 * zoomScale, design: .monospaced))
                         .foregroundStyle(.cyan)
 

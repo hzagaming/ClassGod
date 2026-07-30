@@ -288,6 +288,26 @@ enum ClipoClipboardRestorePolicy {
     }
 }
 
+enum ClipoDeferredPastePolicy {
+    static func shouldExecute(
+        requestIsCurrent: Bool,
+        expectedChangeCount: Int,
+        currentChangeCount: Int
+    ) -> Bool {
+        requestIsCurrent && expectedChangeCount == currentChangeCount
+    }
+}
+
+enum ClipoPasteSnapshotPolicy {
+    static func snapshot(
+        existing: ClipoPayload?,
+        candidate: ClipoPayload?,
+        hasPendingPaste: Bool
+    ) -> ClipoPayload? {
+        hasPendingPaste ? existing : candidate
+    }
+}
+
 enum ClipoPreview {
     static func make(from content: String, limit: Int = 180) -> String {
         let normalized = content.trimmingCharacters(in: .whitespacesAndNewlines)
