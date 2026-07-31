@@ -20,6 +20,8 @@ final class SuperSwitchViewModel: ObservableObject {
     @Published var showToast = false
     
     private var registeredTargetIDs: Set<UUID> = []
+    private var toastWorkItem: DispatchWorkItem?
+    private var toastState = TransientFeedbackState<String>()
     
     init() {
         _targets = Published(initialValue: StorageManager.shared.loadSwitchTargets())
@@ -27,6 +29,7 @@ final class SuperSwitchViewModel: ObservableObject {
     }
     
     deinit {
+        toastWorkItem?.cancel()
         let ids = registeredTargetIDs
         Task { @MainActor in
             for id in ids {
@@ -130,10 +133,16 @@ final class SuperSwitchViewModel: ObservableObject {
     }
     
     private func showToast(message: String) {
+        toastWorkItem?.cancel()
+        let token = toastState.present(message)
         toastMessage = message
         showToast = true
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
-            self?.showToast = false
+        let item = DispatchWorkItem { [weak self] in
+            guard let self, self.toastState.dismiss(ifCurrent: token) else { return }
+            self.showToast = false
+            self.toastWorkItem = nil
         }
+        toastWorkItem = item
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0, execute: item)
     }
 }

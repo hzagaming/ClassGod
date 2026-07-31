@@ -47,6 +47,7 @@ struct AddPanicAppView: View {
                         .clipShape(Circle())
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel(Text("button.close"))
                 
                 Spacer()
                 

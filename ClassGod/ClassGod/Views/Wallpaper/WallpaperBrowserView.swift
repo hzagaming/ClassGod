@@ -12,6 +12,7 @@ struct WallpaperBrowserView: View {
     @State private var itemToDelete: WallpaperItem?
     @State private var showDeleteConfirmation = false
     @State private var hoverItemID: UUID?
+    @State private var importTask: Task<Void, Never>?
     var onClose: () -> Void
     
     @ObservedObject private var prefs = PreferencesManager.shared
@@ -67,6 +68,10 @@ struct WallpaperBrowserView: View {
             }
         } message: { item in
             Text(String(format: String(localized: "wallpaper.delete_message"), item.name))
+        }
+        .onDisappear {
+            importTask?.cancel()
+            importTask = nil
         }
     }
     
@@ -503,12 +508,7 @@ struct WallpaperBrowserView: View {
     private func handleImport(result: Result<[URL], Error>) {
         switch result {
         case .success(let urls):
-            for url in urls {
-                engine.addWallpaper(from: url)
-            }
-            if !urls.isEmpty {
-                SoundEffectManager.shared.playWallpaperAdded()
-            }
+            importWallpapers(urls)
         case .failure(let error):
             print("[WallpaperBrowser] Import failed: \(error)")
         }
@@ -532,12 +532,25 @@ struct WallpaperBrowserView: View {
         }
         
         group.notify(queue: .main) {
-            for url in importedURLs {
-                WallpaperEngine.shared.addWallpaper(from: url)
+            importWallpapers(importedURLs)
+        }
+    }
+
+    private func importWallpapers(_ urls: [URL]) {
+        importTask?.cancel()
+        importTask = Task { @MainActor in
+            var importedCount = 0
+            for url in urls {
+                guard !Task.isCancelled else { return }
+                if await engine.addWallpaper(from: url) {
+                    importedCount += 1
+                }
             }
-            if !importedURLs.isEmpty {
+            guard !Task.isCancelled else { return }
+            if importedCount > 0 {
                 SoundEffectManager.shared.playWallpaperAdded()
             }
+            importTask = nil
         }
     }
 }

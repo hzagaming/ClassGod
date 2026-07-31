@@ -188,7 +188,9 @@ final class BrowserBypasserViewModel: ObservableObject {
         end tell
         """
         if let appleScript = NSAppleScript(source: script) {
-            appleScript.executeAndReturnError(nil)
+            var errorInfo: NSDictionary?
+            _ = appleScript.executeAndReturnError(&errorInfo)
+            guard errorInfo == nil else { return }
         }
     }
     
@@ -217,7 +219,9 @@ final class BrowserBypasserViewModel: ObservableObject {
         end tell
         """
         if let appleScript = NSAppleScript(source: script) {
-            appleScript.executeAndReturnError(nil)
+            var errorInfo: NSDictionary?
+            _ = appleScript.executeAndReturnError(&errorInfo)
+            guard errorInfo == nil else { return }
         }
     }
     
@@ -239,7 +243,9 @@ final class BrowserBypasserViewModel: ObservableObject {
         
         for (_, source) in scripts {
             if let appleScript = NSAppleScript(source: source) {
-                appleScript.executeAndReturnError(nil)
+                var errorInfo: NSDictionary?
+                _ = appleScript.executeAndReturnError(&errorInfo)
+                if errorInfo != nil { continue }
             }
         }
     }

@@ -41,6 +41,12 @@ enum ActivitySortKey {
     case name, cpu, memory, threads, pid, user, energy, diskRead, diskWrite, netRecv, netSent
 }
 
+enum ActivityPermissionPromptPolicy {
+    static func shouldShow(isMonitoring: Bool, processCount: Int) -> Bool {
+        isMonitoring && processCount == 0
+    }
+}
+
 @MainActor
 final class ActivityMonitorViewModel: ObservableObject {
     @Published var selectedTab: ActivityMonitorTab = .cpu
@@ -55,6 +61,12 @@ final class ActivityMonitorViewModel: ObservableObject {
     private var energyAccumulator: [Int32: UInt64] = [:]
     private let monitor = SystemMonitor.shared
     private var isMonitoring = false
+    private var permissionPromptWorkItem: DispatchWorkItem?
+
+    deinit {
+        timer?.invalidate()
+        permissionPromptWorkItem?.cancel()
+    }
     
     var processes: [ProcessMonitorInfo] {
         var list = monitor.processes
@@ -116,6 +128,7 @@ final class ActivityMonitorViewModel: ObservableObject {
         isMonitoring = true
         monitor.start(interval: 1.0)
         updateEnergyHistory()
+        schedulePermissionPromptIfNeeded()
         timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
             Task { @MainActor [weak self] in
                 self?.updateEnergyHistory()
@@ -124,11 +137,31 @@ final class ActivityMonitorViewModel: ObservableObject {
     }
     
     func stopMonitoring() {
+        permissionPromptWorkItem?.cancel()
+        permissionPromptWorkItem = nil
+        showPermissionPrompt = false
         guard isMonitoring else { return }
         isMonitoring = false
         timer?.invalidate()
         timer = nil
         monitor.stop()
+    }
+
+    private func schedulePermissionPromptIfNeeded() {
+        permissionPromptWorkItem?.cancel()
+        showPermissionPrompt = false
+        guard monitor.processes.isEmpty else { return }
+
+        let item = DispatchWorkItem { [weak self] in
+            guard let self else { return }
+            self.permissionPromptWorkItem = nil
+            self.showPermissionPrompt = ActivityPermissionPromptPolicy.shouldShow(
+                isMonitoring: self.isMonitoring,
+                processCount: self.monitor.processes.count
+            )
+        }
+        permissionPromptWorkItem = item
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0, execute: item)
     }
     
     func toggleSort(_ key: ActivitySortKey) {

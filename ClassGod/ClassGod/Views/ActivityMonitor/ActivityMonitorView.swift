@@ -33,14 +33,12 @@ struct ActivityMonitorView: View {
         }
         .onAppear {
             viewModel.startMonitoring()
-            checkPermissions()
         }
         .onDisappear {
             viewModel.stopMonitoring()
         }
         .onReceive(NotificationCenter.default.publisher(for: .activityMonitorWindowDidShow)) { _ in
             viewModel.startMonitoring()
-            checkPermissions()
         }
         .onReceive(NotificationCenter.default.publisher(for: .activityMonitorWindowWillHide)) { _ in
             viewModel.stopMonitoring()
@@ -62,6 +60,7 @@ struct ActivityMonitorView: View {
                     .clipShape(Circle())
             }
             .buttonStyle(.plain)
+            .accessibilityLabel(Text("button.close"))
             
             Image(systemName: "waveform.path.ecg.rectangle")
                 .font(.system(size: 14 * zoomScale))
@@ -125,6 +124,7 @@ struct ActivityMonitorView: View {
                     .foregroundStyle(.white.opacity(0.5))
             }
             .buttonStyle(.plain)
+            .accessibilityLabel(Text("button.close"))
         }
         .padding(.horizontal, 12 * zoomScale)
         .padding(.vertical, 8 * zoomScale)
@@ -547,18 +547,4 @@ struct ActivityMonitorView: View {
         return .green
     }
     
-    // MARK: - Permissions
-    
-    private func checkPermissions() {
-        // Process enumeration via KERN_PROC_ALL generally works without extra
-        // permissions for user-owned processes. If we can't read any processes,
-        // prompt the user. Full access to all processes may require root.
-        if monitor.processes.isEmpty {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                if monitor.processes.isEmpty {
-                    viewModel.showPermissionPrompt = true
-                }
-            }
-        }
-    }
 }

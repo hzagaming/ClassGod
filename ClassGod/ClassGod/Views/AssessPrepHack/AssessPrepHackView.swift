@@ -118,6 +118,7 @@ struct AssessPrepHackView: View {
                     .clipShape(Circle())
             }
             .buttonStyle(.plain)
+            .accessibilityLabel(Text("button.close"))
             
             Image(systemName: "bolt.shield.fill")
                 .font(.system(size: 22 * zoomScale))
@@ -145,6 +146,7 @@ struct AssessPrepHackView: View {
                     .symbolRenderingMode(.monochrome)
             }
             .buttonStyle(.plain)
+            .accessibilityLabel(Text("button.add"))
         }
         .padding()
         .background(Color(white: 0.03))
@@ -178,6 +180,7 @@ struct AssessPrepHackView: View {
                     .foregroundStyle(.white.opacity(0.5))
             }
             .buttonStyle(.plain)
+            .accessibilityLabel(Text("button.refresh"))
         }
         .padding(.horizontal, 12 * zoomScale)
         .padding(.vertical, 8 * zoomScale)

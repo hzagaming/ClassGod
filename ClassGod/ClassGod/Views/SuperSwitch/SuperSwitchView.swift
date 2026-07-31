@@ -92,6 +92,7 @@ struct SuperSwitchView: View {
                     .clipShape(Circle())
             }
             .buttonStyle(.plain)
+            .accessibilityLabel(Text("button.close"))
             
             VStack(alignment: .leading, spacing: 0) {
                 Text("SuperSwitch")
@@ -114,6 +115,7 @@ struct SuperSwitchView: View {
                     .symbolRenderingMode(.monochrome)
             }
             .buttonStyle(.plain)
+            .accessibilityLabel(Text("button.add"))
         }
         .padding(.horizontal)
         .padding(.vertical, 10 * zoomScale)

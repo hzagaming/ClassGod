@@ -196,6 +196,7 @@ struct DestinTabView: View {
                     .clipShape(Circle())
             }
             .buttonStyle(.plain)
+            .accessibilityLabel(Text("button.close"))
 
             VStack(alignment: .leading, spacing: 0) {
                 Text("DestinTab")
@@ -274,6 +275,7 @@ struct DestinTabView: View {
                                 .foregroundStyle(.white.opacity(0.4))
                         }
                         .buttonStyle(.plain)
+                        .accessibilityLabel(Text("button.clear"))
                     }
                 }
                 .padding(.horizontal, 8 * zoomScale)
@@ -728,6 +730,7 @@ struct TabRow: View {
                                 .foregroundStyle(.cyan)
                         }
                         .buttonStyle(.plain)
+                        .accessibilityLabel(Text(tab.isPinned ? String(localized: "destintab.unpin") : String(localized: "destintab.pin")))
 
                         Button(action: {
                             SoundEffectManager.shared.playButtonClick()
@@ -738,6 +741,7 @@ struct TabRow: View {
                                 .foregroundStyle(.white.opacity(0.7))
                         }
                         .buttonStyle(.plain)
+                        .accessibilityLabel(Text("button.edit"))
 
                         Button(action: {
                             SoundEffectManager.shared.playButtonClick()
@@ -748,6 +752,7 @@ struct TabRow: View {
                                 .foregroundStyle(.red.opacity(0.8))
                         }
                         .buttonStyle(.plain)
+                        .accessibilityLabel(Text("button.delete"))
                     }
                 }
             }

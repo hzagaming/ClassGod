@@ -35,6 +35,16 @@ enum WallpaperFilePolicy {
     }
 }
 
+enum WallpaperImportPolicy {
+    static func type(forExtension pathExtension: String) -> WallpaperType? {
+        switch pathExtension.lowercased() {
+        case "mp4", "mov", "m4v", "avi", "mkv", "webm": return .video
+        case "jpg", "jpeg", "png", "heic", "heif", "bmp", "tiff", "gif", "webp": return .image
+        default: return nil
+        }
+    }
+}
+
 enum WallpaperVolumePolicy {
     static func normalized(_ value: Double) -> Double {
         guard value.isFinite else { return 0 }
@@ -89,27 +99,24 @@ final class WallpaperEngine: ObservableObject {
     
     // MARK: - Playlist Management
     
-    func addWallpaper(from url: URL) {
-        let type: WallpaperType
-        let ext = url.pathExtension.lowercased()
-        if ["mp4", "mov", "m4v", "avi", "mkv", "webm"].contains(ext) {
-            type = .video
-        } else if ["jpg", "jpeg", "png", "heic", "heif", "bmp", "tiff", "gif", "webp"].contains(ext) {
-            type = .image
-        } else {
-            return
+    func addWallpaper(from url: URL) async -> Bool {
+        guard let type = WallpaperImportPolicy.type(forExtension: url.pathExtension) else { return false }
+        let hasSecurityScope = url.startAccessingSecurityScopedResource()
+        defer {
+            if hasSecurityScope {
+                url.stopAccessingSecurityScopedResource()
+            }
         }
-        
-        let filePath: String
-        if let copiedURL = copyWallpaperToAppSupport(original: url) {
-            filePath = copiedURL.path
-        } else {
-            filePath = url.path
+
+        guard let copiedURL = await copyWallpaperToAppSupport(original: url) else { return false }
+        if Task.isCancelled {
+            try? FileManager.default.removeItem(at: copiedURL)
+            return false
         }
         
         let item = WallpaperItem(
             name: url.deletingPathExtension().lastPathComponent,
-            filePath: filePath,
+            filePath: copiedURL.path,
             type: type
         )
         playlist.append(item)
@@ -118,6 +125,7 @@ final class WallpaperEngine: ObservableObject {
         if currentWallpaper == nil {
             selectWallpaper(item)
         }
+        return true
     }
     
     func removeWallpaper(_ item: WallpaperItem) {
@@ -144,17 +152,19 @@ final class WallpaperEngine: ObservableObject {
         return dir
     }
     
-    private func copyWallpaperToAppSupport(original: URL) -> URL? {
+    private func copyWallpaperToAppSupport(original: URL) async -> URL? {
         guard let dir = wallpapersDirectory() else { return nil }
         let uniqueName = "\(UUID().uuidString)_\(original.lastPathComponent)"
         let dest = dir.appendingPathComponent(uniqueName)
-        do {
-            try FileManager.default.copyItem(at: original, to: dest)
-            return dest
-        } catch {
-            print("[WallpaperEngine] Failed to copy wallpaper to app support: \(error)")
-            return nil
-        }
+        return await Task.detached(priority: .userInitiated) { () -> URL? in
+            do {
+                try FileManager.default.copyItem(at: original, to: dest)
+                return dest
+            } catch {
+                print("[WallpaperEngine] Failed to copy wallpaper to app support: \(error)")
+                return nil
+            }
+        }.value
     }
     
     private func deleteWallpaperFileIfManaged(path: String) {

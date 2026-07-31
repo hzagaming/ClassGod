@@ -79,6 +79,7 @@ struct PermissionCenterView: View {
                     .clipShape(Circle())
             }
             .buttonStyle(.plain)
+            .accessibilityLabel(Text("button.close"))
             
             Image(systemName: "checkmark.shield.fill")
                 .font(.system(size: 14 * zoomScale))
@@ -415,6 +416,7 @@ struct PermissionOnboardingView: View {
                             .clipShape(Circle())
                     }
                     .buttonStyle(.plain)
+                    .accessibilityLabel(Text("button.close"))
                 }
                 
                 if pendingPermissions.isEmpty {

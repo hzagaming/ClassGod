@@ -392,7 +392,9 @@ final class AssessPrepHackViewModel: ObservableObject {
         """
         
         if let appleScript = NSAppleScript(source: script) {
-            appleScript.executeAndReturnError(nil)
+            var errorInfo: NSDictionary?
+            _ = appleScript.executeAndReturnError(&errorInfo)
+            guard errorInfo == nil else { return }
         }
     }
     

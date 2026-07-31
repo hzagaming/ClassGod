@@ -15,7 +15,8 @@ struct ErrorDetailView: View {
     @ObservedObject private var prefs = PreferencesManager.shared
     @State private var selectedSolutionIndex: Int? = nil
     @State private var selectedCodeExample: CodeExample? = nil
-    @State private var copiedCode = false
+    @State private var copyFeedback = TransientFeedbackState<UUID>()
+    @State private var copyWorkItem: DispatchWorkItem?
     @State private var showRelated = false
     
     private var zoomScale: CGFloat { CGFloat(prefs.preferences.windowZoomScale) }
@@ -48,6 +49,11 @@ struct ErrorDetailView: View {
                 .stroke(Color.white.opacity(0.12), lineWidth: 1 * zoomScale)
         
             .allowsHitTesting(false))
+        .onDisappear {
+            copyWorkItem?.cancel()
+            copyWorkItem = nil
+            copyFeedback.reset()
+        }
     }
     
     // MARK: - Header
@@ -66,6 +72,7 @@ struct ErrorDetailView: View {
                         .clipShape(Circle())
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel(Text("button.close"))
                 .padding(.leading, 12 * zoomScale)
                 
                 Spacer()
@@ -245,6 +252,7 @@ struct ErrorDetailView: View {
             SectionHeader(icon: "curlybraces", title: String(localized: "error.code_examples"), zoomScale: zoomScale)
             
             ForEach(entry.codeExamples) { example in
+                let isCopied = copyFeedback.value == example.id
                 VStack(alignment: .leading, spacing: 6 * zoomScale) {
                     HStack {
                         Text(example.title)
@@ -257,18 +265,23 @@ struct ErrorDetailView: View {
                             SoundEffectManager.shared.playButtonClick()
                             NSPasteboard.general.clearContents()
                             NSPasteboard.general.setString(example.goodCode, forType: .string)
-                            copiedCode = true
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                                copiedCode = false
+                            copyWorkItem?.cancel()
+                            let token = copyFeedback.present(example.id)
+                            let item = DispatchWorkItem {
+                                if copyFeedback.dismiss(ifCurrent: token) {
+                                    copyWorkItem = nil
+                                }
                             }
+                            copyWorkItem = item
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 2, execute: item)
                         }) {
                             HStack(spacing: 3 * zoomScale) {
-                                Image(systemName: copiedCode ? "checkmark" : "doc.on.doc")
+                                Image(systemName: isCopied ? "checkmark" : "doc.on.doc")
                                     .font(.system(size: 8 * zoomScale))
-                                Text(copiedCode ? String(localized: "error.copied") : String(localized: "error.copy_fix"))
+                                Text(isCopied ? String(localized: "error.copied") : String(localized: "error.copy_fix"))
                                     .font(.system(size: 8 * zoomScale, design: .monospaced))
                             }
-                            .foregroundStyle(copiedCode ? .green : .white.opacity(0.5))
+                            .foregroundStyle(isCopied ? .green : .white.opacity(0.5))
                         }
                         .buttonStyle(.plain)
                     }

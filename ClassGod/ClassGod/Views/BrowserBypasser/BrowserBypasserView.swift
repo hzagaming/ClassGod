@@ -103,6 +103,7 @@ struct BrowserBypasserView: View {
                     .clipShape(Circle())
             }
             .buttonStyle(.plain)
+            .accessibilityLabel(Text("button.close"))
             
             Image(systemName: "lock.open.fill")
                 .font(.system(size: 22 * zoomScale))
@@ -130,6 +131,7 @@ struct BrowserBypasserView: View {
                     .symbolRenderingMode(.monochrome)
             }
             .buttonStyle(.plain)
+            .accessibilityLabel(Text("button.add"))
         }
         .padding(.horizontal)
         .padding(.vertical, 10 * zoomScale)

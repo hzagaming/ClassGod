@@ -55,7 +55,19 @@ ClassGod/
     └── Settings/                  # 设置面板
 ```
 
-## 最新公告：v1.5.17
+## 最新公告：v1.5.18
+
+### UIUX / 壁纸导入 / 状态生命周期优化
+
+- [x] **全功能 VoiceOver**：AssessPrepHack、SuperSwitch、BrowserBypasser、DestinTab、Activity Monitor、Permission Center 和错误百科的关键图标按钮补齐可读名称
+- [x] **Toast / 复制反馈竞态**：SuperSwitch 连续 Toast 与错误百科逐项复制都只由最新回调关闭，不再串状态或提前消失
+- [x] **Activity Monitor 生命周期**：窗口隐藏会取消权限延迟检查，不再由过期回调重新显示提示
+- [x] **壁纸导入响应**：大图片/视频在后台复制，安全作用域及时释放，成功音效只在真实导入后播放
+- [x] **SFX / BGM 稳定性**：保留现有互斥短音效与壁纸播放规则，并完成生命周期回归检查
+- [x] **质量回归**：主应用 78 项与 Helper 17 项测试通过，并完成 Debug / Release、Analyze 与资源校验
+- [x] **版本号更新**：实际构建产物更新为 v1.5.18 (Build 43)
+
+## 历史公告：v1.5.17
 
 ### UIUX / Clipo / 壁纸 BGM 生命周期修复
 

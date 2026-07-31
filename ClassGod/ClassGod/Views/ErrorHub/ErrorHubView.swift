@@ -145,6 +145,7 @@ struct ErrorHubView: View {
                     .clipShape(Circle())
             }
             .buttonStyle(.plain)
+            .accessibilityLabel(Text("button.close"))
             .padding(.leading, 12 * zoomScale)
             
             Spacer()
@@ -192,6 +193,7 @@ struct ErrorHubView: View {
                         .foregroundStyle(.white.opacity(0.4))
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel(Text("button.clear"))
             }
         }
         .padding(8 * zoomScale)

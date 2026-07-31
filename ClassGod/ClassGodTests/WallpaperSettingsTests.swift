@@ -83,6 +83,13 @@ struct WallpaperSettingsTests {
         #expect(!WallpaperFilePolicy.isManaged(directory, in: directory))
     }
 
+    @Test("Wallpaper imports accept only supported media types")
+    func validatesWallpaperImportTypes() {
+        #expect(WallpaperImportPolicy.type(forExtension: "MP4") == .video)
+        #expect(WallpaperImportPolicy.type(forExtension: "jpg") == .image)
+        #expect(WallpaperImportPolicy.type(forExtension: "txt") == nil)
+    }
+
     @Test("Stale video loads are rejected even when the URL is reused")
     func rejectsStaleVideoLoads() {
         let url = URL(fileURLWithPath: "/tmp/wallpaper.mov")
