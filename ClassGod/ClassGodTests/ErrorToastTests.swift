@@ -40,4 +40,21 @@ struct ErrorToastTests {
         #expect(first == NSPoint(x: 600, y: 660))
         #expect(second == NSPoint(x: 600, y: 530))
     }
+
+    @Test("Automatic dismissal can be cancelled")
+    func cancelsAutomaticDismissal() {
+        let scheduler = ErrorToastDismissalScheduler()
+        let first = UUID()
+        let second = UUID()
+
+        scheduler.schedule(id: first, after: 60) {}
+        scheduler.schedule(id: second, after: 60) {}
+        #expect(scheduler.pendingIDs == [first, second])
+
+        scheduler.cancel(id: first)
+        #expect(scheduler.pendingIDs == [second])
+
+        scheduler.cancelAll()
+        #expect(scheduler.pendingIDs.isEmpty)
+    }
 }

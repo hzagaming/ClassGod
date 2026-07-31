@@ -16,6 +16,31 @@ struct RegressionPolicyTests {
         #expect(ordered.map(\.id) == [second.id, fourth.id, first.id, third.id])
     }
 
+    @Test("Bulk selection only includes rendered tabs")
+    func limitsBulkSelectionToRenderedTabs() {
+        let tabs = (1...4).map {
+            BrowserTab(title: "Tab \($0)", url: "https://\($0).example", browser: .safari)
+        }
+
+        let selected = TabSelectionPolicy.visibleIDs(in: tabs, limit: 2)
+
+        #expect(selected == Set(tabs.prefix(2).map(\.id)))
+        #expect(!selected.contains(tabs[2].id))
+    }
+
+    @Test("Stale bulk selection is removed after a reload")
+    func removesStaleBulkSelection() {
+        let existing = BrowserTab(title: "Existing", url: "https://existing.example", browser: .safari)
+        let removed = BrowserTab(title: "Removed", url: "https://removed.example", browser: .chrome)
+
+        let reconciled = TabSelectionPolicy.reconciled(
+            selectedIDs: [existing.id, removed.id],
+            tabs: [existing]
+        )
+
+        #expect(reconciled == [existing.id])
+    }
+
     @Test("Preference export replaces an existing file")
     func replacesExistingExportFile() throws {
         let directory = FileManager.default.temporaryDirectory

@@ -347,7 +347,7 @@ struct DestinTabView: View {
                     Button("destintab.all") {
                         SoundEffectManager.shared.playButtonClick()
                         HapticManager.shared.generic()
-                        viewModel.selectAllVisible()
+                        viewModel.selectAllVisible(limit: prefs.preferences.maxTabsInPopover)
                     }
                     .font(.system(size: 10 * zoomScale, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.5))

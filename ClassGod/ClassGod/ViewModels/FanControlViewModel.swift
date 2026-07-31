@@ -75,6 +75,8 @@ final class FanControlViewModel: ObservableObject {
     private var refreshGate = FanRefreshGate()
     private var shouldApplySavedModeAfterRefresh = false
     private var rescanGate = FanRefreshGate()
+    private var toastWorkItem: DispatchWorkItem?
+    private var toastState = TransientFeedbackState<String>()
 
     var highestTemperature: Double {
         sensors.filter { !$0.isEstimated }.map(\.value).max() ?? 0
@@ -153,6 +155,7 @@ final class FanControlViewModel: ObservableObject {
         autoMaxTimer?.invalidate()
         gradualTimer?.invalidate()
         boostTimer?.invalidate()
+        toastWorkItem?.cancel()
         pendingRPMWriteTokens.removeAll()
         NSWorkspace.shared.notificationCenter.removeObserver(self, name: NSWorkspace.willSleepNotification, object: nil)
         NSWorkspace.shared.notificationCenter.removeObserver(self, name: NSWorkspace.didWakeNotification, object: nil)
@@ -248,6 +251,10 @@ final class FanControlViewModel: ObservableObject {
     }
 
     @objc func stopMonitoring() {
+        toastWorkItem?.cancel()
+        toastWorkItem = nil
+        toastState.reset()
+        showToast = false
         guard isMonitoring else { return }
         isMonitoring = false
         shouldApplySavedModeAfterRefresh = false
@@ -854,11 +861,17 @@ final class FanControlViewModel: ObservableObject {
     }
 
     func showToast(message: String) {
+        toastWorkItem?.cancel()
+        let token = toastState.present(message)
         toastMessage = message
         showToast = true
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
-            self?.showToast = false
+        let item = DispatchWorkItem { [weak self] in
+            guard let self, self.toastState.dismiss(ifCurrent: token) else { return }
+            self.showToast = false
+            self.toastWorkItem = nil
         }
+        toastWorkItem = item
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5, execute: item)
     }
 
     private func showError(message: String) {

@@ -421,11 +421,12 @@ struct HackerRevealView: View {
             }
             .padding(.horizontal, 8)
         }
-        .onAppear {
-            startSequence()
+        .task {
+            await runSequence()
         }
         .onDisappear {
             scrambleTimer?.invalidate()
+            scrambleTimer = nil
         }
     }
     
@@ -452,74 +453,51 @@ struct HackerRevealView: View {
         return .white.opacity(0.8)
     }
     
-    private func startSequence() {
-        // Phase 1: Show "Hanazar Products" stable for 0.6s
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
-            guard phase == .showInitial else { return }
-            phase = .scrambling
-            startScramble()
-        }
-    }
-    
-    private func startScramble() {
+    private func runSequence() async {
+        guard await wait(.milliseconds(600)), phase == .showInitial else { return }
+        phase = .scrambling
         topChars = sourceTop
         topSettled = Array(repeating: false, count: 7)
-        
-        // Rapid scramble
         scrambleTimer = Timer.scheduledTimer(withTimeInterval: 0.04, repeats: true) { _ in
             for i in 0..<7 where !topSettled[i] {
                 topChars[i] = scramble.randomElement()!
             }
-            // Also scramble bottom line
             for i in 0..<8 {
                 bottomChars[i] = scramble.randomElement()!
             }
         }
-        
-        // Settle letters one by one: H a n a z a r -> H a c k e r
-        let settleDelays: [(index: Int, delay: Double)] = [
-            (0, 0.2),   // H -> H
-            (1, 0.35),  // a -> a
-            (2, 0.55),  // n -> c
-            (3, 0.75),  // a -> k
-            (4, 0.95),  // z -> e
-            (5, 1.15),  // a -> r
-            (6, 1.35),  // r -> fade out
-        ]
-        
-        for (index, delay) in settleDelays {
-            DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
-                guard phase == .scrambling || phase == .settling else { return }
-                
-                if index == 6 {
-                    // Extra 'r' slides away and fades
-                    withAnimation(.easeOut(duration: 0.25)) {
-                        extraROffset = 20
-                        extraRAlpha = 0
-                    }
-                } else {
-                    topSettled[index] = true
+
+        for (index, delay) in [200, 150, 200, 200, 200, 200, 200].enumerated() {
+            guard await wait(.milliseconds(delay)), phase == .scrambling || phase == .settling else { return }
+            if index == 6 {
+                withAnimation(.easeOut(duration: 0.25)) {
+                    extraROffset = 20
+                    extraRAlpha = 0
                 }
-                
-                // After last letter settles
-                if index == 5 {
-                    phase = .settling
-                    // Fade bottom line
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                        withAnimation(.easeOut(duration: 0.3)) {
-                            bottomOpacity = 0
-                        }
-                        // Glow effect
-                        withAnimation(.easeInOut(duration: 0.4)) {
-                            overallGlow = 1.0
-                        }
-                        // Brief pause on "Hacker" alone
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                            phase = .showHacker
-                        }
-                    }
+                withAnimation(.easeOut(duration: 0.3)) {
+                    bottomOpacity = 0
                 }
+                withAnimation(.easeInOut(duration: 0.4)) {
+                    overallGlow = 1.0
+                }
+                scrambleTimer?.invalidate()
+                scrambleTimer = nil
+            } else {
+                topSettled[index] = true
             }
+            if index == 5 { phase = .settling }
+        }
+
+        guard await wait(.milliseconds(500)) else { return }
+        phase = .showHacker
+    }
+
+    private func wait(_ duration: Duration) async -> Bool {
+        do {
+            try await Task.sleep(for: duration)
+            return !Task.isCancelled
+        } catch {
+            return false
         }
     }
 }

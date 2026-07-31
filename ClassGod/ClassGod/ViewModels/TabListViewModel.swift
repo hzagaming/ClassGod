@@ -39,6 +39,16 @@ enum TabOrderingPolicy {
     }
 }
 
+enum TabSelectionPolicy {
+    static func visibleIDs(in tabs: [BrowserTab], limit: Int) -> Set<UUID> {
+        Set(tabs.prefix(max(0, limit)).map(\.id))
+    }
+
+    static func reconciled(selectedIDs: Set<UUID>, tabs: [BrowserTab]) -> Set<UUID> {
+        selectedIDs.intersection(tabs.map(\.id))
+    }
+}
+
 @MainActor
 final class TabListViewModel: ObservableObject {
     @Published var tabs: [BrowserTab] = []
@@ -125,6 +135,7 @@ final class TabListViewModel: ObservableObject {
     func loadTabs() {
         tabs = StorageManager.shared.loadTabs()
         applySort()
+        selectedTabIDs = TabSelectionPolicy.reconciled(selectedIDs: selectedTabIDs, tabs: tabs)
         refreshShortcuts()
     }
     
@@ -179,8 +190,9 @@ final class TabListViewModel: ObservableObject {
             ShortcutManager.shared.unregisterShortcut(for: tab.id)
             registeredTabIDs.remove(tab.id)
         }
-        tabs.removeAll { selectedTabIDs.contains($0.id) }
-        let count = selectedTabIDs.count
+        let deletedIDs = Set(toDelete.map(\.id))
+        tabs.removeAll { deletedIDs.contains($0.id) }
+        let count = toDelete.count
         selectedTabIDs.removeAll()
         applySort()
         saveTabs()
@@ -288,8 +300,8 @@ final class TabListViewModel: ObservableObject {
         }
     }
     
-    func selectAllVisible() {
-        selectedTabIDs = Set(filteredTabs.map(\.id))
+    func selectAllVisible(limit: Int) {
+        selectedTabIDs = TabSelectionPolicy.visibleIDs(in: visibleTabs, limit: limit)
     }
     
     func deselectAll() {

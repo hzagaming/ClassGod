@@ -25,6 +25,31 @@ enum ErrorToastLayoutPolicy {
     }
 }
 
+final class ErrorToastDismissalScheduler {
+    private var workItems: [UUID: DispatchWorkItem] = [:]
+
+    var pendingIDs: Set<UUID> { Set(workItems.keys) }
+
+    func schedule(id: UUID, after delay: TimeInterval, action: @escaping () -> Void) {
+        cancel(id: id)
+        let item = DispatchWorkItem { [weak self] in
+            self?.workItems.removeValue(forKey: id)
+            action()
+        }
+        workItems[id] = item
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: item)
+    }
+
+    func cancel(id: UUID) {
+        workItems.removeValue(forKey: id)?.cancel()
+    }
+
+    func cancelAll() {
+        workItems.values.forEach { $0.cancel() }
+        workItems.removeAll()
+    }
+}
+
 // MARK: - Toast Item
 struct ErrorToastItem: Identifiable {
     let id: UUID
@@ -68,6 +93,7 @@ final class ErrorToastManager: ObservableObject {
     
     @Published private(set) var toasts: [ErrorToastItem] = []
     private var windows: [UUID: NSWindow] = [:]
+    private let dismissalScheduler = ErrorToastDismissalScheduler()
     
     private init() {}
     
@@ -77,7 +103,7 @@ final class ErrorToastManager: ObservableObject {
         let toast = ErrorToastItem(title: title, message: message, severity: severity, entry: entry, timestamp: Date())
         toasts.append(toast)
         presentToastWindow(toast)
-        DispatchQueue.main.asyncAfter(deadline: .now() + 8) { [weak self] in
+        dismissalScheduler.schedule(id: toast.id, after: 8) { [weak self] in
             self?.dismiss(id: toast.id)
         }
         return toast.id
@@ -123,6 +149,7 @@ final class ErrorToastManager: ObservableObject {
     func dismiss(id: UUID) {
         DispatchQueue.main.async { [weak self] in
             guard let self = self else { return }
+            self.dismissalScheduler.cancel(id: id)
             self.toasts.removeAll { $0.id == id }
             if let window = self.windows[id] {
                 NSAnimationContext.runAnimationGroup { ctx in
@@ -141,6 +168,7 @@ final class ErrorToastManager: ObservableObject {
     func dismissAll() {
         DispatchQueue.main.async { [weak self] in
             guard let self = self else { return }
+            self.dismissalScheduler.cancelAll()
             for (_, window) in self.windows {
                 NSAnimationContext.runAnimationGroup { ctx in
                     ctx.duration = Anim.duration
