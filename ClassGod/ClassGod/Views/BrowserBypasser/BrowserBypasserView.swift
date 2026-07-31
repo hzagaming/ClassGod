@@ -335,14 +335,18 @@ struct RuleRow: View {
     
     @State private var isHovered = false
     @State private var isPressed = false
+    @State private var pressResetWorkItem: DispatchWorkItem?
     
     var body: some View {
         Button(action: {
             SoundEffectManager.shared.playButtonClick()
             Anim.with { isPressed = true }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.06) {
+            pressResetWorkItem?.cancel()
+            let item = DispatchWorkItem {
                 Anim.with { isPressed = false }
             }
+            pressResetWorkItem = item
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.06, execute: item)
             onRun()
         }) {
             HStack(spacing: 10 * zoomScale) {
@@ -417,6 +421,11 @@ struct RuleRow: View {
             } else {
                 isHovered = hovering
             }
+        }
+        .onDisappear {
+            pressResetWorkItem?.cancel()
+            pressResetWorkItem = nil
+            isPressed = false
         }
     }
     

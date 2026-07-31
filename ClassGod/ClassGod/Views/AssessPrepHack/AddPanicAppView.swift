@@ -182,6 +182,7 @@ struct AddPanicAppView: View {
                                             .allowsHitTesting(false))
                                 }
                                 .buttonStyle(.plain)
+                                .accessibilityLabel(Text(String(format: String(localized: "accessibility.select_icon_format"), icon)))
                             }
                         }
                     }

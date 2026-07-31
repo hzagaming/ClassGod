@@ -349,7 +349,7 @@ struct FanControlView: View {
                                 .clipShape(Capsule())
                         }
                         .buttonStyle(.plain)
-                        .accessibilityLabel(Text("clipo.clear_search"))
+                        .accessibilityLabel(Text(filter.displayName))
                     }
                 }
 
@@ -367,7 +367,7 @@ struct FanControlView: View {
                     if !viewModel.sensorSearchText.isEmpty {
                         Button(action: {
                             SoundEffectManager.shared.playButtonClick()
-                        HapticManager.shared.generic()
+                            HapticManager.shared.generic()
                             viewModel.sensorSearchText = ""
                         }) {
                             Image(systemName: "xmark.circle.fill")
@@ -375,6 +375,7 @@ struct FanControlView: View {
                                 .foregroundStyle(.white.opacity(0.3))
                         }
                         .buttonStyle(.plain)
+                        .accessibilityLabel(Text("button.clear"))
                     }
                 }
                 .padding(.horizontal, 6 * zoomScale)

@@ -129,6 +129,10 @@ struct ErrorHubView: View {
         .onChange(of: selectedTag) { _, _ in
             if !searchQuery.isEmpty { debouncedSearch(query: searchQuery) }
         }
+        .onDisappear {
+            searchTask?.cancel()
+            searchTask = nil
+        }
     }
     
     // MARK: - Title Bar

@@ -410,6 +410,7 @@ struct PanicAppRow: View {
             }
             .buttonStyle(.plain)
             .help(String(format: String(localized: "panic.execute_help"), app.bypassTechnique.displayName))
+            .accessibilityLabel(Text(String(format: String(localized: "panic.execute_help"), app.bypassTechnique.displayName)))
             
             VStack(alignment: .leading, spacing: 2) {
                 Text(app.name)
@@ -430,6 +431,10 @@ struct PanicAppRow: View {
                     .foregroundStyle(app.isEnabled ? .green : .white.opacity(0.15))
             }
             .buttonStyle(.plain)
+            .accessibilityLabel(Text(app.isEnabled
+                ? String(format: String(localized: "accessibility.disable_item_format"), app.name)
+                : String(format: String(localized: "accessibility.enable_item_format"), app.name)
+            ))
         }
         .padding(.horizontal, 12 * zoomScale)
         .padding(.vertical, 8 * zoomScale)

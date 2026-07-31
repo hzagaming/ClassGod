@@ -67,6 +67,7 @@ struct HoverScaleModifier: ViewModifier {
 struct BounceModifier: ViewModifier {
     @State private var scale: CGFloat = 1.0
     @State private var hasAnimated = false
+    @State private var resetWorkItem: DispatchWorkItem?
     let intensity: CGFloat
     
     func body(content: Content) -> some View {
@@ -79,12 +80,19 @@ struct BounceModifier: ViewModifier {
                 withAnimation(.easeOut(duration: dur * 2)) {
                     scale = intensity
                 }
-                DispatchQueue.main.asyncAfter(deadline: .now() + dur * 2) {
+                let item = DispatchWorkItem {
                     guard dur > 0 else { return }
                     withAnimation(.easeOut(duration: dur * 2)) {
                         scale = 1.0
                     }
                 }
+                resetWorkItem = item
+                DispatchQueue.main.asyncAfter(deadline: .now() + dur * 2, execute: item)
+            }
+            .onDisappear {
+                resetWorkItem?.cancel()
+                resetWorkItem = nil
+                scale = 1.0
             }
     }
 }

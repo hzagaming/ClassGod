@@ -59,4 +59,16 @@ struct LocalizationRegressionTests {
         #expect(String(format: chinese.localizedString(forKey: "destintab.selected_count", value: nil, table: nil), 3) == "已选择 3 项")
     }
 
+    @Test("DestinTab and panic controls have English accessibility labels")
+    func validatesEnglishAccessibilityLabels() {
+        let english = Locale(identifier: "en")
+
+        #expect(String(localized: "destintab.bulk_select", bundle: .main, locale: english) == "Select Multiple")
+        #expect(String(localized: "destintab.exit_bulk_mode", bundle: .main, locale: english) == "Exit Multi-Select")
+        #expect(String(localized: "destintab.all", bundle: .main, locale: english) == "All")
+        #expect(String(localized: "panic.enabled", bundle: .main, locale: english) == "Enabled")
+        #expect(String(localized: "panic.execute", bundle: .main, locale: english) == "Run")
+        #expect(String(localized: "panic.execute_help", bundle: .main, locale: english) == "Run %@")
+    }
+
 }

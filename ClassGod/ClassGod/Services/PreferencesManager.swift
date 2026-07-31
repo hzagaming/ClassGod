@@ -8,6 +8,12 @@
 import Foundation
 import Combine
 
+enum PreferencesExportWriter {
+    static func write(_ data: Data, to destination: URL) throws {
+        try data.write(to: destination, options: .atomic)
+    }
+}
+
 final class PreferencesManager: ObservableObject {
     static let shared = PreferencesManager()
     
@@ -59,19 +65,21 @@ final class PreferencesManager: ObservableObject {
         preferences = .default
     }
     
-    func exportToFile() -> URL? {
+    func suggestedExportFilename(date: Date = Date()) -> String {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withFullDate, .withTime]
+        let dateString = formatter.string(from: date).replacingOccurrences(of: ":", with: "-")
+        return String(format: String(localized: "export.filename"), dateString)
+    }
+
+    func export(to destination: URL) -> Bool {
         do {
             let data = try encoder.encode(preferences)
-            let formatter = ISO8601DateFormatter()
-            formatter.formatOptions = [.withFullDate, .withTime]
-            let dateString = formatter.string(from: Date()).replacingOccurrences(of: ":", with: "-")
-            let url = FileManager.default.temporaryDirectory
-                .appendingPathComponent(String(format: String(localized: "export.filename"), dateString))
-            try data.write(to: url)
-            return url
+            try PreferencesExportWriter.write(data, to: destination)
+            return true
         } catch {
             print("[PreferencesManager] Export failed: \(error)")
-            return nil
+            return false
         }
     }
     

@@ -237,6 +237,7 @@ struct DestinTabView: View {
             }
             .buttonStyle(.plain)
             .help(String(localized: "button.add_tab"))
+            .accessibilityLabel(Text("button.add_tab"))
         }
         .padding(.horizontal, 16 * zoomScale)
         .padding(.vertical, (prefs.preferences.useCompactMode ? 6 : 10) * zoomScale)
@@ -311,6 +312,7 @@ struct DestinTabView: View {
                 .menuStyle(.borderlessButton)
                 .frame(width: 28 * zoomScale, height: 28 * zoomScale)
                 .help(String(format: String(localized: "destintab.sort_help"), viewModel.sortMode.displayName))
+                .accessibilityLabel(Text(String(format: String(localized: "destintab.sort_help"), viewModel.sortMode.displayName)))
 
                 // Bulk mode toggle
                 Button(action: {
@@ -330,6 +332,7 @@ struct DestinTabView: View {
                 }
                 .buttonStyle(.plain)
                 .help(viewModel.isBulkMode ? String(localized: "destintab.exit_bulk_mode") : String(localized: "destintab.bulk_select"))
+                .accessibilityLabel(Text(viewModel.isBulkMode ? "destintab.exit_bulk_mode" : "destintab.bulk_select"))
             }
 
             // Bulk action bar
@@ -370,6 +373,7 @@ struct DestinTabView: View {
                     }
                     .buttonStyle(.plain)
                     .disabled(viewModel.selectedTabIDs.isEmpty)
+                    .accessibilityLabel(Text("button.delete"))
                 }
                 .padding(.horizontal, 4 * zoomScale)
             }
@@ -626,6 +630,7 @@ struct TabRow: View {
 
     @State private var isHovered = false
     @State private var isPressed = false
+    @State private var pressResetWorkItem: DispatchWorkItem?
     @FocusState private var isFocused: Bool
     @ObservedObject private var prefs = PreferencesManager.shared
     private var zoomScale: CGFloat { CGFloat(prefs.preferences.windowZoomScale) }
@@ -639,9 +644,12 @@ struct TabRow: View {
             }
             SoundEffectManager.shared.playButtonClick()
             Anim.with { isPressed = true }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.06) {
+            pressResetWorkItem?.cancel()
+            let item = DispatchWorkItem {
                 Anim.with { isPressed = false }
             }
+            pressResetWorkItem = item
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.06, execute: item)
             onOpen()
         }) {
             HStack(spacing: 8 * zoomScale) {
@@ -776,6 +784,11 @@ struct TabRow: View {
             } else {
                 isHovered = hovering
             }
+        }
+        .onDisappear {
+            pressResetWorkItem?.cancel()
+            pressResetWorkItem = nil
+            isPressed = false
         }
         .padding(.horizontal, 4 * zoomScale)
         .padding(.vertical, 1 * zoomScale)

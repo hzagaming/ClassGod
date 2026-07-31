@@ -2096,8 +2096,8 @@
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "全选"
+            "state" : "translated",
+            "value" : "All"
           }
         },
         "zh-Hans" : {
@@ -2112,8 +2112,8 @@
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "批量选择"
+            "state" : "translated",
+            "value" : "Select Multiple"
           }
         },
         "zh-Hans" : {
@@ -2160,8 +2160,8 @@
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "退出批量模式"
+            "state" : "translated",
+            "value" : "Exit Multi-Select"
           }
         },
         "zh-Hans" : {
@@ -3348,8 +3348,8 @@
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "已启用"
+            "state" : "translated",
+            "value" : "Enabled"
           }
         },
         "zh-Hans" : {
@@ -3444,8 +3444,8 @@
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "执行应急动作"
+            "state" : "translated",
+            "value" : "Run"
           }
         },
         "zh-Hans" : {
@@ -3460,8 +3460,8 @@
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "执行 %@"
+            "state" : "translated",
+            "value" : "Run %@"
           }
         },
         "zh-Hans" : {
@@ -7456,6 +7456,102 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "版本"
+          }
+        }
+      }
+    },
+    "accessibility.disable_item_format" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disable %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "停用 %@"
+          }
+        }
+      }
+    },
+    "accessibility.enable_item_format" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enable %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "启用 %@"
+          }
+        }
+      }
+    },
+    "accessibility.reset_zoom" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reset Zoom"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重置缩放"
+          }
+        }
+      }
+    },
+    "accessibility.select_icon_format" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select icon %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选择图标 %@"
+          }
+        }
+      }
+    },
+    "accessibility.zoom_in" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zoom In"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "放大"
+          }
+        }
+      }
+    },
+    "accessibility.zoom_out" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zoom Out"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "缩小"
           }
         }
       }
@@ -11527,6 +11623,54 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "ClassGod-設定-%@.json"
+          }
+        }
+      }
+    },
+    "export.failure" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Export failed. Check the destination and try again."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导出失败，请检查保存位置后重试。"
+          }
+        }
+      }
+    },
+    "export.result.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Export Result"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导出结果"
+          }
+        }
+      }
+    },
+    "export.success" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Settings exported successfully."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "设置已成功导出。"
           }
         }
       }

@@ -33,6 +33,12 @@ enum TabSortMode: String, Codable, CaseIterable, Identifiable {
     }
 }
 
+enum TabOrderingPolicy {
+    static func pinnedFirstPreservingOrder(_ tabs: [BrowserTab]) -> [BrowserTab] {
+        tabs.filter(\.isPinned) + tabs.filter { !$0.isPinned }
+    }
+}
+
 @MainActor
 final class TabListViewModel: ObservableObject {
     @Published var tabs: [BrowserTab] = []
@@ -65,12 +71,7 @@ final class TabListViewModel: ObservableObject {
     }
     
     var visibleTabs: [BrowserTab] {
-        let sorted = sortedTabs(from: filteredTabs)
-        // Pinned first, then by sort order
-        return sorted.sorted { lhs, rhs in
-            if lhs.isPinned != rhs.isPinned { return lhs.isPinned }
-            return false // maintain order within same pin status
-        }
+        TabOrderingPolicy.pinnedFirstPreservingOrder(sortedTabs(from: filteredTabs))
     }
     
     var pinnedTabs: [BrowserTab] {
@@ -104,11 +105,7 @@ final class TabListViewModel: ObservableObject {
     private var registeredTabIDs: Set<UUID> = []
 
     init() {
-        var initialTabs = StorageManager.shared.loadTabs()
-        initialTabs.sort { lhs, rhs in
-            if lhs.isPinned != rhs.isPinned { return lhs.isPinned && !rhs.isPinned }
-            return false
-        }
+        let initialTabs = TabOrderingPolicy.pinnedFirstPreservingOrder(StorageManager.shared.loadTabs())
         _tabs = Published(initialValue: initialTabs)
         refreshShortcuts()
         setupStorageChangeObserver()
@@ -378,11 +375,7 @@ final class TabListViewModel: ObservableObject {
         case .byBrowser:
             tabs.sort { $0.browser.displayName < $1.browser.displayName }
         }
-        // After any sort, ensure pinned stay at top
-        tabs.sort { lhs, rhs in
-            if lhs.isPinned != rhs.isPinned { return lhs.isPinned && !rhs.isPinned }
-            return false
-        }
+        tabs = TabOrderingPolicy.pinnedFirstPreservingOrder(tabs)
     }
     
     private func sortedTabs(from list: [BrowserTab]) -> [BrowserTab] {

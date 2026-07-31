@@ -26,6 +26,7 @@ struct WindowZoomControlBar: View {
             .buttonStyle(.plain)
             .foregroundStyle(.white.opacity(0.6))
             .disabled(prefs.preferences.windowZoomScale <= 0.5)
+            .accessibilityLabel(Text("accessibility.zoom_out"))
             
             Text("\(Int(prefs.preferences.windowZoomScale * 100))%")
                 .font(.system(size: 9 * zoomScale, weight: .medium, design: .monospaced))
@@ -46,6 +47,7 @@ struct WindowZoomControlBar: View {
             .buttonStyle(.plain)
             .foregroundStyle(.white.opacity(0.6))
             .disabled(prefs.preferences.windowZoomScale >= 2.0)
+            .accessibilityLabel(Text("accessibility.zoom_in"))
             
             Button(action: {
                 SoundEffectManager.shared.playButtonClick()
@@ -61,6 +63,7 @@ struct WindowZoomControlBar: View {
             .buttonStyle(.plain)
             .foregroundStyle(.white.opacity(0.4))
             .disabled(prefs.preferences.windowZoomScale == 1.0)
+            .accessibilityLabel(Text("accessibility.reset_zoom"))
         }
         .padding(.horizontal, 4)
         .padding(.vertical, 2)

@@ -10,12 +10,28 @@ struct AdvancedSettingsView: View {
     @ObservedObject var prefs = PreferencesManager.shared
     @State private var showResetConfirmation = false
     @State private var showClearConfirmation = false
-    @State private var importResult: ImportResult?
+    @State private var dataOperationResult: DataOperationResult?
 
-    enum ImportResult {
-        case success, failure
+    enum DataOperationResult {
+        case importSuccess, importFailure, exportSuccess, exportFailure
+
+        var title: String {
+            switch self {
+            case .importSuccess, .importFailure: return String(localized: "import.result.title")
+            case .exportSuccess, .exportFailure: return String(localized: "export.result.title")
+            }
+        }
+
+        var message: String {
+            switch self {
+            case .importSuccess: return String(localized: "import.success")
+            case .importFailure: return String(localized: "import.failure")
+            case .exportSuccess: return String(localized: "export.success")
+            case .exportFailure: return String(localized: "export.failure")
+            }
+        }
     }
-    @State private var showImportResult = false
+    @State private var showDataOperationResult = false
 
     var body: some View {
         ScrollView {
@@ -165,29 +181,22 @@ struct AdvancedSettingsView: View {
         } message: {
             Text(String(localized: "clear.confirm.message"))
         }
-        .alert(String(localized: "import.result.title"), isPresented: $showImportResult) {
+        .alert(dataOperationResult?.title ?? "", isPresented: $showDataOperationResult) {
             Button(String(localized: "button.ok"), role: .cancel) {}
         } message: {
-            switch importResult {
-            case .success:
-                Text(String(localized: "import.success"))
-            case .failure:
-                Text(String(localized: "import.failure"))
-            case .none:
-                Text("")
-            }
+            Text(dataOperationResult?.message ?? "")
         }
     }
 
     private func exportPreferences() {
-        guard let url = prefs.exportToFile() else { return }
         let panel = NSSavePanel()
-        panel.nameFieldStringValue = url.lastPathComponent
+        panel.nameFieldStringValue = prefs.suggestedExportFilename()
         panel.allowedContentTypes = [.json]
         panel.directoryURL = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Downloads")
 
         if panel.runModal() == .OK, let destination = panel.url {
-            try? FileManager.default.copyItem(at: url, to: destination)
+            dataOperationResult = prefs.export(to: destination) ? .exportSuccess : .exportFailure
+            showDataOperationResult = true
         }
     }
 
@@ -198,8 +207,8 @@ struct AdvancedSettingsView: View {
 
         if panel.runModal() == .OK, let url = panel.url {
             let success = prefs.importFromFile(url: url)
-            importResult = success ? .success : .failure
-            showImportResult = true
+            dataOperationResult = success ? .importSuccess : .importFailure
+            showDataOperationResult = true
         }
     }
 
