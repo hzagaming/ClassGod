@@ -41,6 +41,20 @@ struct RegressionPolicyTests {
         #expect(reconciled == [existing.id])
     }
 
+    @Test("Bulk actions exclude selections hidden by a later filter")
+    func excludesSelectionsHiddenAfterSelection() {
+        let first = BrowserTab(title: "First", url: "https://first.example", browser: .safari)
+        let second = BrowserTab(title: "Second", url: "https://second.example", browser: .chrome)
+
+        let visibleSelection = TabSelectionPolicy.selectedVisibleIDs(
+            selectedIDs: [first.id, second.id],
+            visibleTabs: [second],
+            limit: 10
+        )
+
+        #expect(visibleSelection == [second.id])
+    }
+
     @Test("Preference export replaces an existing file")
     func replacesExistingExportFile() throws {
         let directory = FileManager.default.temporaryDirectory

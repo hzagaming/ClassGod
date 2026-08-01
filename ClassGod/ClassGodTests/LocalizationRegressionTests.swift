@@ -71,4 +71,15 @@ struct LocalizationRegressionTests {
         #expect(String(localized: "panic.execute_help", bundle: .main, locale: english) == "Run %@")
     }
 
+    @Test("Temperature notifications are localized")
+    func validatesTemperatureNotificationLabels() throws {
+        let english = Locale(identifier: "en")
+        let chineseURL = try #require(Bundle.main.url(forResource: "zh-Hans", withExtension: "lproj"))
+        let chinese = try #require(Bundle(url: chineseURL))
+
+        #expect(String(localized: "fan.notification.high_temperature.title", bundle: .main, locale: english) == "ClassGod - High Temperature")
+        #expect(chinese.localizedString(forKey: "fan.notification.high_temperature.title", value: nil, table: nil) == "ClassGod - 温度过高")
+        #expect(String(format: String(localized: "fan.notification.high_temperature.body", bundle: .main, locale: english), "90°C", "85°C") == "Highest temperature reached 90°C (threshold: 85°C)")
+    }
+
 }

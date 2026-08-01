@@ -101,6 +101,34 @@ struct SystemInfo: Equatable {
 
 // MARK: - System Monitor
 
+nonisolated enum SystemMonitorClient: Hashable {
+    case activityMonitor
+    case fanControl
+    case hackerDesktop
+}
+
+nonisolated enum SystemMonitorIntervalPolicy {
+    static func normalized(_ interval: TimeInterval) -> TimeInterval {
+        guard interval.isFinite, interval > 0 else { return 1 }
+        return max(0.1, interval)
+    }
+
+    static func effectiveInterval(for requests: [SystemMonitorClient: TimeInterval]) -> TimeInterval? {
+        requests.values.map(normalized).min()
+    }
+}
+
+nonisolated enum MonotonicCounterPolicy {
+    static func delta(current: UInt64, previous: UInt64?) -> UInt64 {
+        guard let previous, current >= previous else { return 0 }
+        return current - previous
+    }
+
+    static func rate(current: UInt64, previous: UInt64?, interval: TimeInterval) -> Double {
+        Double(delta(current: current, previous: previous)) / max(interval, 0.1)
+    }
+}
+
 final class SystemMonitor: ObservableObject, @unchecked Sendable {
     static let shared = SystemMonitor()
     
@@ -116,9 +144,13 @@ final class SystemMonitor: ObservableObject, @unchecked Sendable {
     private var timer: Timer?
     private var updateInterval: TimeInterval = 1.0
     private var previousCPUInfo: host_cpu_load_info?
-    private var previousNetworkBytesIn: UInt64 = 0
-    private var previousNetworkBytesOut: UInt64 = 0
-    private var startCount = 0
+    private var previousNetworkBytesIn: UInt64?
+    private var previousNetworkBytesOut: UInt64?
+    private var lastNetworkSampleTime: TimeInterval?
+    private var intervalRequests: [SystemMonitorClient: TimeInterval] = [:]
+    private var monitoringGeneration: UInt = 0
+    private var processRefreshGate = FanRefreshGate()
+    private var lastProcessSampleTime: TimeInterval?
     
     // Per-process IO / energy / CPU time history for delta calculation
     private var previousProcessRUsage: [Int32: (diskRead: UInt64, diskWrite: UInt64, energy: UInt64)] = [:]
@@ -129,26 +161,62 @@ final class SystemMonitor: ObservableObject, @unchecked Sendable {
     }
     
     @MainActor
-    func start(interval: TimeInterval = 1.0) {
-        startCount += 1
-        updateInterval = interval
-        NettopMonitor.shared.start()
-        timer?.invalidate()
+    func start(client: SystemMonitorClient, interval: TimeInterval = 1.0) {
+        let normalized = SystemMonitorIntervalPolicy.normalized(interval)
+        guard intervalRequests[client] != normalized else { return }
+        let wasInactive = intervalRequests.isEmpty
+        let previousInterval = SystemMonitorIntervalPolicy.effectiveInterval(for: intervalRequests)
+        intervalRequests[client] = normalized
+        guard let effectiveInterval = SystemMonitorIntervalPolicy.effectiveInterval(for: intervalRequests) else { return }
+
+        if wasInactive {
+            monitoringGeneration &+= 1
+            resetSamplingBaselines()
+            NettopMonitor.shared.start()
+        }
+        if timer == nil || previousInterval != effectiveInterval {
+            restartTimer(interval: effectiveInterval)
+        }
         updateAll()
-        timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
+    }
+
+    @MainActor
+    func stop(client: SystemMonitorClient) {
+        let previousInterval = SystemMonitorIntervalPolicy.effectiveInterval(for: intervalRequests)
+        guard intervalRequests.removeValue(forKey: client) != nil else { return }
+        guard let effectiveInterval = SystemMonitorIntervalPolicy.effectiveInterval(for: intervalRequests) else {
+            timer?.invalidate()
+            timer = nil
+            monitoringGeneration &+= 1
+            resetSamplingBaselines()
+            NettopMonitor.shared.stop()
+            return
+        }
+        if previousInterval != effectiveInterval {
+            restartTimer(interval: effectiveInterval)
+        }
+    }
+
+    private func restartTimer(interval: TimeInterval) {
+        updateInterval = interval
+        timer?.invalidate()
+        let nextTimer = Timer(timeInterval: interval, repeats: true) { [weak self] _ in
             Task { @MainActor [weak self] in
                 self?.updateAll()
             }
         }
+        timer = nextTimer
+        RunLoop.main.add(nextTimer, forMode: .common)
     }
-    
-    @MainActor
-    func stop() {
-        startCount = max(0, startCount - 1)
-        guard startCount == 0 else { return }
-        timer?.invalidate()
-        timer = nil
-        NettopMonitor.shared.stop()
+
+    private func resetSamplingBaselines() {
+        previousCPUInfo = nil
+        previousNetworkBytesIn = nil
+        previousNetworkBytesOut = nil
+        lastNetworkSampleTime = nil
+        previousProcessRUsage.removeAll()
+        previousProcessTaskTimes.removeAll()
+        lastProcessSampleTime = nil
     }
     
     private func updateAll() {
@@ -276,18 +344,29 @@ final class SystemMonitor: ObservableObject, @unchecked Sendable {
             ptr = interface.ifa_next!
         }
         
-        let deltaIn = totalIn >= previousNetworkBytesIn ? totalIn - previousNetworkBytesIn : 0
-        let deltaOut = totalOut >= previousNetworkBytesOut ? totalOut - previousNetworkBytesOut : 0
+        let sampleTime = ProcessInfo.processInfo.systemUptime
+        let interval = max(lastNetworkSampleTime.map { sampleTime - $0 } ?? updateInterval, 0.1)
+        let deltaIn = MonotonicCounterPolicy.rate(
+            current: totalIn,
+            previous: previousNetworkBytesIn,
+            interval: interval
+        )
+        let deltaOut = MonotonicCounterPolicy.rate(
+            current: totalOut,
+            previous: previousNetworkBytesOut,
+            interval: interval
+        )
         
         self.network = NetworkStats(
             bytesIn: totalIn,
             bytesOut: totalOut,
-            deltaIn: Double(deltaIn),
-            deltaOut: Double(deltaOut)
+            deltaIn: deltaIn,
+            deltaOut: deltaOut
         )
         
         previousNetworkBytesIn = totalIn
         previousNetworkBytesOut = totalOut
+        lastNetworkSampleTime = sampleTime
     }
     
     // MARK: - Processes
@@ -300,17 +379,27 @@ final class SystemMonitor: ObservableObject, @unchecked Sendable {
     }
     
     private func readProcesses() {
+        guard processRefreshGate.begin() else { return }
         var mib: [Int32] = [CTL_KERN, KERN_PROC, KERN_PROC_ALL, 0]
         var size = 0
-        sysctl(&mib, u_int(mib.count), nil, &size, nil, 0)
+        guard sysctl(&mib, u_int(mib.count), nil, &size, nil, 0) == 0, size > 0 else {
+            processRefreshGate.end()
+            return
+        }
         
         let count = size / MemoryLayout<kinfo_proc>.stride
         var procs = [kinfo_proc](repeating: kinfo_proc(), count: count)
         let result = sysctl(&mib, u_int(mib.count), &procs, &size, nil, 0)
-        guard result == 0 else { return }
+        guard result == 0 else {
+            processRefreshGate.end()
+            return
+        }
         
         let nettop = NettopMonitor.shared.currentDeltas()
-        let interval = max(updateInterval, 0.1)
+        let sampleTime = ProcessInfo.processInfo.systemUptime
+        let interval = max(lastProcessSampleTime.map { sampleTime - $0 } ?? updateInterval, 0.1)
+        lastProcessSampleTime = sampleTime
+        let generation = monitoringGeneration
         let processorCount = max(1, ProcessInfo.processInfo.processorCount)
         
         // Snapshot previous history locally so concurrent workers can read safely.
@@ -466,6 +555,8 @@ final class SystemMonitor: ObservableObject, @unchecked Sendable {
 
             Task { @MainActor [weak self] in
                 guard let self else { return }
+                defer { self.processRefreshGate.end() }
+                guard self.monitoringGeneration == generation, !self.intervalRequests.isEmpty else { return }
                 self.previousProcessRUsage = rusageSnapshot
                 self.previousProcessTaskTimes = taskTimesSnapshot
                 self.processes = sortedInfos

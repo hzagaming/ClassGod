@@ -47,6 +47,14 @@ enum TabSelectionPolicy {
     static func reconciled(selectedIDs: Set<UUID>, tabs: [BrowserTab]) -> Set<UUID> {
         selectedIDs.intersection(tabs.map(\.id))
     }
+
+    static func selectedVisibleIDs(
+        selectedIDs: Set<UUID>,
+        visibleTabs: [BrowserTab],
+        limit: Int
+    ) -> Set<UUID> {
+        selectedIDs.intersection(visibleIDs(in: visibleTabs, limit: limit))
+    }
 }
 
 @MainActor
@@ -184,8 +192,9 @@ final class TabListViewModel: ObservableObject {
         saveTabs()
     }
     
-    func bulkDeleteSelected() {
-        let toDelete = tabs.filter { selectedTabIDs.contains($0.id) }
+    func bulkDeleteSelected(limit: Int) {
+        let visibleSelection = selectedVisibleIDs(limit: limit)
+        let toDelete = tabs.filter { visibleSelection.contains($0.id) }
         for tab in toDelete {
             ShortcutManager.shared.unregisterShortcut(for: tab.id)
             registeredTabIDs.remove(tab.id)
@@ -302,6 +311,14 @@ final class TabListViewModel: ObservableObject {
     
     func selectAllVisible(limit: Int) {
         selectedTabIDs = TabSelectionPolicy.visibleIDs(in: visibleTabs, limit: limit)
+    }
+
+    func selectedVisibleIDs(limit: Int) -> Set<UUID> {
+        TabSelectionPolicy.selectedVisibleIDs(
+            selectedIDs: selectedTabIDs,
+            visibleTabs: visibleTabs,
+            limit: limit
+        )
     }
     
     func deselectAll() {

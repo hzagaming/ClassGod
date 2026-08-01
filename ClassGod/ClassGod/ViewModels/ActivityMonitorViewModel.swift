@@ -126,7 +126,7 @@ final class ActivityMonitorViewModel: ObservableObject {
     func startMonitoring() {
         guard !isMonitoring else { return }
         isMonitoring = true
-        monitor.start(interval: 1.0)
+        monitor.start(client: .activityMonitor, interval: 1.0)
         updateEnergyHistory()
         schedulePermissionPromptIfNeeded()
         timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
@@ -144,7 +144,7 @@ final class ActivityMonitorViewModel: ObservableObject {
         isMonitoring = false
         timer?.invalidate()
         timer = nil
-        monitor.stop()
+        monitor.stop(client: .activityMonitor)
     }
 
     private func schedulePermissionPromptIfNeeded() {

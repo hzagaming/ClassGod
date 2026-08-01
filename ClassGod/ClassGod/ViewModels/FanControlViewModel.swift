@@ -181,7 +181,7 @@ final class FanControlViewModel: ObservableObject {
 
         // Ensure SystemMonitor is running so CPU-estimated temperature fallback
         // has live CPU load data instead of defaulting to zero.
-        SystemMonitor.shared.start(interval: 1.0)
+        SystemMonitor.shared.start(client: .fanControl, interval: 1.0)
 
         // Discover fans before restoring the saved mode.
         refresh()
@@ -269,7 +269,7 @@ final class FanControlViewModel: ObservableObject {
         pendingRPMWriteTokens.removeAll()
         
         // Balance the SystemMonitor start call from startMonitoring().
-        SystemMonitor.shared.stop()
+        SystemMonitor.shared.stop(client: .fanControl)
         
         // When the panel closes, release fans back to system control so they
         // don't stay stuck at the last commanded RPM. Update the local mode to
@@ -740,8 +740,12 @@ final class FanControlViewModel: ObservableObject {
         lastNotificationDate = Date()
         let unit = prefs.preferences.fanControlTemperatureUnit
         let content = UNMutableNotificationContent()
-        content.title = "ClassGod - High Temperature"
-        content.body = "Highest temperature reached \(unit.formatted(temp)) (threshold: \(unit.formatted(threshold)))"
+        content.title = String(localized: "fan.notification.high_temperature.title")
+        content.body = String(
+            format: String(localized: "fan.notification.high_temperature.body"),
+            unit.formatted(temp),
+            unit.formatted(threshold)
+        )
         content.sound = .default
 
         let request = UNNotificationRequest(identifier: "fancontrol-high-temp-\(Date().timeIntervalSince1970)", content: content, trigger: nil)

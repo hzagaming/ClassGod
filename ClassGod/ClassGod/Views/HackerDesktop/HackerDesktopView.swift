@@ -485,7 +485,7 @@ struct HackerDesktopView: View {
         guard !isActive else { return }
         isActive = true
         loadData()
-        SystemMonitor.shared.start(interval: 2.0)
+        SystemMonitor.shared.start(client: .hackerDesktop, interval: 2.0)
         saveTimer?.invalidate()
         saveTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { _ in
             saveSystemData()
@@ -495,7 +495,7 @@ struct HackerDesktopView: View {
     private func deactivate() {
         guard isActive else { return }
         isActive = false
-        SystemMonitor.shared.stop()
+        SystemMonitor.shared.stop(client: .hackerDesktop)
         saveTimer?.invalidate()
         saveTimer = nil
         pendingSaveWorkItem?.cancel()

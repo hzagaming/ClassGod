@@ -36,4 +36,26 @@ struct FanRefreshPolicyTests {
         let next = gate.begin()
         #expect(next)
     }
+
+    @Test("Shared monitoring honors the fastest active client")
+    func resolvesSharedMonitorInterval() {
+        var requests: [SystemMonitorClient: TimeInterval] = [
+            .hackerDesktop: 2,
+            .activityMonitor: 1,
+        ]
+
+        #expect(SystemMonitorIntervalPolicy.effectiveInterval(for: requests) == 1)
+        requests[.hackerDesktop] = 0.05
+        #expect(SystemMonitorIntervalPolicy.effectiveInterval(for: requests) == 0.1)
+        requests.removeValue(forKey: .hackerDesktop)
+        #expect(SystemMonitorIntervalPolicy.effectiveInterval(for: requests) == 1)
+    }
+
+    @Test("The first network sample never reports a launch spike")
+    func suppressesInitialNetworkDelta() {
+        #expect(MonotonicCounterPolicy.delta(current: 1_000, previous: nil) == 0)
+        #expect(MonotonicCounterPolicy.delta(current: 1_250, previous: 1_000) == 250)
+        #expect(MonotonicCounterPolicy.delta(current: 20, previous: 1_000) == 0)
+        #expect(MonotonicCounterPolicy.rate(current: 1_300, previous: 1_000, interval: 2) == 150)
+    }
 }

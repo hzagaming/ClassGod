@@ -23,6 +23,10 @@ struct DestinTabView: View {
     @State private var showExportPanel = false
     @State private var showSortPicker = false
 
+    private var visibleSelectedIDs: Set<UUID> {
+        viewModel.selectedVisibleIDs(limit: prefs.preferences.maxTabsInPopover)
+    }
+
     var onClose: () -> Void
 
     var body: some View {
@@ -338,7 +342,7 @@ struct DestinTabView: View {
             // Bulk action bar
             if viewModel.isBulkMode {
                 HStack(spacing: 8) {
-                    Text(String(format: String(localized: "destintab.selected_count"), viewModel.selectedTabIDs.count))
+                    Text(String(format: String(localized: "destintab.selected_count"), visibleSelectedIDs.count))
                         .font(.system(size: 10 * zoomScale, design: .monospaced))
                         .foregroundStyle(.cyan)
 
@@ -365,14 +369,14 @@ struct DestinTabView: View {
                     Button(action: {
                         SoundEffectManager.shared.playTabDeleted()
                         HapticManager.shared.warning()
-                        viewModel.bulkDeleteSelected()
+                        viewModel.bulkDeleteSelected(limit: prefs.preferences.maxTabsInPopover)
                     }) {
                         Image(systemName: "trash")
                             .font(.system(size: 11 * zoomScale))
-                            .foregroundStyle(.red.opacity(viewModel.selectedTabIDs.isEmpty ? 0.3 : 0.8))
+                            .foregroundStyle(.red.opacity(visibleSelectedIDs.isEmpty ? 0.3 : 0.8))
                     }
                     .buttonStyle(.plain)
-                    .disabled(viewModel.selectedTabIDs.isEmpty)
+                    .disabled(visibleSelectedIDs.isEmpty)
                     .accessibilityLabel(Text("button.delete"))
                 }
                 .padding(.horizontal, 4 * zoomScale)

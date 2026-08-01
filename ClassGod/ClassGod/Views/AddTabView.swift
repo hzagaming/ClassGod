@@ -29,6 +29,7 @@ struct AddTabView: View {
     @State private var formOffset: CGFloat = 15
     @State private var formOpacity: Double = 0
     @State private var saveButtonScale: CGFloat = 1.0
+    @State private var conflictAlertWorkItem: DispatchWorkItem?
 
     init(viewModel: TabListViewModel, tab: BrowserTab?) {
         self.viewModel = viewModel
@@ -99,6 +100,10 @@ struct AddTabView: View {
         .onChange(of: browser) { _, _ in
             SoundEffectManager.shared.playButtonClick()
             HapticManager.shared.generic()
+        }
+        .onDisappear {
+            conflictAlertWorkItem?.cancel()
+            conflictAlertWorkItem = nil
         }
     }
 
@@ -206,9 +211,13 @@ struct AddTabView: View {
                     shakeTrigger.toggle()
                     SoundEffectManager.shared.play(.shortcutConflict)
                     HapticManager.shared.warning()
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                    conflictAlertWorkItem?.cancel()
+                    let item = DispatchWorkItem {
+                        conflictAlertWorkItem = nil
                         showConflictAlert = true
                     }
+                    conflictAlertWorkItem = item
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.15, execute: item)
                 } else {
                     performSave()
                 }

@@ -383,11 +383,18 @@ struct PermissionCenterView: View {
 
 // MARK: - Onboarding Sheet
 
+enum PermissionOnboardingAdvancePolicy {
+    static func shouldAdvance(expectedStep: Int, currentStep: Int) -> Bool {
+        expectedStep == currentStep
+    }
+}
+
 struct PermissionOnboardingView: View {
     @ObservedObject var service: PermissionCenterService
     @ObservedObject private var prefs = PreferencesManager.shared
     @State private var step = 0
     @State private var setupPermissions: [PermissionItemInfo] = []
+    @State private var advanceWorkItem: DispatchWorkItem?
     var onComplete: () -> Void
     
     private var zoomScale: CGFloat { CGFloat(prefs.preferences.windowZoomScale) }
@@ -406,7 +413,7 @@ struct PermissionOnboardingView: View {
                     Button(action: {
                         SoundEffectManager.shared.playButtonClick()
                         HapticManager.shared.generic()
-                        onComplete()
+                        finishOnboarding()
                     }) {
                         Image(systemName: "xmark")
                             .font(.system(size: 10 * zoomScale, weight: .bold))
@@ -434,6 +441,7 @@ struct PermissionOnboardingView: View {
                         Button(action: {
                             SoundEffectManager.shared.playButtonClick()
                             HapticManager.shared.generic()
+                            cancelPendingAdvance()
                             step -= 1
                         }) {
                             Text(String(localized: "button.back"))
@@ -454,11 +462,20 @@ struct PermissionOnboardingView: View {
                         Button(action: {
                             SoundEffectManager.shared.playButtonClick()
                             HapticManager.shared.generic()
+                            guard advanceWorkItem == nil else { return }
                             service.requestPermission(item.type)
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                            let expectedStep = step
+                            let item = DispatchWorkItem {
+                                advanceWorkItem = nil
+                                guard PermissionOnboardingAdvancePolicy.shouldAdvance(
+                                    expectedStep: expectedStep,
+                                    currentStep: step
+                                ) else { return }
                                 service.refreshAll()
                                 step += 1
                             }
+                            advanceWorkItem = item
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: item)
                         }) {
                             Text(item.canPrompt ? String(localized: "permission.allow_and_continue") : String(localized: "permission.open_settings_and_continue"))
                                 .font(.system(size: 10 * zoomScale, weight: .bold, design: .monospaced))
@@ -473,6 +490,7 @@ struct PermissionOnboardingView: View {
                         Button(action: {
                             SoundEffectManager.shared.playButtonClick()
                             HapticManager.shared.generic()
+                            cancelPendingAdvance()
                             step += 1
                         }) {
                             Text(String(localized: "button.skip"))
@@ -486,7 +504,7 @@ struct PermissionOnboardingView: View {
                         Button(action: {
                             SoundEffectManager.shared.playButtonClick()
                             HapticManager.shared.generic()
-                            onComplete()
+                            finishOnboarding()
                         }) {
                             Text(String(localized: "button.done"))
                                 .font(.system(size: 10 * zoomScale, weight: .bold, design: .monospaced))
@@ -509,6 +527,19 @@ struct PermissionOnboardingView: View {
             }
             step = 0
         }
+        .onDisappear {
+            cancelPendingAdvance()
+        }
+    }
+
+    private func cancelPendingAdvance() {
+        advanceWorkItem?.cancel()
+        advanceWorkItem = nil
+    }
+
+    private func finishOnboarding() {
+        cancelPendingAdvance()
+        onComplete()
     }
     
     private func onboardingStep(_ item: PermissionItemInfo, index: Int, total: Int) -> some View {

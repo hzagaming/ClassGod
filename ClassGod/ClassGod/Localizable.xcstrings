@@ -3063,6 +3063,18 @@
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "暂无温度数据" } }
       }
     },
+    "fan.notification.high_temperature.body" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Highest temperature reached %1$@ (threshold: %2$@)" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "最高温度已达到 %1$@（阈值：%2$@）" } }
+      }
+    },
+    "fan.notification.high_temperature.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "ClassGod - High Temperature" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "ClassGod - 温度过高" } }
+      }
+    },
     "fan.rescan" : {
       "localizations" : {
         "en" : { "stringUnit" : { "state" : "translated", "value" : "Rescan" } },

@@ -43,6 +43,12 @@ struct PermissionCenterTests {
         #expect(setupPermissions == [.accessibility, .appleEvents])
     }
 
+    @Test("A delayed onboarding action cannot skip a newer step")
+    func guardsDelayedOnboardingAdvance() {
+        #expect(PermissionOnboardingAdvancePolicy.shouldAdvance(expectedStep: 0, currentStep: 0))
+        #expect(!PermissionOnboardingAdvancePolicy.shouldAdvance(expectedStep: 0, currentStep: 1))
+    }
+
     @Test("Apple Events passive check only grants successful OSStatus")
     func appleEventsStatusMapping() {
         #expect(AppleEventsPermissionCheck.isGranted(status: 0))
