@@ -4,6 +4,16 @@ import Testing
 
 @Suite("Regression policies")
 struct RegressionPolicyTests {
+    @Test("Only the latest delayed browser switch remains current")
+    func supersedesDelayedBrowserSwitches() {
+        var session = BrowserSwitchSession()
+        let first = session.begin()
+        let second = session.begin()
+
+        #expect(!session.isCurrent(first))
+        #expect(session.isCurrent(second))
+    }
+
     @Test("Pinned tabs preserve their relative order")
     func preservesRelativeOrderWhenGroupingPinnedTabs() {
         let first = BrowserTab(title: "First", url: "https://first.example", browser: .safari)

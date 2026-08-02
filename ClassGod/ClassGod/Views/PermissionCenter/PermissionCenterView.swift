@@ -486,6 +486,8 @@ struct PermissionOnboardingView: View {
                                 .clipShape(RoundedRectangle(cornerRadius: 6 * zoomScale))
                         }
                         .buttonStyle(.plain)
+                        .disabled(advanceWorkItem != nil)
+                        .opacity(advanceWorkItem == nil ? 1 : 0.55)
                         
                         Button(action: {
                             SoundEffectManager.shared.playButtonClick()

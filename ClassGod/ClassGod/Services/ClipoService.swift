@@ -43,6 +43,32 @@ nonisolated struct ClipoPasteSession: Sendable {
     }
 }
 
+nonisolated struct ClipoSelectionSession: Sendable {
+    private(set) var generation: UInt = 0
+    private(set) var isActive = false
+
+    mutating func begin() -> UInt {
+        generation &+= 1
+        isActive = true
+        return generation
+    }
+
+    mutating func cancel() {
+        generation &+= 1
+        isActive = false
+    }
+
+    func isCurrent(_ request: UInt) -> Bool {
+        isActive && request == generation
+    }
+
+    mutating func complete(_ request: UInt) -> Bool {
+        guard isCurrent(request) else { return false }
+        isActive = false
+        return true
+    }
+}
+
 @MainActor
 final class ClipoService: ObservableObject {
     static let shared = ClipoService()
@@ -69,7 +95,8 @@ final class ClipoService: ObservableObject {
     private var isLoading = false
     private var pasteTarget: NSRunningApplication?
     private var isTrackingApplications = false
-    private var selectionTasks: [Int: Task<Void, Never>] = [:]
+    private var selectionTask: Task<Void, Never>?
+    private var selectionSession = ClipoSelectionSession()
     private var pasteSession = ClipoPasteSession()
     private var pendingPasteSnapshot: ClipoPayload?
     private var saveTask: Task<Void, Never>?
@@ -99,8 +126,9 @@ final class ClipoService: ObservableObject {
         cancelPendingPaste()
         stopMonitoring()
         stopTrackingApplications()
-        selectionTasks.values.forEach { $0.cancel() }
-        selectionTasks.removeAll()
+        selectionSession.cancel()
+        selectionTask?.cancel()
+        selectionTask = nil
         saveTask?.cancel()
         saveTask = nil
         enqueueSave()
@@ -248,13 +276,18 @@ final class ClipoService: ObservableObject {
         cancelPendingPaste()
         simulateKeyPress(keyCode: 8)
 
-        selectionTasks[slotNumber]?.cancel()
-        selectionTasks[slotNumber] = Task { [weak self] in
+        selectionTask?.cancel()
+        let request = selectionSession.begin()
+        selectionTask = Task { [weak self] in
             guard let self else { return }
-            defer { selectionTasks[slotNumber] = nil }
+            defer {
+                if selectionSession.complete(request) {
+                    selectionTask = nil
+                }
+            }
             for _ in 0..<16 {
                 try? await Task.sleep(for: .milliseconds(50))
-                guard !Task.isCancelled else { return }
+                guard !Task.isCancelled, selectionSession.isCurrent(request) else { return }
                 guard NSPasteboard.general.changeCount != previousChangeCount else { continue }
                 guard let item = makeItem(sourceApp: source) else { return }
                 let selectionChangeCount = NSPasteboard.general.changeCount
@@ -262,7 +295,9 @@ final class ClipoService: ObservableObject {
                 save(item, to: slotNumber)
                 if let previous {
                     try? await Task.sleep(for: .milliseconds(50))
-                    guard ClipoClipboardRestorePolicy.shouldRestore(
+                    guard !Task.isCancelled,
+                          selectionSession.isCurrent(request),
+                          ClipoClipboardRestorePolicy.shouldRestore(
                         expectedChangeCount: selectionChangeCount,
                         currentChangeCount: NSPasteboard.general.changeCount
                     ) else { return }

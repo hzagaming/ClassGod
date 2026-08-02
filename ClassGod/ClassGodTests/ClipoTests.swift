@@ -63,6 +63,21 @@ struct ClipoTests {
         #expect(!session.isCurrent(second))
     }
 
+    @Test("A newer selection capture owns the shared clipboard")
+    func supersedesPendingSelectionCapture() {
+        var session = ClipoSelectionSession()
+        let first = session.begin()
+        let second = session.begin()
+
+        #expect(!session.isCurrent(first))
+        #expect(session.isCurrent(second))
+        let staleCompletion = session.complete(first)
+        let currentCompletion = session.complete(second)
+        #expect(!staleCompletion)
+        #expect(currentCompletion)
+        #expect(!session.isActive)
+    }
+
     @Test("Rapid paste keeps the original clipboard snapshot")
     func preservesOriginalPasteSnapshot() {
         let original = ClipoPayload(items: [

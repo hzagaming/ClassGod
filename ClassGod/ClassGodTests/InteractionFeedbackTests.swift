@@ -24,4 +24,11 @@ struct InteractionFeedbackTests {
         #expect(!ActivityPermissionPromptPolicy.shouldShow(isMonitoring: false, processCount: 0))
         #expect(!ActivityPermissionPromptPolicy.shouldShow(isMonitoring: true, processCount: 1))
     }
+
+    @Test("Async results require current ownership and an active task")
+    func validatesAsyncResultOwnership() {
+        #expect(AsyncRequestPolicy.shouldApply(request: 2, current: 2, isCancelled: false))
+        #expect(!AsyncRequestPolicy.shouldApply(request: 1, current: 2, isCancelled: false))
+        #expect(!AsyncRequestPolicy.shouldApply(request: 2, current: 2, isCancelled: true))
+    }
 }

@@ -22,10 +22,12 @@ enum WallpaperLoopPolicy {
     static func action(
         mode: WallpaperPlaybackMode,
         isEnabled: Bool,
-        isPlaying: Bool
+        isPlaying: Bool,
+        coordinatesPlayback: Bool = true
     ) -> WallpaperLoopAction {
         guard isEnabled, isPlaying else { return .stop }
-        return mode == .singleLoop ? .restart : .advance
+        if mode == .singleLoop { return .restart }
+        return coordinatesPlayback ? .advance : .stop
     }
 }
 

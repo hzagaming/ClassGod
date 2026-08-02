@@ -12,6 +12,7 @@ struct BrowserBypasserView: View {
     @State private var showAddSheet = false
     @State private var editingRule: BypassRule?
     @State private var ruleToDelete: BypassRule?
+    @State private var detectionTask: Task<Void, Never>?
     @ObservedObject private var prefs = PreferencesManager.shared
     
     var onClose: () -> Void
@@ -86,6 +87,11 @@ struct BrowserBypasserView: View {
             toastOverlay,
             alignment: .bottom
         )
+        .onDisappear {
+            detectionTask?.cancel()
+            detectionTask = nil
+            viewModel.cancelDetection()
+        }
     }
     
     // MARK: - Header
@@ -274,10 +280,15 @@ struct BrowserBypasserView: View {
                 Button(action: {
                     SoundEffectManager.shared.playButtonClick()
                     HapticManager.shared.generic()
-                    if let detected = viewModel.detectLockedBrowser() {
-                        viewModel.showToast(message: String(format: String(localized: "bypass.toast.detected"), detected.browser))
-                    } else {
-                        viewModel.showToast(message: String(localized: "bypass.toast.not_detected"))
+                    detectionTask?.cancel()
+                    detectionTask = Task {
+                        let detected = await viewModel.detectLockedBrowser()
+                        guard !Task.isCancelled else { return }
+                        if let detected {
+                            viewModel.showToast(message: String(format: String(localized: "bypass.toast.detected"), detected.browser))
+                        } else {
+                            viewModel.showToast(message: String(localized: "bypass.toast.not_detected"))
+                        }
                     }
                 }) {
                     HStack(spacing: 4 * zoomScale) {
@@ -289,6 +300,8 @@ struct BrowserBypasserView: View {
                 }
                 .buttonStyle(.plain)
                 .foregroundStyle(.white.opacity(0.6))
+                .disabled(viewModel.isDetecting)
+                .opacity(viewModel.isDetecting ? 0.55 : 1)
             }
             .padding(.horizontal)
             .padding(.vertical, 8 * zoomScale)

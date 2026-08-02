@@ -69,6 +69,9 @@ struct LocalizationRegressionTests {
         #expect(String(localized: "panic.enabled", bundle: .main, locale: english) == "Enabled")
         #expect(String(localized: "panic.execute", bundle: .main, locale: english) == "Run")
         #expect(String(localized: "panic.execute_help", bundle: .main, locale: english) == "Run %@")
+        #expect(String(localized: "panic.detected", bundle: .main, locale: english) == "Proctoring App Detected")
+        #expect(String(localized: "panic.lockdown_browser_window", bundle: .main, locale: english) == "Lockdown Browser (Browser Window)")
+        #expect(String(localized: "panic.error.accessibility_required", bundle: .main, locale: english).hasPrefix("Accessibility permission"))
     }
 
     @Test("Temperature notifications are localized")

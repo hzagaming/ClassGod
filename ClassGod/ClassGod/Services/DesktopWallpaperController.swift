@@ -94,12 +94,17 @@ final class DesktopWallpaperController {
         }
         
         // Create/update windows for each screen
+        let primaryScreen = screens.first
         for screen in screens {
+            let coordinatesPlayback = primaryScreen.map { $0 === screen } ?? false
             if let existing = windows[screen] {
                 existing.updateFrame(screen)
-                existing.refreshContent()
+                existing.refreshContent(coordinatesPlayback: coordinatesPlayback)
             } else {
-                let window = DesktopWallpaperWindow(screen: screen)
+                let window = DesktopWallpaperWindow(
+                    screen: screen,
+                    coordinatesPlayback: coordinatesPlayback
+                )
                 windows[screen] = window
                 window.orderFront(nil)
             }
@@ -131,8 +136,10 @@ final class DesktopWallpaperController {
 
 private final class DesktopWallpaperWindow: NSWindow {
     private var hostingView: NSHostingView<WallpaperPlayerView>?
+    private var coordinatesPlayback: Bool
     
-    init(screen: NSScreen) {
+    init(screen: NSScreen, coordinatesPlayback: Bool) {
+        self.coordinatesPlayback = coordinatesPlayback
         super.init(
             contentRect: screen.frame,
             styleMask: [.borderless],
@@ -171,7 +178,10 @@ private final class DesktopWallpaperWindow: NSWindow {
     func setupContent() {
         guard let wallpaper = WallpaperEngine.shared.currentWallpaper else { return }
         
-        let playerView = WallpaperPlayerView(wallpaper: wallpaper)
+        let playerView = WallpaperPlayerView(
+            wallpaper: wallpaper,
+            coordinatesPlayback: coordinatesPlayback
+        )
         let hostingView = NSHostingView(rootView: playerView)
         hostingView.frame = contentView?.bounds ?? .zero
         hostingView.autoresizingMask = [.width, .height]
@@ -182,7 +192,10 @@ private final class DesktopWallpaperWindow: NSWindow {
         self.hostingView = hostingView
     }
     
-    func refreshContent() {
+    func refreshContent(coordinatesPlayback: Bool? = nil) {
+        if let coordinatesPlayback {
+            self.coordinatesPlayback = coordinatesPlayback
+        }
         // Remove old hosting view
         hostingView?.removeFromSuperview()
         hostingView = nil
@@ -192,7 +205,10 @@ private final class DesktopWallpaperWindow: NSWindow {
             return
         }
         
-        let playerView = WallpaperPlayerView(wallpaper: wallpaper)
+        let playerView = WallpaperPlayerView(
+            wallpaper: wallpaper,
+            coordinatesPlayback: self.coordinatesPlayback
+        )
         let hostingView = NSHostingView(rootView: playerView)
         hostingView.frame = contentView?.bounds ?? frame
         hostingView.autoresizingMask = [.width, .height]

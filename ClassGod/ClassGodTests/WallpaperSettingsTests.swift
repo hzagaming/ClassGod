@@ -44,6 +44,12 @@ struct WallpaperSettingsTests {
     func resolvesVideoLoopAction() {
         #expect(WallpaperLoopPolicy.action(mode: .singleLoop, isEnabled: true, isPlaying: true) == .restart)
         #expect(WallpaperLoopPolicy.action(mode: .listLoop, isEnabled: true, isPlaying: true) == .advance)
+        #expect(WallpaperLoopPolicy.action(
+            mode: .listLoop,
+            isEnabled: true,
+            isPlaying: true,
+            coordinatesPlayback: false
+        ) == .stop)
         #expect(WallpaperLoopPolicy.action(mode: .random, isEnabled: false, isPlaying: true) == .stop)
         #expect(WallpaperLoopPolicy.action(mode: .singleLoop, isEnabled: true, isPlaying: false) == .stop)
     }
@@ -63,6 +69,9 @@ struct WallpaperSettingsTests {
         #expect(WallpaperAudioPolicy.isAvailable(for: .video))
         #expect(!WallpaperAudioPolicy.isAvailable(for: .image))
         #expect(!WallpaperAudioPolicy.isAvailable(for: nil))
+        #expect(!WallpaperAudioPolicy.shouldMute(userMuted: false, allowsAudio: true))
+        #expect(WallpaperAudioPolicy.shouldMute(userMuted: false, allowsAudio: false))
+        #expect(WallpaperAudioPolicy.shouldMute(userMuted: true, allowsAudio: true))
     }
 
     @Test("Wallpaper volume always remains finite and in range")

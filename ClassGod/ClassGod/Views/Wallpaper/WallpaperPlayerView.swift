@@ -10,11 +10,17 @@ import AVFoundation
 
 struct WallpaperPlayerView: View {
     let wallpaper: WallpaperItem
+    let coordinatesPlayback: Bool
+
+    init(wallpaper: WallpaperItem, coordinatesPlayback: Bool = true) {
+        self.wallpaper = wallpaper
+        self.coordinatesPlayback = coordinatesPlayback
+    }
     
     var body: some View {
         Group {
             if let fileURL = wallpaper.fileURL, wallpaper.type == .video {
-                VideoWallpaperView(fileURL: fileURL)
+                VideoWallpaperView(fileURL: fileURL, coordinatesPlayback: coordinatesPlayback)
             } else if let fileURL = wallpaper.fileURL {
                 ImageWallpaperView(fileURL: fileURL)
             } else {
@@ -69,6 +75,10 @@ enum AnimatedImagePlaybackPolicy {
 enum WallpaperAudioPolicy {
     static func isAvailable(for type: WallpaperType?) -> Bool {
         type == .video
+    }
+
+    static func shouldMute(userMuted: Bool, allowsAudio: Bool) -> Bool {
+        userMuted || !allowsAudio
     }
 }
 
@@ -225,15 +235,16 @@ final class AnimatedImageNSView: NSView {
 
 struct VideoWallpaperView: NSViewRepresentable {
     let fileURL: URL
+    let coordinatesPlayback: Bool
     
     func makeNSView(context: Context) -> VideoWallpaperNSView {
         let view = VideoWallpaperNSView()
-        view.loadVideo(url: fileURL)
+        view.loadVideo(url: fileURL, coordinatesPlayback: coordinatesPlayback)
         return view
     }
     
     func updateNSView(_ nsView: VideoWallpaperNSView, context: Context) {
-        nsView.loadVideo(url: fileURL)
+        nsView.loadVideo(url: fileURL, coordinatesPlayback: coordinatesPlayback)
     }
 
     static func dismantleNSView(_ nsView: VideoWallpaperNSView, coordinator: ()) {
@@ -245,6 +256,7 @@ final class VideoWallpaperNSView: NSView {
     private var playerLayer: AVPlayerLayer?
     private var currentURL: URL?
     private var currentRequestID = UUID()
+    private var coordinatesPlayback = true
     private var endObserverToken: NSObjectProtocol?
     private var stateObserverToken: NSObjectProtocol?
     
@@ -253,7 +265,8 @@ final class VideoWallpaperNSView: NSView {
         playerLayer?.frame = bounds
     }
     
-    func loadVideo(url: URL) {
+    func loadVideo(url: URL, coordinatesPlayback: Bool) {
+        self.coordinatesPlayback = coordinatesPlayback
         guard currentURL != url else {
             syncPlaybackState()
             return
@@ -318,14 +331,15 @@ final class VideoWallpaperNSView: NSView {
             forName: .AVPlayerItemDidPlayToEndTime,
             object: item,
             queue: .main
-        ) { [weak player] _ in
-            Task { @MainActor [weak player] in
-                guard let player else { return }
+        ) { [weak self, weak player] _ in
+            Task { @MainActor [weak self, weak player] in
+                guard let self, let player else { return }
                 let engine = WallpaperEngine.shared
                 switch WallpaperLoopPolicy.action(
                     mode: engine.playbackMode,
                     isEnabled: engine.isEnabled,
-                    isPlaying: engine.isPlaying
+                    isPlaying: engine.isPlaying,
+                    coordinatesPlayback: self.coordinatesPlayback
                 ) {
                 case .restart:
                     player.seek(to: .zero)
@@ -355,7 +369,10 @@ final class VideoWallpaperNSView: NSView {
     func syncPlaybackState() {
         guard let player = playerLayer?.player else { return }
         let engine = WallpaperEngine.shared
-        player.isMuted = engine.isMuted
+        player.isMuted = WallpaperAudioPolicy.shouldMute(
+            userMuted: engine.isMuted,
+            allowsAudio: coordinatesPlayback
+        )
         player.volume = Float(engine.volume)
         if engine.isEnabled && engine.isPlaying {
             player.play()

@@ -26,7 +26,11 @@ final class AssessPrepHackViewModel: ObservableObject {
     @Published var showError: Bool = false
     
     private var bypassTimer: Timer?
+    private var focusGuardTask: Task<Void, Never>?
+    private var bypassGeneration: UInt = 0
     private var detectionTimer: Timer?
+    private var detectionTask: Task<Void, Never>?
+    private var detectionGeneration: UInt = 0
     private var toastWorkItem: DispatchWorkItem?
     private var targetAppForGuard: String?
     
@@ -92,18 +96,26 @@ final class AssessPrepHackViewModel: ObservableObject {
     
     deinit {
         bypassTimer?.invalidate()
+        focusGuardTask?.cancel()
         detectionTimer?.invalidate()
+        detectionTask?.cancel()
         toastWorkItem?.cancel()
     }
     
     func stopDetectionTimer() {
         detectionTimer?.invalidate()
         detectionTimer = nil
+        detectionGeneration &+= 1
+        detectionTask?.cancel()
+        detectionTask = nil
     }
     
     func stopAllTimers() {
         bypassTimer?.invalidate()
         bypassTimer = nil
+        bypassGeneration &+= 1
+        focusGuardTask?.cancel()
+        focusGuardTask = nil
         stopDetectionTimer()
     }
     
@@ -163,6 +175,11 @@ final class AssessPrepHackViewModel: ObservableObject {
     }
     
     func scanForAssessPrep() {
+        detectionGeneration &+= 1
+        let request = detectionGeneration
+        detectionTask?.cancel()
+        detectionTask = nil
+
         let runningApps = NSWorkspace.shared.runningApplications
         var found = false
         var foundName = ""
@@ -190,19 +207,33 @@ final class AssessPrepHackViewModel: ObservableObject {
             if found { break }
         }
         
-        // Also check for lockdown browser windows in common browsers
-        if !found {
-            found = checkBrowserForAssessPrep()
-            if found {
-                foundName = "Lockdown Browser (Browser Window)"
-            }
+        if found {
+            assessPrepDetected = true
+            assessPrepProcessName = foundName
+            return
         }
-        
-        assessPrepDetected = found
-        assessPrepProcessName = foundName
+
+        let keywords = knownAssessPrepNameKeywords
+            + ["lockdown", "respondus", "safe exam", "examplify", "bluebook", "proctorio", "honorlock"]
+        detectionTask = Task { @MainActor [weak self] in
+            let browserFound = await Task.detached(priority: .utility) {
+                Self.checkBrowserForAssessPrep(keywords: keywords)
+            }.value
+            guard let self,
+                  AsyncRequestPolicy.shouldApply(
+                    request: request,
+                    current: self.detectionGeneration,
+                    isCancelled: Task.isCancelled
+                  ) else { return }
+            self.detectionTask = nil
+            self.assessPrepDetected = browserFound
+            self.assessPrepProcessName = browserFound
+                ? String(localized: "panic.lockdown_browser_window")
+                : ""
+        }
     }
     
-    private func checkBrowserForAssessPrep() -> Bool {
+    private nonisolated static func checkBrowserForAssessPrep(keywords: [String]) -> Bool {
         // Return all window titles from common browsers; Swift side decides matches.
         let script = """
         tell application "System Events"
@@ -232,13 +263,12 @@ final class AssessPrepHackViewModel: ObservableObject {
         }
         guard let titles = result.stringValue else { return false }
         let lowerTitles = titles.lowercased()
-        let keywords = knownAssessPrepNameKeywords + ["lockdown", "respondus", "safe exam", "examplify", "bluebook", "proctorio", "honorlock"]
         return keywords.contains { !$0.isEmpty && lowerTitles.contains($0.lowercased()) }
     }
     
     private func updateFrontApp() {
         if let frontApp = NSWorkspace.shared.frontmostApplication {
-            currentFrontApp = frontApp.localizedName ?? frontApp.bundleIdentifier ?? "Unknown"
+            currentFrontApp = frontApp.localizedName ?? frontApp.bundleIdentifier ?? String(localized: "error.unknown")
         }
     }
     
@@ -246,13 +276,16 @@ final class AssessPrepHackViewModel: ObservableObject {
     
     func executeBypass(for app: PanicApp) {
         guard app.isEnabled else {
-            showError(message: "App \(app.name) is disabled")
+            showError(message: String(
+                format: String(localized: "panic.error.app_disabled"),
+                app.name
+            ))
             return
         }
         
         guard checkAccessibilityPermission() else {
             _ = checkAccessibilityPermission(prompt: true)
-            showError(message: "Accessibility permission required. Please enable ClassGod in System Settings > Privacy & Security > Accessibility, then try again.")
+            showError(message: String(localized: "panic.error.accessibility_required"))
             return
         }
         
@@ -279,13 +312,19 @@ final class AssessPrepHackViewModel: ObservableObject {
             showToast(message: String(format: String(localized: "panic.toast.technique_activated"), app.bypassTechnique.displayName))
         } else {
             SoundEffectManager.shared.play(.shortcutConflict)
-            showError(message: "\(app.bypassTechnique.displayName) failed")
+            showError(message: String(
+                format: String(localized: "panic.error.technique_failed"),
+                app.bypassTechnique.displayName
+            ))
         }
     }
     
     func stopAllBypasses() {
         bypassTimer?.invalidate()
         bypassTimer = nil
+        bypassGeneration &+= 1
+        focusGuardTask?.cancel()
+        focusGuardTask = nil
         targetAppForGuard = nil
         
         // Resume any suspended proctoring processes
@@ -343,6 +382,9 @@ final class AssessPrepHackViewModel: ObservableObject {
         targetAppForGuard = targetApp
         
         bypassTimer?.invalidate()
+        bypassGeneration &+= 1
+        focusGuardTask?.cancel()
+        focusGuardTask = nil
         bypassTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
             Task { @MainActor [weak self] in
                 guard let self = self, self.isBypassActive else { return }
@@ -353,7 +395,7 @@ final class AssessPrepHackViewModel: ObservableObject {
     }
     
     private func enforceFocusGuard() {
-        guard let targetBundleID = targetAppForGuard else { return }
+        guard focusGuardTask == nil, let targetBundleID = targetAppForGuard else { return }
         
         let safeTarget = targetBundleID
             .replacingOccurrences(of: "\\", with: "\\\\")
@@ -391,11 +433,27 @@ final class AssessPrepHackViewModel: ObservableObject {
         end tell
         """
         
-        if let appleScript = NSAppleScript(source: script) {
-            var errorInfo: NSDictionary?
-            _ = appleScript.executeAndReturnError(&errorInfo)
-            guard errorInfo == nil else { return }
+        let request = bypassGeneration
+        focusGuardTask = Task { @MainActor [weak self] in
+            _ = await Task.detached(priority: .utility) {
+                Self.executeAppleScript(script)
+            }.value
+            guard let self,
+                  AsyncRequestPolicy.shouldApply(
+                    request: request,
+                    current: self.bypassGeneration,
+                    isCancelled: Task.isCancelled
+                  ) else { return }
+            self.focusGuardTask = nil
         }
+    }
+
+    @discardableResult
+    private nonisolated static func executeAppleScript(_ source: String) -> Bool {
+        guard let appleScript = NSAppleScript(source: source) else { return false }
+        var errorInfo: NSDictionary?
+        _ = appleScript.executeAndReturnError(&errorInfo)
+        return errorInfo == nil
     }
     
     private func performScreenSpoof() -> Bool {
@@ -607,7 +665,9 @@ final class AssessPrepHackViewModel: ObservableObject {
         showToast = true
         
         let item = DispatchWorkItem { [weak self] in
-            self?.showToast = false
+            guard let self else { return }
+            self.showToast = false
+            self.toastWorkItem = nil
         }
         toastWorkItem = item
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.0, execute: item)

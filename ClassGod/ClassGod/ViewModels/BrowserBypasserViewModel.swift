@@ -20,8 +20,12 @@ final class BrowserBypasserViewModel: ObservableObject {
     @Published var showToast: Bool = false
     @Published var errorMessage: String?
     @Published var showError: Bool = false
+    @Published private(set) var isDetecting = false
     
     private var bypassTimer: Timer?
+    private var focusScriptTask: Task<Void, Never>?
+    private var bypassGeneration: UInt = 0
+    private var detectionGeneration: UInt = 0
     private var toastWorkItem: DispatchWorkItem?
     
     // Common lockdown page patterns
@@ -44,6 +48,7 @@ final class BrowserBypasserViewModel: ObservableObject {
     
     deinit {
         bypassTimer?.invalidate()
+        focusScriptTask?.cancel()
         toastWorkItem?.cancel()
     }
     
@@ -84,25 +89,52 @@ final class BrowserBypasserViewModel: ObservableObject {
     
     // MARK: - Bypass Actions
     
-    func detectLockedBrowser() -> (browser: String, url: String)? {
+    func detectLockedBrowser() async -> (browser: String, url: String)? {
+        detectionGeneration &+= 1
+        let request = detectionGeneration
+        isDetecting = true
+
         // Check running browsers for lockdown pages
-        let browsers = ["com.apple.Safari", "com.google.Chrome", "com.microsoft.edgemac"]
-        
-        for bundleID in browsers {
-            if let app = NSWorkspace.shared.runningApplications.first(where: { $0.bundleIdentifier == bundleID }),
-               app.isActive {
-                // Try to get current URL via AppleScript
-                if let url = getCurrentURL(for: bundleID) {
-                    detectedBrowser = app.localizedName ?? bundleID
-                    detectedURL = url
-                    return (detectedBrowser, url)
-                }
-            }
+        let browserIDs = Set(["com.apple.Safari", "com.google.Chrome", "com.microsoft.edgemac"])
+        guard let app = NSWorkspace.shared.runningApplications.first(where: {
+            $0.isActive && $0.bundleIdentifier.map(browserIDs.contains) == true
+        }), let bundleID = app.bundleIdentifier else {
+            isDetecting = false
+            clearDetection()
+            return nil
         }
-        return nil
+
+        let browserName = app.localizedName ?? bundleID
+        let url = await Task.detached(priority: .userInitiated) {
+            Self.getCurrentURL(for: bundleID)
+        }.value
+        guard AsyncRequestPolicy.shouldApply(
+            request: request,
+            current: detectionGeneration,
+            isCancelled: Task.isCancelled
+        ) else { return nil }
+
+        isDetecting = false
+        guard let url else {
+            clearDetection()
+            return nil
+        }
+        detectedBrowser = browserName
+        detectedURL = url
+        return (browserName, url)
+    }
+
+    func cancelDetection() {
+        detectionGeneration &+= 1
+        isDetecting = false
+    }
+
+    private func clearDetection() {
+        detectedBrowser = ""
+        detectedURL = ""
     }
     
-    private func getCurrentURL(for bundleID: String) -> String? {
+    private nonisolated static func getCurrentURL(for bundleID: String) -> String? {
         let script: String
         switch bundleID {
         case "com.apple.Safari":
@@ -160,7 +192,9 @@ final class BrowserBypasserViewModel: ObservableObject {
             injectBypassScript()
         }
         
-        activeBypasses.append(type)
+        if !activeBypasses.contains(type) {
+            activeBypasses.append(type)
+        }
         isBypassActive = true
         showToast(message: String(format: String(localized: "bypass.toast.activated"), type.displayName))
     }
@@ -168,6 +202,9 @@ final class BrowserBypasserViewModel: ObservableObject {
     func stopAllBypasses() {
         bypassTimer?.invalidate()
         bypassTimer = nil
+        bypassGeneration &+= 1
+        focusScriptTask?.cancel()
+        focusScriptTask = nil
         activeBypasses.removeAll()
         isBypassActive = false
         showToast(message: String(localized: "bypass.toast.all_stopped"))
@@ -187,15 +224,17 @@ final class BrowserBypasserViewModel: ObservableObject {
             key code 53 -- ESC key
         end tell
         """
-        if let appleScript = NSAppleScript(source: script) {
-            var errorInfo: NSDictionary?
-            _ = appleScript.executeAndReturnError(&errorInfo)
-            guard errorInfo == nil else { return }
+        Task.detached(priority: .userInitiated) {
+            _ = Self.executeAppleScript(script)
         }
     }
     
     private func startFocusLossPrevention() {
         // Periodically send focus events to make the page think it's still focused
+        bypassTimer?.invalidate()
+        bypassGeneration &+= 1
+        focusScriptTask?.cancel()
+        focusScriptTask = nil
         bypassTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
             Task { @MainActor [weak self] in
                 guard let self = self, self.isBypassActive else { return }
@@ -205,6 +244,7 @@ final class BrowserBypasserViewModel: ObservableObject {
     }
     
     private func sendFakeFocusEvent() {
+        guard focusScriptTask == nil else { return }
         // Inject JavaScript to maintain visibility state
         let script = """
         tell application "Safari"
@@ -218,10 +258,18 @@ final class BrowserBypasserViewModel: ObservableObject {
             end if
         end tell
         """
-        if let appleScript = NSAppleScript(source: script) {
-            var errorInfo: NSDictionary?
-            _ = appleScript.executeAndReturnError(&errorInfo)
-            guard errorInfo == nil else { return }
+        let request = bypassGeneration
+        focusScriptTask = Task { @MainActor [weak self] in
+            _ = await Task.detached(priority: .utility) {
+                Self.executeAppleScript(script)
+            }.value
+            guard let self,
+                  AsyncRequestPolicy.shouldApply(
+                    request: request,
+                    current: self.bypassGeneration,
+                    isCancelled: Task.isCancelled
+                  ) else { return }
+            self.focusScriptTask = nil
         }
     }
     
@@ -241,13 +289,20 @@ final class BrowserBypasserViewModel: ObservableObject {
             "Microsoft Edge": "tell application \"Microsoft Edge\" to if exists active tab of front window then execute active tab of front window javascript \"" + bypassJS + "\""
         ]
         
-        for (_, source) in scripts {
-            if let appleScript = NSAppleScript(source: source) {
-                var errorInfo: NSDictionary?
-                _ = appleScript.executeAndReturnError(&errorInfo)
-                if errorInfo != nil { continue }
+        let sources = Array(scripts.values)
+        Task.detached(priority: .userInitiated) {
+            for source in sources {
+                _ = Self.executeAppleScript(source)
             }
         }
+    }
+
+    @discardableResult
+    private nonisolated static func executeAppleScript(_ source: String) -> Bool {
+        guard let appleScript = NSAppleScript(source: source) else { return false }
+        var errorInfo: NSDictionary?
+        _ = appleScript.executeAndReturnError(&errorInfo)
+        return errorInfo == nil
     }
     
     func showToast(message: String) {
@@ -256,7 +311,9 @@ final class BrowserBypasserViewModel: ObservableObject {
         showToast = true
         
         let item = DispatchWorkItem { [weak self] in
-            self?.showToast = false
+            guard let self else { return }
+            self.showToast = false
+            self.toastWorkItem = nil
         }
         toastWorkItem = item
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.0, execute: item)

@@ -8,8 +8,24 @@
 import Foundation
 import AppKit
 
+nonisolated struct BrowserSwitchSession: Sendable {
+    private(set) var generation: UInt = 0
+
+    mutating func begin() -> UInt {
+        generation &+= 1
+        return generation
+    }
+
+    func isCurrent(_ request: UInt) -> Bool {
+        request == generation
+    }
+}
+
 final class BrowserSwitcher {
     static let shared = BrowserSwitcher()
+
+    private var pendingSwitchWorkItem: DispatchWorkItem?
+    private var switchSession = BrowserSwitchSession()
 
     private init() {}
 
@@ -35,19 +51,37 @@ final class BrowserSwitcher {
     func switchToTab(_ tab: BrowserTab, completion: ((Bool, String) -> Void)? = nil) {
         let prefs = PreferencesManager.shared.preferences
         let delay = max(0, prefs.switchDelayMs) / 1000
+        pendingSwitchWorkItem?.cancel()
+        let request = switchSession.begin()
 
         if delay > 0 {
-            DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
-                self.performSwitchToTab(tab, prefs: prefs, completion: completion)
+            let item = DispatchWorkItem { [weak self] in
+                guard let self, self.switchSession.isCurrent(request) else { return }
+                self.pendingSwitchWorkItem = nil
+                self.performSwitchToTab(tab, prefs: prefs, request: request, completion: completion)
             }
+            pendingSwitchWorkItem = item
+            DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: item)
         } else {
-            performSwitchToTab(tab, prefs: prefs, completion: completion)
+            pendingSwitchWorkItem = nil
+            performSwitchToTab(tab, prefs: prefs, request: request, completion: completion)
         }
     }
 
-    private func performSwitchToTab(_ tab: BrowserTab, prefs: AppPreferences, completion: ((Bool, String) -> Void)? = nil) {
+    private func performSwitchToTab(
+        _ tab: BrowserTab,
+        prefs: AppPreferences,
+        request: UInt,
+        completion: ((Bool, String) -> Void)? = nil
+    ) {
+        guard switchSession.isCurrent(request) else { return }
         guard tab.browser.isInstalled else {
-            completion?(false, String(format: String(localized: "error.browser_not_found"), tab.browser.displayName))
+            complete(
+                request: request,
+                success: false,
+                message: String(format: String(localized: "error.browser_not_found"), tab.browser.displayName),
+                completion: completion
+            )
             return
         }
         
@@ -58,10 +92,15 @@ final class BrowserSwitcher {
         if !isRunning {
             switch prefs.browserNotRunningBehavior {
             case .doNothing:
-                completion?(false, String(format: String(localized: "error.browser_not_running"), tab.browser.displayName))
+                complete(
+                    request: request,
+                    success: false,
+                    message: String(format: String(localized: "error.browser_not_running"), tab.browser.displayName),
+                    completion: completion
+                )
                 return
             case .launchOnly:
-                launchBrowser(tab.browser, completion: completion)
+                launchBrowser(tab.browser, request: request, completion: completion)
                 return
             case .launchAndOpen:
                 break // fall through to open URL
@@ -70,7 +109,7 @@ final class BrowserSwitcher {
 
         // If "always new tab" is selected, skip search and directly open URL
         if prefs.switchBehavior == .alwaysNewTab {
-            openURLDirectly(tab: tab, url: safeURL, completion: completion)
+            openURLDirectly(tab: tab, url: safeURL, request: request, completion: completion)
             return
         }
 
@@ -86,41 +125,73 @@ final class BrowserSwitcher {
         }
 
         executeAppleScript(scriptSource) { result, errorMsg in
+            guard self.switchSession.isCurrent(request) else { return }
             if errorMsg != nil {
                 // Fallback: try to open URL directly
-                self.openURLDirectly(tab: tab, url: safeURL, completion: completion)
+                self.openURLDirectly(tab: tab, url: safeURL, request: request, completion: completion)
                 return
             }
 
             let output = result?.stringValue ?? ""
             if output == "NOT_FOUND" {
-                self.openURLDirectly(tab: tab, url: safeURL, completion: completion)
+                self.openURLDirectly(tab: tab, url: safeURL, request: request, completion: completion)
             } else {
-                completion?(true, String(format: String(localized: "toast.switched_browser"), tab.browser.displayName))
+                self.complete(
+                    request: request,
+                    success: true,
+                    message: String(format: String(localized: "toast.switched_browser"), tab.browser.displayName),
+                    completion: completion
+                )
             }
         }
     }
 
-    private func launchBrowser(_ browser: BrowserType, completion: ((Bool, String) -> Void)?) {
+    private func launchBrowser(_ browser: BrowserType, request: UInt, completion: ((Bool, String) -> Void)?) {
         guard let appURL = NSWorkspace.shared.urlForApplication(withBundleIdentifier: browser.bundleIdentifier) else {
-            completion?(false, String(format: String(localized: "error.browser_not_found"), browser.displayName))
+            complete(
+                request: request,
+                success: false,
+                message: String(format: String(localized: "error.browser_not_found"), browser.displayName),
+                completion: completion
+            )
             return
         }
         let configuration = NSWorkspace.OpenConfiguration()
         NSWorkspace.shared.openApplication(at: appURL, configuration: configuration) { app, error in
             DispatchQueue.main.async {
                 if let error = error {
-                    completion?(false, String(format: String(localized: "error.launch_failed"), browser.displayName, error.localizedDescription))
+                    self.complete(
+                        request: request,
+                        success: false,
+                        message: String(format: String(localized: "error.launch_failed"), browser.displayName, error.localizedDescription),
+                        completion: completion
+                    )
                 } else {
-                    completion?(true, String(format: String(localized: "toast.launched"), browser.displayName))
+                    self.complete(
+                        request: request,
+                        success: true,
+                        message: String(format: String(localized: "toast.launched"), browser.displayName),
+                        completion: completion
+                    )
                 }
             }
         }
     }
 
-    private func openURLDirectly(tab: BrowserTab, url: String, completion: ((Bool, String) -> Void)? = nil) {
+    private func openURLDirectly(
+        tab: BrowserTab,
+        url: String,
+        request: UInt,
+        completion: ((Bool, String) -> Void)? = nil
+    ) {
+        guard switchSession.isCurrent(request) else { return }
         guard tab.browser.isInstalled else {
-            completion?(false, String(format: String(localized: "error.browser_not_found"), tab.browser.displayName))
+            complete(
+                request: request,
+                success: false,
+                message: String(format: String(localized: "error.browser_not_found"), tab.browser.displayName),
+                completion: completion
+            )
             return
         }
         
@@ -136,11 +207,26 @@ final class BrowserSwitcher {
 
         executeAppleScript(scriptSource) { _, errorMsg in
             if let msg = errorMsg {
-                completion?(false, msg)
+                self.complete(request: request, success: false, message: msg, completion: completion)
             } else {
-                completion?(true, String(format: String(localized: "toast.opened_url"), tab.browser.displayName))
+                self.complete(
+                    request: request,
+                    success: true,
+                    message: String(format: String(localized: "toast.opened_url"), tab.browser.displayName),
+                    completion: completion
+                )
             }
         }
+    }
+
+    private func complete(
+        request: UInt,
+        success: Bool,
+        message: String,
+        completion: ((Bool, String) -> Void)?
+    ) {
+        guard switchSession.isCurrent(request) else { return }
+        completion?(success, message)
     }
 
     private func executeAppleScript(_ source: String, completion: @escaping (NSAppleEventDescriptor?, String?) -> Void) {

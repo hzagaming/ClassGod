@@ -20,3 +20,9 @@ struct TransientFeedbackState<Value: Equatable> {
         value = nil
     }
 }
+
+nonisolated enum AsyncRequestPolicy {
+    static func shouldApply(request: UInt, current: UInt, isCancelled: Bool) -> Bool {
+        request == current && !isCancelled
+    }
+}

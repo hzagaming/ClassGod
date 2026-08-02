@@ -3296,8 +3296,8 @@
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "添加应急应用"
+            "state" : "translated",
+            "value" : "Add Emergency App"
           }
         },
         "zh-Hans" : {
@@ -3312,8 +3312,8 @@
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "移除应急应用 \"%@\"？"
+            "state" : "translated",
+            "value" : "Remove emergency app \"%@\"?"
           }
         },
         "zh-Hans" : {
@@ -3328,8 +3328,8 @@
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "删除应用?"
+            "state" : "translated",
+            "value" : "Delete App?"
           }
         },
         "zh-Hans" : {
@@ -3344,8 +3344,8 @@
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "编辑应急应用"
+            "state" : "translated",
+            "value" : "Edit Emergency App"
           }
         },
         "zh-Hans" : {
@@ -3376,8 +3376,8 @@
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "应急状态已激活"
+            "state" : "translated",
+            "value" : "Emergency Mode Active"
           }
         },
         "zh-Hans" : {
@@ -3392,8 +3392,8 @@
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "添加应用"
+            "state" : "translated",
+            "value" : "Add App"
           }
         },
         "zh-Hans" : {
@@ -3408,8 +3408,8 @@
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "检测到考试锁定应用"
+            "state" : "translated",
+            "value" : "Proctoring App Detected"
           }
         },
         "zh-Hans" : {
@@ -3420,12 +3420,30 @@
         }
       }
     },
+    "panic.error.accessibility_required" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Accessibility permission is required. Enable ClassGod in System Settings > Privacy & Security > Accessibility, then try again." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "需要辅助功能权限。请在系统设置 > 隐私与安全性 > 辅助功能中启用 ClassGod，然后重试。" } }
+      }
+    },
+    "panic.error.app_disabled" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "App %@ is disabled" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "应用 %@ 已停用" } }
+      }
+    },
+    "panic.error.technique_failed" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%@ failed" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%@ 执行失败" } }
+      }
+    },
     "panic.empty_subtitle" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "添加应急切换目标，用于快速恢复到预设应用"
+            "state" : "translated",
+            "value" : "Add emergency switch targets to quickly return to a preset app"
           }
         },
         "zh-Hans" : {
@@ -3440,8 +3458,8 @@
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "尚未配置应急应用"
+            "state" : "translated",
+            "value" : "No Emergency Apps Configured"
           }
         },
         "zh-Hans" : {
@@ -3488,8 +3506,8 @@
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "扫描"
+            "state" : "translated",
+            "value" : "Scan"
           }
         },
         "zh-Hans" : {
@@ -3504,8 +3522,8 @@
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "全部停止"
+            "state" : "translated",
+            "value" : "Stop All"
           }
         },
         "zh-Hans" : {
@@ -3520,8 +3538,8 @@
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "管理应急应用与快捷切换"
+            "state" : "translated",
+            "value" : "Manage emergency apps and quick switching"
           }
         },
         "zh-Hans" : {
@@ -3532,12 +3550,18 @@
         }
       }
     },
+    "panic.lockdown_browser_window" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Lockdown Browser (Browser Window)" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "锁定浏览器（浏览器窗口）" } }
+      }
+    },
     "panic.technique.focus_guard" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "焦点守护"
+            "state" : "translated",
+            "value" : "Focus Guard"
           }
         },
         "zh-Hans" : {
@@ -3552,8 +3576,8 @@
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "防止 AssessPrep 窃取焦点"
+            "state" : "translated",
+            "value" : "Prevent AssessPrep from stealing focus"
           }
         },
         "zh-Hans" : {
@@ -3568,8 +3592,8 @@
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "键盘解锁"
+            "state" : "translated",
+            "value" : "Keyboard Unlock"
           }
         },
         "zh-Hans" : {
@@ -3584,8 +3608,8 @@
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "恢复系统键盘快捷键"
+            "state" : "translated",
+            "value" : "Restore system keyboard shortcuts"
           }
         },
         "zh-Hans" : {
@@ -3600,8 +3624,8 @@
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "应急切换"
+            "state" : "translated",
+            "value" : "Emergency Switch"
           }
         },
         "zh-Hans" : {
@@ -3616,8 +3640,8 @@
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "立即切换到安全应用"
+            "state" : "translated",
+            "value" : "Instantly switch to a safe app"
           }
         },
         "zh-Hans" : {
@@ -3632,8 +3656,8 @@
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "进程暂停"
+            "state" : "translated",
+            "value" : "Process Suspend"
           }
         },
         "zh-Hans" : {
@@ -3648,8 +3672,8 @@
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "临时冻结 AssessPrep 进程"
+            "state" : "translated",
+            "value" : "Temporarily suspend AssessPrep processes"
           }
         },
         "zh-Hans" : {
@@ -3664,8 +3688,8 @@
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "屏幕欺骗"
+            "state" : "translated",
+            "value" : "Screen Spoof"
           }
         },
         "zh-Hans" : {
@@ -3680,8 +3704,8 @@
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "伪造屏幕可见状态"
+            "state" : "translated",
+            "value" : "Spoof screen visibility state"
           }
         },
         "zh-Hans" : {
@@ -3696,8 +3720,8 @@
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "已添加应急应用: %@"
+            "state" : "translated",
+            "value" : "Emergency app added: %@"
           }
         },
         "zh-Hans" : {
@@ -3712,8 +3736,8 @@
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "已停止所有绕过"
+            "state" : "translated",
+            "value" : "All bypasses stopped"
           }
         },
         "zh-Hans" : {
@@ -3728,8 +3752,8 @@
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "%@ 已激活"
+            "state" : "translated",
+            "value" : "%@ activated"
           }
         },
         "zh-Hans" : {
@@ -3744,8 +3768,8 @@
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "已更新应用: %@"
+            "state" : "translated",
+            "value" : "App updated: %@"
           }
         },
         "zh-Hans" : {
