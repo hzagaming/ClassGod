@@ -98,14 +98,27 @@ struct ClipoPayload: Codable, Equatable, Sendable {
 
     var fingerprint: String {
         var hash: UInt64 = 14_695_981_039_346_656_037
-        for representation in items.flatMap(\.representations) {
-            for byte in representation.type.utf8 {
+
+        func mix<S: Sequence>(_ bytes: S) where S.Element == UInt8 {
+            for byte in bytes {
                 hash ^= UInt64(byte)
                 hash &*= 1_099_511_628_211
             }
-            for byte in representation.data {
-                hash ^= UInt64(byte)
-                hash &*= 1_099_511_628_211
+        }
+
+        func mix(_ value: UInt64) {
+            var littleEndian = value.littleEndian
+            withUnsafeBytes(of: &littleEndian) { mix($0) }
+        }
+
+        mix(UInt64(items.count))
+        for item in items {
+            mix(UInt64(item.representations.count))
+            for representation in item.representations {
+                mix(UInt64(representation.type.utf8.count))
+                mix(representation.type.utf8)
+                mix(UInt64(representation.data.count))
+                mix(representation.data)
             }
         }
         return String(hash, radix: 16)

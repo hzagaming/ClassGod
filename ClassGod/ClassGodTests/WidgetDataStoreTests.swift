@@ -34,6 +34,17 @@ struct WidgetDataStoreTests {
         #expect(WidgetMetricNormalization.batteryPercent(from: 0.52) == 52)
         #expect(WidgetMetricNormalization.batteryPercent(from: -1) == 0)
         #expect(WidgetMetricNormalization.batteryPercent(from: 2) == 100)
+        #expect(WidgetMetricNormalization.batteryPercent(from: .nan) == 0)
+        #expect(WidgetMetricNormalization.batteryPercent(from: .infinity) == 0)
+    }
+
+    @Test("Widget metrics reject non-finite and negative snapshots")
+    func normalizesSystemMetrics() {
+        #expect(WidgetMetricNormalization.nonnegativeFinite(.nan) == 0)
+        #expect(WidgetMetricNormalization.nonnegativeFinite(.infinity) == 0)
+        #expect(WidgetMetricNormalization.nonnegativeFinite(-1) == 0)
+        #expect(WidgetMetricNormalization.nonnegativeFinite(42) == 42)
+        #expect(WidgetMetricNormalization.percentage(120) == 100)
     }
 
     @Test("Uptime advances with each generated timeline entry")
@@ -50,6 +61,11 @@ struct WidgetDataStoreTests {
             snapshotDate: snapshot,
             entryDate: snapshot.addingTimeInterval(-120)
         ) == 3_600)
+        #expect(WidgetMetricNormalization.uptime(
+            storedSeconds: .nan,
+            snapshotDate: snapshot,
+            entryDate: snapshot
+        ) == 0)
     }
 
     @Test("App Launcher deep links round-trip safe bundle identifiers")

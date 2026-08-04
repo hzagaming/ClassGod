@@ -24,6 +24,7 @@ struct PermissionCenterTests {
             #expect(!permission.iconName.isEmpty)
             #expect(!permission.features.isEmpty)
         }
+        #expect(PermissionType.appleEvents.canPrompt)
     }
 
     @Test("Unqueryable system panes are marked for manual review")
@@ -37,16 +38,65 @@ struct PermissionCenterTests {
         #expect(!PermissionType.speechRecognition.requiresManualReview)
     }
 
-    @Test("First-time setup only asks for permissions required by core switching")
-    func firstTimeSetupScope() {
-        let setupPermissions = PermissionType.allCases.filter(\.isRecommendedForSetup)
-        #expect(setupPermissions == [.accessibility, .appleEvents])
+    @Test("Full review includes every permission in catalog order")
+    func fullReviewScope() {
+        #expect(PermissionReviewPlan.all == PermissionType.allCases)
     }
 
-    @Test("A delayed onboarding action cannot skip a newer step")
-    func guardsDelayedOnboardingAdvance() {
-        #expect(PermissionOnboardingAdvancePolicy.shouldAdvance(expectedStep: 0, currentStep: 0))
-        #expect(!PermissionOnboardingAdvancePolicy.shouldAdvance(expectedStep: 0, currentStep: 1))
+    @Test("Every permission communicates whether access is required")
+    func permissionRequirementMetadata() {
+        #expect(PermissionType.accessibility.requirement == .required)
+        #expect(PermissionType.appleEvents.requirement == .required)
+        #expect(PermissionType.inputMonitoring.requirement == .recommended)
+        #expect(PermissionType.contacts.requirement == .optional)
+        #expect(PermissionType.calendar.requirement == .optional)
+    }
+
+    @Test("Permission states never report manual review as denied")
+    func permissionStateSemantics() {
+        #expect(PermissionAuthorizationState.granted.isGranted)
+        #expect(!PermissionAuthorizationState.denied.isGranted)
+        #expect(!PermissionAuthorizationState.notDetermined.isGranted)
+        #expect(!PermissionAuthorizationState.restricted.isGranted)
+        #expect(!PermissionAuthorizationState.manualReview.isGranted)
+        #expect(PermissionAuthorizationState.manualReview.needsManualReview)
+    }
+
+    @Test("Every asynchronous prompt refreshes after its completion callback")
+    func asynchronousPromptRefreshPolicy() {
+        #expect(PermissionRequestRefreshPolicy.completionDriven == [
+            .appleEvents, .microphone, .camera, .photos, .speechRecognition,
+            .location, .notifications, .contacts, .reminders, .calendar, .bluetooth
+        ])
+        for permission in PermissionRequestRefreshPolicy.completionDriven {
+            #expect(PermissionRequestRefreshPolicy.shouldRefreshOnCompletion(permission))
+        }
+        #expect(!PermissionRequestRefreshPolicy.shouldRefreshOnCompletion(.accessibility))
+    }
+
+    @Test("Permission actions distinguish refresh, native prompts, and Settings")
+    func permissionRequestActions() {
+        #expect(PermissionRequestPolicy.action(for: .microphone, state: .granted) == .refresh)
+        #expect(PermissionRequestPolicy.action(for: .microphone, state: .notDetermined) == .prompt)
+        #expect(PermissionRequestPolicy.action(for: .microphone, state: .denied) == .openSettings)
+        #expect(PermissionRequestPolicy.action(for: .filesAndFolders, state: .manualReview) == .openSettings)
+        #expect(PermissionRequestPolicy.action(for: .accessibility, state: .denied) == .prompt)
+        #expect(PermissionRequestPolicy.action(for: .inputMonitoring, state: .denied) == .prompt)
+        #expect(PermissionRequestPolicy.action(for: .screenRecording, state: .denied) == .prompt)
+    }
+
+    @Test("Repeated permission clicks are coalesced until completion")
+    func permissionRequestTracker() {
+        var tracker = PermissionRequestTracker()
+        let first = tracker.begin(.location)
+        let duplicate = tracker.begin(.location)
+        #expect(first)
+        #expect(!duplicate)
+        #expect(tracker.contains(.location))
+        tracker.end(.location)
+        #expect(!tracker.contains(.location))
+        let retry = tracker.begin(.location)
+        #expect(retry)
     }
 
     @Test("Apple Events passive check only grants successful OSStatus")
@@ -54,6 +104,9 @@ struct PermissionCenterTests {
         #expect(AppleEventsPermissionCheck.isGranted(status: 0))
         #expect(!AppleEventsPermissionCheck.isGranted(status: -1743))
         #expect(!AppleEventsPermissionCheck.isGranted(status: -600))
+        #expect(AppleEventsPermissionCheck.authorizationState(status: 0) == .granted)
+        #expect(AppleEventsPermissionCheck.authorizationState(status: -1744) == .notDetermined)
+        #expect(AppleEventsPermissionCheck.authorizationState(status: -1743) == .denied)
     }
 
     @Test("Every permission has a safe System Settings destination")
@@ -61,5 +114,9 @@ struct PermissionCenterTests {
         for permission in PermissionType.allCases {
             #expect(PermissionSettingsDestination.url(for: permission) != nil)
         }
+        #expect(
+            PermissionSettingsDestination.url(for: .notifications)?.absoluteString
+                == "x-apple.systempreferences:com.apple.Notifications-Settings.extension?id=com.hanazar.classgod"
+        )
     }
 }

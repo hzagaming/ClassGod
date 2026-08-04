@@ -9,6 +9,38 @@ import SwiftUI
 import AppKit
 import Carbon
 
+nonisolated enum LaunchWindowPresentationPolicy {
+    static func shouldShowMainWindow(showOnLaunch: Bool) -> Bool {
+        showOnLaunch
+    }
+}
+
+nonisolated struct WindowTransitionTracker<Key: Hashable> {
+    private struct State {
+        let generation: UInt
+        let targetVisible: Bool
+    }
+
+    private var states: [Key: State] = [:]
+
+    mutating func begin(for key: Key, targetVisible: Bool, currentVisible: Bool) -> UInt? {
+        if let state = states[key], state.targetVisible == targetVisible { return nil }
+        guard states[key] != nil || currentVisible != targetVisible else { return nil }
+        let generation = (states[key]?.generation ?? 0) &+ 1
+        states[key] = State(generation: generation, targetVisible: targetVisible)
+        return generation
+    }
+
+    func isCurrent(_ generation: UInt, for key: Key, targetVisible: Bool) -> Bool {
+        guard let state = states[key] else { return false }
+        return state.generation == generation && state.targetVisible == targetVisible
+    }
+
+    func targetVisibility(for key: Key, currentVisible: Bool) -> Bool {
+        states[key]?.targetVisible ?? currentVisible
+    }
+}
+
 @main
 struct ClassGodApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
@@ -45,7 +77,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     var splashWindow: NSWindow?
     private var clickOutsideMonitor: Any?
-    private var ghostProtocolWindowTransition: UInt = 0
+    private var windowTransitions = WindowTransitionTracker<ObjectIdentifier>()
 
     private var targetWindowAlpha: CGFloat {
         CGFloat(PreferencesManager.shared.preferences.windowOpacity)
@@ -129,10 +161,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 window.orderBack(nil)
                 
                 // Phase 3: Chaos glitch animation
-                LaunchAnimationManager.shared.startChaosAnimation(mainWindow: window) { [weak self] in
+                LaunchAnimationManager.shared.startChaosAnimation(mainWindow: window) { [weak self, weak window] in
                     // Phase 4: Animation complete
-                    if PreferencesManager.shared.preferences.showPopoverOnLaunch {
+                    if LaunchWindowPresentationPolicy.shouldShowMainWindow(
+                        showOnLaunch: PreferencesManager.shared.preferences.showPopoverOnLaunch
+                    ) {
                         self?.showMainWindow(animated: false)
+                    } else {
+                        window?.alphaValue = 0
+                        window?.orderOut(nil)
                     }
                 }
             }
@@ -331,6 +368,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             showDestinTabWindow(animated: animated)
             return
         }
+        guard beginWindowTransition(window, targetVisible: true) != nil else { return }
         
         SoundEffectManager.shared.playWindowOpen(feature: "destintab")
         
@@ -349,15 +387,18 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     func hideDestinTabWindow() {
-        guard let window = destinTabWindow else { return }
+        guard let window = destinTabWindow,
+              let transition = beginWindowTransition(window, targetVisible: false) else { return }
         SoundEffectManager.shared.playWindowClose(feature: "destintab")
         
         NSAnimationContext.runAnimationGroup { context in
             context.duration = Anim.duration
             context.timingFunction = .init(name: .easeIn)
             window.animator().alphaValue = 0
-        } completionHandler: { [weak self] in
-            self?.destinTabWindow?.orderOut(nil)
+        } completionHandler: { [weak self, weak window] in
+            guard let self, let window,
+                  self.isCurrentWindowTransition(transition, for: window, targetVisible: false) else { return }
+            window.orderOut(nil)
         }
     }
     
@@ -368,7 +409,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
         
-        if window.isVisible && window.alphaValue > 0 {
+        if windowTargetIsVisible(window) {
             hideDestinTabWindow()
         } else {
             showDestinTabWindow(animated: true)
@@ -432,6 +473,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             showSuperSwitchWindow(animated: animated)
             return
         }
+        guard beginWindowTransition(window, targetVisible: true) != nil else { return }
         
         SoundEffectManager.shared.playWindowOpen(feature: "superswitch")
         
@@ -450,15 +492,18 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     func hideSuperSwitchWindow() {
-        guard let window = superSwitchWindow else { return }
+        guard let window = superSwitchWindow,
+              let transition = beginWindowTransition(window, targetVisible: false) else { return }
         SoundEffectManager.shared.playWindowClose(feature: "superswitch")
         
         NSAnimationContext.runAnimationGroup { context in
             context.duration = Anim.duration
             context.timingFunction = .init(name: .easeIn)
             window.animator().alphaValue = 0
-        } completionHandler: { [weak self] in
-            self?.superSwitchWindow?.orderOut(nil)
+        } completionHandler: { [weak self, weak window] in
+            guard let self, let window,
+                  self.isCurrentWindowTransition(transition, for: window, targetVisible: false) else { return }
+            window.orderOut(nil)
         }
     }
     
@@ -469,7 +514,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
         
-        if window.isVisible && window.alphaValue > 0 {
+        if windowTargetIsVisible(window) {
             hideSuperSwitchWindow()
         } else {
             showSuperSwitchWindow(animated: true)
@@ -526,9 +571,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             showGhostProtocolWindow(animated: animated)
             return
         }
+        guard beginWindowTransition(window, targetVisible: true) != nil else { return }
         GhostProtocolController.shared.refresh()
         SoundEffectManager.shared.playWindowOpen(feature: "ghostprotocol")
-        ghostProtocolWindowTransition &+= 1
 
         if animated && Anim.enabled {
             window.alphaValue = 0
@@ -545,11 +590,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func hideGhostProtocolWindow() {
-        guard let window = ghostProtocolWindow, window.isVisible else { return }
+        guard let window = ghostProtocolWindow,
+              let transition = beginWindowTransition(window, targetVisible: false) else { return }
         NotificationCenter.default.post(name: .ghostProtocolWindowWillHide, object: nil)
         SoundEffectManager.shared.playWindowClose(feature: "ghostprotocol")
-        ghostProtocolWindowTransition &+= 1
-        let transition = ghostProtocolWindowTransition
         guard Anim.enabled else {
             window.alphaValue = 0
             window.orderOut(nil)
@@ -560,8 +604,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             context.timingFunction = .init(name: .easeIn)
             window.animator().alphaValue = 0
         } completionHandler: { [weak self, weak window] in
-            guard let self, self.ghostProtocolWindowTransition == transition else { return }
-            window?.orderOut(nil)
+            guard let self, let window,
+                  self.isCurrentWindowTransition(transition, for: window, targetVisible: false) else { return }
+            window.orderOut(nil)
         }
     }
 
@@ -571,7 +616,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             showGhostProtocolWindow(animated: true)
             return
         }
-        if window.isVisible && window.alphaValue > 0 {
+        if windowTargetIsVisible(window) {
             hideGhostProtocolWindow()
         } else {
             showGhostProtocolWindow(animated: true)
@@ -635,6 +680,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             showBrowserBypasserWindow(animated: animated)
             return
         }
+        guard beginWindowTransition(window, targetVisible: true) != nil else { return }
         
         SoundEffectManager.shared.playWindowOpen(feature: "browserbypasser")
         
@@ -653,15 +699,18 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     func hideBrowserBypasserWindow() {
-        guard let window = browserBypasserWindow else { return }
+        guard let window = browserBypasserWindow,
+              let transition = beginWindowTransition(window, targetVisible: false) else { return }
         SoundEffectManager.shared.playWindowClose(feature: "browserbypasser")
         
         NSAnimationContext.runAnimationGroup { context in
             context.duration = Anim.duration
             context.timingFunction = .init(name: .easeIn)
             window.animator().alphaValue = 0
-        } completionHandler: { [weak self] in
-            self?.browserBypasserWindow?.orderOut(nil)
+        } completionHandler: { [weak self, weak window] in
+            guard let self, let window,
+                  self.isCurrentWindowTransition(transition, for: window, targetVisible: false) else { return }
+            window.orderOut(nil)
         }
     }
     
@@ -672,7 +721,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
         
-        if window.isVisible && window.alphaValue > 0 {
+        if windowTargetIsVisible(window) {
             hideBrowserBypasserWindow()
         } else {
             showBrowserBypasserWindow(animated: true)
@@ -736,6 +785,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             showAssessPrepHackWindow(animated: animated)
             return
         }
+        guard beginWindowTransition(window, targetVisible: true) != nil else { return }
         
         SoundEffectManager.shared.playWindowOpen(feature: "assessprephack")
         NotificationCenter.default.post(name: .assessPrepHackWindowDidShow, object: nil)
@@ -755,7 +805,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     func hideAssessPrepHackWindow() {
-        guard let window = assessPrepHackWindow else { return }
+        guard let window = assessPrepHackWindow,
+              let transition = beginWindowTransition(window, targetVisible: false) else { return }
         SoundEffectManager.shared.playWindowClose(feature: "assessprephack")
         NotificationCenter.default.post(name: .assessPrepHackWindowWillHide, object: nil)
         
@@ -763,8 +814,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             context.duration = Anim.duration
             context.timingFunction = .init(name: .easeIn)
             window.animator().alphaValue = 0
-        } completionHandler: { [weak self] in
-            self?.assessPrepHackWindow?.orderOut(nil)
+        } completionHandler: { [weak self, weak window] in
+            guard let self, let window,
+                  self.isCurrentWindowTransition(transition, for: window, targetVisible: false) else { return }
+            window.orderOut(nil)
         }
     }
     
@@ -775,7 +828,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
         
-        if window.isVisible && window.alphaValue > 0 {
+        if windowTargetIsVisible(window) {
             hideAssessPrepHackWindow()
         } else {
             showAssessPrepHackWindow(animated: true)
@@ -835,6 +888,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             showSettingsWindow(animated: animated)
             return
         }
+        guard beginWindowTransition(window, targetVisible: true) != nil else { return }
         
         SoundEffectManager.shared.playWindowOpen()
         
@@ -853,15 +907,18 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     func hideSettingsWindow() {
-        guard let window = settingsWindow else { return }
+        guard let window = settingsWindow,
+              let transition = beginWindowTransition(window, targetVisible: false) else { return }
         SoundEffectManager.shared.playWindowClose()
         
         NSAnimationContext.runAnimationGroup { context in
             context.duration = Anim.duration
             context.timingFunction = .init(name: .easeIn)
             window.animator().alphaValue = 0
-        } completionHandler: { [weak self] in
-            self?.settingsWindow?.orderOut(nil)
+        } completionHandler: { [weak self, weak window] in
+            guard let self, let window,
+                  self.isCurrentWindowTransition(transition, for: window, targetVisible: false) else { return }
+            window.orderOut(nil)
         }
     }
     
@@ -872,7 +929,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
         
-        if window.isVisible && window.alphaValue > 0 {
+        if windowTargetIsVisible(window) {
             hideSettingsWindow()
         } else {
             showSettingsWindow(animated: true)
@@ -932,6 +989,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             showWallpaperBrowserWindow(animated: animated)
             return
         }
+        guard beginWindowTransition(window, targetVisible: true) != nil else { return }
 
         SoundEffectManager.shared.playWindowOpen()
 
@@ -950,15 +1008,18 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func hideWallpaperBrowserWindow() {
-        guard let window = wallpaperBrowserWindow else { return }
+        guard let window = wallpaperBrowserWindow,
+              let transition = beginWindowTransition(window, targetVisible: false) else { return }
         SoundEffectManager.shared.playWindowClose()
 
         NSAnimationContext.runAnimationGroup { context in
             context.duration = Anim.duration
             context.timingFunction = .init(name: .easeIn)
             window.animator().alphaValue = 0
-        } completionHandler: { [weak self] in
-            self?.wallpaperBrowserWindow?.orderOut(nil)
+        } completionHandler: { [weak self, weak window] in
+            guard let self, let window,
+                  self.isCurrentWindowTransition(transition, for: window, targetVisible: false) else { return }
+            window.orderOut(nil)
         }
     }
 
@@ -969,7 +1030,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
 
-        if window.isVisible && window.alphaValue > 0 {
+        if windowTargetIsVisible(window) {
             hideWallpaperBrowserWindow()
         } else {
             showWallpaperBrowserWindow(animated: true)
@@ -1032,6 +1093,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             showHackerDesktopWindow(animated: animated)
             return
         }
+        guard beginWindowTransition(window, targetVisible: true) != nil else { return }
 
         SoundEffectManager.shared.playWindowOpen(feature: "hackerdesktop")
         NotificationCenter.default.post(name: .hackerDesktopWindowDidShow, object: nil)
@@ -1051,7 +1113,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func hideHackerDesktopWindow() {
-        guard let window = hackerDesktopWindow else { return }
+        guard let window = hackerDesktopWindow,
+              let transition = beginWindowTransition(window, targetVisible: false) else { return }
         SoundEffectManager.shared.playWindowClose(feature: "hackerdesktop")
         NotificationCenter.default.post(name: .hackerDesktopWindowWillHide, object: nil)
 
@@ -1059,8 +1122,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             context.duration = Anim.duration
             context.timingFunction = .init(name: .easeIn)
             window.animator().alphaValue = 0
-        } completionHandler: { [weak self] in
-            self?.hackerDesktopWindow?.orderOut(nil)
+        } completionHandler: { [weak self, weak window] in
+            guard let self, let window,
+                  self.isCurrentWindowTransition(transition, for: window, targetVisible: false) else { return }
+            window.orderOut(nil)
         }
     }
 
@@ -1071,7 +1136,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
 
-        if window.isVisible && window.alphaValue > 0 {
+        if windowTargetIsVisible(window) {
             hideHackerDesktopWindow()
         } else {
             showHackerDesktopWindow(animated: true)
@@ -1129,6 +1194,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             showClipoWindow(animated: animated)
             return
         }
+        guard beginWindowTransition(window, targetVisible: true) != nil else { return }
 
         SoundEffectManager.shared.playWindowOpen(feature: "clipo")
         ClipoService.shared.rememberPasteTarget()
@@ -1147,7 +1213,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func hideClipoWindow(playSound: Bool = true) {
-        guard let window = clipoWindow else { return }
+        guard let window = clipoWindow,
+              let transition = beginWindowTransition(window, targetVisible: false) else { return }
         if playSound {
             SoundEffectManager.shared.playWindowClose(feature: "clipo")
         }
@@ -1155,8 +1222,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             context.duration = Anim.duration
             context.timingFunction = .init(name: .easeIn)
             window.animator().alphaValue = 0
-        } completionHandler: { [weak self] in
-            self?.clipoWindow?.orderOut(nil)
+        } completionHandler: { [weak self, weak window] in
+            guard let self, let window,
+                  self.isCurrentWindowTransition(transition, for: window, targetVisible: false) else { return }
+            window.orderOut(nil)
         }
     }
 
@@ -1166,7 +1235,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             showClipoWindow(animated: true)
             return
         }
-        window.isVisible && window.alphaValue > 0 ? hideClipoWindow() : showClipoWindow(animated: true)
+        windowTargetIsVisible(window) ? hideClipoWindow() : showClipoWindow(animated: true)
     }
 
     @objc private func hideClipoForPaste() {
@@ -1226,6 +1295,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             showErrorHubWindow(animated: animated)
             return
         }
+        guard beginWindowTransition(window, targetVisible: true) != nil else { return }
 
         SoundEffectManager.shared.playWindowOpen(feature: "errorhub")
 
@@ -1244,15 +1314,18 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func hideErrorHubWindow() {
-        guard let window = errorHubWindow else { return }
+        guard let window = errorHubWindow,
+              let transition = beginWindowTransition(window, targetVisible: false) else { return }
         SoundEffectManager.shared.playWindowClose(feature: "errorhub")
 
         NSAnimationContext.runAnimationGroup { context in
             context.duration = Anim.duration
             context.timingFunction = .init(name: .easeIn)
             window.animator().alphaValue = 0
-        } completionHandler: { [weak self] in
-            self?.errorHubWindow?.orderOut(nil)
+        } completionHandler: { [weak self, weak window] in
+            guard let self, let window,
+                  self.isCurrentWindowTransition(transition, for: window, targetVisible: false) else { return }
+            window.orderOut(nil)
         }
     }
 
@@ -1263,7 +1336,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
 
-        if window.isVisible && window.alphaValue > 0 {
+        if windowTargetIsVisible(window) {
             hideErrorHubWindow()
         } else {
             showErrorHubWindow(animated: true)
@@ -1331,6 +1404,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             showFanControlWindow(animated: animated)
             return
         }
+        guard beginWindowTransition(window, targetVisible: true) != nil else { return }
 
         SoundEffectManager.shared.playWindowOpen(feature: "fancontrol")
 
@@ -1349,7 +1423,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func hideFanControlWindow() {
-        guard let window = fanControlWindow else { return }
+        guard let window = fanControlWindow,
+              let transition = beginWindowTransition(window, targetVisible: false) else { return }
         SoundEffectManager.shared.playWindowClose(feature: "fancontrol")
         NotificationCenter.default.post(name: .fanControlWindowWillHide, object: nil)
 
@@ -1357,8 +1432,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             context.duration = Anim.duration
             context.timingFunction = .init(name: .easeIn)
             window.animator().alphaValue = 0
-        } completionHandler: { [weak self] in
-            self?.fanControlWindow?.orderOut(nil)
+        } completionHandler: { [weak self, weak window] in
+            guard let self, let window,
+                  self.isCurrentWindowTransition(transition, for: window, targetVisible: false) else { return }
+            window.orderOut(nil)
         }
     }
 
@@ -1369,7 +1446,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
 
-        if window.isVisible && window.alphaValue > 0 {
+        if windowTargetIsVisible(window) {
             hideFanControlWindow()
         } else {
             showFanControlWindow(animated: true)
@@ -1431,6 +1508,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             showActivityMonitorWindow(animated: animated)
             return
         }
+        guard beginWindowTransition(window, targetVisible: true) != nil else { return }
 
         SoundEffectManager.shared.playWindowOpen(feature: "activitymonitor")
         NotificationCenter.default.post(name: .activityMonitorWindowDidShow, object: nil)
@@ -1450,7 +1528,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func hideActivityMonitorWindow() {
-        guard let window = activityMonitorWindow else { return }
+        guard let window = activityMonitorWindow,
+              let transition = beginWindowTransition(window, targetVisible: false) else { return }
         SoundEffectManager.shared.playWindowClose(feature: "activitymonitor")
         NotificationCenter.default.post(name: .activityMonitorWindowWillHide, object: nil)
 
@@ -1458,8 +1537,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             context.duration = Anim.duration
             context.timingFunction = .init(name: .easeIn)
             window.animator().alphaValue = 0
-        } completionHandler: { [weak self] in
-            self?.activityMonitorWindow?.orderOut(nil)
+        } completionHandler: { [weak self, weak window] in
+            guard let self, let window,
+                  self.isCurrentWindowTransition(transition, for: window, targetVisible: false) else { return }
+            window.orderOut(nil)
         }
     }
 
@@ -1470,7 +1551,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
 
-        if window.isVisible && window.alphaValue > 0 {
+        if windowTargetIsVisible(window) {
             hideActivityMonitorWindow()
         } else {
             showActivityMonitorWindow(animated: true)
@@ -1532,6 +1613,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             showPermissionCenterWindow(animated: animated)
             return
         }
+        guard beginWindowTransition(window, targetVisible: true) != nil else { return }
 
         SoundEffectManager.shared.playWindowOpen(feature: "permissioncenter")
 
@@ -1551,15 +1633,18 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func hidePermissionCenterWindow() {
-        guard let window = permissionCenterWindow else { return }
+        guard let window = permissionCenterWindow,
+              let transition = beginWindowTransition(window, targetVisible: false) else { return }
         SoundEffectManager.shared.playWindowClose(feature: "permissioncenter")
 
         NSAnimationContext.runAnimationGroup { context in
             context.duration = Anim.duration
             context.timingFunction = .init(name: .easeIn)
             window.animator().alphaValue = 0
-        } completionHandler: { [weak self] in
-            self?.permissionCenterWindow?.orderOut(nil)
+        } completionHandler: { [weak self, weak window] in
+            guard let self, let window,
+                  self.isCurrentWindowTransition(transition, for: window, targetVisible: false) else { return }
+            window.orderOut(nil)
         }
     }
 
@@ -1570,7 +1655,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
 
-        if window.isVisible && window.alphaValue > 0 {
+        if windowTargetIsVisible(window) {
             hidePermissionCenterWindow()
         } else {
             showPermissionCenterWindow(animated: true)
@@ -1618,6 +1703,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func showMainWindow(animated: Bool = false) {
         guard let window = mainWindow else { return }
+        guard beginWindowTransition(window, targetVisible: true) != nil else { return }
 
         // Status-item and global-hotkey actions do not necessarily activate an accessory app.
         // Activate first so a normal-level panel is not ordered behind the current application.
@@ -1658,7 +1744,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func hideMainWindow() {
-        guard let window = mainWindow else { return }
+        guard let window = mainWindow,
+              let transition = beginWindowTransition(window, targetVisible: false) else { return }
         SoundEffectManager.shared.playWindowClose()
         NotificationCenter.default.post(name: .mainWindowWillHide, object: nil)
 
@@ -1667,8 +1754,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 context.duration = Anim.duration
                 context.timingFunction = .init(name: .easeIn)
                 window.animator().alphaValue = 0
-            } completionHandler: { [weak self] in
-                self?.mainWindow?.orderOut(nil)
+            } completionHandler: { [weak self, weak window] in
+                guard let self, let window,
+                      self.isCurrentWindowTransition(transition, for: window, targetVisible: false) else { return }
+                window.orderOut(nil)
             }
         } else {
             window.alphaValue = 0
@@ -1684,7 +1773,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
 
-        if window.isVisible && window.alphaValue > 0 {
+        if windowTargetIsVisible(window) {
             hideMainWindow()
         } else {
             showMainWindow(animated: true)
@@ -1692,6 +1781,33 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     // MARK: - Window Behavior Helpers
+
+    private func beginWindowTransition(_ window: NSWindow, targetVisible: Bool) -> UInt? {
+        windowTransitions.begin(
+            for: ObjectIdentifier(window),
+            targetVisible: targetVisible,
+            currentVisible: window.isVisible && window.alphaValue > 0
+        )
+    }
+
+    private func isCurrentWindowTransition(
+        _ generation: UInt,
+        for window: NSWindow,
+        targetVisible: Bool
+    ) -> Bool {
+        windowTransitions.isCurrent(
+            generation,
+            for: ObjectIdentifier(window),
+            targetVisible: targetVisible
+        )
+    }
+
+    private func windowTargetIsVisible(_ window: NSWindow) -> Bool {
+        windowTransitions.targetVisibility(
+            for: ObjectIdentifier(window),
+            currentVisible: window.isVisible && window.alphaValue > 0
+        )
+    }
 
     private func updateAllWindowLevels() {
         let level = windowLevel

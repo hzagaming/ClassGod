@@ -118,4 +118,16 @@ struct WallpaperSettingsTests {
             currentRequestID: currentRequest
         ))
     }
+
+    @Test("Desktop wallpaper windows reconcile stable display identifiers")
+    func reconcilesDesktopDisplays() {
+        #expect(WallpaperDisplayPolicy.disconnectedIDs(
+            existing: [1, 2],
+            connected: [2, 3]
+        ) == [1])
+        #expect(WallpaperDisplayPolicy.disconnectedIDs(
+            existing: [1],
+            connected: [1]
+        ).isEmpty)
+    }
 }

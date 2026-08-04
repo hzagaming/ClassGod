@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+import UserNotifications
 @testable import ClassGod
 
 @Suite("Fan refresh policy")
@@ -57,5 +58,45 @@ struct FanRefreshPolicyTests {
         #expect(MonotonicCounterPolicy.delta(current: 1_250, previous: 1_000) == 250)
         #expect(MonotonicCounterPolicy.delta(current: 20, previous: 1_000) == 0)
         #expect(MonotonicCounterPolicy.rate(current: 1_300, previous: 1_000, interval: 2) == 150)
+    }
+
+    @Test("Fan alerts require authorization already granted in Permission Center")
+    func notificationDeliveryRequiresExistingAuthorization() {
+        #expect(FanNotificationPolicy.canDeliver(
+            isEnabled: true,
+            authorizationStatus: .authorized,
+            currentTemperature: 85,
+            threshold: 85
+        ))
+        #expect(FanNotificationPolicy.canDeliver(
+            isEnabled: true,
+            authorizationStatus: .provisional,
+            currentTemperature: 90,
+            threshold: 85
+        ))
+        #expect(!FanNotificationPolicy.canDeliver(
+            isEnabled: true,
+            authorizationStatus: .authorized,
+            currentTemperature: 84.9,
+            threshold: 85
+        ))
+        #expect(!FanNotificationPolicy.canDeliver(
+            isEnabled: true,
+            authorizationStatus: .notDetermined,
+            currentTemperature: 90,
+            threshold: 85
+        ))
+        #expect(!FanNotificationPolicy.canDeliver(
+            isEnabled: true,
+            authorizationStatus: .denied,
+            currentTemperature: 90,
+            threshold: 85
+        ))
+        #expect(!FanNotificationPolicy.canDeliver(
+            isEnabled: false,
+            authorizationStatus: .authorized,
+            currentTemperature: 90,
+            threshold: 85
+        ))
     }
 }

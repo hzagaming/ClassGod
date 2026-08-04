@@ -235,6 +235,22 @@ struct ClipoTests {
         #expect(!ClipoPayloadPolicy.isWithinBudget(oversizedRepresentation, representationLimit: 4, payloadLimit: 8))
     }
 
+    @Test("Clipboard fingerprints preserve representation boundaries")
+    func fingerprintsStructuredPayloads() {
+        let first = ClipoPayload(items: [
+            ClipoPayloadItem(representations: [
+                ClipoRepresentation(type: "ab", data: Data("c".utf8))
+            ])
+        ])
+        let second = ClipoPayload(items: [
+            ClipoPayloadItem(representations: [
+                ClipoRepresentation(type: "a", data: Data("bc".utf8))
+            ])
+        ])
+
+        #expect(first.fingerprint != second.fingerprint)
+    }
+
     @Test("Search combines query, fuzzy matching, and type filters")
     func filtersHistory() {
         let items = [

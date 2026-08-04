@@ -7,6 +7,19 @@ import SwiftUI
 import AppKit
 import Combine
 
+enum WallpaperDisplayPolicy {
+    static func identifier(for screen: NSScreen) -> UInt32? {
+        (screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber)?.uint32Value
+    }
+
+    nonisolated static func disconnectedIDs(
+        existing: Set<UInt32>,
+        connected: Set<UInt32>
+    ) -> Set<UInt32> {
+        existing.subtracting(connected)
+    }
+}
+
 /// Manages borderless wallpaper windows at the desktop level (behind Finder icons).
 /// Creates one window per connected display. Windows ignore mouse events so
 /// users can still click desktop icons and use Finder normally.
@@ -14,7 +27,7 @@ import Combine
 final class DesktopWallpaperController {
     static let shared = DesktopWallpaperController()
     
-    private var windows: [NSScreen: DesktopWallpaperWindow] = [:]
+    private var windows: [UInt32: DesktopWallpaperWindow] = [:]
     private var cancellables = Set<AnyCancellable>()
     private var screenObserver: NSObjectProtocol?
     
@@ -80,24 +93,26 @@ final class DesktopWallpaperController {
             return
         }
         
-        let screens = NSScreen.screens
-        let connectedIDs = Set(screens.compactMap { $0.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber })
+        let screens = NSScreen.screens.compactMap { screen in
+            WallpaperDisplayPolicy.identifier(for: screen).map { ($0, screen) }
+        }
+        let connectedIDs = Set(screens.map { $0.0 })
         
         // Remove windows for disconnected screens
-        let disconnected = windows.keys.filter { screen in
-            guard let id = screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber else { return true }
-            return !connectedIDs.contains(id)
-        }
-        for screen in disconnected {
-            windows[screen]?.orderOut(nil)
-            windows.removeValue(forKey: screen)
+        let disconnectedIDs = WallpaperDisplayPolicy.disconnectedIDs(
+            existing: Set(windows.keys),
+            connected: connectedIDs
+        )
+        for displayID in disconnectedIDs {
+            windows[displayID]?.orderOut(nil)
+            windows.removeValue(forKey: displayID)
         }
         
         // Create/update windows for each screen
-        let primaryScreen = screens.first
-        for screen in screens {
-            let coordinatesPlayback = primaryScreen.map { $0 === screen } ?? false
-            if let existing = windows[screen] {
+        let primaryDisplayID = screens.first?.0
+        for (displayID, screen) in screens {
+            let coordinatesPlayback = displayID == primaryDisplayID
+            if let existing = windows[displayID] {
                 existing.updateFrame(screen)
                 existing.refreshContent(coordinatesPlayback: coordinatesPlayback)
             } else {
@@ -105,7 +120,7 @@ final class DesktopWallpaperController {
                     screen: screen,
                     coordinatesPlayback: coordinatesPlayback
                 )
-                windows[screen] = window
+                windows[displayID] = window
                 window.orderFront(nil)
             }
         }

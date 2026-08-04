@@ -32,14 +32,14 @@ struct WidgetProvider: TimelineProvider {
         let snapshotDate = store.date(forKey: .lastUpdate) ?? date
         return WidgetEntry(
             date: date,
-            cpuUsage: store.double(forKey: .cpuUsage),
-            memoryUsage: store.double(forKey: .memoryUsage),
-            memoryTotal: store.double(forKey: .memoryTotal),
-            diskFree: store.double(forKey: .diskFree),
-            diskTotal: store.double(forKey: .diskTotal),
-            networkDown: store.double(forKey: .networkDown),
-            networkUp: store.double(forKey: .networkUp),
-            batteryLevel: store.double(forKey: .batteryLevel),
+            cpuUsage: WidgetMetricNormalization.percentage(store.double(forKey: .cpuUsage)),
+            memoryUsage: WidgetMetricNormalization.nonnegativeFinite(store.double(forKey: .memoryUsage)),
+            memoryTotal: WidgetMetricNormalization.nonnegativeFinite(store.double(forKey: .memoryTotal)),
+            diskFree: WidgetMetricNormalization.nonnegativeFinite(store.double(forKey: .diskFree)),
+            diskTotal: WidgetMetricNormalization.nonnegativeFinite(store.double(forKey: .diskTotal)),
+            networkDown: WidgetMetricNormalization.nonnegativeFinite(store.double(forKey: .networkDown)),
+            networkUp: WidgetMetricNormalization.nonnegativeFinite(store.double(forKey: .networkUp)),
+            batteryLevel: WidgetMetricNormalization.percentage(store.double(forKey: .batteryLevel)),
             batteryIsCharging: store.bool(forKey: .batteryIsCharging),
             uptimeSeconds: WidgetMetricNormalization.uptime(
                 storedSeconds: store.double(forKey: .uptimeSeconds),

@@ -48,6 +48,23 @@ enum PermissionCategory: String, CaseIterable, Identifiable, Equatable {
     }
 }
 
+enum PermissionRequirement: Equatable {
+    case required
+    case recommended
+    case optional
+}
+
+enum PermissionAuthorizationState: Equatable {
+    case granted
+    case denied
+    case notDetermined
+    case restricted
+    case manualReview
+
+    var isGranted: Bool { self == .granted }
+    var needsManualReview: Bool { self == .manualReview }
+}
+
 enum PermissionType: String, CaseIterable, Identifiable, Equatable {
     case accessibility = "Accessibility"
     case inputMonitoring = "Input Monitoring"
@@ -242,7 +259,7 @@ enum PermissionType: String, CaseIterable, Identifiable, Equatable {
     /// Whether the OS supports prompting directly from the app (vs opening System Settings).
     var canPrompt: Bool {
         switch self {
-        case .accessibility, .inputMonitoring, .screenRecording, .microphone, .camera,
+        case .accessibility, .inputMonitoring, .appleEvents, .screenRecording, .microphone, .camera,
              .photos, .speechRecognition, .location, .notifications, .contacts,
              .reminders, .calendar, .bluetooth:
             return true
@@ -259,8 +276,68 @@ enum PermissionType: String, CaseIterable, Identifiable, Equatable {
         }
     }
 
-    var isRecommendedForSetup: Bool {
-        self == .accessibility || self == .appleEvents
+    var requirement: PermissionRequirement {
+        switch self {
+        case .accessibility, .appleEvents:
+            return .required
+        case .inputMonitoring, .screenRecording, .fullDiskAccess, .notifications:
+            return .recommended
+        default:
+            return .optional
+        }
+    }
+}
+
+enum PermissionReviewPlan {
+    static let all = PermissionType.allCases
+}
+
+nonisolated enum PermissionRequestRefreshPolicy {
+    static let completionDriven: [PermissionType] = [
+        .appleEvents, .microphone, .camera, .photos, .speechRecognition,
+        .location, .notifications, .contacts, .reminders, .calendar, .bluetooth
+    ]
+
+    static func shouldRefreshOnCompletion(_ type: PermissionType) -> Bool {
+        completionDriven.contains(type)
+    }
+}
+
+enum PermissionRequestAction: Equatable {
+    case refresh
+    case prompt
+    case openSettings
+}
+
+enum PermissionRequestPolicy {
+    private static let booleanPreflightOnly: [PermissionType] = [
+        .accessibility, .inputMonitoring, .screenRecording
+    ]
+
+    static func action(
+        for type: PermissionType,
+        state: PermissionAuthorizationState
+    ) -> PermissionRequestAction {
+        if state.isGranted { return .refresh }
+        if state.needsManualReview || state == .restricted { return .openSettings }
+        if state == .denied, !booleanPreflightOnly.contains(type) { return .openSettings }
+        return type.canPrompt ? .prompt : .openSettings
+    }
+}
+
+struct PermissionRequestTracker {
+    private(set) var active: Set<PermissionType> = []
+
+    mutating func begin(_ type: PermissionType) -> Bool {
+        active.insert(type).inserted
+    }
+
+    mutating func end(_ type: PermissionType) {
+        active.remove(type)
+    }
+
+    func contains(_ type: PermissionType) -> Bool {
+        active.contains(type)
     }
 }
 
@@ -277,9 +354,11 @@ struct PermissionItemInfo: Identifiable, Equatable {
 
 struct PermissionStatus: Equatable {
     let type: PermissionType
-    let isGranted: Bool
+    let state: PermissionAuthorizationState
     let lastChecked: Date
     let detail: String?
+
+    var isGranted: Bool { state.isGranted }
 }
 
 enum AppleEventsPermissionCheck {
@@ -288,18 +367,39 @@ enum AppleEventsPermissionCheck {
     }
 
     nonisolated static func status() -> OSStatus {
+        determinePermission(askUserIfNeeded: false)
+    }
+
+    nonisolated static func request() -> OSStatus {
+        determinePermission(askUserIfNeeded: true)
+    }
+
+    private nonisolated static func determinePermission(askUserIfNeeded: Bool) -> OSStatus {
         let target = NSAppleEventDescriptor(bundleIdentifier: "com.apple.systemevents")
         return AEDeterminePermissionToAutomateTarget(
             target.aeDesc,
             typeWildCard,
             typeWildCard,
-            false
+            askUserIfNeeded
         )
+    }
+
+    nonisolated static func authorizationState(status: OSStatus) -> PermissionAuthorizationState {
+        switch status {
+        case noErr: .granted
+        case -1744: .notDetermined
+        default: .denied
+        }
     }
 }
 
 enum PermissionSettingsDestination {
     nonisolated static func url(for type: PermissionType) -> URL? {
+        if type == .notifications {
+            return URL(
+                string: "x-apple.systempreferences:com.apple.Notifications-Settings.extension?id=com.hanazar.classgod"
+            )
+        }
         let pane = switch type {
         case .fullDiskAccess: "Privacy_AllFiles"
         case .filesAndFolders: "Privacy_FilesAndFolders"
@@ -332,7 +432,9 @@ final class PermissionCenterService: ObservableObject {
     
     @Published var statuses: [PermissionType: PermissionStatus] = [:]
     @Published var isChecking = false
+    @Published private(set) var pendingRequests: Set<PermissionType> = []
     private var refreshRequestedWhileChecking = false
+    private var requestTracker = PermissionRequestTracker()
     
     var allPermissions: [PermissionItemInfo] {
         PermissionType.allCases.map { PermissionItemInfo(type: $0) }
@@ -350,8 +452,8 @@ final class PermissionCenterService: ObservableObject {
             var newStatuses: [PermissionType: PermissionStatus] = [:]
             let now = Date()
             for type in PermissionType.allCases {
-                let (granted, detail) = Self.checkStatus(type)
-                newStatuses[type] = PermissionStatus(type: type, isGranted: granted, lastChecked: now, detail: detail)
+                let (state, detail) = Self.checkStatus(type)
+                newStatuses[type] = PermissionStatus(type: type, state: state, lastChecked: now, detail: detail)
             }
             DispatchQueue.main.async {
                 guard let self else { return }
@@ -366,6 +468,20 @@ final class PermissionCenterService: ObservableObject {
     }
     
     func requestPermission(_ type: PermissionType) {
+        let fallbackState: PermissionAuthorizationState = type.requiresManualReview ? .manualReview : .notDetermined
+        switch PermissionRequestPolicy.action(for: type, state: statuses[type]?.state ?? fallbackState) {
+        case .refresh:
+            refreshAll()
+            return
+        case .openSettings:
+            Self.openSystemSettings(for: type)
+            return
+        case .prompt:
+            break
+        }
+        guard beginRequest(type) else { return }
+
+        let completed = completionHandler(for: type)
         switch type {
         case .accessibility:
             let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true]
@@ -374,107 +490,203 @@ final class PermissionCenterService: ObservableObject {
             if !CGPreflightListenEventAccess() {
                 _ = CGRequestListenEventAccess()
             }
+        case .appleEvents:
+            DispatchQueue.global(qos: .userInitiated).async {
+                _ = AppleEventsPermissionCheck.request()
+                completed()
+            }
         case .screenRecording:
             if !CGPreflightScreenCaptureAccess() {
                 CGRequestScreenCaptureAccess()
             }
         case .microphone:
-            AVCaptureDevice.requestAccess(for: .audio) { _ in }
+            AVCaptureDevice.requestAccess(for: .audio) { _ in completed() }
         case .camera:
-            AVCaptureDevice.requestAccess(for: .video) { _ in }
+            AVCaptureDevice.requestAccess(for: .video) { _ in completed() }
         case .photos:
-            PHPhotoLibrary.requestAuthorization(for: .readWrite) { _ in }
+            PHPhotoLibrary.requestAuthorization(for: .readWrite) { _ in completed() }
         case .speechRecognition:
-            SFSpeechRecognizer.requestAuthorization { _ in }
+            SFSpeechRecognizer.requestAuthorization { _ in completed() }
         case .location:
-            LocationPermissionHelper.shared.request()
+            LocationPermissionHelper.shared.request(completion: completed)
         case .notifications:
-            UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound]) { _, _ in }
+            UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound]) { _, _ in completed() }
         case .contacts:
-            CNContactStore().requestAccess(for: .contacts) { _, _ in }
+            CNContactStore().requestAccess(for: .contacts) { _, _ in completed() }
         case .reminders:
-            EventPermissionHelper.shared.requestReminders()
+            EventPermissionHelper.shared.requestReminders(completion: completed)
         case .calendar:
-            EventPermissionHelper.shared.requestCalendar()
+            EventPermissionHelper.shared.requestCalendar(completion: completed)
         case .bluetooth:
-            BluetoothPermissionHelper.shared.request()
+            BluetoothPermissionHelper.shared.request(completion: completed)
         default:
             Self.openSystemSettings(for: type)
         }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
-            self?.refreshAll()
+        if !PermissionRequestRefreshPolicy.shouldRefreshOnCompletion(type) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+                self?.finishRequest(type)
+                self?.refreshAll()
+            }
+        } else {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 60) { [weak self] in
+                guard self?.requestTracker.contains(type) == true else { return }
+                self?.finishRequest(type)
+                self?.refreshAll()
+            }
         }
     }
-    
-    private nonisolated static func checkStatus(_ type: PermissionType) -> (Bool, String?) {
+
+    func isRequesting(_ type: PermissionType) -> Bool {
+        pendingRequests.contains(type)
+    }
+
+    private func beginRequest(_ type: PermissionType) -> Bool {
+        guard requestTracker.begin(type) else { return false }
+        pendingRequests = requestTracker.active
+        return true
+    }
+
+    private func finishRequest(_ type: PermissionType) {
+        requestTracker.end(type)
+        pendingRequests = requestTracker.active
+    }
+
+    private func completionHandler(for type: PermissionType) -> @Sendable () -> Void {
+        { [weak self] in
+            DispatchQueue.main.async {
+                self?.finishRequest(type)
+                self?.refreshAll()
+            }
+        }
+    }
+
+    private nonisolated static func checkStatus(_ type: PermissionType) -> (PermissionAuthorizationState, String?) {
         switch type {
         case .accessibility:
             let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: false]
             let granted = AXIsProcessTrustedWithOptions(options as CFDictionary)
-            return (granted, nil)
+            return (granted ? .granted : .denied, nil)
 
         case .inputMonitoring:
-            return (CGPreflightListenEventAccess(), nil)
+            return (CGPreflightListenEventAccess() ? .granted : .denied, nil)
             
         case .appleEvents:
             let status = AppleEventsPermissionCheck.status()
-            return (AppleEventsPermissionCheck.isGranted(status: status), nil)
+            return (AppleEventsPermissionCheck.authorizationState(status: status), nil)
             
         case .screenRecording:
-            return (CGPreflightScreenCaptureAccess(), nil)
+            return (CGPreflightScreenCaptureAccess() ? .granted : .denied, nil)
             
         case .fullDiskAccess:
             // Probe a system-protected location; this is only a heuristic.
             let protectedPath = "/Library/Application Support/com.apple.TCC/TCC.db"
             let granted = FileManager.default.isReadableFile(atPath: protectedPath)
-            return (granted, nil)
+            return (granted ? .granted : .denied, nil)
 
         case .filesAndFolders, .developerTools, .appManagement, .mediaLibrary, .localNetwork:
-            return (false, nil)
+            return (.manualReview, nil)
             
         case .microphone:
             let status = AVCaptureDevice.authorizationStatus(for: .audio)
-            return (status == .authorized, nil)
+            return (authorizationState(for: status), nil)
             
         case .camera:
             let status = AVCaptureDevice.authorizationStatus(for: .video)
-            return (status == .authorized, nil)
+            return (authorizationState(for: status), nil)
 
         case .photos:
             let status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
-            return (status == .authorized || status == .limited, nil)
+            switch status {
+            case .authorized, .limited: return (.granted, nil)
+            case .notDetermined: return (.notDetermined, nil)
+            case .restricted: return (.restricted, nil)
+            case .denied: return (.denied, nil)
+            @unknown default: return (.restricted, nil)
+            }
 
         case .speechRecognition:
             let status = SFSpeechRecognizer.authorizationStatus()
-            return (status == .authorized, nil)
+            switch status {
+            case .authorized: return (.granted, nil)
+            case .notDetermined: return (.notDetermined, nil)
+            case .restricted: return (.restricted, nil)
+            case .denied: return (.denied, nil)
+            @unknown default: return (.restricted, nil)
+            }
             
         case .location:
             let status = CLLocationManager().authorizationStatus
-            let granted = status == .authorizedAlways || status == .authorized
-            return (granted, nil)
+            switch status {
+            case .authorizedAlways, .authorized: return (.granted, nil)
+            case .notDetermined: return (.notDetermined, nil)
+            case .restricted: return (.restricted, nil)
+            case .denied: return (.denied, nil)
+            @unknown default: return (.restricted, nil)
+            }
             
         case .notifications:
             let semaphore = DispatchSemaphore(value: 0)
-            var granted = false
+            var state = PermissionAuthorizationState.notDetermined
             UNUserNotificationCenter.current().getNotificationSettings { settings in
-                granted = settings.authorizationStatus == .authorized
+                switch settings.authorizationStatus {
+                case .authorized, .provisional, .ephemeral: state = .granted
+                case .notDetermined: state = .notDetermined
+                case .denied: state = .denied
+                @unknown default: state = .restricted
+                }
                 semaphore.signal()
             }
             _ = semaphore.wait(timeout: .now() + 0.5)
-            return (granted, nil)
+            return (state, nil)
             
         case .contacts:
-            return (CNContactStore.authorizationStatus(for: .contacts) == .authorized, nil)
+            return (authorizationState(for: CNContactStore.authorizationStatus(for: .contacts)), nil)
             
         case .reminders:
-            return (EKEventStore.authorizationStatus(for: .reminder) == .fullAccess, nil)
+            return (authorizationState(for: EKEventStore.authorizationStatus(for: .reminder)), nil)
             
         case .calendar:
-            return (EKEventStore.authorizationStatus(for: .event) == .fullAccess, nil)
+            return (authorizationState(for: EKEventStore.authorizationStatus(for: .event)), nil)
             
         case .bluetooth:
             let auth = CBCentralManager.authorization
-            return (auth == .allowedAlways, nil)
+            switch auth {
+            case .allowedAlways: return (.granted, nil)
+            case .notDetermined: return (.notDetermined, nil)
+            case .restricted: return (.restricted, nil)
+            case .denied: return (.denied, nil)
+            @unknown default: return (.restricted, nil)
+            }
+        }
+    }
+
+    private nonisolated static func authorizationState(for status: AVAuthorizationStatus) -> PermissionAuthorizationState {
+        switch status {
+        case .authorized: .granted
+        case .notDetermined: .notDetermined
+        case .restricted: .restricted
+        case .denied: .denied
+        @unknown default: .restricted
+        }
+    }
+
+    private nonisolated static func authorizationState(for status: CNAuthorizationStatus) -> PermissionAuthorizationState {
+        switch status {
+        case .authorized, .limited: .granted
+        case .notDetermined: .notDetermined
+        case .restricted: .restricted
+        case .denied: .denied
+        @unknown default: .restricted
+        }
+    }
+
+    private nonisolated static func authorizationState(for status: EKAuthorizationStatus) -> PermissionAuthorizationState {
+        switch status {
+        case .authorized, .fullAccess, .writeOnly: .granted
+        case .notDetermined: .notDetermined
+        case .restricted: .restricted
+        case .denied: .denied
+        @unknown default: .restricted
         }
     }
     
@@ -489,27 +701,39 @@ final class PermissionCenterService: ObservableObject {
 final class LocationPermissionHelper: NSObject, CLLocationManagerDelegate {
     static let shared = LocationPermissionHelper()
     private let manager = CLLocationManager()
+    private var completion: (@Sendable () -> Void)?
     
     private override init() {
         super.init()
         manager.delegate = self
     }
     
-    func request() {
+    func request(completion: @escaping @Sendable () -> Void) {
+        self.completion = completion
         manager.requestWhenInUseAuthorization()
+    }
+
+    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        guard manager.authorizationStatus != .notDetermined else { return }
+        completion?()
+        completion = nil
     }
 }
 
 final class BluetoothPermissionHelper: NSObject, CBCentralManagerDelegate {
     static let shared = BluetoothPermissionHelper()
     private var manager: CBCentralManager?
+    private var completion: (@Sendable () -> Void)?
     
-    func request() {
+    func request(completion: @escaping @Sendable () -> Void) {
+        self.completion = completion
         manager = CBCentralManager(delegate: self, queue: nil)
     }
     
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
-        // Triggered side effect: instantiates CBCentralManager, which prompts on first use.
+        guard CBCentralManager.authorization != .notDetermined else { return }
+        completion?()
+        completion = nil
     }
 }
 
@@ -517,11 +741,11 @@ final class EventPermissionHelper {
     static let shared = EventPermissionHelper()
     private let store = EKEventStore()
 
-    func requestReminders() {
-        store.requestFullAccessToReminders { _, _ in }
+    func requestReminders(completion: @escaping @Sendable () -> Void) {
+        store.requestFullAccessToReminders { _, _ in completion() }
     }
 
-    func requestCalendar() {
-        store.requestFullAccessToEvents { _, _ in }
+    func requestCalendar(completion: @escaping @Sendable () -> Void) {
+        store.requestFullAccessToEvents { _, _ in completion() }
     }
 }

@@ -8,6 +8,22 @@ import AppKit
 import Combine
 import UserNotifications
 
+nonisolated enum FanNotificationPolicy {
+    static func canDeliver(
+        isEnabled: Bool,
+        authorizationStatus: UNAuthorizationStatus,
+        currentTemperature: Double,
+        threshold: Double
+    ) -> Bool {
+        guard isEnabled, currentTemperature >= threshold else { return false }
+        switch authorizationStatus {
+        case .authorized, .provisional, .ephemeral: return true
+        case .notDetermined, .denied: return false
+        @unknown default: return false
+        }
+    }
+}
+
 @MainActor
 enum FanRuleSensorResolver {
     static func value(
@@ -75,6 +91,7 @@ final class FanControlViewModel: ObservableObject {
     private var refreshGate = FanRefreshGate()
     private var shouldApplySavedModeAfterRefresh = false
     private var rescanGate = FanRefreshGate()
+    private var notificationGate = FanRefreshGate()
     private var toastWorkItem: DispatchWorkItem?
     private var toastState = TransientFeedbackState<String>()
 
@@ -146,7 +163,6 @@ final class FanControlViewModel: ObservableObject {
     init() {
         fanMode = prefs.preferences.fanControlMode
         setupSleepObservers()
-        requestNotificationPermission()
         NotificationCenter.default.addObserver(self, selector: #selector(stopMonitoring), name: .fanControlWindowWillHide, object: nil)
     }
 
@@ -721,37 +737,56 @@ final class FanControlViewModel: ObservableObject {
 
     // MARK: - Notifications
 
-    private func requestNotificationPermission() {
-        guard prefs.preferences.fanControlEnableNotifications else { return }
-        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { _, _ in }
-    }
-
     private func checkTemperatureNotification() {
         guard prefs.preferences.fanControlEnableNotifications else { return }
-        // Re-request authorization if the user toggled notifications on after
-        // the initial permission prompt was dismissed.
-        requestNotificationPermission()
         let threshold = prefs.preferences.fanControlNotificationThreshold
         let temp = highestTemperature
 
         guard temp >= threshold else { return }
         guard lastNotificationDate == nil || Date().timeIntervalSince(lastNotificationDate!) > 600 else { return }
+        guard notificationGate.begin() else { return }
 
-        lastNotificationDate = Date()
-        let unit = prefs.preferences.fanControlTemperatureUnit
-        let content = UNMutableNotificationContent()
-        content.title = String(localized: "fan.notification.high_temperature.title")
-        content.body = String(
-            format: String(localized: "fan.notification.high_temperature.body"),
-            unit.formatted(temp),
-            unit.formatted(threshold)
-        )
-        content.sound = .default
+        UNUserNotificationCenter.current().getNotificationSettings { [weak self] settings in
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                defer { self.notificationGate.end() }
+                let currentTemperature = self.highestTemperature
+                let currentThreshold = self.prefs.preferences.fanControlNotificationThreshold
+                guard self.isMonitoring,
+                      FanNotificationPolicy.canDeliver(
+                        isEnabled: self.prefs.preferences.fanControlEnableNotifications,
+                        authorizationStatus: settings.authorizationStatus,
+                        currentTemperature: currentTemperature,
+                        threshold: currentThreshold
+                      ),
+                      self.lastNotificationDate == nil || Date().timeIntervalSince(self.lastNotificationDate!) > 600 else {
+                    return
+                }
 
-        let request = UNNotificationRequest(identifier: "fancontrol-high-temp-\(Date().timeIntervalSince1970)", content: content, trigger: nil)
-        UNUserNotificationCenter.current().add(request)
+                self.lastNotificationDate = Date()
+                let unit = self.prefs.preferences.fanControlTemperatureUnit
+                let content = UNMutableNotificationContent()
+                content.title = String(localized: "fan.notification.high_temperature.title")
+                content.body = String(
+                    format: String(localized: "fan.notification.high_temperature.body"),
+                    unit.formatted(currentTemperature),
+                    unit.formatted(currentThreshold)
+                )
+                content.sound = .default
 
-        SoundEffectManager.shared.playTemperatureWarning()
+                let request = UNNotificationRequest(
+                    identifier: "fancontrol-high-temp-\(Date().timeIntervalSince1970)",
+                    content: content,
+                    trigger: nil
+                )
+                do {
+                    try await UNUserNotificationCenter.current().add(request)
+                    SoundEffectManager.shared.playTemperatureWarning()
+                } catch {
+                    self.lastNotificationDate = nil
+                }
+            }
+        }
     }
 
     // MARK: - Sleep Observers

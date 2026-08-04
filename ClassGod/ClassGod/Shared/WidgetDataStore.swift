@@ -26,12 +26,24 @@ nonisolated enum WidgetRefreshPolicy {
 }
 
 nonisolated enum WidgetMetricNormalization {
+    static func nonnegativeFinite(_ value: Double) -> Double {
+        guard value.isFinite else { return 0 }
+        return max(0, value)
+    }
+
+    static func percentage(_ value: Double) -> Double {
+        min(100, nonnegativeFinite(value))
+    }
+
     static func batteryPercent(from fraction: Double) -> Double {
-        min(100, max(0, fraction * 100))
+        percentage(fraction * 100)
     }
 
     static func uptime(storedSeconds: TimeInterval, snapshotDate: Date, entryDate: Date) -> TimeInterval {
-        max(0, storedSeconds) + max(0, entryDate.timeIntervalSince(snapshotDate))
+        nonnegativeFinite(
+            nonnegativeFinite(storedSeconds)
+                + nonnegativeFinite(entryDate.timeIntervalSince(snapshotDate))
+        )
     }
 }
 
@@ -203,16 +215,16 @@ final class WidgetDataStore {
         isCharging: Bool,
         uptime: TimeInterval
     ) {
-        set(cpu, forKey: .cpuUsage)
-        set(memoryUsed, forKey: .memoryUsage)
-        set(memoryTotal, forKey: .memoryTotal)
-        set(diskFree, forKey: .diskFree)
-        set(diskTotal, forKey: .diskTotal)
-        set(netDown, forKey: .networkDown)
-        set(netUp, forKey: .networkUp)
-        set(battery, forKey: .batteryLevel)
+        set(WidgetMetricNormalization.percentage(cpu), forKey: .cpuUsage)
+        set(WidgetMetricNormalization.nonnegativeFinite(memoryUsed), forKey: .memoryUsage)
+        set(WidgetMetricNormalization.nonnegativeFinite(memoryTotal), forKey: .memoryTotal)
+        set(WidgetMetricNormalization.nonnegativeFinite(diskFree), forKey: .diskFree)
+        set(WidgetMetricNormalization.nonnegativeFinite(diskTotal), forKey: .diskTotal)
+        set(WidgetMetricNormalization.nonnegativeFinite(netDown), forKey: .networkDown)
+        set(WidgetMetricNormalization.nonnegativeFinite(netUp), forKey: .networkUp)
+        set(WidgetMetricNormalization.percentage(battery), forKey: .batteryLevel)
         set(isCharging, forKey: .batteryIsCharging)
-        set(uptime, forKey: .uptimeSeconds)
+        set(WidgetMetricNormalization.nonnegativeFinite(uptime), forKey: .uptimeSeconds)
         set(Date(), forKey: .lastUpdate)
     }
     
