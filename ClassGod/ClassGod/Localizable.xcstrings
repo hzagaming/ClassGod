@@ -10367,6 +10367,22 @@
         }
       }
     },
+    "hackerdesktop.add_log_line" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add Log Line"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "添加日志行"
+          }
+        }
+      }
+    },
     "hackerdesktop.add_task" : {
       "localizations" : {
         "en" : {
@@ -10395,6 +10411,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "小组件应用"
+          }
+        }
+      }
+    },
+    "hackerdesktop.ascii_art" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ASCII Art"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ASCII 艺术"
           }
         }
       }
@@ -10772,13 +10804,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "System data is collected every 5 seconds. WidgetKit sync requires the shared App Group; local builds keep in-app widget data in a fallback store."
+            "value" : "System data is sampled in the app and synced to WidgetKit every 60 seconds. Shared widgets require the App Group; local builds use a fallback store."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "系统数据每 5 秒采集一次。WidgetKit 同步需要共享 App Group；本地构建会把应用内小组件数据保存在回退存储里。"
+            "value" : "应用内持续采样系统数据，并每 60 秒同步到 WidgetKit。共享小组件需要 App Group；本地构建会使用回退存储。"
           }
         }
       }
@@ -10813,6 +10845,220 @@
             "value" : "天气城市"
           }
         }
+      }
+    },
+    "hackerdesktop.weather_condition" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Condition"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "天气状态"
+          }
+        }
+      }
+    },
+    "hackerdesktop.weather_feels_like" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Feels Like"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "体感温度"
+          }
+        }
+      }
+    },
+    "hackerdesktop.weather_high" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "High"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最高温"
+          }
+        }
+      }
+    },
+    "hackerdesktop.weather_humidity" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Humidity"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "湿度"
+          }
+        }
+      }
+    },
+    "hackerdesktop.weather_low" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Low"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最低温"
+          }
+        }
+      }
+    },
+    "hackerdesktop.weather_manual_notice" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Manual weather data; values are validated before syncing."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "天气数据由你手动维护，同步前会自动校验。"
+          }
+        }
+      }
+    },
+    "hackerdesktop.weather_temperature" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Temperature"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当前温度"
+          }
+        }
+      }
+    },
+    "hackerdesktop.weather_unit" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unit"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "温度单位"
+          }
+        }
+      }
+    },
+    "hackerdesktop.weather_updated" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Updated"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更新于"
+          }
+        }
+      }
+    },
+    "hackerdesktop.weather_value_placeholder" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "0"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "0"
+          }
+        }
+      }
+    },
+    "weather.condition.clear" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Clear" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "晴朗" } }
+      }
+    },
+    "weather.condition.clear_night" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Clear Night" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "晴夜" } }
+      }
+    },
+    "weather.condition.cloudy" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Cloudy" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "多云" } }
+      }
+    },
+    "weather.condition.fog" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Fog" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "有雾" } }
+      }
+    },
+    "weather.condition.partly_cloudy" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Partly Cloudy" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "局部多云" } }
+      }
+    },
+    "weather.condition.rain" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Rain" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "有雨" } }
+      }
+    },
+    "weather.condition.snow" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Snow" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "有雪" } }
+      }
+    },
+    "weather.condition.storm" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Thunderstorm" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "雷暴" } }
+      }
+    },
+    "weather.condition.wind" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Windy" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "有风" } }
       }
     },
     "hackerdesktop.widgets.hacker" : {
@@ -10868,13 +11114,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Clock, World Clock, Calendar, Weather, System Info"
+            "value" : "Clock, World Clock, Calendar, Weather"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "时钟、世界时钟、日历、天气、系统信息"
+            "value" : "时钟、世界时钟、日历、天气"
           }
         }
       }
@@ -10900,13 +11146,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "CPU, Memory, Disk, Network, Battery, Uptime"
+            "value" : "CPU, Memory, Disk, Network, Battery, Uptime, System Info"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "CPU、内存、磁盘、网络、电池、运行时间"
+            "value" : "CPU、内存、磁盘、网络、电池、运行时间、系统信息"
           }
         }
       }

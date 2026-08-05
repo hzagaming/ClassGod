@@ -29,23 +29,27 @@ struct AppLauncherWidgetView: View {
                     Spacer()
                 }
                 
-                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
-                    ForEach(entry.appItems.prefix(4)) { app in
-                        if let url = WidgetDeepLink.launchURL(bundleIdentifier: app.bundleID) {
-                            Link(destination: url) {
-                                VStack(spacing: 3) {
-                                    Image(systemName: "app.fill")
-                                        .font(.system(size: 18))
-                                        .foregroundStyle(.cyan.opacity(0.7))
-                                    Text(app.name)
-                                        .font(.system(size: 8, design: .monospaced))
-                                        .foregroundStyle(.white.opacity(0.6))
-                                        .lineLimit(1)
+                if entry.appItems.isEmpty {
+                    WidgetEmptyState(icon: "app", title: "WIDGET_EMPTY_APPS")
+                } else {
+                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
+                        ForEach(entry.appItems.prefix(4)) { app in
+                            if let url = WidgetDeepLink.launchURL(bundleIdentifier: app.bundleID) {
+                                Link(destination: url) {
+                                    VStack(spacing: 3) {
+                                        Image(systemName: "app.fill")
+                                            .font(.system(size: 18))
+                                            .foregroundStyle(.cyan.opacity(0.7))
+                                        Text(app.name)
+                                            .font(.system(size: 8, design: .monospaced))
+                                            .foregroundStyle(.white.opacity(0.6))
+                                            .lineLimit(1)
+                                    }
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 6)
+                                    .background(Color.white.opacity(0.04))
+                                    .clipShape(RoundedRectangle(cornerRadius: 8))
                                 }
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 6)
-                                .background(Color.white.opacity(0.04))
-                                .clipShape(RoundedRectangle(cornerRadius: 8))
                             }
                         }
                     }
@@ -66,23 +70,27 @@ struct AppLauncherWidgetView: View {
                     Spacer()
                 }
                 
-                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
-                    ForEach(entry.appItems.prefix(6)) { app in
-                        if let url = WidgetDeepLink.launchURL(bundleIdentifier: app.bundleID) {
-                            Link(destination: url) {
-                                VStack(spacing: 4) {
-                                    Image(systemName: "app.fill")
-                                        .font(.system(size: 22))
-                                        .foregroundStyle(.cyan.opacity(0.7))
-                                    Text(app.name)
-                                        .font(.system(size: 9, design: .monospaced))
-                                        .foregroundStyle(.white.opacity(0.65))
-                                        .lineLimit(1)
+                if entry.appItems.isEmpty {
+                    WidgetEmptyState(icon: "app", title: "WIDGET_EMPTY_APPS")
+                } else {
+                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
+                        ForEach(entry.appItems.prefix(6)) { app in
+                            if let url = WidgetDeepLink.launchURL(bundleIdentifier: app.bundleID) {
+                                Link(destination: url) {
+                                    VStack(spacing: 4) {
+                                        Image(systemName: "app.fill")
+                                            .font(.system(size: 22))
+                                            .foregroundStyle(.cyan.opacity(0.7))
+                                        Text(app.name)
+                                            .font(.system(size: 9, design: .monospaced))
+                                            .foregroundStyle(.white.opacity(0.65))
+                                            .lineLimit(1)
+                                    }
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 8)
+                                    .background(Color.white.opacity(0.04))
+                                    .clipShape(RoundedRectangle(cornerRadius: 10))
                                 }
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 8)
-                                .background(Color.white.opacity(0.04))
-                                .clipShape(RoundedRectangle(cornerRadius: 10))
                             }
                         }
                     }

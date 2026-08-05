@@ -16,13 +16,13 @@ struct ClassGodWidgetBundle: WidgetBundle {
         NetworkWidgetConfig()
         BatteryWidgetConfig()
         UptimeWidgetConfig()
+        SystemInfoWidgetConfig()
         
         // Info
         ClockWidgetConfig()
         WorldClockWidgetConfig()
         CalendarWidgetConfig()
         WeatherWidgetConfig()
-        SystemInfoWidgetConfig()
         
         // Tools
         TodoWidgetConfig()
@@ -43,7 +43,7 @@ struct ClassGodWidgetBundle: WidgetBundle {
 // --- System ---
 
 struct CPUWidgetConfig: Widget {
-    let kind: String = "CPUWidget"
+    let kind = ClassGodWidgetKind.cpu.rawValue
     
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: WidgetProvider()) { entry in
@@ -56,7 +56,7 @@ struct CPUWidgetConfig: Widget {
 }
 
 struct MemoryWidgetConfig: Widget {
-    let kind: String = "MemoryWidget"
+    let kind = ClassGodWidgetKind.memory.rawValue
     
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: WidgetProvider()) { entry in
@@ -69,7 +69,7 @@ struct MemoryWidgetConfig: Widget {
 }
 
 struct DiskWidgetConfig: Widget {
-    let kind: String = "DiskWidget"
+    let kind = ClassGodWidgetKind.disk.rawValue
     
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: WidgetProvider()) { entry in
@@ -82,7 +82,7 @@ struct DiskWidgetConfig: Widget {
 }
 
 struct NetworkWidgetConfig: Widget {
-    let kind: String = "NetworkWidget"
+    let kind = ClassGodWidgetKind.network.rawValue
     
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: WidgetProvider()) { entry in
@@ -95,7 +95,7 @@ struct NetworkWidgetConfig: Widget {
 }
 
 struct BatteryWidgetConfig: Widget {
-    let kind: String = "BatteryWidget"
+    let kind = ClassGodWidgetKind.battery.rawValue
     
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: WidgetProvider()) { entry in
@@ -108,7 +108,7 @@ struct BatteryWidgetConfig: Widget {
 }
 
 struct UptimeWidgetConfig: Widget {
-    let kind: String = "UptimeWidget"
+    let kind = ClassGodWidgetKind.uptime.rawValue
     
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: WidgetProvider()) { entry in
@@ -123,7 +123,7 @@ struct UptimeWidgetConfig: Widget {
 // --- Info ---
 
 struct ClockWidgetConfig: Widget {
-    let kind: String = "ClockWidget"
+    let kind = ClassGodWidgetKind.clock.rawValue
     
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: WidgetProvider()) { entry in
@@ -136,7 +136,7 @@ struct ClockWidgetConfig: Widget {
 }
 
 struct WorldClockWidgetConfig: Widget {
-    let kind: String = "WorldClockWidget"
+    let kind = ClassGodWidgetKind.worldClock.rawValue
     
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: WidgetProvider()) { entry in
@@ -149,7 +149,7 @@ struct WorldClockWidgetConfig: Widget {
 }
 
 struct CalendarWidgetConfig: Widget {
-    let kind: String = "CalendarWidget"
+    let kind = ClassGodWidgetKind.calendar.rawValue
     
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: WidgetProvider()) { entry in
@@ -162,7 +162,7 @@ struct CalendarWidgetConfig: Widget {
 }
 
 struct WeatherWidgetConfig: Widget {
-    let kind: String = "WeatherWidget"
+    let kind = ClassGodWidgetKind.weather.rawValue
     
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: WidgetProvider()) { entry in
@@ -175,7 +175,7 @@ struct WeatherWidgetConfig: Widget {
 }
 
 struct SystemInfoWidgetConfig: Widget {
-    let kind: String = "SystemInfoWidget"
+    let kind = ClassGodWidgetKind.systemInfo.rawValue
     
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: WidgetProvider()) { entry in
@@ -190,7 +190,7 @@ struct SystemInfoWidgetConfig: Widget {
 // --- Tools ---
 
 struct TodoWidgetConfig: Widget {
-    let kind: String = "TodoWidget"
+    let kind = ClassGodWidgetKind.todo.rawValue
     
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: WidgetProvider()) { entry in
@@ -203,7 +203,7 @@ struct TodoWidgetConfig: Widget {
 }
 
 struct NotesWidgetConfig: Widget {
-    let kind: String = "NotesWidget"
+    let kind = ClassGodWidgetKind.notes.rawValue
     
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: WidgetProvider()) { entry in
@@ -216,7 +216,7 @@ struct NotesWidgetConfig: Widget {
 }
 
 struct FileWidgetConfig: Widget {
-    let kind: String = "FileWidget"
+    let kind = ClassGodWidgetKind.files.rawValue
     
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: WidgetProvider()) { entry in
@@ -229,7 +229,7 @@ struct FileWidgetConfig: Widget {
 }
 
 struct AppLauncherWidgetConfig: Widget {
-    let kind: String = "AppLauncherWidget"
+    let kind = ClassGodWidgetKind.appLauncher.rawValue
     
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: WidgetProvider()) { entry in
@@ -244,7 +244,7 @@ struct AppLauncherWidgetConfig: Widget {
 // --- Fun / Hacker ---
 
 struct TerminalLogWidgetConfig: Widget {
-    let kind: String = "TerminalLogWidget"
+    let kind = ClassGodWidgetKind.terminal.rawValue
     
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: WidgetProvider()) { entry in
@@ -257,7 +257,7 @@ struct TerminalLogWidgetConfig: Widget {
 }
 
 struct AsciiArtWidgetConfig: Widget {
-    let kind: String = "AsciiArtWidget"
+    let kind = ClassGodWidgetKind.asciiArt.rawValue
     
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: WidgetProvider()) { entry in
@@ -270,7 +270,7 @@ struct AsciiArtWidgetConfig: Widget {
 }
 
 struct CryptoWidgetConfig: Widget {
-    let kind: String = "CryptoWidget"
+    let kind = ClassGodWidgetKind.crypto.rawValue
     
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: WidgetProvider()) { entry in
@@ -283,7 +283,7 @@ struct CryptoWidgetConfig: Widget {
 }
 
 struct QuoteWidgetConfig: Widget {
-    let kind: String = "QuoteWidget"
+    let kind = ClassGodWidgetKind.quote.rawValue
     
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: WidgetProvider()) { entry in

@@ -10,8 +10,33 @@ import AppKit
 import Carbon
 
 nonisolated enum LaunchWindowPresentationPolicy {
-    static func shouldShowMainWindow(showOnLaunch: Bool) -> Bool {
-        showOnLaunch
+    static let shouldShowMainWindow = true
+
+    static func splashDelay(preferred: Double, animationDuration: Double) -> Double {
+        animationDuration > 0 ? preferred : 1
+    }
+}
+
+enum WidgetHostSnapshot {
+    static func save(reloadWidgets: Bool = true) {
+        let monitor = SystemMonitor.shared
+        let store = WidgetDataStore.shared
+        let disk = monitor.disks.first
+        store.saveSystemSnapshot(
+            cpu: monitor.cpu.total,
+            memoryUsed: Double(monitor.memory.used) / 1024 / 1024 / 1024,
+            memoryTotal: Double(monitor.memory.total) / 1024 / 1024 / 1024,
+            diskFree: Double(disk?.free ?? 0) / 1024 / 1024 / 1024,
+            diskTotal: Double(disk?.total ?? 0) / 1024 / 1024 / 1024,
+            netDown: monitor.network.downloadSpeedKBs / 1024,
+            netUp: monitor.network.uploadSpeedKBs / 1024,
+            battery: WidgetMetricNormalization.batteryPercent(from: monitor.battery.level),
+            isCharging: monitor.battery.isCharging,
+            uptime: Date().timeIntervalSince(monitor.system.bootTime ?? Date())
+        )
+        if reloadWidgets {
+            store.reloadWidgets(ClassGodWidgetKind.systemKinds)
+        }
     }
 }
 
@@ -77,6 +102,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     var splashWindow: NSWindow?
     private var clickOutsideMonitor: Any?
+    private var widgetSnapshotTimer: Timer?
     private var windowTransitions = WindowTransitionTracker<ObjectIdentifier>()
 
     private var targetWindowAlpha: CGFloat {
@@ -92,16 +118,18 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         _ = DesktopWallpaperController.shared
         
         let launchAnimationDuration = Anim.duration
-        if AnimationDurationPolicy.shouldRunLaunchEffects(duration: launchAnimationDuration) {
-            showSplashScreen()
-        }
+        showSplashScreen()
 
         // Phase 1: Splash (2s) -> Phase 2: Chaos Animation -> Phase 3: Main Window
-        let launchDelay = AnimationDurationPolicy.launchDelay(preferred: 2, duration: launchAnimationDuration)
+        let launchDelay = LaunchWindowPresentationPolicy.splashDelay(
+            preferred: 2,
+            animationDuration: launchAnimationDuration
+        )
         DispatchQueue.main.asyncAfter(deadline: .now() + launchDelay) { [weak self] in
             guard let self = self else { return }
             self.closeSplashScreen()
             self.setupStatusItem()
+            self.startWidgetSnapshotSync()
             self.setupShowPopoverShortcut()
             self.setupPanicShortcut()
             self.setupGlobalHotKeyHandler()
@@ -163,9 +191,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 // Phase 3: Chaos glitch animation
                 LaunchAnimationManager.shared.startChaosAnimation(mainWindow: window) { [weak self, weak window] in
                     // Phase 4: Animation complete
-                    if LaunchWindowPresentationPolicy.shouldShowMainWindow(
-                        showOnLaunch: PreferencesManager.shared.preferences.showPopoverOnLaunch
-                    ) {
+                    if LaunchWindowPresentationPolicy.shouldShowMainWindow {
                         self?.showMainWindow(animated: false)
                     } else {
                         window?.alphaValue = 0
@@ -1996,8 +2022,28 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     // MARK: - Lifecycle
 
+    private func startWidgetSnapshotSync() {
+        widgetSnapshotTimer?.invalidate()
+        SystemMonitor.shared.start(
+            client: .widgetHost,
+            interval: WidgetRefreshPolicy.hostSnapshotInterval
+        )
+        let timer = Timer(
+            fire: Date().addingTimeInterval(WidgetRefreshPolicy.hostSnapshotInterval + 0.25),
+            interval: WidgetRefreshPolicy.hostSnapshotInterval,
+            repeats: true
+        ) { _ in
+            WidgetHostSnapshot.save()
+        }
+        widgetSnapshotTimer = timer
+        RunLoop.main.add(timer, forMode: .common)
+    }
+
     func applicationWillTerminate(_ notification: Notification) {
         statusItemTimer?.invalidate()
+        widgetSnapshotTimer?.invalidate()
+        widgetSnapshotTimer = nil
+        SystemMonitor.shared.stop(client: .widgetHost)
         statusItemUpdateTask?.cancel()
         statusItemUpdateTask = nil
         SMCService.shared.restoreSystemFanControl()

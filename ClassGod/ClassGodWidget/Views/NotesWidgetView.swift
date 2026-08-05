@@ -32,11 +32,15 @@ struct NotesWidgetView: View {
                     Spacer()
                 }
                 
-                Text(entry.noteContent)
-                    .font(.system(size: 10, design: .monospaced))
-                    .foregroundStyle(.white.opacity(0.75))
-                    .lineLimit(2)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                if entry.noteContent.isEmpty {
+                    WidgetEmptyState(icon: "note.text", title: "WIDGET_EMPTY_NOTES")
+                } else {
+                    Text(entry.noteContent)
+                        .font(.system(size: 10, design: .monospaced))
+                        .foregroundStyle(.white.opacity(0.75))
+                        .lineLimit(5)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                }
             }
             .padding(10)
         }
@@ -56,11 +60,15 @@ struct NotesWidgetView: View {
                     Spacer()
                 }
                 
-                Text(entry.noteContent)
-                    .font(.system(size: 11, design: .monospaced))
-                    .foregroundStyle(.white.opacity(0.8))
-                    .lineLimit(4)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                if entry.noteContent.isEmpty {
+                    WidgetEmptyState(icon: "note.text", title: "WIDGET_EMPTY_NOTES")
+                } else {
+                    Text(entry.noteContent)
+                        .font(.system(size: 11, design: .monospaced))
+                        .foregroundStyle(.white.opacity(0.8))
+                        .lineLimit(6)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                }
             }
             .padding(12)
         }

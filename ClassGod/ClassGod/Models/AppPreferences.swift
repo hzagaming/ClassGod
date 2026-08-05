@@ -216,7 +216,6 @@ enum LanguageOverride: String, Codable, CaseIterable, Identifiable {
 struct AppPreferences: Codable, Equatable {
     // MARK: - General
     var launchAtLogin: Bool
-    var showPopoverOnLaunch: Bool
     var showToastNotifications: Bool
     var toastDuration: Double
     var switchBehavior: SwitchBehavior
@@ -302,7 +301,6 @@ struct AppPreferences: Codable, Equatable {
     // MARK: - Memberwise Init
     init(
         launchAtLogin: Bool,
-        showPopoverOnLaunch: Bool,
         showToastNotifications: Bool,
         toastDuration: Double,
         switchBehavior: SwitchBehavior,
@@ -372,7 +370,6 @@ struct AppPreferences: Codable, Equatable {
         fanControlNotificationThreshold: Double
     ) {
         self.launchAtLogin = launchAtLogin
-        self.showPopoverOnLaunch = showPopoverOnLaunch
         self.showToastNotifications = showToastNotifications
         self.toastDuration = toastDuration
         self.switchBehavior = switchBehavior
@@ -445,7 +442,6 @@ struct AppPreferences: Codable, Equatable {
     // MARK: - Defaults
     static let `default` = AppPreferences(
         launchAtLogin: false,
-        showPopoverOnLaunch: true,
         showToastNotifications: true,
         toastDuration: 1.5,
         switchBehavior: .activateExisting,
@@ -527,7 +523,6 @@ struct AppPreferences: Codable, Equatable {
 extension AppPreferences {
     private enum CodingKeys: String, CodingKey {
         case launchAtLogin
-        case showPopoverOnLaunch
         case showToastNotifications
         case toastDuration
         case switchBehavior
@@ -604,7 +599,6 @@ extension AppPreferences {
 
         // General
         preferences.launchAtLogin = try container.decodeIfPresent(Bool.self, forKey: .launchAtLogin) ?? preferences.launchAtLogin
-        preferences.showPopoverOnLaunch = try container.decodeIfPresent(Bool.self, forKey: .showPopoverOnLaunch) ?? preferences.showPopoverOnLaunch
         preferences.showToastNotifications = try container.decodeIfPresent(Bool.self, forKey: .showToastNotifications) ?? preferences.showToastNotifications
         preferences.toastDuration = try container.decodeIfPresent(Double.self, forKey: .toastDuration) ?? preferences.toastDuration
         preferences.switchBehavior = try container.decodeIfPresent(SwitchBehavior.self, forKey: .switchBehavior) ?? preferences.switchBehavior
@@ -691,9 +685,6 @@ extension AppPreferences {
         preferences.fanControlEnableNotifications = try container.decodeIfPresent(Bool.self, forKey: .fanControlEnableNotifications) ?? preferences.fanControlEnableNotifications
         preferences.fanControlNotificationThreshold = try container.decodeIfPresent(Double.self, forKey: .fanControlNotificationThreshold) ?? preferences.fanControlNotificationThreshold
 
-        if storedVersion < 2 {
-            preferences.showPopoverOnLaunch = true
-        }
         preferences.version = AppPreferences.default.version
 
         self = preferences

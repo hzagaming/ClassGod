@@ -853,6 +853,132 @@
         }
       }
     },
+    "WIDGET_CONFIGURE_IN_CLASSGOD" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Configure in ClassGod" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "请在 ClassGod 中配置" } }
+      }
+    },
+    "WIDGET_EMPTY_APPS" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No apps selected" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "尚未选择应用" } }
+      }
+    },
+    "WIDGET_EMPTY_ASCII" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No ASCII art" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "尚未设置 ASCII 艺术" } }
+      }
+    },
+    "WIDGET_EMPTY_FILES" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No files selected" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "尚未选择文件" } }
+      }
+    },
+    "WIDGET_EMPTY_LOGS" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No log lines" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "尚未设置日志" } }
+      }
+    },
+    "WIDGET_EMPTY_NOTES" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No note yet" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "尚未添加便签" } }
+      }
+    },
+    "WIDGET_EMPTY_TODO" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No tasks yet" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "尚未添加任务" } }
+      }
+    },
+    "WIDGET_FEELS_LIKE" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Feels" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "体感" } }
+      }
+    },
+    "WIDGET_HIGH_LOW" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "High / Low" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "最高 / 最低" } }
+      }
+    },
+    "WIDGET_HUMIDITY" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Humidity" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "湿度" } }
+      }
+    },
+    "WIDGET_UPDATED" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Updated" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "更新于" } }
+      }
+    },
+    "WIDGET_WEATHER_CLEAR" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Clear" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "晴朗" } }
+      }
+    },
+    "WIDGET_WEATHER_CLEAR_NIGHT" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Clear Night" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "晴夜" } }
+      }
+    },
+    "WIDGET_WEATHER_CLOUDY" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Cloudy" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "多云" } }
+      }
+    },
+    "WIDGET_WEATHER_FOG" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Fog" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "有雾" } }
+      }
+    },
+    "WIDGET_WEATHER_NOT_CONFIGURED" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Weather not configured" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "尚未配置天气" } }
+      }
+    },
+    "WIDGET_WEATHER_PARTLY_CLOUDY" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Partly Cloudy" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "局部多云" } }
+      }
+    },
+    "WIDGET_WEATHER_RAIN" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Rain" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "有雨" } }
+      }
+    },
+    "WIDGET_WEATHER_SNOW" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Snow" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "有雪" } }
+      }
+    },
+    "WIDGET_WEATHER_STORM" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Thunderstorm" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "雷暴" } }
+      }
+    },
+    "WIDGET_WEATHER_WIND" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Windy" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "有风" } }
+      }
+    },
     "WIDGET_CORES_VALUE" : {
       "localizations" : {
         "en" : {

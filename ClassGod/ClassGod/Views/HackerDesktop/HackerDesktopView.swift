@@ -9,6 +9,16 @@ import SwiftUI
 import AppKit
 import UniformTypeIdentifiers
 
+nonisolated enum HackerDesktopTab: Int, CaseIterable {
+    case data
+    case tools
+    case fun
+    case widgets
+    case about
+
+    static let defaultSelection: HackerDesktopTab = .widgets
+}
+
 struct HackerDesktopView: View {
     var onClose: () -> Void
     
@@ -16,6 +26,14 @@ struct HackerDesktopView: View {
     @State private var noteContent: String = ""
     @State private var clockCity = String(localized: "hackerdesktop.default_city")
     @State private var weatherCity = String(localized: "hackerdesktop.default_city")
+    @State private var weatherTemperature = 24.0
+    @State private var weatherApparentTemperature = 25.0
+    @State private var weatherHigh = 28.0
+    @State private var weatherLow = 19.0
+    @State private var weatherHumidity = 62
+    @State private var weatherCondition = WidgetWeatherCondition.partlyCloudy
+    @State private var weatherUnit = WidgetTemperatureUnit.celsius
+    @State private var weatherUpdatedAt = Date()
     @State private var cryptoBTC: String = "$64,230 ▲2.4%"
     @State private var cryptoETH: String = "$3,450 ▼0.8%"
     @State private var quoteText = String(localized: "hackerdesktop.default_quote")
@@ -29,9 +47,9 @@ struct HackerDesktopView: View {
     @State private var filePaths: [FileItem] = []
     @State private var appItems: [AppLauncherItem] = []
     
-    @State private var selectedTab = 0
-    @State private var saveTimer: Timer?
+    @State private var selectedTab = HackerDesktopTab.defaultSelection
     @State private var pendingSaveWorkItem: DispatchWorkItem?
+    @State private var pendingReloadKinds = Set<ClassGodWidgetKind>()
     @State private var isActive = false
     
     @ObservedObject private var prefs = PreferencesManager.shared
@@ -71,11 +89,11 @@ struct HackerDesktopView: View {
             
             // Tabs
             HStack(spacing: 0 * zoomScale) {
-                TabButton(title: "Data", icon: "cpu", isSelected: selectedTab == 0) { selectedTab = 0 }
-                TabButton(title: "Tools", icon: "wrench", isSelected: selectedTab == 1) { selectedTab = 1 }
-                TabButton(title: "Fun", icon: "sparkles", isSelected: selectedTab == 2) { selectedTab = 2 }
-                TabButton(title: "Widgets", icon: "square.grid.2x2", isSelected: selectedTab == 3) { selectedTab = 3 }
-                TabButton(title: "About", icon: "info.circle", isSelected: selectedTab == 4) { selectedTab = 4 }
+                TabButton(title: "Data", icon: "cpu", isSelected: selectedTab == .data) { selectedTab = .data }
+                TabButton(title: "Tools", icon: "wrench", isSelected: selectedTab == .tools) { selectedTab = .tools }
+                TabButton(title: "Fun", icon: "sparkles", isSelected: selectedTab == .fun) { selectedTab = .fun }
+                TabButton(title: "Widgets", icon: "square.grid.2x2", isSelected: selectedTab == .widgets) { selectedTab = .widgets }
+                TabButton(title: "About", icon: "info.circle", isSelected: selectedTab == .about) { selectedTab = .about }
             }
             .padding(.horizontal, 8 * zoomScale)
             .padding(.top, 8 * zoomScale)
@@ -84,11 +102,11 @@ struct HackerDesktopView: View {
             ScrollView {
                 VStack(spacing: 16 * zoomScale) {
                     switch selectedTab {
-                    case 0: dataTab
-                    case 1: toolsTab
-                    case 2: funTab
-                    case 3: officialWidgetsTab
-                    default: aboutTab
+                    case .data: dataTab
+                    case .tools: toolsTab
+                    case .fun: funTab
+                    case .widgets: officialWidgetsTab
+                    case .about: aboutTab
                     }
                 }
                 .padding(14 * zoomScale)
@@ -156,7 +174,9 @@ struct HackerDesktopView: View {
                             .padding(8 * zoomScale)
                             .background(Color(white: 0.06))
                             .clipShape(RoundedRectangle(cornerRadius: 6 * zoomScale))
-                            .onChange(of: clockCity) { _, _ in saveData() }
+                            .onChange(of: clockCity) { _, _ in
+                                saveData(for: [.clock, .worldClock])
+                            }
                     }
                     
                     VStack(alignment: .leading, spacing: 4) {
@@ -170,9 +190,75 @@ struct HackerDesktopView: View {
                             .padding(8 * zoomScale)
                             .background(Color(white: 0.06))
                             .clipShape(RoundedRectangle(cornerRadius: 6 * zoomScale))
-                            .onChange(of: weatherCity) { _, _ in saveData() }
+                            .onChange(of: weatherCity) { _, _ in weatherChanged() }
                     }
                 }
+
+                HStack(spacing: 12 * zoomScale) {
+                    weatherNumberField("hackerdesktop.weather_temperature", value: $weatherTemperature)
+                        .onChange(of: weatherTemperature) { _, _ in weatherChanged() }
+                    weatherNumberField("hackerdesktop.weather_feels_like", value: $weatherApparentTemperature)
+                        .onChange(of: weatherApparentTemperature) { _, _ in weatherChanged() }
+                    weatherNumberField("hackerdesktop.weather_high", value: $weatherHigh)
+                        .onChange(of: weatherHigh) { _, _ in weatherChanged() }
+                    weatherNumberField("hackerdesktop.weather_low", value: $weatherLow)
+                        .onChange(of: weatherLow) { _, _ in weatherChanged() }
+                }
+
+                HStack(spacing: 12 * zoomScale) {
+                    VStack(alignment: .leading, spacing: 4 * zoomScale) {
+                        Text("hackerdesktop.weather_condition")
+                            .widgetFieldLabel(zoomScale: zoomScale)
+                        Picker("hackerdesktop.weather_condition", selection: $weatherCondition) {
+                            ForEach(WidgetWeatherCondition.allCases, id: \.self) { condition in
+                                Label(weatherConditionTitle(condition), systemImage: condition.rawValue)
+                                    .tag(condition)
+                            }
+                        }
+                        .labelsHidden()
+                        .pickerStyle(.menu)
+                        .onChange(of: weatherCondition) { _, _ in weatherChanged() }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                    VStack(alignment: .leading, spacing: 4 * zoomScale) {
+                        Text("hackerdesktop.weather_unit")
+                            .widgetFieldLabel(zoomScale: zoomScale)
+                        Picker("hackerdesktop.weather_unit", selection: $weatherUnit) {
+                            ForEach(WidgetTemperatureUnit.allCases, id: \.self) { unit in
+                                Text(verbatim: unit.symbol).tag(unit)
+                            }
+                        }
+                        .labelsHidden()
+                        .pickerStyle(.segmented)
+                        .onChange(of: weatherUnit) { oldValue, newValue in
+                            changeWeatherUnit(from: oldValue, to: newValue)
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                    VStack(alignment: .leading, spacing: 4 * zoomScale) {
+                        Text("hackerdesktop.weather_humidity")
+                            .widgetFieldLabel(zoomScale: zoomScale)
+                        Stepper(value: $weatherHumidity, in: 0...100) {
+                            Text(verbatim: "\(weatherHumidity)%")
+                                .font(.system(size: 11 * zoomScale, weight: .medium, design: .monospaced))
+                                .foregroundStyle(.white.opacity(0.8))
+                        }
+                        .onChange(of: weatherHumidity) { _, _ in weatherChanged() }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+
+                HStack(spacing: 5 * zoomScale) {
+                    Image(systemName: "info.circle")
+                    Text("hackerdesktop.weather_manual_notice")
+                    Spacer()
+                    Text("hackerdesktop.weather_updated")
+                    Text(weatherUpdatedAt, style: .relative)
+                }
+                .font(.system(size: 9 * zoomScale, design: .monospaced))
+                .foregroundStyle(.white.opacity(0.35))
             }
         }
     }
@@ -187,7 +273,7 @@ struct HackerDesktopView: View {
                                 SoundEffectManager.shared.playButtonClick()
                                 HapticManager.shared.generic()
                                 item.isDone.toggle()
-                                saveData(immediate: true)
+                                saveData(for: [.todo], immediate: true)
                             } label: {
                                 Image(systemName: item.isDone ? "checkmark.square.fill" : "square")
                                     .font(.system(size: 12 * zoomScale))
@@ -202,12 +288,13 @@ struct HackerDesktopView: View {
                                 .font(.system(size: 11 * zoomScale, design: .monospaced))
                                 .foregroundStyle(item.isDone ? .white.opacity(0.3) : .white.opacity(0.8))
                                 .strikethrough(item.isDone)
+                                .onChange(of: item.text) { _, _ in saveData(for: [.todo]) }
                             
                             Button(action: {
                                 SoundEffectManager.shared.playWidgetDeleted()
                                 HapticManager.shared.warning()
                                 todoItems.removeAll { $0.id == item.id }
-                                saveData(immediate: true)
+                                saveData(for: [.todo], immediate: true)
                             }) {
                                 Image(systemName: "xmark")
                                     .font(.system(size: 9 * zoomScale))
@@ -222,8 +309,9 @@ struct HackerDesktopView: View {
                 Button(action: {
                     SoundEffectManager.shared.playButtonClick()
                     HapticManager.shared.generic()
+                    guard todoItems.count < WidgetContentPolicy.maxTodoItems else { return }
                     todoItems.append(TodoItem(id: UUID(), text: "", isDone: false))
-                    saveData(immediate: true)
+                    saveData(for: [.todo], immediate: true)
                 }) {
                     HStack(spacing: 4 * zoomScale) {
                         Image(systemName: "plus")
@@ -235,6 +323,7 @@ struct HackerDesktopView: View {
                     .padding(.vertical, 6 * zoomScale)
                 }
                 .buttonStyle(.plain)
+                .disabled(todoItems.count >= WidgetContentPolicy.maxTodoItems)
             }
             
             ConfigSection(title: "Quick Note", icon: "note.text") {
@@ -245,14 +334,14 @@ struct HackerDesktopView: View {
                     .background(Color(white: 0.04))
                     .clipShape(RoundedRectangle(cornerRadius: 8 * zoomScale))
                     .frame(height: 100 * zoomScale)
-                    .onChange(of: noteContent) { _, _ in saveData() }
+                    .onChange(of: noteContent) { _, _ in saveData(for: [.notes]) }
             }
 
             ConfigSection(title: "hackerdesktop.files", icon: "doc.on.doc") {
                 ForEach(filePaths) { file in
                     removableWidgetItem(title: file.name, subtitle: file.path) {
                         filePaths.removeAll { $0.id == file.id }
-                        saveData(immediate: true)
+                        saveData(for: [.files], immediate: true)
                     }
                 }
                 Button("hackerdesktop.add_files", systemImage: "plus") { selectFiles() }
@@ -263,7 +352,7 @@ struct HackerDesktopView: View {
                 ForEach(appItems) { app in
                     removableWidgetItem(title: app.name, subtitle: app.bundleID) {
                         appItems.removeAll { $0.id == app.id }
-                        saveData(immediate: true)
+                        saveData(for: [.appLauncher], immediate: true)
                     }
                 }
                 Button("hackerdesktop.add_apps", systemImage: "plus") { selectApplications() }
@@ -287,7 +376,7 @@ struct HackerDesktopView: View {
                             .padding(8 * zoomScale)
                             .background(Color(white: 0.06))
                             .clipShape(RoundedRectangle(cornerRadius: 6 * zoomScale))
-                            .onChange(of: cryptoBTC) { _, _ in saveData() }
+                            .onChange(of: cryptoBTC) { _, _ in saveData(for: [.crypto]) }
                     }
                     
                     VStack(alignment: .leading, spacing: 4) {
@@ -301,7 +390,7 @@ struct HackerDesktopView: View {
                             .padding(8 * zoomScale)
                             .background(Color(white: 0.06))
                             .clipShape(RoundedRectangle(cornerRadius: 6 * zoomScale))
-                            .onChange(of: cryptoETH) { _, _ in saveData() }
+                            .onChange(of: cryptoETH) { _, _ in saveData(for: [.crypto]) }
                     }
                 }
             }
@@ -315,7 +404,7 @@ struct HackerDesktopView: View {
                         .padding(8 * zoomScale)
                         .background(Color(white: 0.06))
                         .clipShape(RoundedRectangle(cornerRadius: 6 * zoomScale))
-                        .onChange(of: quoteText) { _, _ in saveData() }
+                        .onChange(of: quoteText) { _, _ in saveData(for: [.quote]) }
                     
                     TextField("hackerdesktop.author_placeholder", text: $quoteAuthor)
                         .textFieldStyle(.plain)
@@ -324,23 +413,53 @@ struct HackerDesktopView: View {
                         .padding(8 * zoomScale)
                         .background(Color(white: 0.06))
                         .clipShape(RoundedRectangle(cornerRadius: 6 * zoomScale))
-                        .onChange(of: quoteAuthor) { _, _ in saveData() }
+                        .onChange(of: quoteAuthor) { _, _ in saveData(for: [.quote]) }
                 }
             }
             
             ConfigSection(title: "Terminal Logs", icon: "terminal") {
                 VStack(spacing: 4 * zoomScale) {
-                    ForEach(terminalLogs.indices, id: \.self) { i in
-                        TextField("hackerdesktop.log_line_placeholder", text: $terminalLogs[i])
-                            .textFieldStyle(.plain)
-                            .font(.system(size: 10 * zoomScale, design: .monospaced))
-                            .foregroundStyle(.green.opacity(0.8))
-                            .padding(6 * zoomScale)
-                            .background(Color(white: 0.04))
-                            .clipShape(RoundedRectangle(cornerRadius: 4 * zoomScale))
+                    ForEach(terminalLogs.indices, id: \.self) { index in
+                        HStack(spacing: 6 * zoomScale) {
+                            TextField("hackerdesktop.log_line_placeholder", text: $terminalLogs[index])
+                                .textFieldStyle(.plain)
+                                .font(.system(size: 10 * zoomScale, design: .monospaced))
+                                .foregroundStyle(.green.opacity(0.8))
+                                .padding(6 * zoomScale)
+                                .background(Color(white: 0.04))
+                                .clipShape(RoundedRectangle(cornerRadius: 4 * zoomScale))
+                            Button {
+                                terminalLogs.remove(at: index)
+                                saveData(for: [.terminal], immediate: true)
+                            } label: {
+                                Image(systemName: "trash")
+                                    .foregroundStyle(.red.opacity(0.65))
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityLabel(Text("button.delete"))
+                        }
                     }
                 }
-                .onChange(of: terminalLogs) { _, _ in saveData() }
+                .onChange(of: terminalLogs) { _, _ in saveData(for: [.terminal]) }
+
+                Button("hackerdesktop.add_log_line", systemImage: "plus") {
+                    guard terminalLogs.count < WidgetContentPolicy.maxLogLines else { return }
+                    terminalLogs.append("")
+                    saveData(for: [.terminal], immediate: true)
+                }
+                .widgetDataButtonStyle(zoomScale: zoomScale)
+                .disabled(terminalLogs.count >= WidgetContentPolicy.maxLogLines)
+            }
+
+            ConfigSection(title: "hackerdesktop.ascii_art", icon: "textformat") {
+                TextEditor(text: $asciiArt)
+                    .font(.system(size: 10 * zoomScale, design: .monospaced))
+                    .foregroundStyle(.cyan.opacity(0.75))
+                    .scrollContentBackground(.hidden)
+                    .background(Color(white: 0.04))
+                    .clipShape(RoundedRectangle(cornerRadius: 8 * zoomScale))
+                    .frame(height: 110 * zoomScale)
+                    .onChange(of: asciiArt) { _, _ in saveData(for: [.asciiArt]) }
             }
         }
     }
@@ -376,7 +495,7 @@ struct HackerDesktopView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 8 * zoomScale))
 
                 Button {
-                    saveSystemData()
+                    refreshAllWidgets()
                     SoundEffectManager.shared.playButtonClick()
                 } label: {
                     Label("hackerdesktop.native_widgets.refresh", systemImage: "arrow.clockwise")
@@ -483,94 +602,197 @@ struct HackerDesktopView: View {
 
     private func activate() {
         guard !isActive else { return }
-        isActive = true
         loadData()
+        isActive = true
         SystemMonitor.shared.start(client: .hackerDesktop, interval: 2.0)
-        saveTimer?.invalidate()
-        saveTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { _ in
-            saveSystemData()
-        }
+        saveSystemData()
     }
 
     private func deactivate() {
         guard isActive else { return }
         isActive = false
         SystemMonitor.shared.stop(client: .hackerDesktop)
-        saveTimer?.invalidate()
-        saveTimer = nil
-        pendingSaveWorkItem?.cancel()
-        pendingSaveWorkItem = nil
-        saveSystemData()
+        persistPendingData()
+        saveSystemData(reloadWidgets: false)
     }
     
-    private func saveSystemData() {
-        let store = WidgetDataStore.shared
-        let disk = SystemMonitor.shared.disks.first
-        store.saveSystemSnapshot(
-            cpu: SystemMonitor.shared.cpu.total,
-            memoryUsed: Double(SystemMonitor.shared.memory.used) / 1024 / 1024 / 1024,
-            memoryTotal: Double(SystemMonitor.shared.memory.total) / 1024 / 1024 / 1024,
-            diskFree: Double(disk?.free ?? 0) / 1024 / 1024 / 1024,
-            diskTotal: Double(disk?.total ?? 0) / 1024 / 1024 / 1024,
-            netDown: SystemMonitor.shared.network.downloadSpeedKBs / 1024,
-            netUp: SystemMonitor.shared.network.uploadSpeedKBs / 1024,
-            battery: WidgetMetricNormalization.batteryPercent(from: SystemMonitor.shared.battery.level),
-            isCharging: SystemMonitor.shared.battery.isCharging,
-            uptime: Date().timeIntervalSince(SystemMonitor.shared.system.bootTime ?? Date())
-        )
-        store.set(clockCity, forKey: .clockCity)
-        store.set(weatherCity, forKey: .weatherCity)
-        store.set("24°", forKey: .weatherTemp)
-        store.set("cloud.sun.fill", forKey: .weatherCondition)
-        store.setArray(todoItems, forKey: .todoItems)
-        store.set(noteContent, forKey: .noteContent)
-        store.setArray(filePaths, forKey: .filePaths)
-        store.setArray(appItems, forKey: .appBundleIDs)
-        store.set(cryptoBTC, forKey: .cryptoBTC)
-        store.set(cryptoETH, forKey: .cryptoETH)
-        store.set(quoteText, forKey: .quoteText)
-        store.set(quoteAuthor, forKey: .quoteAuthor)
-        store.set(terminalLogs, forKey: .terminalLogs)
-        store.set(asciiArt, forKey: .asciiArt)
-        store.reloadAllWidgets()
+    private func saveSystemData(reloadWidgets: Bool = true) {
+        WidgetHostSnapshot.save(reloadWidgets: reloadWidgets)
     }
     
-    private func saveData(immediate: Bool = false) {
+    private func saveData(for kinds: [ClassGodWidgetKind], immediate: Bool = false) {
+        guard isActive else { return }
+        pendingReloadKinds.formUnion(kinds)
         pendingSaveWorkItem?.cancel()
         if immediate {
-            pendingSaveWorkItem = nil
-            saveSystemData()
+            persistPendingData()
             return
         }
 
         let workItem = DispatchWorkItem {
-            saveSystemData()
+            persistPendingData()
         }
         pendingSaveWorkItem = workItem
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.35, execute: workItem)
     }
+
+    private func persistPendingData() {
+        pendingSaveWorkItem?.cancel()
+        pendingSaveWorkItem = nil
+        let kinds = pendingReloadKinds
+        pendingReloadKinds.removeAll()
+        guard !kinds.isEmpty else { return }
+        persistConfiguredData()
+        WidgetDataStore.shared.reloadWidgets(Array(kinds))
+    }
+
+    private func persistConfiguredData() {
+        let store = WidgetDataStore.shared
+        store.set(
+            WidgetContentPolicy.text(clockCity, maxLength: WidgetContentPolicy.maxCityLength, trimsWhitespace: true),
+            forKey: .clockCity
+        )
+        store.setValue(WidgetWeatherPolicy.normalized(currentWeatherSnapshot), forKey: .weatherSnapshot)
+        store.setArray(WidgetContentPolicy.todoItems(todoItems), forKey: .todoItems)
+        store.set(WidgetContentPolicy.text(noteContent, maxLength: WidgetContentPolicy.maxNoteLength), forKey: .noteContent)
+        store.setArray(WidgetContentPolicy.fileItems(filePaths), forKey: .filePaths)
+        store.setArray(WidgetContentPolicy.appItems(appItems), forKey: .appBundleIDs)
+        store.set(WidgetContentPolicy.text(cryptoBTC, maxLength: WidgetContentPolicy.maxPriceLength, trimsWhitespace: true), forKey: .cryptoBTC)
+        store.set(WidgetContentPolicy.text(cryptoETH, maxLength: WidgetContentPolicy.maxPriceLength, trimsWhitespace: true), forKey: .cryptoETH)
+        store.set(WidgetContentPolicy.text(quoteText, maxLength: WidgetContentPolicy.maxQuoteLength, trimsWhitespace: true), forKey: .quoteText)
+        store.set(WidgetContentPolicy.text(quoteAuthor, maxLength: WidgetContentPolicy.maxAuthorLength, trimsWhitespace: true), forKey: .quoteAuthor)
+        store.set(WidgetContentPolicy.terminalLogs(terminalLogs), forKey: .terminalLogs)
+        store.set(WidgetContentPolicy.text(asciiArt, maxLength: WidgetContentPolicy.maxAsciiLength), forKey: .asciiArt)
+    }
+
+    private func refreshAllWidgets() {
+        pendingSaveWorkItem?.cancel()
+        pendingSaveWorkItem = nil
+        pendingReloadKinds.removeAll()
+        persistConfiguredData()
+        saveSystemData(reloadWidgets: false)
+        WidgetDataStore.shared.reloadAllWidgets()
+    }
     
     private func loadData() {
         let store = WidgetDataStore.shared
-        clockCity = store.string(forKey: .clockCity) ?? String(localized: "hackerdesktop.default_city")
-        weatherCity = store.string(forKey: .weatherCity) ?? String(localized: "hackerdesktop.default_city")
-        todoItems = store.array(forKey: .todoItems, type: TodoItem.self)
-        noteContent = store.string(forKey: .noteContent) ?? ""
-        filePaths = store.array(forKey: .filePaths, type: FileItem.self)
-        appItems = store.array(forKey: .appBundleIDs, type: AppLauncherItem.self)
+        clockCity = WidgetContentPolicy.text(
+            store.string(forKey: .clockCity) ?? String(localized: "hackerdesktop.default_city"),
+            maxLength: WidgetContentPolicy.maxCityLength,
+            trimsWhitespace: true
+        )
+        let weather = WidgetWeatherPolicy.normalized(
+            store.value(forKey: .weatherSnapshot, type: WidgetWeatherSnapshot.self) ?? defaultWeatherSnapshot
+        )
+        weatherCity = weather.city
+        weatherTemperature = weather.temperature
+        weatherApparentTemperature = weather.apparentTemperature
+        weatherHigh = weather.high
+        weatherLow = weather.low
+        weatherHumidity = weather.humidity
+        weatherCondition = weather.condition
+        weatherUnit = weather.unit
+        weatherUpdatedAt = weather.updatedAt
+        todoItems = WidgetContentPolicy.todoItems(store.array(forKey: .todoItems, type: TodoItem.self))
+        noteContent = WidgetContentPolicy.text(
+            store.string(forKey: .noteContent) ?? "",
+            maxLength: WidgetContentPolicy.maxNoteLength
+        )
+        filePaths = WidgetContentPolicy.fileItems(store.array(forKey: .filePaths, type: FileItem.self))
+        appItems = WidgetContentPolicy.appItems(store.array(forKey: .appBundleIDs, type: AppLauncherItem.self))
         cryptoBTC = store.string(forKey: .cryptoBTC) ?? "$64,230 ▲2.4%"
         cryptoETH = store.string(forKey: .cryptoETH) ?? "$3,450 ▼0.8%"
         quoteText = store.string(forKey: .quoteText) ?? String(localized: "hackerdesktop.default_quote")
         quoteAuthor = store.string(forKey: .quoteAuthor) ?? "Gene Spafford"
-        terminalLogs = store.stringArray(forKey: .terminalLogs)
-        if terminalLogs.isEmpty {
+        if store.contains(.terminalLogs) {
+            terminalLogs = WidgetContentPolicy.terminalLogs(store.stringArray(forKey: .terminalLogs))
+        } else {
             terminalLogs = [
                 "[14:02:01] kernel: system boot",
                 "[14:02:05] sshd: accepted key",
                 "[14:03:12] cron: daily backup"
             ]
         }
-        asciiArt = store.string(forKey: .asciiArt) ?? "  .--.\n /  o \\n|   __|\n \\__/"
+        asciiArt = WidgetContentPolicy.text(
+            store.string(forKey: .asciiArt) ?? "  .--.\n /  o \\n|   __|\n \\__/",
+            maxLength: WidgetContentPolicy.maxAsciiLength
+        )
+    }
+
+    private var defaultWeatherSnapshot: WidgetWeatherSnapshot {
+        WidgetWeatherSnapshot(
+            city: String(localized: "hackerdesktop.default_city"),
+            temperature: 24,
+            apparentTemperature: 25,
+            high: 28,
+            low: 19,
+            humidity: 62,
+            condition: .partlyCloudy,
+            unit: .celsius,
+            updatedAt: Date()
+        )
+    }
+
+    private var currentWeatherSnapshot: WidgetWeatherSnapshot {
+        WidgetWeatherSnapshot(
+            city: weatherCity,
+            temperature: weatherTemperature,
+            apparentTemperature: weatherApparentTemperature,
+            high: weatherHigh,
+            low: weatherLow,
+            humidity: weatherHumidity,
+            condition: weatherCondition,
+            unit: weatherUnit,
+            updatedAt: weatherUpdatedAt
+        )
+    }
+
+    private func weatherChanged() {
+        guard isActive else { return }
+        weatherUpdatedAt = Date()
+        saveData(for: [.weather])
+    }
+
+    private func changeWeatherUnit(from source: WidgetTemperatureUnit, to destination: WidgetTemperatureUnit) {
+        guard source != destination, isActive else { return }
+        weatherTemperature = WidgetWeatherPolicy.convert(weatherTemperature, from: source, to: destination)
+        weatherApparentTemperature = WidgetWeatherPolicy.convert(weatherApparentTemperature, from: source, to: destination)
+        weatherHigh = WidgetWeatherPolicy.convert(weatherHigh, from: source, to: destination)
+        weatherLow = WidgetWeatherPolicy.convert(weatherLow, from: source, to: destination)
+        weatherChanged()
+    }
+
+    private func weatherNumberField(_ title: LocalizedStringKey, value: Binding<Double>) -> some View {
+        VStack(alignment: .leading, spacing: 4 * zoomScale) {
+            Text(title)
+                .widgetFieldLabel(zoomScale: zoomScale)
+            TextField(
+                "hackerdesktop.weather_value_placeholder",
+                value: value,
+                format: .number.precision(.fractionLength(0...1))
+            )
+            .textFieldStyle(.plain)
+            .font(.system(size: 11 * zoomScale, design: .monospaced))
+            .foregroundStyle(.white)
+            .padding(8 * zoomScale)
+            .background(Color(white: 0.06))
+            .clipShape(RoundedRectangle(cornerRadius: 6 * zoomScale))
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    private func weatherConditionTitle(_ condition: WidgetWeatherCondition) -> LocalizedStringKey {
+        switch condition {
+        case .clearDay: "weather.condition.clear"
+        case .clearNight: "weather.condition.clear_night"
+        case .partlyCloudy: "weather.condition.partly_cloudy"
+        case .cloudy: "weather.condition.cloudy"
+        case .rain: "weather.condition.rain"
+        case .thunderstorm: "weather.condition.storm"
+        case .snow: "weather.condition.snow"
+        case .fog: "weather.condition.fog"
+        case .wind: "weather.condition.wind"
+        }
     }
 
     private func removableWidgetItem(title: String, subtitle: String, onRemove: @escaping () -> Void) -> some View {
@@ -603,12 +825,13 @@ struct HackerDesktopView: View {
         panel.canChooseDirectories = false
         panel.allowsMultipleSelection = true
         guard panel.runModal() == .OK else { return }
-        let existing = Set(filePaths.map(\.path))
+        var existing = Set(filePaths.map(\.path))
+        let availableSlots = max(0, WidgetContentPolicy.maxFileItems - filePaths.count)
         filePaths.append(contentsOf: panel.urls.compactMap { url in
-            guard !existing.contains(url.path) else { return nil }
+            guard existing.insert(url.path).inserted else { return nil }
             return FileItem(id: UUID(), path: url.path, name: url.lastPathComponent)
-        })
-        saveData(immediate: true)
+        }.prefix(availableSlots))
+        saveData(for: [.files], immediate: true)
     }
 
     private func selectApplications() {
@@ -617,13 +840,14 @@ struct HackerDesktopView: View {
         panel.canChooseDirectories = false
         panel.allowsMultipleSelection = true
         guard panel.runModal() == .OK else { return }
-        let existing = Set(appItems.map(\.bundleID))
+        var existing = Set(appItems.map(\.bundleID))
+        let availableSlots = max(0, WidgetContentPolicy.maxAppItems - appItems.count)
         appItems.append(contentsOf: panel.urls.compactMap { url in
             guard let bundleID = Bundle(url: url)?.bundleIdentifier,
-                  !existing.contains(bundleID) else { return nil }
+                  existing.insert(bundleID).inserted else { return nil }
             return AppLauncherItem(id: UUID(), bundleID: bundleID, name: url.deletingPathExtension().lastPathComponent)
-        })
-        saveData(immediate: true)
+        }.prefix(availableSlots))
+        saveData(for: [.appLauncher], immediate: true)
     }
 }
 
@@ -717,6 +941,11 @@ private struct StatBadge: View {
 }
 
 private extension View {
+    func widgetFieldLabel(zoomScale: CGFloat) -> some View {
+        font(.system(size: 9 * zoomScale, design: .monospaced))
+            .foregroundStyle(.white.opacity(0.4))
+    }
+
     func widgetDataButtonStyle(zoomScale: CGFloat) -> some View {
         buttonStyle(.plain)
             .font(.system(size: 9 * zoomScale, weight: .bold, design: .monospaced))

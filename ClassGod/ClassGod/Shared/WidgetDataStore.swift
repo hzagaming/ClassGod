@@ -15,13 +15,202 @@ import WidgetKit
 /// App Group identifier for data sharing between main app and widgets.
 nonisolated let widgetAppGroupID = "group.com.hanazar.classgod"
 
+nonisolated enum ClassGodWidgetKind: String, CaseIterable, Sendable {
+    case cpu = "CPUWidget"
+    case memory = "MemoryWidget"
+    case disk = "DiskWidget"
+    case network = "NetworkWidget"
+    case battery = "BatteryWidget"
+    case uptime = "UptimeWidget"
+    case clock = "ClockWidget"
+    case worldClock = "WorldClockWidget"
+    case calendar = "CalendarWidget"
+    case weather = "WeatherWidget"
+    case systemInfo = "SystemInfoWidget"
+    case todo = "TodoWidget"
+    case notes = "NotesWidget"
+    case files = "FileWidget"
+    case appLauncher = "AppLauncherWidget"
+    case terminal = "TerminalLogWidget"
+    case asciiArt = "AsciiArtWidget"
+    case crypto = "CryptoWidget"
+    case quote = "QuoteWidget"
+
+    static let systemKinds: [ClassGodWidgetKind] = [.cpu, .memory, .disk, .network, .battery, .uptime, .systemInfo]
+    static let informationKinds: [ClassGodWidgetKind] = [.clock, .worldClock, .calendar, .weather]
+    static let toolKinds: [ClassGodWidgetKind] = [.todo, .notes, .files, .appLauncher]
+    static let funKinds: [ClassGodWidgetKind] = [.terminal, .asciiArt, .crypto, .quote]
+}
+
 nonisolated enum WidgetRefreshPolicy {
+    static let hostSnapshotInterval: TimeInterval = 60
+
     static func nextUpdate(after date: Date) -> Date {
         date.addingTimeInterval(15 * 60)
     }
 
     static func timelineDates(startingAt date: Date) -> [Date] {
         (0..<15).map { date.addingTimeInterval(Double($0) * 60) }
+    }
+}
+
+nonisolated enum WidgetTemperatureUnit: String, Codable, CaseIterable, Sendable {
+    case celsius
+    case fahrenheit
+
+    var symbol: String { self == .celsius ? "°C" : "°F" }
+    var validRange: ClosedRange<Double> { self == .celsius ? -100...80 : -148...176 }
+}
+
+nonisolated enum WidgetWeatherCondition: String, Codable, CaseIterable, Sendable {
+    case clearDay = "sun.max.fill"
+    case clearNight = "moon.stars.fill"
+    case partlyCloudy = "cloud.sun.fill"
+    case cloudy = "cloud.fill"
+    case rain = "cloud.rain.fill"
+    case thunderstorm = "cloud.bolt.rain.fill"
+    case snow = "cloud.snow.fill"
+    case fog = "cloud.fog.fill"
+    case wind = "wind"
+}
+
+nonisolated struct WidgetWeatherSnapshot: Codable, Equatable, Sendable {
+    var city: String
+    var temperature: Double
+    var apparentTemperature: Double
+    var high: Double
+    var low: Double
+    var humidity: Int
+    var condition: WidgetWeatherCondition
+    var unit: WidgetTemperatureUnit
+    var updatedAt: Date
+
+    static var placeholder: WidgetWeatherSnapshot {
+        WidgetWeatherSnapshot(
+            city: "",
+            temperature: 0,
+            apparentTemperature: 0,
+            high: 0,
+            low: 0,
+            humidity: 0,
+            condition: .partlyCloudy,
+            unit: .celsius,
+            updatedAt: .distantPast
+        )
+    }
+}
+
+nonisolated enum WidgetWeatherPolicy {
+    static func normalized(_ snapshot: WidgetWeatherSnapshot) -> WidgetWeatherSnapshot {
+        let range = snapshot.unit.validRange
+        let temperature = clamp(snapshot.temperature, to: range, fallback: 0)
+        let apparent = clamp(snapshot.apparentTemperature, to: range, fallback: temperature)
+        let first = clamp(snapshot.low, to: range, fallback: temperature)
+        let second = clamp(snapshot.high, to: range, fallback: temperature)
+
+        return WidgetWeatherSnapshot(
+            city: WidgetContentPolicy.text(snapshot.city, maxLength: WidgetContentPolicy.maxCityLength, trimsWhitespace: true),
+            temperature: temperature,
+            apparentTemperature: apparent,
+            high: max(first, second),
+            low: min(first, second),
+            humidity: max(0, min(100, snapshot.humidity)),
+            condition: snapshot.condition,
+            unit: snapshot.unit,
+            updatedAt: snapshot.updatedAt
+        )
+    }
+
+    static func temperatureText(_ value: Double, unit: WidgetTemperatureUnit) -> String {
+        let value = clamp(value, to: unit.validRange, fallback: 0)
+        if value.rounded() == value {
+            return "\(Int(value))°"
+        }
+        return String(format: "%.1f°", value)
+    }
+
+    static func convert(_ value: Double, from source: WidgetTemperatureUnit, to destination: WidgetTemperatureUnit) -> Double {
+        guard source != destination, value.isFinite else { return value }
+        switch (source, destination) {
+        case (.celsius, .fahrenheit): return value * 9 / 5 + 32
+        case (.fahrenheit, .celsius): return (value - 32) * 5 / 9
+        default: return value
+        }
+    }
+
+    private static func clamp(_ value: Double, to range: ClosedRange<Double>, fallback: Double) -> Double {
+        guard value.isFinite else { return fallback }
+        return min(range.upperBound, max(range.lowerBound, value))
+    }
+}
+
+nonisolated enum WidgetContentPolicy {
+    static let maxCityLength = 64
+    static let maxTodoItems = 20
+    static let maxTodoLength = 160
+    static let maxNoteLength = 2_000
+    static let maxFileItems = 12
+    static let maxAppItems = 12
+    static let maxLogLines = 8
+    static let maxLogLength = 200
+    static let maxQuoteLength = 320
+    static let maxAuthorLength = 80
+    static let maxAsciiLength = 1_000
+    static let maxPriceLength = 64
+
+    static func text(_ value: String, maxLength: Int, trimsWhitespace: Bool = false) -> String {
+        let source = trimsWhitespace ? value.trimmingCharacters(in: .whitespacesAndNewlines) : value
+        return String(source.prefix(max(0, maxLength)))
+    }
+
+    static func todoItems(_ items: [TodoItem]) -> [TodoItem] {
+        var identifiers = Set<UUID>()
+        return items.compactMap { item -> TodoItem? in
+            let value = text(item.text, maxLength: maxTodoLength, trimsWhitespace: true)
+            guard !value.isEmpty, identifiers.insert(item.id).inserted else { return nil }
+            return TodoItem(id: item.id, text: value, isDone: item.isDone)
+        }
+        .prefix(maxTodoItems)
+        .map { $0 }
+    }
+
+    static func fileItems(_ items: [FileItem]) -> [FileItem] {
+        var identifiers = Set<UUID>()
+        var paths = Set<String>()
+        return items.compactMap { item in
+            let path = text(item.path, maxLength: 1_024, trimsWhitespace: true)
+            guard !path.isEmpty,
+                  identifiers.insert(item.id).inserted,
+                  paths.insert(path).inserted else { return nil }
+            let name = text(item.name, maxLength: 96, trimsWhitespace: true)
+            return FileItem(id: item.id, path: path, name: name.isEmpty ? URL(fileURLWithPath: path).lastPathComponent : name)
+        }
+        .prefix(maxFileItems)
+        .map { $0 }
+    }
+
+    static func appItems(_ items: [AppLauncherItem]) -> [AppLauncherItem] {
+        var identifiers = Set<UUID>()
+        var bundleIDs = Set<String>()
+        return items.compactMap { item in
+            let bundleID = text(item.bundleID, maxLength: 255, trimsWhitespace: true)
+            guard WidgetDeepLink.isValidBundleIdentifier(bundleID),
+                  identifiers.insert(item.id).inserted,
+                  bundleIDs.insert(bundleID).inserted else { return nil }
+            let name = text(item.name, maxLength: 96, trimsWhitespace: true)
+            return AppLauncherItem(id: item.id, bundleID: bundleID, name: name.isEmpty ? bundleID : name)
+        }
+        .prefix(maxAppItems)
+        .map { $0 }
+    }
+
+    static func terminalLogs(_ lines: [String]) -> [String] {
+        lines.compactMap { line in
+            let value = text(line, maxLength: maxLogLength, trimsWhitespace: true)
+            return value.isEmpty ? nil : value
+        }
+        .prefix(maxLogLines)
+        .map { $0 }
     }
 }
 
@@ -37,6 +226,12 @@ nonisolated enum WidgetMetricNormalization {
 
     static func batteryPercent(from fraction: Double) -> Double {
         percentage(fraction * 100)
+    }
+
+    static func boundedComponent(_ value: Double, total: Double) -> Double {
+        let total = nonnegativeFinite(total)
+        guard total > 0 else { return 0 }
+        return min(total, nonnegativeFinite(value))
     }
 
     static func uptime(storedSeconds: TimeInterval, snapshotDate: Date, entryDate: Date) -> TimeInterval {
@@ -77,7 +272,7 @@ nonisolated enum WidgetDeepLink {
         return bundleIdentifier
     }
 
-    private static func isValidBundleIdentifier(_ value: String) -> Bool {
+    static func isValidBundleIdentifier(_ value: String) -> Bool {
         value.count <= 255
             && !value.hasSuffix(".")
             && !value.contains("..")
@@ -119,9 +314,7 @@ enum WidgetDataKey: String {
     case filePaths = "widget.filePaths"
     case appBundleIDs = "widget.appBundleIDs"
     case clockCity = "widget.clockCity"
-    case weatherCity = "widget.weatherCity"
-    case weatherTemp = "widget.weatherTemp"
-    case weatherCondition = "widget.weatherCondition"
+    case weatherSnapshot = "widget.weatherSnapshot"
     case cryptoBTC = "widget.cryptoBTC"
     case cryptoETH = "widget.cryptoETH"
     case quoteText = "widget.quoteText"
@@ -177,6 +370,10 @@ final class WidgetDataStore {
     func data(forKey key: WidgetDataKey) -> Data? {
         defaults.data(forKey: key.rawValue)
     }
+
+    func contains(_ key: WidgetDataKey) -> Bool {
+        defaults.object(forKey: key.rawValue) != nil
+    }
     
     func date(forKey key: WidgetDataKey) -> Date? {
         defaults.object(forKey: key.rawValue) as? Date
@@ -194,11 +391,21 @@ final class WidgetDataStore {
         guard let data = try? JSONEncoder().encode(array) else { return }
         defaults.set(data, forKey: key.rawValue)
     }
+
+    func setValue<T: Codable>(_ value: T, forKey key: WidgetDataKey) {
+        guard let data = try? JSONEncoder().encode(value) else { return }
+        defaults.set(data, forKey: key.rawValue)
+    }
     
     func array<T: Codable>(forKey key: WidgetDataKey, type: T.Type) -> [T] {
         guard let data = defaults.data(forKey: key.rawValue),
               let array = try? JSONDecoder().decode([T].self, from: data) else { return [] }
         return array
+    }
+
+    func value<T: Codable>(forKey key: WidgetDataKey, type: T.Type) -> T? {
+        guard let data = defaults.data(forKey: key.rawValue) else { return nil }
+        return try? JSONDecoder().decode(T.self, from: data)
     }
     
     // MARK: - Convenience: System Snapshot
@@ -216,10 +423,12 @@ final class WidgetDataStore {
         uptime: TimeInterval
     ) {
         set(WidgetMetricNormalization.percentage(cpu), forKey: .cpuUsage)
-        set(WidgetMetricNormalization.nonnegativeFinite(memoryUsed), forKey: .memoryUsage)
-        set(WidgetMetricNormalization.nonnegativeFinite(memoryTotal), forKey: .memoryTotal)
-        set(WidgetMetricNormalization.nonnegativeFinite(diskFree), forKey: .diskFree)
-        set(WidgetMetricNormalization.nonnegativeFinite(diskTotal), forKey: .diskTotal)
+        let normalizedMemoryTotal = WidgetMetricNormalization.nonnegativeFinite(memoryTotal)
+        let normalizedDiskTotal = WidgetMetricNormalization.nonnegativeFinite(diskTotal)
+        set(WidgetMetricNormalization.boundedComponent(memoryUsed, total: normalizedMemoryTotal), forKey: .memoryUsage)
+        set(normalizedMemoryTotal, forKey: .memoryTotal)
+        set(WidgetMetricNormalization.boundedComponent(diskFree, total: normalizedDiskTotal), forKey: .diskFree)
+        set(normalizedDiskTotal, forKey: .diskTotal)
         set(WidgetMetricNormalization.nonnegativeFinite(netDown), forKey: .networkDown)
         set(WidgetMetricNormalization.nonnegativeFinite(netUp), forKey: .networkUp)
         set(WidgetMetricNormalization.percentage(battery), forKey: .batteryLevel)
@@ -230,12 +439,18 @@ final class WidgetDataStore {
     
     // MARK: - Trigger Widget Reload
     
-    func reloadAllWidgets() {
+    func reloadWidgets(_ kinds: [ClassGodWidgetKind]) {
         #if canImport(WidgetKit)
         if #available(macOS 11.0, *) {
-            WidgetCenter.shared.reloadAllTimelines()
+            for kind in Set(kinds) {
+                WidgetCenter.shared.reloadTimelines(ofKind: kind.rawValue)
+            }
         }
         #endif
+    }
+
+    func reloadAllWidgets() {
+        reloadWidgets(ClassGodWidgetKind.allCases)
     }
 }
 

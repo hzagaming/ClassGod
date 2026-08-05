@@ -27,6 +27,102 @@ struct WidgetDataStoreTests {
         #expect(WidgetRefreshPolicy.nextUpdate(after: now) == Date(timeIntervalSince1970: 1_900))
         #expect(WidgetRefreshPolicy.timelineDates(startingAt: now).count == 15)
         #expect(WidgetRefreshPolicy.timelineDates(startingAt: now).last == Date(timeIntervalSince1970: 1_840))
+        #expect(WidgetRefreshPolicy.hostSnapshotInterval == 60)
+    }
+
+    @Test("Widget catalog groups every bundled kind exactly once")
+    func validatesWidgetKindCatalog() {
+        let grouped = ClassGodWidgetKind.systemKinds
+            + ClassGodWidgetKind.informationKinds
+            + ClassGodWidgetKind.toolKinds
+            + ClassGodWidgetKind.funKinds
+
+        #expect(ClassGodWidgetKind.allCases.count == 19)
+        #expect(grouped.count == ClassGodWidgetKind.allCases.count)
+        #expect(Set(grouped) == Set(ClassGodWidgetKind.allCases))
+    }
+
+    @Test("Widget center opens from the main panel at the widget collection")
+    func selectsWidgetCollectionByDefault() {
+        #expect(HackerDesktopTab.defaultSelection == .widgets)
+    }
+
+    @Test("Weather snapshots clamp values and preserve a valid range")
+    func normalizesWidgetWeather() {
+        let snapshot = WidgetWeatherSnapshot(
+            city: "  \(String(repeating: "A", count: 80))  ",
+            temperature: .infinity,
+            apparentTemperature: -500,
+            high: 10,
+            low: 30,
+            humidity: 180,
+            condition: .rain,
+            unit: .celsius,
+            updatedAt: Date(timeIntervalSince1970: 1_000)
+        )
+        let normalized = WidgetWeatherPolicy.normalized(snapshot)
+
+        #expect(normalized.city.count == WidgetContentPolicy.maxCityLength)
+        #expect(normalized.temperature == 0)
+        #expect(normalized.apparentTemperature == -100)
+        #expect(normalized.low == 10)
+        #expect(normalized.high == 30)
+        #expect(normalized.humidity == 100)
+        #expect(WidgetWeatherPolicy.temperatureText(normalized.temperature, unit: normalized.unit) == "0°")
+    }
+
+    @Test("Weather units convert values and enforce Fahrenheit limits")
+    func convertsWidgetWeatherUnits() {
+        #expect(WidgetWeatherPolicy.convert(0, from: .celsius, to: .fahrenheit) == 32)
+        #expect(WidgetWeatherPolicy.convert(212, from: .fahrenheit, to: .celsius) == 100)
+
+        let snapshot = WidgetWeatherSnapshot(
+            city: "Shanghai",
+            temperature: 500,
+            apparentTemperature: -.infinity,
+            high: 220,
+            low: -200,
+            humidity: -1,
+            condition: .clearDay,
+            unit: .fahrenheit,
+            updatedAt: Date()
+        )
+        let normalized = WidgetWeatherPolicy.normalized(snapshot)
+
+        #expect(normalized.temperature == 176)
+        #expect(normalized.apparentTemperature == 176)
+        #expect(normalized.high == 176)
+        #expect(normalized.low == -148)
+        #expect(normalized.humidity == 0)
+    }
+
+    @Test("Configurable widget payloads stay compact and renderable")
+    func boundsWidgetPayloads() {
+        let items = (0..<30).map { index in
+            TodoItem(
+                id: UUID(),
+                text: index == 0 ? "   " : String(repeating: "T", count: 300),
+                isDone: false
+            )
+        }
+        let normalized = WidgetContentPolicy.todoItems(items)
+
+        #expect(normalized.count == WidgetContentPolicy.maxTodoItems)
+        #expect(normalized.allSatisfy { !$0.text.isEmpty && $0.text.count <= WidgetContentPolicy.maxTodoLength })
+        #expect(WidgetContentPolicy.terminalLogs(Array(repeating: "duplicate", count: 20)).count == WidgetContentPolicy.maxLogLines)
+
+        let duplicateID = UUID()
+        let todos = WidgetContentPolicy.todoItems([
+            TodoItem(id: duplicateID, text: "first", isDone: false),
+            TodoItem(id: duplicateID, text: "duplicate id", isDone: true)
+        ])
+        #expect(todos.map(\.text) == ["first"])
+
+        let files = WidgetContentPolicy.fileItems([
+            FileItem(id: UUID(), path: "/tmp/a", name: "a"),
+            FileItem(id: UUID(), path: "/tmp/a", name: "duplicate")
+        ])
+        #expect(files.count == 1)
     }
 
     @Test("Battery fractions are normalized to a clamped percentage")
@@ -45,6 +141,9 @@ struct WidgetDataStoreTests {
         #expect(WidgetMetricNormalization.nonnegativeFinite(-1) == 0)
         #expect(WidgetMetricNormalization.nonnegativeFinite(42) == 42)
         #expect(WidgetMetricNormalization.percentage(120) == 100)
+        #expect(WidgetMetricNormalization.boundedComponent(12, total: 8) == 8)
+        #expect(WidgetMetricNormalization.boundedComponent(-1, total: 8) == 0)
+        #expect(WidgetMetricNormalization.boundedComponent(4, total: .nan) == 0)
     }
 
     @Test("Uptime advances with each generated timeline entry")

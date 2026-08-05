@@ -32,12 +32,16 @@ struct TerminalLogWidgetView: View {
                     Spacer()
                 }
                 
-                VStack(alignment: .leading, spacing: 2) {
-                    ForEach(entry.terminalLogs.prefix(3), id: \.self) { line in
-                        Text(line)
-                            .font(.system(size: 8, design: .monospaced))
-                            .foregroundStyle(logColor(for: line))
-                            .lineLimit(1)
+                if entry.terminalLogs.isEmpty {
+                    WidgetEmptyState(icon: "terminal", title: "WIDGET_EMPTY_LOGS")
+                } else {
+                    VStack(alignment: .leading, spacing: 2) {
+                        ForEach(Array(entry.terminalLogs.prefix(3).enumerated()), id: \.offset) { _, line in
+                            Text(line)
+                                .font(.system(size: 8, design: .monospaced))
+                                .foregroundStyle(logColor(for: line))
+                                .lineLimit(1)
+                        }
                     }
                 }
             }
@@ -59,12 +63,16 @@ struct TerminalLogWidgetView: View {
                     Spacer()
                 }
                 
-                VStack(alignment: .leading, spacing: 3) {
-                    ForEach(entry.terminalLogs.prefix(5), id: \.self) { line in
-                        Text(line)
-                            .font(.system(size: 9, design: .monospaced))
-                            .foregroundStyle(logColor(for: line))
-                            .lineLimit(1)
+                if entry.terminalLogs.isEmpty {
+                    WidgetEmptyState(icon: "terminal", title: "WIDGET_EMPTY_LOGS")
+                } else {
+                    VStack(alignment: .leading, spacing: 3) {
+                        ForEach(Array(entry.terminalLogs.prefix(5).enumerated()), id: \.offset) { _, line in
+                            Text(line)
+                                .font(.system(size: 9, design: .monospaced))
+                                .foregroundStyle(logColor(for: line))
+                                .lineLimit(1)
+                        }
                     }
                 }
             }

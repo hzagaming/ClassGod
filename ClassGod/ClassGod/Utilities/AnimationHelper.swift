@@ -19,9 +19,6 @@ nonisolated enum AnimationDurationPolicy {
         duration > 0
     }
 
-    static func launchDelay(preferred: Double, duration: Double) -> Double {
-        shouldRunLaunchEffects(duration: duration) ? preferred : 0
-    }
 }
 
 enum Anim {

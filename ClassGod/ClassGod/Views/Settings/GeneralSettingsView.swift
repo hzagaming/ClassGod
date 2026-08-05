@@ -174,12 +174,6 @@ struct GeneralSettingsView: View {
                     )
                     .disabled(true)
 
-                    SettingsToggleRow(
-                        icon: "rectangle.portrait.arrowtriangle.2.outward",
-                        title: "setting.show_on_launch",
-                        subtitle: "setting.show_on_launch.subtitle",
-                        isOn: $prefs.preferences.showPopoverOnLaunch
-                    )
                 }
 
                 StatefulCollapsibleSection(

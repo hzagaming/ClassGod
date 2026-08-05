@@ -30,13 +30,21 @@ struct WidgetProvider: TimelineProvider {
     
     private func loadEntry(date: Date = Date(), store: WidgetExtensionStore) -> WidgetEntry {
         let snapshotDate = store.date(forKey: .lastUpdate) ?? date
+        let memoryTotal = WidgetMetricNormalization.nonnegativeFinite(store.double(forKey: .memoryTotal))
+        let diskTotal = WidgetMetricNormalization.nonnegativeFinite(store.double(forKey: .diskTotal))
         return WidgetEntry(
             date: date,
             cpuUsage: WidgetMetricNormalization.percentage(store.double(forKey: .cpuUsage)),
-            memoryUsage: WidgetMetricNormalization.nonnegativeFinite(store.double(forKey: .memoryUsage)),
-            memoryTotal: WidgetMetricNormalization.nonnegativeFinite(store.double(forKey: .memoryTotal)),
-            diskFree: WidgetMetricNormalization.nonnegativeFinite(store.double(forKey: .diskFree)),
-            diskTotal: WidgetMetricNormalization.nonnegativeFinite(store.double(forKey: .diskTotal)),
+            memoryUsage: WidgetMetricNormalization.boundedComponent(
+                store.double(forKey: .memoryUsage),
+                total: memoryTotal
+            ),
+            memoryTotal: memoryTotal,
+            diskFree: WidgetMetricNormalization.boundedComponent(
+                store.double(forKey: .diskFree),
+                total: diskTotal
+            ),
+            diskTotal: diskTotal,
             networkDown: WidgetMetricNormalization.nonnegativeFinite(store.double(forKey: .networkDown)),
             networkUp: WidgetMetricNormalization.nonnegativeFinite(store.double(forKey: .networkUp)),
             batteryLevel: WidgetMetricNormalization.percentage(store.double(forKey: .batteryLevel)),
@@ -46,20 +54,46 @@ struct WidgetProvider: TimelineProvider {
                 snapshotDate: snapshotDate,
                 entryDate: date
             ),
-            clockCity: store.string(forKey: .clockCity) ?? String(localized: "Local"),
-            weatherCity: store.string(forKey: .weatherCity) ?? "",
-            weatherTemp: store.string(forKey: .weatherTemp) ?? "--",
-            weatherCondition: store.string(forKey: .weatherCondition) ?? "questionmark",
-            todoItems: store.array(forKey: .todoItems, type: TodoItem.self),
-            noteContent: store.string(forKey: .noteContent) ?? "",
-            filePaths: store.array(forKey: .filePaths, type: FileItem.self),
-            appItems: store.array(forKey: .appBundleIDs, type: AppLauncherItem.self),
-            cryptoBTC: store.string(forKey: .cryptoBTC) ?? "--",
-            cryptoETH: store.string(forKey: .cryptoETH) ?? "--",
-            quoteText: store.string(forKey: .quoteText) ?? "",
-            quoteAuthor: store.string(forKey: .quoteAuthor) ?? "",
-            terminalLogs: store.stringArray(forKey: .terminalLogs),
-            asciiArt: store.string(forKey: .asciiArt) ?? ""
+            clockCity: WidgetContentPolicy.text(
+                store.string(forKey: .clockCity) ?? String(localized: "Local"),
+                maxLength: WidgetContentPolicy.maxCityLength,
+                trimsWhitespace: true
+            ),
+            weather: WidgetWeatherPolicy.normalized(
+                store.value(forKey: .weatherSnapshot, type: WidgetWeatherSnapshot.self) ?? .placeholder
+            ),
+            todoItems: WidgetContentPolicy.todoItems(store.array(forKey: .todoItems, type: TodoItem.self)),
+            noteContent: WidgetContentPolicy.text(
+                store.string(forKey: .noteContent) ?? "",
+                maxLength: WidgetContentPolicy.maxNoteLength
+            ),
+            filePaths: WidgetContentPolicy.fileItems(store.array(forKey: .filePaths, type: FileItem.self)),
+            appItems: WidgetContentPolicy.appItems(store.array(forKey: .appBundleIDs, type: AppLauncherItem.self)),
+            cryptoBTC: WidgetContentPolicy.text(
+                store.string(forKey: .cryptoBTC) ?? "--",
+                maxLength: WidgetContentPolicy.maxPriceLength,
+                trimsWhitespace: true
+            ),
+            cryptoETH: WidgetContentPolicy.text(
+                store.string(forKey: .cryptoETH) ?? "--",
+                maxLength: WidgetContentPolicy.maxPriceLength,
+                trimsWhitespace: true
+            ),
+            quoteText: WidgetContentPolicy.text(
+                store.string(forKey: .quoteText) ?? "",
+                maxLength: WidgetContentPolicy.maxQuoteLength,
+                trimsWhitespace: true
+            ),
+            quoteAuthor: WidgetContentPolicy.text(
+                store.string(forKey: .quoteAuthor) ?? "",
+                maxLength: WidgetContentPolicy.maxAuthorLength,
+                trimsWhitespace: true
+            ),
+            terminalLogs: WidgetContentPolicy.terminalLogs(store.stringArray(forKey: .terminalLogs)),
+            asciiArt: WidgetContentPolicy.text(
+                store.string(forKey: .asciiArt) ?? "",
+                maxLength: WidgetContentPolicy.maxAsciiLength
+            )
         )
     }
 }
@@ -99,6 +133,11 @@ struct WidgetExtensionStore {
         guard let data = defaults.data(forKey: key.rawValue),
               let array = try? JSONDecoder().decode([T].self, from: data) else { return [] }
         return array
+    }
+
+    func value<T: Codable>(forKey key: WidgetDataKey, type: T.Type) -> T? {
+        guard let data = defaults.data(forKey: key.rawValue) else { return nil }
+        return try? JSONDecoder().decode(T.self, from: data)
     }
     
     func stringArray(forKey key: WidgetDataKey) -> [String] {

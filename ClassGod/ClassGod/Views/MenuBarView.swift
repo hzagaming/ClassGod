@@ -98,7 +98,7 @@ struct MenuBarView: View {
                         
                         FeatureButton(
                             icon: "square.grid.2x2",
-                            title: "HackerDesktop",
+                            title: "hackerdesktop.config_title",
                             description: "menu.hacker_desktop.description",
                             action: onOpenHackerDesktop
                         )

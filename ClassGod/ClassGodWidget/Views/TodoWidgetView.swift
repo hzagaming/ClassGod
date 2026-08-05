@@ -32,17 +32,21 @@ struct TodoWidgetView: View {
                         .foregroundStyle(.cyan.opacity(0.6))
                 }
                 
-                VStack(alignment: .leading, spacing: 4) {
-                    ForEach(entry.todoItems.prefix(3)) { item in
-                        HStack(spacing: 6) {
-                            Image(systemName: item.isDone ? "checkmark.square.fill" : "square")
-                                .font(.system(size: 10))
-                                .foregroundStyle(item.isDone ? .green : .white.opacity(0.4))
-                            Text(item.text)
-                                .font(.system(size: 10, design: .monospaced))
-                                .foregroundStyle(item.isDone ? .white.opacity(0.3) : .white.opacity(0.8))
-                                .strikethrough(item.isDone)
-                                .lineLimit(1)
+                if entry.todoItems.isEmpty {
+                    WidgetEmptyState(icon: "checkmark.square", title: "WIDGET_EMPTY_TODO")
+                } else {
+                    VStack(alignment: .leading, spacing: 4) {
+                        ForEach(entry.todoItems.prefix(3)) { item in
+                            HStack(spacing: 6) {
+                                Image(systemName: item.isDone ? "checkmark.square.fill" : "square")
+                                    .font(.system(size: 10))
+                                    .foregroundStyle(item.isDone ? .green : .white.opacity(0.4))
+                                Text(item.text)
+                                    .font(.system(size: 10, design: .monospaced))
+                                    .foregroundStyle(item.isDone ? .white.opacity(0.3) : .white.opacity(0.8))
+                                    .strikethrough(item.isDone)
+                                    .lineLimit(1)
+                            }
                         }
                     }
                 }
@@ -69,17 +73,21 @@ struct TodoWidgetView: View {
                         .foregroundStyle(.cyan.opacity(0.6))
                 }
                 
-                VStack(alignment: .leading, spacing: 5) {
-                    ForEach(entry.todoItems.prefix(5)) { item in
-                        HStack(spacing: 6) {
-                            Image(systemName: item.isDone ? "checkmark.square.fill" : "square")
-                                .font(.system(size: 11))
-                                .foregroundStyle(item.isDone ? .green : .white.opacity(0.4))
-                            Text(item.text)
-                                .font(.system(size: 11, design: .monospaced))
-                                .foregroundStyle(item.isDone ? .white.opacity(0.3) : .white.opacity(0.85))
-                                .strikethrough(item.isDone)
-                                .lineLimit(1)
+                if entry.todoItems.isEmpty {
+                    WidgetEmptyState(icon: "checkmark.square", title: "WIDGET_EMPTY_TODO")
+                } else {
+                    VStack(alignment: .leading, spacing: 5) {
+                        ForEach(entry.todoItems.prefix(5)) { item in
+                            HStack(spacing: 6) {
+                                Image(systemName: item.isDone ? "checkmark.square.fill" : "square")
+                                    .font(.system(size: 11))
+                                    .foregroundStyle(item.isDone ? .green : .white.opacity(0.4))
+                                Text(item.text)
+                                    .font(.system(size: 11, design: .monospaced))
+                                    .foregroundStyle(item.isDone ? .white.opacity(0.3) : .white.opacity(0.85))
+                                    .strikethrough(item.isDone)
+                                    .lineLimit(1)
+                            }
                         }
                     }
                 }

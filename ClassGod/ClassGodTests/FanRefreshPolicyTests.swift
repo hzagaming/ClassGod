@@ -41,6 +41,7 @@ struct FanRefreshPolicyTests {
     @Test("Shared monitoring honors the fastest active client")
     func resolvesSharedMonitorInterval() {
         var requests: [SystemMonitorClient: TimeInterval] = [
+            .widgetHost: WidgetRefreshPolicy.hostSnapshotInterval,
             .hackerDesktop: 2,
             .activityMonitor: 1,
         ]
@@ -50,6 +51,8 @@ struct FanRefreshPolicyTests {
         #expect(SystemMonitorIntervalPolicy.effectiveInterval(for: requests) == 0.1)
         requests.removeValue(forKey: .hackerDesktop)
         #expect(SystemMonitorIntervalPolicy.effectiveInterval(for: requests) == 1)
+        requests.removeValue(forKey: .activityMonitor)
+        #expect(SystemMonitorIntervalPolicy.effectiveInterval(for: requests) == WidgetRefreshPolicy.hostSnapshotInterval)
     }
 
     @Test("The first network sample never reports a launch spike")

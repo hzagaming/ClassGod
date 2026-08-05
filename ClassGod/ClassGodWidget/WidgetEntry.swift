@@ -23,9 +23,7 @@ struct WidgetEntry: TimelineEntry {
     
     // Info
     let clockCity: String
-    let weatherCity: String
-    let weatherTemp: String
-    let weatherCondition: String
+    let weather: WidgetWeatherSnapshot
     
     // Tools
     let todoItems: [TodoItem]
@@ -55,9 +53,17 @@ struct WidgetEntry: TimelineEntry {
             batteryIsCharging: true,
             uptimeSeconds: 86400 * 3 + 3600 * 5,
             clockCity: String(localized: "Beijing"),
-            weatherCity: String(localized: "Beijing"),
-            weatherTemp: "24°",
-            weatherCondition: "cloud.sun.fill",
+            weather: WidgetWeatherSnapshot(
+                city: String(localized: "Beijing"),
+                temperature: 24,
+                apparentTemperature: 25,
+                high: 28,
+                low: 19,
+                humidity: 62,
+                condition: .partlyCloudy,
+                unit: .celsius,
+                updatedAt: Date()
+            ),
             todoItems: [
                 TodoItem(id: UUID(), text: String(localized: "Review code"), isDone: true),
                 TodoItem(id: UUID(), text: String(localized: "Deploy update"), isDone: false),
@@ -104,9 +110,7 @@ struct WidgetEntry: TimelineEntry {
             batteryIsCharging: false,
             uptimeSeconds: 0,
             clockCity: String(localized: "Local"),
-            weatherCity: "",
-            weatherTemp: "--",
-            weatherCondition: "questionmark",
+            weather: .placeholder,
             todoItems: [],
             noteContent: "",
             filePaths: [],
@@ -118,5 +122,27 @@ struct WidgetEntry: TimelineEntry {
             terminalLogs: [],
             asciiArt: "..."
         )
+    }
+}
+
+struct WidgetEmptyState: View {
+    let icon: String
+    let title: LocalizedStringKey
+
+    var body: some View {
+        VStack(spacing: 5) {
+            Image(systemName: icon)
+                .font(.system(size: 20))
+                .foregroundStyle(.cyan.opacity(0.55))
+            Text(title)
+                .font(.system(size: 9, weight: .medium, design: .monospaced))
+                .foregroundStyle(.white.opacity(0.55))
+                .multilineTextAlignment(.center)
+            Text("WIDGET_CONFIGURE_IN_CLASSGOD")
+                .font(.system(size: 7, design: .monospaced))
+                .foregroundStyle(.white.opacity(0.28))
+                .multilineTextAlignment(.center)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }

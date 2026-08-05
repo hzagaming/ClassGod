@@ -105,6 +105,7 @@ nonisolated enum SystemMonitorClient: Hashable {
     case activityMonitor
     case fanControl
     case hackerDesktop
+    case widgetHost
 }
 
 nonisolated enum SystemMonitorIntervalPolicy {
