@@ -510,7 +510,8 @@ struct WallpaperBrowserView: View {
         case .success(let urls):
             importWallpapers(urls)
         case .failure(let error):
-            print("[WallpaperBrowser] Import failed: \(error)")
+            guard !WallpaperImportPolicy.isUserCancellation(error) else { return }
+            ErrorToastManager.shared.show(error: error)
         }
     }
     
@@ -547,8 +548,20 @@ struct WallpaperBrowserView: View {
                 }
             }
             guard !Task.isCancelled else { return }
+            let summary = WallpaperImportSummary(total: urls.count, imported: importedCount)
             if importedCount > 0 {
                 SoundEffectManager.shared.playWallpaperAdded()
+            }
+            if summary.shouldReportFailure {
+                ErrorToastManager.shared.show(
+                    title: String(localized: "wallpaper.import_failed_title"),
+                    message: String(
+                        format: String(localized: "wallpaper.import_failed_message"),
+                        summary.failed,
+                        summary.total
+                    ),
+                    severity: .medium
+                )
             }
             importTask = nil
         }

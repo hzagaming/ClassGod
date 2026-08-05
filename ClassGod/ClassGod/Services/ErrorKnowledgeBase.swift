@@ -9,6 +9,13 @@
 import Foundation
 import Combine
 
+nonisolated enum ErrorSearchQuery {
+    static func normalized(_ query: String) -> String? {
+        let value = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        return value.isEmpty ? nil : value
+    }
+}
+
 final class ErrorKnowledgeBase: ObservableObject {
     static let shared = ErrorKnowledgeBase()
     
@@ -33,6 +40,11 @@ final class ErrorKnowledgeBase: ObservableObject {
         loadTask = Task { [weak self] in
             await self?.loadInBackground()
         }
+    }
+
+    func ensureLoadedAndWait() async {
+        ensureLoaded()
+        await loadTask?.value
     }
     
     @MainActor
@@ -149,6 +161,7 @@ final class ErrorKnowledgeBase: ObservableObject {
     
     func search(query: String, category: ErrorCategory? = nil) -> [ErrorSearchResult] {
         ensureLoaded()
+        guard let query = ErrorSearchQuery.normalized(query) else { return [] }
         let lowerQuery = query.lowercased()
         let queryTokens = lowerQuery
             .components(separatedBy: CharacterSet.alphanumerics.inverted)

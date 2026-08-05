@@ -129,6 +129,13 @@ nonisolated enum MonotonicCounterPolicy {
     }
 }
 
+nonisolated enum BatteryLevelPolicy {
+    static func fraction(current: Int, maximum: Int) -> Double {
+        guard maximum > 0 else { return 0 }
+        return max(0, min(1, Double(current) / Double(maximum)))
+    }
+}
+
 final class SystemMonitor: ObservableObject, @unchecked Sendable {
     static let shared = SystemMonitor()
     
@@ -585,7 +592,7 @@ final class SystemMonitor: ObservableObject, @unchecked Sendable {
         self.battery = BatteryInfo(
             isPresent: true,
             isCharging: isCharging,
-            level: Double(capacity) / Double(maxCapacity),
+            level: BatteryLevelPolicy.fraction(current: capacity, maximum: maxCapacity),
             timeRemaining: time,
             cycleCount: cycles,
             health: 100

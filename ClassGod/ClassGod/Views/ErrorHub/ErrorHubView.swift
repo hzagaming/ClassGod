@@ -44,7 +44,7 @@ struct ErrorHubView: View {
     }
     
     private var displayedEntries: [ErrorEntry] {
-        if searchQuery.isEmpty {
+        if ErrorSearchQuery.normalized(searchQuery) == nil {
             return baseEntries
         } else {
             return searchResults.map { $0.entry }
@@ -53,7 +53,9 @@ struct ErrorHubView: View {
     
     // Grouped by category when showing all without search/tag filter
     private var groupedEntries: [(category: ErrorCategory, entries: [ErrorEntry])]? {
-        guard searchQuery.isEmpty, selectedCategory == .all, selectedTag == nil else { return nil }
+        guard ErrorSearchQuery.normalized(searchQuery) == nil,
+              selectedCategory == .all,
+              selectedTag == nil else { return nil }
         let cats = ErrorCategory.allCases.filter { $0 != .all }
         return cats.compactMap { cat in
             let entries = displayedEntries.filter { $0.category == cat }
@@ -214,7 +216,7 @@ struct ErrorHubView: View {
     
     private func debouncedSearch(query: String) {
         searchTask?.cancel()
-        if query.isEmpty {
+        guard let query = ErrorSearchQuery.normalized(query) else {
             searchResults = []
             return
         }
@@ -228,10 +230,6 @@ struct ErrorHubView: View {
     
     @MainActor
     private func performSearch(query: String, knowledgeBase: ErrorKnowledgeBase) async {
-        if query.isEmpty {
-            searchResults = []
-            return
-        }
         let category = selectedCategory
         let severity = selectedSeverity
         let tag = selectedTag
@@ -247,7 +245,7 @@ struct ErrorHubView: View {
             results = results.filter { $0.entry.tags.contains(tag) }
         }
         
-        guard searchQuery == query else { return }
+        guard ErrorSearchQuery.normalized(searchQuery) == query else { return }
         searchResults = results
     }
     

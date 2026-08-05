@@ -8,6 +8,41 @@
 import Foundation
 import AppKit
 
+nonisolated enum AppleScriptLiteral {
+    static func escaped(_ value: String) -> String {
+        value
+            .replacingOccurrences(of: "\\", with: "\\\\")
+            .replacingOccurrences(of: "\"", with: "\\\"")
+    }
+}
+
+nonisolated enum BrowserURLMatchPolicy {
+    static func matchesHost(tabURL: String, targetURL: String) -> Bool {
+        guard let tabHost = URLComponents(string: tabURL)?.host,
+              let targetHost = URLComponents(string: targetURL)?.host else { return false }
+        return tabHost.caseInsensitiveCompare(targetHost) == .orderedSame
+    }
+
+    static func appleScriptHostCondition(targetURL: String) -> String {
+        guard var host = URLComponents(string: targetURL)?.host, !host.isEmpty else {
+            return "tabURL = targetURL"
+        }
+        if host.contains(":"), !host.hasPrefix("[") {
+            host = "[\(host)]"
+        }
+        let safeHost = AppleScriptLiteral.escaped(host)
+        return ["http://\(safeHost)", "https://\(safeHost)"].flatMap { base in
+            [
+                "tabURL = \"\(base)\"",
+                "tabURL starts with \"\(base)/\"",
+                "tabURL starts with \"\(base):\"",
+                "tabURL starts with \"\(base)?\"",
+                "tabURL starts with \"\(base)#\"",
+            ]
+        }.joined(separator: " or ")
+    }
+}
+
 nonisolated struct BrowserSwitchSession: Sendable {
     private(set) var generation: UInt = 0
 
@@ -29,17 +64,8 @@ final class BrowserSwitcher {
 
     private init() {}
 
-    /// AppleScript strings use doubled quotes for escaping: " → ""
     private func appleScriptEscape(_ string: String) -> String {
-        return string.replacingOccurrences(of: "\"", with: "\"\"")
-    }
-
-    /// Extract host from URL in Swift (avoids shell injection in AppleScript)
-    private func extractHost(from urlString: String) -> String {
-        guard let url = URL(string: urlString), let host = url.host else {
-            return urlString
-        }
-        return host
+        AppleScriptLiteral.escaped(string)
     }
 
     /// Check if browser is currently running
@@ -85,7 +111,7 @@ final class BrowserSwitcher {
             return
         }
         
-        let safeURL = appleScriptEscape(tab.url)
+        let targetURL = tab.url
         let isRunning = isBrowserRunning(tab.browser)
 
         // If browser not running, respect user preference
@@ -109,7 +135,7 @@ final class BrowserSwitcher {
 
         // If "always new tab" is selected, skip search and directly open URL
         if prefs.switchBehavior == .alwaysNewTab {
-            openURLDirectly(tab: tab, url: safeURL, request: request, completion: completion)
+            openURLDirectly(tab: tab, url: targetURL, request: request, completion: completion)
             return
         }
 
@@ -117,24 +143,24 @@ final class BrowserSwitcher {
         let scriptSource: String
         switch tab.browser {
         case .safari:
-            scriptSource = buildSafariSwitchScript(url: safeURL, precision: prefs.urlMatchPrecision)
+            scriptSource = buildSafariSwitchScript(url: targetURL, precision: prefs.urlMatchPrecision)
         case .chrome:
-            scriptSource = buildChromeSwitchScript(url: safeURL, precision: prefs.urlMatchPrecision)
+            scriptSource = buildChromeSwitchScript(url: targetURL, precision: prefs.urlMatchPrecision)
         case .edge:
-            scriptSource = buildEdgeSwitchScript(url: safeURL, precision: prefs.urlMatchPrecision)
+            scriptSource = buildEdgeSwitchScript(url: targetURL, precision: prefs.urlMatchPrecision)
         }
 
         executeAppleScript(scriptSource) { result, errorMsg in
             guard self.switchSession.isCurrent(request) else { return }
             if errorMsg != nil {
                 // Fallback: try to open URL directly
-                self.openURLDirectly(tab: tab, url: safeURL, request: request, completion: completion)
+                self.openURLDirectly(tab: tab, url: targetURL, request: request, completion: completion)
                 return
             }
 
             let output = result?.stringValue ?? ""
             if output == "NOT_FOUND" {
-                self.openURLDirectly(tab: tab, url: safeURL, request: request, completion: completion)
+                self.openURLDirectly(tab: tab, url: targetURL, request: request, completion: completion)
             } else {
                 self.complete(
                     request: request,
@@ -255,6 +281,7 @@ final class BrowserSwitcher {
     // MARK: - Switch Scripts (find existing tab)
 
     private func buildSafariSwitchScript(url: String, precision: URLMatchPrecision) -> String {
+        let safeURL = appleScriptEscape(url)
         let matchCondition: String
         switch precision {
         case .exact:
@@ -262,15 +289,13 @@ final class BrowserSwitcher {
         case .prefix:
             matchCondition = "tabURL starts with targetURL or targetURL starts with tabURL"
         case .hostOnly:
-            let host = extractHost(from: url)
-            let safeHost = appleScriptEscape(host)
-            matchCondition = "tabURL contains \"\(safeHost)\""
+            matchCondition = BrowserURLMatchPolicy.appleScriptHostCondition(targetURL: url)
         }
 
         return """
         tell application "Safari"
             activate
-            set targetURL to "\(url)"
+            set targetURL to "\(safeURL)"
             repeat with w in windows
                 repeat with t in tabs of w
                     set tabURL to URL of t
@@ -287,6 +312,7 @@ final class BrowserSwitcher {
     }
 
     private func buildChromeSwitchScript(url: String, precision: URLMatchPrecision) -> String {
+        let safeURL = appleScriptEscape(url)
         let matchCondition: String
         switch precision {
         case .exact:
@@ -294,15 +320,13 @@ final class BrowserSwitcher {
         case .prefix:
             matchCondition = "tabURL starts with targetURL or targetURL starts with tabURL"
         case .hostOnly:
-            let host = extractHost(from: url)
-            let safeHost = appleScriptEscape(host)
-            matchCondition = "tabURL contains \"\(safeHost)\""
+            matchCondition = BrowserURLMatchPolicy.appleScriptHostCondition(targetURL: url)
         }
 
         return """
         tell application "Google Chrome"
             activate
-            set targetURL to "\(url)"
+            set targetURL to "\(safeURL)"
             repeat with w in windows
                 set tabList to tabs of w
                 repeat with t in tabList
@@ -322,6 +346,7 @@ final class BrowserSwitcher {
     }
 
     private func buildEdgeSwitchScript(url: String, precision: URLMatchPrecision) -> String {
+        let safeURL = appleScriptEscape(url)
         let matchCondition: String
         switch precision {
         case .exact:
@@ -329,15 +354,13 @@ final class BrowserSwitcher {
         case .prefix:
             matchCondition = "tabURL starts with targetURL or targetURL starts with tabURL"
         case .hostOnly:
-            let host = extractHost(from: url)
-            let safeHost = appleScriptEscape(host)
-            matchCondition = "tabURL contains \"\(safeHost)\""
+            matchCondition = BrowserURLMatchPolicy.appleScriptHostCondition(targetURL: url)
         }
 
         return """
         tell application "Microsoft Edge"
             activate
-            set targetURL to "\(url)"
+            set targetURL to "\(safeURL)"
             repeat with w in windows
                 set tabList to tabs of w
                 repeat with t in tabList
@@ -359,10 +382,11 @@ final class BrowserSwitcher {
     // MARK: - Open Scripts (new tab/window)
 
     private func buildSafariOpenScript(url: String) -> String {
+        let safeURL = appleScriptEscape(url)
         return """
         tell application "Safari"
             activate
-            set targetURL to "\(url)"
+            set targetURL to "\(safeURL)"
             if (count of windows) = 0 then
                 make new document with properties {URL:targetURL}
             else
@@ -375,10 +399,11 @@ final class BrowserSwitcher {
     }
 
     private func buildChromeOpenScript(url: String) -> String {
+        let safeURL = appleScriptEscape(url)
         return """
         tell application "Google Chrome"
             activate
-            set targetURL to "\(url)"
+            set targetURL to "\(safeURL)"
             if (count of windows) = 0 then
                 make new window
                 set URL of active tab of front window to targetURL
@@ -392,10 +417,11 @@ final class BrowserSwitcher {
     }
 
     private func buildEdgeOpenScript(url: String) -> String {
+        let safeURL = appleScriptEscape(url)
         return """
         tell application "Microsoft Edge"
             activate
-            set targetURL to "\(url)"
+            set targetURL to "\(safeURL)"
             if (count of windows) = 0 then
                 make new window
                 set URL of active tab of front window to targetURL

@@ -123,13 +123,11 @@ final class ErrorToastManager: ObservableObject {
         // Present toast immediately, then enrich with knowledge-base match on background
         let toastID = show(title: title, message: message, severity: .high, entry: nil)
         
-        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-            ErrorKnowledgeBase.shared.ensureLoaded()
+        Task { @MainActor [weak self] in
+            await ErrorKnowledgeBase.shared.ensureLoadedAndWait()
             let matching = ErrorKnowledgeBase.shared.search(query: "\(nsError.domain) \(nsError.code)")
             guard let entry = matching.first?.entry else { return }
-            DispatchQueue.main.async {
-                self?.enrichToast(id: toastID, with: entry)
-            }
+            self?.enrichToast(id: toastID, with: entry)
         }
     }
     

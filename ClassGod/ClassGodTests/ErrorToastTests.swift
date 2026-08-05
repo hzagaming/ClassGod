@@ -5,6 +5,15 @@ import Testing
 
 @Suite("Error toast updates")
 struct ErrorToastTests {
+    @Test("Knowledge-base callers can await the initial resource load")
+    func awaitsKnowledgeBaseLoading() async {
+        await ErrorKnowledgeBase.shared.ensureLoadedAndWait()
+
+        #expect(!ErrorKnowledgeBase.shared.isLoading)
+        #expect(ErrorKnowledgeBase.shared.loadingError == nil)
+        #expect(!ErrorKnowledgeBase.shared.allEntries.isEmpty)
+    }
+
     @Test("Knowledge-base enrichment preserves toast identity")
     func preservesIdentity() {
         let toast = ErrorToastItem(

@@ -409,7 +409,7 @@ struct FeatureButton: View {
                     Text(description)
                         .font(.system(size: 9 * zoomScale, design: .monospaced))
                         .foregroundStyle(.white.opacity(isEnabled ? 0.55 : 0.3))
-                        .lineLimit(1)
+                        .lineLimit(2)
                 }
                 
                 Spacer()

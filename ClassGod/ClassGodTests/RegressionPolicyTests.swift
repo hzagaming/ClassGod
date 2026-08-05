@@ -4,6 +4,89 @@ import Testing
 
 @Suite("Regression policies")
 struct RegressionPolicyTests {
+    @Test("Browser responses split at the final delimiter and require a URL")
+    func parsesBrowserDetectionResponses() {
+        let delimiter = "\u{001E}"
+        let parsed = BrowserDetectionResponseParser.parse(
+            "Section\(delimiter)Title\(delimiter)https://example.com/path",
+            delimiter: delimiter,
+            browser: .safari
+        )
+
+        #expect(parsed?.title == "Section\(delimiter)Title")
+        #expect(parsed?.url == "https://example.com/path")
+        #expect(BrowserDetectionResponseParser.parse(
+            "Title\(delimiter)   ",
+            delimiter: delimiter,
+            browser: .safari
+        ) == nil)
+    }
+
+    @Test("AppleScript literals escape quotes and backslashes")
+    func escapesAppleScriptLiterals() {
+        #expect(AppleScriptLiteral.escaped(#"a"b\c"#) == #"a\"b\\c"#)
+    }
+
+    @Test("Host-only matching respects URL authority boundaries")
+    func matchesExactBrowserHosts() {
+        #expect(BrowserURLMatchPolicy.matchesHost(
+            tabURL: "https://example.com/path",
+            targetURL: "https://example.com/other"
+        ))
+        #expect(!BrowserURLMatchPolicy.matchesHost(
+            tabURL: "https://notexample.com/path",
+            targetURL: "https://example.com/other"
+        ))
+        #expect(!BrowserURLMatchPolicy.matchesHost(
+            tabURL: "https://evil.test/?next=example.com",
+            targetURL: "https://example.com/other"
+        ))
+        let condition = BrowserURLMatchPolicy.appleScriptHostCondition(targetURL: "https://example.com/other")
+        #expect(condition.contains("tabURL starts with \"https://example.com/\""))
+        #expect(!condition.contains("tabURL contains"))
+    }
+
+    @Test("Shortcut capture accepts only registerable combinations")
+    func validatesCapturedShortcuts() {
+        #expect(!ShortcutCapturePolicy.shouldAccept(keyName: "", keyCode: nil, modifiers: 1, isFunctionKey: false, isNumericPad: false))
+        #expect(!ShortcutCapturePolicy.shouldAccept(keyName: "1", keyCode: 0x12, modifiers: 0, isFunctionKey: false, isNumericPad: false))
+        #expect(!ShortcutCapturePolicy.shouldAccept(keyName: "1", keyCode: 0x12, modifiers: 1, isFunctionKey: false, isNumericPad: true))
+        #expect(ShortcutCapturePolicy.shouldAccept(keyName: "1", keyCode: 0x12, modifiers: 1, isFunctionKey: false, isNumericPad: false))
+        #expect(ShortcutCapturePolicy.shouldAccept(keyName: "F7", keyCode: 0x62, modifiers: 0, isFunctionKey: true, isNumericPad: false))
+    }
+
+    @Test("Battery fractions remain finite and bounded")
+    func normalizesBatteryFractions() {
+        #expect(BatteryLevelPolicy.fraction(current: 50, maximum: 100) == 0.5)
+        #expect(BatteryLevelPolicy.fraction(current: 100, maximum: 0) == 0)
+        #expect(BatteryLevelPolicy.fraction(current: 150, maximum: 100) == 1)
+        #expect(BatteryLevelPolicy.fraction(current: -1, maximum: 100) == 0)
+    }
+
+    @Test("Error search ignores whitespace-only queries")
+    func normalizesErrorSearchQueries() {
+        #expect(ErrorSearchQuery.normalized("  \n\t ") == nil)
+        #expect(ErrorSearchQuery.normalized("  NSURLError -1009  ") == "NSURLError -1009")
+    }
+
+    @Test("App switching reports the actual activation or launch result")
+    func resolvesAppSwitchOutcomes() {
+        #expect(AppSwitchOutcome.activation(didActivate: true) == .success)
+        #expect(AppSwitchOutcome.activation(didActivate: false) == .failure)
+        #expect(AppSwitchOutcome.launch(hasApplication: true, hasError: false) == .success)
+        #expect(AppSwitchOutcome.launch(hasApplication: false, hasError: false) == .failure)
+        #expect(AppSwitchOutcome.launch(hasApplication: true, hasError: true) == .failure)
+    }
+
+    @Test("Dismissed boot sequences reject stale callbacks")
+    func cancelsBootSequenceCallbacks() {
+        var session = BootSequenceSession()
+        let request = session.begin()
+        #expect(session.isCurrent(request))
+        session.cancel()
+        #expect(!session.isCurrent(request))
+    }
+
     @Test("Only the latest delayed browser switch remains current")
     func supersedesDelayedBrowserSwitches() {
         var session = BrowserSwitchSession()

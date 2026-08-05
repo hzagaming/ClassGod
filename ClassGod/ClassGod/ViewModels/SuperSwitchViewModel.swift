@@ -9,6 +9,19 @@ import Foundation
 import AppKit
 import Combine
 
+nonisolated enum AppSwitchOutcome: Equatable {
+    case success
+    case failure
+
+    static func activation(didActivate: Bool) -> AppSwitchOutcome {
+        didActivate ? .success : .failure
+    }
+
+    static func launch(hasApplication: Bool, hasError: Bool) -> AppSwitchOutcome {
+        hasApplication && !hasError ? .success : .failure
+    }
+}
+
 @MainActor
 final class SuperSwitchViewModel: ObservableObject {
     @Published var targets: [SwitchTarget] = []
@@ -73,13 +86,19 @@ final class SuperSwitchViewModel: ObservableObject {
     }
     
     func switchToTarget(_ target: SwitchTarget) {
-        SoundEffectManager.shared.playSwitchSuccess()
-        
         // Try to activate running application first
         let runningApps = NSWorkspace.shared.runningApplications
         if let app = runningApps.first(where: { $0.bundleIdentifier == target.bundleIdentifier }) {
-            app.activate(options: [.activateAllWindows])
-            showToast(message: String(format: String(localized: "toast.switched_to"), target.name))
+            let outcome = AppSwitchOutcome.activation(
+                didActivate: app.activate(options: [.activateAllWindows])
+            )
+            if outcome == .success {
+                SoundEffectManager.shared.playSwitchSuccess()
+                HapticManager.shared.success()
+                showToast(message: String(format: String(localized: "toast.switched_to"), target.name))
+            } else {
+                presentSwitchFailure(target: target, detail: String(localized: "error.unknown"))
+            }
             return
         }
         
@@ -88,20 +107,25 @@ final class SuperSwitchViewModel: ObservableObject {
             let config = NSWorkspace.OpenConfiguration()
             config.activates = true
             NSWorkspace.shared.openApplication(at: url, configuration: config) { [weak self] app, error in
-                if let error = error {
-                    DispatchQueue.main.async { [weak self] in
-                        self?.errorMessage = String(format: String(localized: "error.launch_failed"), target.name, error.localizedDescription)
-                        self?.showError = true
-                    }
-                } else {
-                    DispatchQueue.main.async { [weak self] in
-                        self?.showToast(message: String(format: String(localized: "toast.launched"), target.name))
+                DispatchQueue.main.async { [weak self] in
+                    guard let self else { return }
+                    if AppSwitchOutcome.launch(hasApplication: app != nil, hasError: error != nil) == .success {
+                        SoundEffectManager.shared.playSwitchSuccess()
+                        HapticManager.shared.success()
+                        self.showToast(message: String(format: String(localized: "toast.launched"), target.name))
+                    } else {
+                        self.presentSwitchFailure(
+                            target: target,
+                            detail: error?.localizedDescription ?? String(localized: "error.unknown")
+                        )
                     }
                 }
             }
         } else {
             errorMessage = String(format: String(localized: "error.app_not_found"), target.bundleIdentifier)
             showError = true
+            SoundEffectManager.shared.playSwitchFailure()
+            HapticManager.shared.warning()
         }
     }
     
@@ -130,6 +154,13 @@ final class SuperSwitchViewModel: ObservableObject {
             _ = ShortcutManager.shared.registerShortcut(for: target)
         }
         registeredTargetIDs = currentIDs
+    }
+
+    private func presentSwitchFailure(target: SwitchTarget, detail: String) {
+        errorMessage = String(format: String(localized: "error.launch_failed"), target.name, detail)
+        showError = true
+        SoundEffectManager.shared.playSwitchFailure()
+        HapticManager.shared.warning()
     }
     
     private func showToast(message: String) {

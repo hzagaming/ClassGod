@@ -34,6 +34,16 @@ struct DetectedTab {
     let browser: BrowserType
 }
 
+enum BrowserDetectionResponseParser {
+    static func parse(_ output: String, delimiter: String, browser: BrowserType) -> DetectedTab? {
+        guard let range = output.range(of: delimiter, options: .backwards) else { return nil }
+        let title = output[..<range.lowerBound].trimmingCharacters(in: .whitespacesAndNewlines)
+        let url = output[range.upperBound...].trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !url.isEmpty else { return nil }
+        return DetectedTab(title: title, url: url, browser: browser)
+    }
+}
+
 final class BrowserDetector {
     static let shared = BrowserDetector()
     
@@ -134,14 +144,9 @@ final class BrowserDetector {
             return .failure(.invalidResponse)
         }
         
-        let parts = output.components(separatedBy: delimiter)
-        guard parts.count >= 2 else {
+        guard let tab = BrowserDetectionResponseParser.parse(output, delimiter: delimiter, browser: browser) else {
             return .failure(.invalidResponse)
         }
-        
-        let title = parts[0].trimmingCharacters(in: .whitespacesAndNewlines)
-        let url = parts[1].trimmingCharacters(in: .whitespacesAndNewlines)
-        
-        return .success(DetectedTab(title: title, url: url, browser: browser))
+        return .success(tab)
     }
 }

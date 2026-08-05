@@ -6,7 +6,32 @@
 //
 
 import SwiftUI
-import Combine
+
+nonisolated struct BootSequenceSession: Sendable {
+    private(set) var generation: UInt = 0
+    private(set) var isActive = false
+
+    mutating func begin() -> UInt {
+        generation &+= 1
+        isActive = true
+        return generation
+    }
+
+    mutating func cancel() {
+        generation &+= 1
+        isActive = false
+    }
+
+    func isCurrent(_ request: UInt) -> Bool {
+        isActive && request == generation
+    }
+
+    mutating func complete(_ request: UInt) -> Bool {
+        guard isCurrent(request) else { return false }
+        isActive = false
+        return true
+    }
+}
 
 struct BootSequenceView: View {
     @State private var phase: BootPhase = .showInitial
@@ -17,6 +42,7 @@ struct BootSequenceView: View {
     @State private var overallOpacity: Double = 1.0
     @State private var extraROffset: CGFloat = 0
     @State private var extraRAlpha: Double = 1.0
+    @State private var sequenceSession = BootSequenceSession()
     
     let onComplete: () -> Void
     
@@ -60,10 +86,13 @@ struct BootSequenceView: View {
         }
         .opacity(overallOpacity)
         .onAppear {
-            startSequence()
+            resetSequence()
+            startSequence(request: sequenceSession.begin())
         }
         .onDisappear {
+            sequenceSession.cancel()
             scrambleTimer?.invalidate()
+            scrambleTimer = nil
         }
     }
     
@@ -92,22 +121,35 @@ struct BootSequenceView: View {
     }
     
     // MARK: - Animation Sequence
+
+    private func resetSequence() {
+        scrambleTimer?.invalidate()
+        scrambleTimer = nil
+        phase = .showInitial
+        scrambleChars = []
+        settledMask = []
+        productsOpacity = 1
+        overallOpacity = 1
+        extraROffset = 0
+        extraRAlpha = 1
+    }
     
-    private func startSequence() {
+    private func startSequence(request: UInt) {
         // Phase 1: Show "Hanazar Products" stable for 400ms
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
-            guard phase == .showInitial else { return }
+            guard sequenceSession.isCurrent(request), phase == .showInitial else { return }
             phase = .scrambling
-            startScramble()
+            startScramble(request: request)
         }
     }
     
-    private func startScramble() {
+    private func startScramble(request: UInt) {
         scrambleChars = sourceWord
         settledMask = Array(repeating: false, count: 7)
         
         // Rapid scramble timer (every 40ms)
         scrambleTimer = Timer.scheduledTimer(withTimeInterval: 0.04, repeats: true) { _ in
+            guard sequenceSession.isCurrent(request) else { return }
             for i in 0..<7 where !settledMask[i] {
                 scrambleChars[i] = scrambleSource.randomElement()!
             }
@@ -128,7 +170,8 @@ struct BootSequenceView: View {
         
         for (index, delay) in settleDelays {
             DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
-                guard phase == .scrambling || phase == .settling else { return }
+                guard sequenceSession.isCurrent(request),
+                      phase == .scrambling || phase == .settling else { return }
                 
                 if index == 6 {
                     // Extra 'r' fades and slides away
@@ -145,19 +188,23 @@ struct BootSequenceView: View {
                 if index == 5 {
                     phase = .settling
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                        guard sequenceSession.isCurrent(request) else { return }
                         withAnimation(.easeOut(duration: 0.4)) {
                             productsOpacity = 0
                         }
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                            guard sequenceSession.isCurrent(request) else { return }
                             phase = .showHacker
                             // Brief pause on "Hacker" alone
                             DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+                                guard sequenceSession.isCurrent(request) else { return }
                                 phase = .fadeOut
                                 scrambleTimer?.invalidate()
                                 withAnimation(.easeOut(duration: 0.3)) {
                                     overallOpacity = 0
                                 }
                                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                                    guard sequenceSession.complete(request) else { return }
                                     onComplete()
                                 }
                             }

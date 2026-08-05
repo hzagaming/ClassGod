@@ -8,6 +8,19 @@
 import SwiftUI
 import Carbon
 
+nonisolated enum ShortcutCapturePolicy {
+    static func shouldAccept(
+        keyName: String,
+        keyCode: UInt32?,
+        modifiers: UInt,
+        isFunctionKey: Bool,
+        isNumericPad: Bool
+    ) -> Bool {
+        guard !isNumericPad, !keyName.isEmpty, keyCode != nil else { return false }
+        return isFunctionKey || modifiers != 0
+    }
+}
+
 struct ShortcutPicker: View {
     @Binding var key: String
     @Binding var modifiers: UInt
@@ -91,6 +104,7 @@ struct ShortcutPicker: View {
             guard self.isRecording else { return event }
 
             let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+            let shortcutFlags = flags.intersection([.command, .option, .control, .shift])
 
             if event.type == .keyDown {
                 if event.keyCode == 0x35 {
@@ -121,15 +135,18 @@ struct ShortcutPicker: View {
 
                 let isFunctionKey = functionKeyName(for: event.keyCode) != nil
                 let keyName = keyName(for: event)
-
-                if !isFunctionKey &&
-                    flags.subtracting([.function, .numericPad]).isEmpty &&
-                    keyName.rangeOfCharacter(from: .letters) != nil {
+                guard ShortcutCapturePolicy.shouldAccept(
+                    keyName: keyName,
+                    keyCode: ShortcutManager.shared.keyCode(for: keyName),
+                    modifiers: shortcutFlags.rawValue,
+                    isFunctionKey: isFunctionKey,
+                    isNumericPad: flags.contains(.numericPad)
+                ) else {
                     return event
                 }
 
                 self.key = keyName
-                self.modifiers = flags.rawValue
+                self.modifiers = shortcutFlags.rawValue
                 SoundEffectManager.shared.playShortcutRecorded()
                 HapticManager.shared.success()
                 self.stopRecording()

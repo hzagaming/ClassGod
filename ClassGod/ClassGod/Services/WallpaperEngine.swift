@@ -45,6 +45,19 @@ enum WallpaperImportPolicy {
         default: return nil
         }
     }
+
+    static func isUserCancellation(_ error: Error) -> Bool {
+        let error = error as NSError
+        return error.domain == NSCocoaErrorDomain && error.code == NSUserCancelledError
+    }
+}
+
+nonisolated struct WallpaperImportSummary {
+    let total: Int
+    let imported: Int
+
+    var failed: Int { max(0, total - imported) }
+    var shouldReportFailure: Bool { total > 0 && failed > 0 }
 }
 
 enum WallpaperVolumePolicy {

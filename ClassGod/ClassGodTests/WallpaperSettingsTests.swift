@@ -99,6 +99,19 @@ struct WallpaperSettingsTests {
         #expect(WallpaperImportPolicy.type(forExtension: "txt") == nil)
     }
 
+    @Test("Wallpaper import feedback distinguishes failures from cancellation")
+    func resolvesWallpaperImportFeedback() {
+        #expect(WallpaperImportSummary(total: 3, imported: 3).failed == 0)
+        #expect(!WallpaperImportSummary(total: 3, imported: 3).shouldReportFailure)
+        #expect(WallpaperImportSummary(total: 3, imported: 1).failed == 2)
+        #expect(WallpaperImportSummary(total: 3, imported: 1).shouldReportFailure)
+
+        let cancellation = NSError(domain: NSCocoaErrorDomain, code: NSUserCancelledError)
+        let unrelated = NSError(domain: "WallpaperImport", code: NSUserCancelledError)
+        #expect(WallpaperImportPolicy.isUserCancellation(cancellation))
+        #expect(!WallpaperImportPolicy.isUserCancellation(unrelated))
+    }
+
     @Test("Stale video loads are rejected even when the URL is reused")
     func rejectsStaleVideoLoads() {
         let url = URL(fileURLWithPath: "/tmp/wallpaper.mov")
