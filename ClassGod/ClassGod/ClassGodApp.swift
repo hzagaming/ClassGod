@@ -15,6 +15,15 @@ nonisolated enum LaunchWindowPresentationPolicy {
     static func splashDelay(preferred: Double, animationDuration: Double) -> Double {
         animationDuration > 0 ? preferred : 1
     }
+
+    static func shouldResetBeforeInitialShow(isVisible: Bool, isKeyWindow: Bool) -> Bool {
+        isVisible && !isKeyWindow
+    }
+}
+
+nonisolated enum SettingsWindowLayoutPolicy {
+    static let baseWidth: CGFloat = 580
+    static let baseHeight: CGFloat = 500
 }
 
 enum WidgetHostSnapshot {
@@ -192,6 +201,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 LaunchAnimationManager.shared.startChaosAnimation(mainWindow: window) { [weak self, weak window] in
                     // Phase 4: Animation complete
                     if LaunchWindowPresentationPolicy.shouldShowMainWindow {
+                        if let window,
+                           LaunchWindowPresentationPolicy.shouldResetBeforeInitialShow(
+                               isVisible: window.isVisible,
+                               isKeyWindow: window.isKeyWindow
+                           ) {
+                            window.alphaValue = 0
+                            window.orderOut(nil)
+                        }
                         self?.showMainWindow(animated: false)
                     } else {
                         window?.alphaValue = 0
@@ -866,7 +883,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func setupSettingsWindow() {
         let prefs = PreferencesManager.shared.preferences
         let zoom = CGFloat(prefs.windowZoomScale)
-        let size = constrainedWindowSize(base: NSSize(width: 520, height: 480), zoom: zoom)
+        let size = constrainedWindowSize(
+            base: NSSize(
+                width: SettingsWindowLayoutPolicy.baseWidth,
+                height: SettingsWindowLayoutPolicy.baseHeight
+            ),
+            zoom: zoom
+        )
 
         let window = DraggableWindow(
             contentRect: NSRect(origin: .zero, size: size),
@@ -1891,7 +1914,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         // settingsWindow
         if let w = settingsWindow {
-            let base = NSSize(width: 520, height: 480)
+            let base = NSSize(
+                width: SettingsWindowLayoutPolicy.baseWidth,
+                height: SettingsWindowLayoutPolicy.baseHeight
+            )
             w.setContentSize(constrainedWindowSize(base: base, zoom: zoom, screen: w.screen))
         }
 
@@ -2431,8 +2457,52 @@ struct SettingsWindowView: View {
 
 // MARK: - Settings Container
 
+enum SettingsPage: Int, CaseIterable, Identifiable {
+    case general
+    case shortcuts
+    case appearance
+    case browser
+    case advanced
+    case fan
+
+    var id: Int { rawValue }
+
+    var title: LocalizedStringKey {
+        switch self {
+        case .general: "tab.general"
+        case .shortcuts: "tab.shortcuts"
+        case .appearance: "tab.appearance"
+        case .browser: "tab.browser"
+        case .advanced: "tab.advanced"
+        case .fan: "tab.fan"
+        }
+    }
+
+    var accessibilityTitle: String {
+        switch self {
+        case .general: String(localized: "tab.general")
+        case .shortcuts: String(localized: "tab.shortcuts")
+        case .appearance: String(localized: "tab.appearance")
+        case .browser: String(localized: "tab.browser")
+        case .advanced: String(localized: "tab.advanced")
+        case .fan: String(localized: "tab.fan")
+        }
+    }
+
+    var iconName: String {
+        switch self {
+        case .general: "gear"
+        case .shortcuts: "keyboard"
+        case .appearance: "paintbrush"
+        case .browser: "globe"
+        case .advanced: "wrench.and.screwdriver"
+        case .fan: "fanblades"
+        }
+    }
+}
+
 struct SettingsContainerView: View {
-    @State private var selectedTab = 0
+    @State private var selectedPage = SettingsPage.general
     @ObservedObject private var prefs = PreferencesManager.shared
     var onClose: () -> Void
 
@@ -2470,52 +2540,69 @@ struct SettingsContainerView: View {
             .background(Color(white: 0.03))
             
             Divider().background(Color.white.opacity(0.1))
-            
-            TabView(selection: $selectedTab) {
-                GeneralSettingsView()
-                    .tabItem {
-                        Label(String(localized: "tab.general"), systemImage: "gear")
-                    }
-                    .tag(0)
 
-                ShortcutsSettingsView()
-                    .tabItem {
-                        Label(String(localized: "tab.shortcuts"), systemImage: "keyboard")
-                    }
-                    .tag(1)
+            pageNavigation
+            Divider().background(Color.white.opacity(0.08))
 
-                AppearanceSettingsView()
-                    .tabItem {
-                        Label(String(localized: "tab.appearance"), systemImage: "paintbrush")
-                    }
-                    .tag(2)
-
-                BrowserSettingsView()
-                    .tabItem {
-                        Label(String(localized: "tab.browser"), systemImage: "globe")
-                    }
-                    .tag(3)
-
-                AdvancedSettingsView()
-                    .tabItem {
-                        Label(String(localized: "tab.advanced"), systemImage: "wrench.and.screwdriver")
-                    }
-                    .tag(4)
-
-                FanControlSettingsView()
-                    .tabItem {
-                        Label(String(localized: "tab.fan"), systemImage: "fanblades")
-                    }
-                    .tag(5)
-            }
-            .padding(.horizontal, 4)
-            .preferredColorScheme(prefs.preferences.theme.colorScheme)
+            settingsContent
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .id(selectedPage)
         }
         .background(Color.black)
+        .tint(.cyan)
+        .preferredColorScheme(.dark)
         .overlay(
             RoundedRectangle(cornerRadius: 12 * zoomScale)
                 .stroke(Color.white.opacity(0.12), lineWidth: 1 * zoomScale)
         )
+    }
+
+    private var pageNavigation: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 4 * zoomScale) {
+                ForEach(SettingsPage.allCases) { page in
+                    let isSelected = selectedPage == page
+                    Button {
+                        selectedPage = page
+                    } label: {
+                        HStack(spacing: 4 * zoomScale) {
+                            Image(systemName: page.iconName)
+                                .font(.system(size: 9 * zoomScale, weight: .semibold))
+                            Text(page.title)
+                                .font(.system(size: 9 * zoomScale, weight: isSelected ? .bold : .medium, design: .monospaced))
+                                .lineLimit(1)
+                        }
+                        .foregroundStyle(isSelected ? .black : .white.opacity(0.62))
+                        .padding(.horizontal, 8 * zoomScale)
+                        .frame(height: 28 * zoomScale)
+                        .background(isSelected ? Color.cyan.opacity(0.86) : Color.white.opacity(0.035))
+                        .clipShape(RoundedRectangle(cornerRadius: 6 * zoomScale))
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(page.accessibilityTitle)
+                    .accessibilityAddTraits(isSelected ? .isSelected : [])
+                }
+            }
+            .padding(.horizontal, 8 * zoomScale)
+            .padding(.vertical, 6 * zoomScale)
+        }
+        .background(Color(white: 0.025))
+        .onChange(of: selectedPage) { _, _ in
+            SoundEffectManager.shared.playFeatureSwitch()
+            HapticManager.shared.generic()
+        }
+    }
+
+    @ViewBuilder
+    private var settingsContent: some View {
+        switch selectedPage {
+        case .general: GeneralSettingsView()
+        case .shortcuts: ShortcutsSettingsView()
+        case .appearance: AppearanceSettingsView()
+        case .browser: BrowserSettingsView()
+        case .advanced: AdvancedSettingsView()
+        case .fan: FanControlSettingsView()
+        }
     }
 }
 

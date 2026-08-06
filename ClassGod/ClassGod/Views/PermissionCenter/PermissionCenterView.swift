@@ -7,29 +7,13 @@
 
 import SwiftUI
 
-private enum PermissionListFilter: CaseIterable, Identifiable {
-    case all
-    case actionNeeded
-    case granted
-    case manualReview
-
-    var id: Self { self }
-
-    var title: LocalizedStringKey {
-        switch self {
-        case .all: "permission.filter.all"
-        case .actionNeeded: "permission.filter.action_needed"
-        case .granted: "permission.filter.granted"
-        case .manualReview: "permission.filter.manual"
-        }
-    }
-}
-
 struct PermissionCenterView: View {
     @StateObject private var service = PermissionCenterService.shared
     @ObservedObject private var prefs = PreferencesManager.shared
     @State private var selectedCategory: PermissionCategory? = nil
-    @State private var selectedStatusFilter = PermissionListFilter.all
+    @State private var selectedStatusFilter = PermissionStatusFilter.all
+    @State private var selectedRequirementFilter = PermissionRequirementFilter.all
+    @State private var selectedSortOrder = PermissionSortOrder.attention
     @State private var searchText = ""
     @State private var showingOnboarding = false
     
@@ -37,30 +21,27 @@ struct PermissionCenterView: View {
     
     private var zoomScale: CGFloat { CGFloat(prefs.preferences.windowZoomScale) }
     
-    private var groupedPermissions: [(category: PermissionCategory, items: [PermissionItemInfo])] {
-        let grouped = Dictionary(grouping: service.allPermissions) { $0.category }
+    private var visiblePermissions: [PermissionItemInfo] {
+        PermissionCatalogPolicy.items(
+            from: service.allPermissions,
+            statuses: service.statuses,
+            category: selectedCategory,
+            statusFilter: selectedStatusFilter,
+            requirementFilter: selectedRequirementFilter,
+            searchText: searchText,
+            sortOrder: selectedSortOrder
+        )
+    }
+
+    private var visibleGroups: [(category: PermissionCategory, items: [PermissionItemInfo])] {
+        let grouped = Dictionary(grouping: visiblePermissions) { $0.category }
         return PermissionCategory.allCases.compactMap { cat in
             grouped[cat].map { (category: cat, items: $0) }
         }
     }
-    
-    private var grantedCount: Int {
-        service.statuses.values.filter(\.isGranted).count
-    }
-    
-    private var totalCount: Int {
-        PermissionType.allCases.filter { !$0.requiresManualReview }.count
-    }
 
-    private var manualCount: Int {
-        PermissionType.allCases.filter(\.requiresManualReview).count
-    }
-
-    private var actionNeededCount: Int {
-        PermissionType.allCases.filter { type in
-            guard !type.requiresManualReview else { return false }
-            return service.statuses[type]?.isGranted != true
-        }.count
+    private var summary: PermissionSummary {
+        PermissionCatalogPolicy.summary(for: PermissionType.allCases, statuses: service.statuses)
     }
     
     var body: some View {
@@ -161,7 +142,7 @@ struct PermissionCenterView: View {
                     .font(.system(size: 9 * zoomScale, weight: .bold, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.5))
                 Spacer()
-                Text(String(format: String(localized: "permission.progress_format"), grantedCount, totalCount, manualCount))
+                Text(String(format: String(localized: "permission.progress_format"), summary.granted, summary.queryableTotal, summary.manualReview))
                     .font(.system(size: 9 * zoomScale, weight: .bold, design: .monospaced))
                     .foregroundStyle(progressColor)
             }
@@ -172,26 +153,31 @@ struct PermissionCenterView: View {
                         .fill(Color.white.opacity(0.06))
                     RoundedRectangle(cornerRadius: 3 * zoomScale)
                         .fill(progressColor)
-                        .frame(width: max(2, geo.size.width * CGFloat(grantedCount) / CGFloat(max(1, totalCount))))
+                        .frame(width: max(2, geo.size.width * CGFloat(summary.granted) / CGFloat(max(1, summary.queryableTotal))))
                 }
             }
             .frame(height: 8 * zoomScale)
 
             HStack(spacing: 12 * zoomScale) {
                 statusMetric(
-                    value: grantedCount,
+                    value: summary.granted,
                     label: "permission.filter.granted",
                     color: .green
                 )
                 statusMetric(
-                    value: actionNeededCount,
+                    value: summary.actionNeeded,
                     label: "permission.filter.action_needed",
                     color: .orange
                 )
                 statusMetric(
-                    value: manualCount,
+                    value: summary.manualReview,
                     label: "permission.filter.manual",
                     color: .cyan
+                )
+                statusMetric(
+                    value: summary.requiredPending,
+                    label: "permission.required_pending",
+                    color: .red
                 )
                 Spacer()
             }
@@ -203,7 +189,7 @@ struct PermissionCenterView: View {
     }
     
     private var progressColor: Color {
-        let ratio = Double(grantedCount) / Double(max(1, totalCount))
+        let ratio = Double(summary.granted) / Double(max(1, summary.queryableTotal))
         if ratio >= 1.0 { return .green }
         if ratio >= 0.6 { return .yellow }
         return .orange
@@ -261,52 +247,125 @@ struct PermissionCenterView: View {
     }
 
     private var statusFilterBar: some View {
-        HStack(spacing: 6 * zoomScale) {
-            HStack(spacing: 5 * zoomScale) {
-                Image(systemName: "magnifyingglass")
-                    .font(.system(size: 9 * zoomScale))
-                    .foregroundStyle(.white.opacity(0.35))
-                TextField(String(localized: "permission.search_placeholder"), text: $searchText)
-                    .textFieldStyle(.plain)
-                    .font(.system(size: 9 * zoomScale, design: .monospaced))
-                    .foregroundStyle(.white.opacity(0.85))
-                if !searchText.isEmpty {
-                    Button {
-                        searchText = ""
-                    } label: {
-                        Image(systemName: "xmark.circle.fill")
-                            .foregroundStyle(.white.opacity(0.35))
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel(Text("button.clear"))
-                }
+        VStack(spacing: 6 * zoomScale) {
+            HStack(spacing: 6 * zoomScale) {
+                searchField
+                requirementMenu
+                sortMenu
             }
-            .padding(.horizontal, 8 * zoomScale)
-            .frame(width: 220 * zoomScale, height: 26 * zoomScale)
-            .background(Color(white: 0.08))
-            .clipShape(RoundedRectangle(cornerRadius: 6 * zoomScale))
 
-            Spacer()
-
-            ForEach(PermissionListFilter.allCases) { filter in
-                Button {
-                    SoundEffectManager.shared.playButtonClick()
-                    selectedStatusFilter = filter
-                } label: {
-                    Text(filter.title)
-                        .font(.system(size: 8 * zoomScale, weight: selectedStatusFilter == filter ? .bold : .medium, design: .monospaced))
-                        .foregroundStyle(selectedStatusFilter == filter ? .black : .white.opacity(0.6))
-                        .padding(.horizontal, 8 * zoomScale)
-                        .frame(height: 24 * zoomScale)
-                        .background(selectedStatusFilter == filter ? Color.cyan.opacity(0.85) : Color(white: 0.08))
-                        .clipShape(RoundedRectangle(cornerRadius: 5 * zoomScale))
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 6 * zoomScale) {
+                    ForEach(PermissionStatusFilter.allCases) { filter in
+                        Button {
+                            SoundEffectManager.shared.playButtonClick()
+                            HapticManager.shared.generic()
+                            selectedStatusFilter = filter
+                        } label: {
+                            HStack(spacing: 5 * zoomScale) {
+                                Text(filter.title)
+                                Text("\(count(for: filter))")
+                                    .foregroundStyle(selectedStatusFilter == filter ? .black.opacity(0.6) : .white.opacity(0.35))
+                            }
+                            .font(.system(size: 8 * zoomScale, weight: selectedStatusFilter == filter ? .bold : .medium, design: .monospaced))
+                            .foregroundStyle(selectedStatusFilter == filter ? .black : .white.opacity(0.6))
+                            .padding(.horizontal, 8 * zoomScale)
+                            .frame(height: 24 * zoomScale)
+                            .background(selectedStatusFilter == filter ? Color.cyan.opacity(0.85) : Color(white: 0.08))
+                            .clipShape(RoundedRectangle(cornerRadius: 5 * zoomScale))
+                        }
+                        .buttonStyle(.plain)
+                    }
                 }
-                .buttonStyle(.plain)
             }
         }
         .padding(.horizontal, 12 * zoomScale)
         .padding(.vertical, 7 * zoomScale)
         .background(Color(white: 0.03))
+    }
+
+    private var searchField: some View {
+        HStack(spacing: 5 * zoomScale) {
+            Image(systemName: "magnifyingglass")
+                .font(.system(size: 9 * zoomScale))
+                .foregroundStyle(.white.opacity(0.35))
+            TextField(String(localized: "permission.search_placeholder"), text: $searchText)
+                .textFieldStyle(.plain)
+                .font(.system(size: 9 * zoomScale, design: .monospaced))
+                .foregroundStyle(.white.opacity(0.85))
+            if !searchText.isEmpty {
+                Button {
+                    SoundEffectManager.shared.playButtonClick()
+                    searchText = ""
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundStyle(.white.opacity(0.35))
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(Text("button.clear"))
+            }
+        }
+        .padding(.horizontal, 8 * zoomScale)
+        .frame(maxWidth: .infinity, minHeight: 26 * zoomScale)
+        .background(Color(white: 0.08))
+        .clipShape(RoundedRectangle(cornerRadius: 6 * zoomScale))
+    }
+
+    private var requirementMenu: some View {
+        Menu {
+            ForEach(PermissionRequirementFilter.allCases) { filter in
+                Button(filter.displayName) {
+                    SoundEffectManager.shared.playButtonClick()
+                    HapticManager.shared.generic()
+                    selectedRequirementFilter = filter
+                }
+            }
+        } label: {
+            compactMenuLabel(icon: "exclamationmark.shield", title: selectedRequirementFilter.displayName)
+        }
+        .menuStyle(.borderlessButton)
+        .accessibilityLabel(Text("permission.filter.requirement"))
+    }
+
+    private var sortMenu: some View {
+        Menu {
+            ForEach(PermissionSortOrder.allCases) { order in
+                Button(order.displayName) {
+                    SoundEffectManager.shared.playButtonClick()
+                    HapticManager.shared.generic()
+                    selectedSortOrder = order
+                }
+            }
+        } label: {
+            compactMenuLabel(icon: "arrow.up.arrow.down", title: selectedSortOrder.displayName)
+        }
+        .menuStyle(.borderlessButton)
+        .accessibilityLabel(Text("permission.sort.label"))
+    }
+
+    private func compactMenuLabel(icon: String, title: String) -> some View {
+        HStack(spacing: 4 * zoomScale) {
+            Image(systemName: icon)
+            Text(title)
+                .lineLimit(1)
+            Image(systemName: "chevron.down")
+                .font(.system(size: 6 * zoomScale, weight: .bold))
+        }
+        .font(.system(size: 8 * zoomScale, weight: .medium, design: .monospaced))
+        .foregroundStyle(.white.opacity(0.7))
+        .padding(.horizontal, 8 * zoomScale)
+        .frame(height: 26 * zoomScale)
+        .background(Color(white: 0.08))
+        .clipShape(RoundedRectangle(cornerRadius: 6 * zoomScale))
+    }
+
+    private func count(for filter: PermissionStatusFilter) -> Int {
+        switch filter {
+        case .all: PermissionType.allCases.count
+        case .actionNeeded: summary.actionNeeded
+        case .granted: summary.granted
+        case .manualReview: summary.manualReview
+        }
     }
     
     // MARK: - Permission List
@@ -336,30 +395,6 @@ struct PermissionCenterView: View {
         .background(Color(white: 0.02))
     }
     
-    private var visibleGroups: [(category: PermissionCategory, items: [PermissionItemInfo])] {
-        groupedPermissions.compactMap { group in
-            guard selectedCategory == nil || group.category == selectedCategory else { return nil }
-            let items = group.items.filter(matchesCurrentFilters)
-            return items.isEmpty ? nil : (category: group.category, items: items)
-        }
-    }
-
-    private func matchesCurrentFilters(_ item: PermissionItemInfo) -> Bool {
-        let state = service.statuses[item.type]?.state ?? (item.requiresManualReview ? .manualReview : .notDetermined)
-        let matchesStatus = switch selectedStatusFilter {
-        case .all: true
-        case .actionNeeded: !state.isGranted && !state.needsManualReview
-        case .granted: state.isGranted
-        case .manualReview: state.needsManualReview
-        }
-        guard matchesStatus else { return false }
-
-        let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !query.isEmpty else { return true }
-        return ([item.title, item.description] + item.features)
-            .contains { $0.localizedCaseInsensitiveContains(query) }
-    }
-    
     private func categorySection(_ group: (category: PermissionCategory, items: [PermissionItemInfo])) -> some View {
         VStack(alignment: .leading, spacing: 8 * zoomScale) {
             HStack(spacing: 6 * zoomScale) {
@@ -382,7 +417,7 @@ struct PermissionCenterView: View {
     
     private func permissionCard(_ item: PermissionItemInfo) -> some View {
         let status = service.statuses[item.type]
-        let state = status?.state ?? (item.requiresManualReview ? .manualReview : .notDetermined)
+        let state = PermissionCatalogPolicy.state(for: item.type, statuses: service.statuses)
         let statusColor = color(for: state)
         
         return HStack(spacing: 10 * zoomScale) {
@@ -401,9 +436,11 @@ struct PermissionCenterView: View {
                 Text(item.title)
                     .font(.system(size: 11 * zoomScale, weight: .semibold, design: .monospaced))
                     .foregroundStyle(.white)
-                Text(requirementTitle(item.type.requirement))
-                    .font(.system(size: 7 * zoomScale, weight: .bold, design: .monospaced))
-                    .foregroundStyle(requirementColor(item.type.requirement))
+                HStack(spacing: 4 * zoomScale) {
+                    metadataChip(item.type.requirement.displayName, color: requirementColor(item.type.requirement))
+                    metadataChip(item.requestMethod.displayName, color: .cyan)
+                    metadataChip(item.statusDetection.displayName, color: item.requiresManualReview ? .orange : .green)
+                }
                 Text(item.description)
                     .font(.system(size: 8 * zoomScale, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.5))
@@ -416,6 +453,7 @@ struct PermissionCenterView: View {
                     Text(item.features.joined(separator: ", "))
                         .font(.system(size: 7 * zoomScale, weight: .medium, design: .monospaced))
                         .foregroundStyle(.cyan.opacity(0.7))
+                        .lineLimit(1)
                 }
             }
             
@@ -430,6 +468,12 @@ struct PermissionCenterView: View {
                     Text(statusTitle(state))
                         .font(.system(size: 9 * zoomScale, weight: .bold, design: .monospaced))
                         .foregroundStyle(statusColor)
+                }
+
+                if let lastChecked = status?.lastChecked {
+                    Text(formatTime(lastChecked))
+                        .font(.system(size: 7 * zoomScale, design: .monospaced))
+                        .foregroundStyle(.white.opacity(0.3))
                 }
                 
                 Button(action: {
@@ -457,6 +501,17 @@ struct PermissionCenterView: View {
         )
         .clipShape(RoundedRectangle(cornerRadius: 8 * zoomScale))
     }
+
+    private func metadataChip(_ title: String, color: Color) -> some View {
+        Text(title)
+            .font(.system(size: 6.5 * zoomScale, weight: .bold, design: .monospaced))
+            .foregroundStyle(color)
+            .lineLimit(1)
+            .padding(.horizontal, 5 * zoomScale)
+            .padding(.vertical, 1.5 * zoomScale)
+            .background(color.opacity(0.1))
+            .clipShape(RoundedRectangle(cornerRadius: 3 * zoomScale))
+    }
     
     private func buttonTitle(for item: PermissionItemInfo, state: PermissionAuthorizationState) -> String {
         switch PermissionRequestPolicy.action(for: item.type, state: state) {
@@ -467,13 +522,7 @@ struct PermissionCenterView: View {
     }
 
     private func statusTitle(_ state: PermissionAuthorizationState) -> String {
-        switch state {
-        case .granted: String(localized: "permission.granted")
-        case .denied: String(localized: "permission.denied")
-        case .notDetermined: String(localized: "permission.not_determined")
-        case .restricted: String(localized: "permission.restricted")
-        case .manualReview: String(localized: "permission.manual_review")
-        }
+        state.displayName
     }
 
     private func color(for state: PermissionAuthorizationState) -> Color {
@@ -483,14 +532,6 @@ struct PermissionCenterView: View {
         case .notDetermined: .yellow
         case .restricted: .red
         case .manualReview: .cyan
-        }
-    }
-
-    private func requirementTitle(_ requirement: PermissionRequirement) -> String {
-        switch requirement {
-        case .required: String(localized: "permission.requirement.required")
-        case .recommended: String(localized: "permission.requirement.recommended")
-        case .optional: String(localized: "permission.requirement.optional")
         }
     }
 

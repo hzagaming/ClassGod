@@ -52,6 +52,14 @@ enum PermissionRequirement: Equatable {
     case required
     case recommended
     case optional
+
+    var displayName: String {
+        switch self {
+        case .required: String(localized: "permission.requirement.required")
+        case .recommended: String(localized: "permission.requirement.recommended")
+        case .optional: String(localized: "permission.requirement.optional")
+        }
+    }
 }
 
 enum PermissionAuthorizationState: Equatable {
@@ -63,6 +71,101 @@ enum PermissionAuthorizationState: Equatable {
 
     var isGranted: Bool { self == .granted }
     var needsManualReview: Bool { self == .manualReview }
+
+    var displayName: String {
+        switch self {
+        case .granted: String(localized: "permission.granted")
+        case .denied: String(localized: "permission.denied")
+        case .notDetermined: String(localized: "permission.not_determined")
+        case .restricted: String(localized: "permission.restricted")
+        case .manualReview: String(localized: "permission.manual_review")
+        }
+    }
+}
+
+enum PermissionRequestMethod: Equatable {
+    case nativePrompt
+    case systemSettings
+
+    var displayName: String {
+        switch self {
+        case .nativePrompt: String(localized: "permission.parameter.native_prompt")
+        case .systemSettings: String(localized: "permission.parameter.system_settings")
+        }
+    }
+}
+
+enum PermissionStatusDetection: Equatable {
+    case automatic
+    case manual
+
+    var displayName: String {
+        switch self {
+        case .automatic: String(localized: "permission.parameter.automatic_check")
+        case .manual: String(localized: "permission.parameter.manual_check")
+        }
+    }
+}
+
+enum PermissionStatusFilter: CaseIterable, Identifiable, Equatable {
+    case all
+    case actionNeeded
+    case granted
+    case manualReview
+
+    var id: Self { self }
+
+    var title: String {
+        switch self {
+        case .all: String(localized: "permission.filter.all")
+        case .actionNeeded: String(localized: "permission.filter.action_needed")
+        case .granted: String(localized: "permission.filter.granted")
+        case .manualReview: String(localized: "permission.filter.manual")
+        }
+    }
+}
+
+enum PermissionRequirementFilter: CaseIterable, Identifiable, Equatable {
+    case all
+    case required
+    case recommended
+    case optional
+
+    var id: Self { self }
+
+    var displayName: String {
+        switch self {
+        case .all: String(localized: "permission.requirement.all")
+        case .required: PermissionRequirement.required.displayName
+        case .recommended: PermissionRequirement.recommended.displayName
+        case .optional: PermissionRequirement.optional.displayName
+        }
+    }
+
+    func matches(_ requirement: PermissionRequirement) -> Bool {
+        switch self {
+        case .all: true
+        case .required: requirement == .required
+        case .recommended: requirement == .recommended
+        case .optional: requirement == .optional
+        }
+    }
+}
+
+enum PermissionSortOrder: CaseIterable, Identifiable, Equatable {
+    case attention
+    case catalog
+    case name
+
+    var id: Self { self }
+
+    var displayName: String {
+        switch self {
+        case .attention: String(localized: "permission.sort.attention")
+        case .catalog: String(localized: "permission.sort.catalog")
+        case .name: String(localized: "permission.sort.name")
+        }
+    }
 }
 
 enum PermissionType: String, CaseIterable, Identifiable, Equatable {
@@ -267,6 +370,10 @@ enum PermissionType: String, CaseIterable, Identifiable, Equatable {
         }
     }
 
+    var requestMethod: PermissionRequestMethod {
+        canPrompt ? .nativePrompt : .systemSettings
+    }
+
     var requiresManualReview: Bool {
         switch self {
         case .filesAndFolders, .developerTools, .appManagement, .mediaLibrary, .localNetwork:
@@ -274,6 +381,10 @@ enum PermissionType: String, CaseIterable, Identifiable, Equatable {
         default:
             return false
         }
+    }
+
+    var statusDetection: PermissionStatusDetection {
+        requiresManualReview ? .manual : .automatic
     }
 
     var requirement: PermissionRequirement {
@@ -349,6 +460,8 @@ struct PermissionItemInfo: Identifiable, Equatable {
     var features: [String] { type.features }
     var canPrompt: Bool { type.canPrompt }
     var requiresManualReview: Bool { type.requiresManualReview }
+    var requestMethod: PermissionRequestMethod { type.requestMethod }
+    var statusDetection: PermissionStatusDetection { type.statusDetection }
     var id: String { type.id }
 }
 
@@ -359,6 +472,127 @@ struct PermissionStatus: Equatable {
     let detail: String?
 
     var isGranted: Bool { state.isGranted }
+}
+
+struct PermissionSummary: Equatable {
+    let queryableTotal: Int
+    let granted: Int
+    let actionNeeded: Int
+    let manualReview: Int
+    let requiredPending: Int
+}
+
+enum PermissionCatalogPolicy {
+    static func items(
+        from items: [PermissionItemInfo],
+        statuses: [PermissionType: PermissionStatus],
+        category: PermissionCategory?,
+        statusFilter: PermissionStatusFilter,
+        requirementFilter: PermissionRequirementFilter,
+        searchText: String,
+        sortOrder: PermissionSortOrder
+    ) -> [PermissionItemInfo] {
+        let tokens = normalizedTokens(searchText)
+        let filtered = items.filter { item in
+            guard category == nil || item.category == category else { return false }
+            let state = state(for: item.type, statuses: statuses)
+            guard matches(state, filter: statusFilter),
+                  requirementFilter.matches(item.type.requirement) else { return false }
+            guard !tokens.isEmpty else { return true }
+            let searchableText = ([
+                item.type.rawValue,
+                item.title,
+                item.description,
+                item.category.displayName,
+                item.type.requirement.displayName,
+                item.requestMethod.displayName,
+                item.statusDetection.displayName,
+                state.displayName,
+            ] + item.features).joined(separator: " ")
+            let normalizedText = normalize(searchableText)
+            return tokens.allSatisfy(normalizedText.contains)
+        }
+
+        switch sortOrder {
+        case .catalog:
+            let indexes = Dictionary(uniqueKeysWithValues: PermissionType.allCases.enumerated().map { ($1, $0) })
+            return filtered.sorted { indexes[$0.type, default: .max] < indexes[$1.type, default: .max] }
+        case .name:
+            return filtered.sorted { $0.title.localizedStandardCompare($1.title) == .orderedAscending }
+        case .attention:
+            return filtered.sorted { lhs, rhs in
+                let left = attentionRank(for: lhs.type, statuses: statuses)
+                let right = attentionRank(for: rhs.type, statuses: statuses)
+                if left != right { return left.lexicographicallyPrecedes(right) }
+                return PermissionType.allCases.firstIndex(of: lhs.type) ?? .max
+                    < PermissionType.allCases.firstIndex(of: rhs.type) ?? .max
+            }
+        }
+    }
+
+    static func summary(
+        for types: [PermissionType],
+        statuses: [PermissionType: PermissionStatus]
+    ) -> PermissionSummary {
+        let queryable = types.filter { !$0.requiresManualReview }
+        let granted = queryable.filter { state(for: $0, statuses: statuses).isGranted }.count
+        return PermissionSummary(
+            queryableTotal: queryable.count,
+            granted: granted,
+            actionNeeded: queryable.count - granted,
+            manualReview: types.count - queryable.count,
+            requiredPending: types.filter {
+                $0.requirement == .required && !state(for: $0, statuses: statuses).isGranted
+            }.count
+        )
+    }
+
+    static func state(
+        for type: PermissionType,
+        statuses: [PermissionType: PermissionStatus]
+    ) -> PermissionAuthorizationState {
+        statuses[type]?.state ?? (type.requiresManualReview ? .manualReview : .notDetermined)
+    }
+
+    private static func matches(
+        _ state: PermissionAuthorizationState,
+        filter: PermissionStatusFilter
+    ) -> Bool {
+        switch filter {
+        case .all: true
+        case .actionNeeded: !state.isGranted && !state.needsManualReview
+        case .granted: state.isGranted
+        case .manualReview: state.needsManualReview
+        }
+    }
+
+    private static func attentionRank(
+        for type: PermissionType,
+        statuses: [PermissionType: PermissionStatus]
+    ) -> [Int] {
+        let stateRank = switch state(for: type, statuses: statuses) {
+        case .denied, .restricted, .notDetermined: 0
+        case .manualReview: 1
+        case .granted: 2
+        }
+        let requirementRank = switch type.requirement {
+        case .required: 0
+        case .recommended: 1
+        case .optional: 2
+        }
+        return [stateRank, requirementRank]
+    }
+
+    private static func normalizedTokens(_ text: String) -> [String] {
+        normalize(text).split(whereSeparator: \.isWhitespace).map(String.init)
+    }
+
+    private static func normalize(_ text: String) -> String {
+        text.folding(
+            options: [.caseInsensitive, .diacriticInsensitive, .widthInsensitive],
+            locale: .current
+        )
+    }
 }
 
 enum AppleEventsPermissionCheck {

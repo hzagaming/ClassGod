@@ -23,8 +23,14 @@ struct PermissionCenterTests {
             #expect(!permission.description.isEmpty)
             #expect(!permission.iconName.isEmpty)
             #expect(!permission.features.isEmpty)
+            #expect(!permission.requestMethod.displayName.isEmpty)
+            #expect(!permission.statusDetection.displayName.isEmpty)
         }
         #expect(PermissionType.appleEvents.canPrompt)
+        #expect(PermissionType.accessibility.requestMethod == .nativePrompt)
+        #expect(PermissionType.fullDiskAccess.requestMethod == .systemSettings)
+        #expect(PermissionType.accessibility.statusDetection == .automatic)
+        #expect(PermissionType.filesAndFolders.statusDetection == .manual)
     }
 
     @Test("Unqueryable system panes are marked for manual review")
@@ -118,5 +124,95 @@ struct PermissionCenterTests {
             PermissionSettingsDestination.url(for: .notifications)?.absoluteString
                 == "x-apple.systempreferences:com.apple.Notifications-Settings.extension?id=com.hanazar.classgod"
         )
+    }
+
+    @Test("Catalog filters combine category, status, requirement, and normalized search")
+    func catalogFiltering() {
+        let items = PermissionType.allCases.map(PermissionItemInfo.init)
+        let statuses = makeStatuses([
+            .accessibility: .granted,
+            .appleEvents: .denied,
+            .inputMonitoring: .notDetermined,
+            .filesAndFolders: .manualReview,
+            .contacts: .denied,
+        ])
+
+        let browserControl = PermissionCatalogPolicy.items(
+            from: items,
+            statuses: statuses,
+            category: .browser,
+            statusFilter: .actionNeeded,
+            requirementFilter: .required,
+            searchText: "  Browser   Control  ",
+            sortOrder: .attention
+        )
+        #expect(browserControl.map(\.type) == [.appleEvents])
+
+        let manual = PermissionCatalogPolicy.items(
+            from: items,
+            statuses: statuses,
+            category: nil,
+            statusFilter: .manualReview,
+            requirementFilter: .all,
+            searchText: "system settings manual",
+            sortOrder: .catalog
+        )
+        #expect(manual.contains { $0.type == .filesAndFolders })
+    }
+
+    @Test("Attention sorting prioritizes unresolved permissions before granted access")
+    func attentionSorting() {
+        let items = [
+            PermissionItemInfo(type: .appleEvents),
+            PermissionItemInfo(type: .contacts),
+            PermissionItemInfo(type: .inputMonitoring),
+        ]
+        let statuses = makeStatuses([
+            .appleEvents: .granted,
+            .contacts: .denied,
+            .inputMonitoring: .denied,
+        ])
+
+        let result = PermissionCatalogPolicy.items(
+            from: items,
+            statuses: statuses,
+            category: nil,
+            statusFilter: .all,
+            requirementFilter: .all,
+            searchText: "",
+            sortOrder: .attention
+        )
+        #expect(result.map(\.type) == [.inputMonitoring, .contacts, .appleEvents])
+    }
+
+    @Test("Permission summary separates queryable and manual-review access")
+    func permissionSummary() {
+        let types: [PermissionType] = [.accessibility, .appleEvents, .filesAndFolders, .contacts]
+        let statuses = makeStatuses([
+            .accessibility: .granted,
+            .appleEvents: .denied,
+            .filesAndFolders: .manualReview,
+            .contacts: .notDetermined,
+        ])
+
+        let summary = PermissionCatalogPolicy.summary(for: types, statuses: statuses)
+        #expect(summary.queryableTotal == 3)
+        #expect(summary.granted == 1)
+        #expect(summary.actionNeeded == 2)
+        #expect(summary.manualReview == 1)
+        #expect(summary.requiredPending == 1)
+    }
+
+    private func makeStatuses(
+        _ states: [PermissionType: PermissionAuthorizationState]
+    ) -> [PermissionType: PermissionStatus] {
+        states.reduce(into: [:]) { result, entry in
+            result[entry.key] = PermissionStatus(
+                type: entry.key,
+                state: entry.value,
+                lastChecked: .distantPast,
+                detail: nil
+            )
+        }
     }
 }

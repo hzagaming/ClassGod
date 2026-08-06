@@ -12,20 +12,33 @@ struct SuperSwitchView: View {
     @State private var showAddSheet = false
     @State private var editingTarget: SwitchTarget?
     @State private var targetToDelete: SwitchTarget?
+    @State private var searchText = ""
     @ObservedObject private var prefs = PreferencesManager.shared
     
     var onClose: () -> Void
     
     private var zoomScale: CGFloat { CGFloat(prefs.preferences.windowZoomScale) }
+    private var visibleTargets: [SwitchTarget] {
+        SuperSwitchCatalogPolicy.filteredTargets(viewModel.targets, query: searchText)
+    }
+
     var body: some View {
-        ZStack {
+        ZStack(alignment: .top) {
             VStack(spacing: 0 * zoomScale) {
                 header
-                
+
+                Divider()
+                    .background(Color.white.opacity(0.1))
+
                 if viewModel.targets.isEmpty {
                     emptyState
                 } else {
-                    targetList
+                    searchBar
+                    if visibleTargets.isEmpty {
+                        noResultsState
+                    } else {
+                        targetList
+                    }
                 }
                 
                 Divider()
@@ -33,6 +46,7 @@ struct SuperSwitchView: View {
                 
                 footer
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(
@@ -61,8 +75,6 @@ struct SuperSwitchView: View {
         )) {
             Button(String(localized: "button.cancel"), role: .cancel) { targetToDelete = nil }
             Button(String(localized: "button.delete"), role: .destructive) {
-                SoundEffectManager.shared.playTabDeleted()
-                HapticManager.shared.warning()
                 if let target = targetToDelete {
                     viewModel.deleteTarget(target)
                 }
@@ -75,6 +87,9 @@ struct SuperSwitchView: View {
             toastOverlay,
             alignment: .bottom
         )
+        .onAppear {
+            viewModel.refreshRunningApplications()
+        }
     }
     
     // MARK: - Header
@@ -103,16 +118,28 @@ struct SuperSwitchView: View {
                     .font(.system(size: 9 * zoomScale, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.4))
             }
+
+            Text("\(viewModel.targets.count)")
+                .font(.system(size: 9 * zoomScale, weight: .bold, design: .monospaced))
+                .foregroundStyle(.cyan)
+                .padding(.horizontal, 6 * zoomScale)
+                .padding(.vertical, 2 * zoomScale)
+                .background(Color.cyan.opacity(0.1))
+                .clipShape(Capsule())
             
             Spacer()
             
-            Button(action: {
-                SoundEffectManager.shared.playButtonClick()
-                showAddSheet = true
-            }) {
-                Image(systemName: "plus.circle.fill")
-                    .foregroundStyle(.white)
-                    .symbolRenderingMode(.monochrome)
+            Button(action: presentAddSheet) {
+                HStack(spacing: 5 * zoomScale) {
+                    Image(systemName: "plus")
+                    Text("button.add")
+                }
+                .font(.system(size: 9 * zoomScale, weight: .bold, design: .monospaced))
+                .foregroundStyle(.black)
+                .padding(.horizontal, 9 * zoomScale)
+                .frame(height: 26 * zoomScale)
+                .background(Color.cyan.opacity(0.9))
+                .clipShape(RoundedRectangle(cornerRadius: 6 * zoomScale))
             }
             .buttonStyle(.plain)
             .accessibilityLabel(Text("button.add"))
@@ -122,13 +149,44 @@ struct SuperSwitchView: View {
     }
     
     // MARK: - Target List
+
+    private var searchBar: some View {
+        HStack(spacing: 6 * zoomScale) {
+            Image(systemName: "magnifyingglass")
+                .font(.system(size: 9 * zoomScale))
+                .foregroundStyle(.white.opacity(0.35))
+            TextField("superswitch.search_placeholder", text: $searchText)
+                .textFieldStyle(.plain)
+                .font(.system(size: 9 * zoomScale, design: .monospaced))
+                .foregroundStyle(.white.opacity(0.85))
+            if !searchText.isEmpty {
+                Button {
+                    SoundEffectManager.shared.playButtonClick()
+                    searchText = ""
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundStyle(.white.opacity(0.35))
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(Text("button.clear"))
+            }
+        }
+        .padding(.horizontal, 9 * zoomScale)
+        .frame(height: 28 * zoomScale)
+        .background(Color(white: 0.07))
+        .clipShape(RoundedRectangle(cornerRadius: 6 * zoomScale))
+        .padding(.horizontal, 10 * zoomScale)
+        .padding(.vertical, 7 * zoomScale)
+        .background(Color(white: 0.025))
+    }
     
     private var targetList: some View {
         ScrollView {
-            VStack(spacing: 0 * zoomScale) {
-                ForEach(viewModel.targets) { target in
+            LazyVStack(spacing: 6 * zoomScale) {
+                ForEach(visibleTargets) { target in
                     TargetRow(
                         target: target,
+                        isRunning: viewModel.runningBundleIdentifiers.contains(target.bundleIdentifier),
                         onSwitch: {
                             viewModel.switchToTarget(target)
                         },
@@ -140,15 +198,12 @@ struct SuperSwitchView: View {
                             targetToDelete = target
                         }
                     )
-                    if target.id != viewModel.targets.last?.id {
-                        Divider()
-                            .padding(.leading, 48 * zoomScale)
-                            .opacity(0.3)
-                    }
                 }
             }
+            .padding(.horizontal, 8 * zoomScale)
+            .padding(.vertical, 7 * zoomScale)
         }
-        .frame(maxHeight: (prefs.preferences.panelMaxHeight - 120) * zoomScale)
+        .frame(maxHeight: .infinity)
     }
     
     // MARK: - Empty State
@@ -174,20 +229,53 @@ struct SuperSwitchView: View {
                 .font(.system(size: 11 * zoomScale, design: .monospaced))
                 .foregroundStyle(.white.opacity(0.5))
                 .multilineTextAlignment(.center)
+
+            Button(action: presentAddSheet) {
+                Label("button.add", systemImage: "plus")
+                    .font(.system(size: 10 * zoomScale, weight: .bold, design: .monospaced))
+                    .foregroundStyle(.black)
+                    .padding(.horizontal, 12 * zoomScale)
+                    .frame(height: 28 * zoomScale)
+                    .background(Color.cyan.opacity(0.9))
+                    .clipShape(RoundedRectangle(cornerRadius: 6 * zoomScale))
+            }
+            .buttonStyle(.plain)
         }
-        .frame(maxWidth: .infinity, minHeight: 120 * zoomScale)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding()
+    }
+
+    private var noResultsState: some View {
+        VStack(spacing: 8 * zoomScale) {
+            Image(systemName: "magnifyingglass")
+                .font(.system(size: 22 * zoomScale))
+                .foregroundStyle(.cyan.opacity(0.65))
+            Text("superswitch.no_results")
+                .font(.system(size: 12 * zoomScale, weight: .bold, design: .monospaced))
+                .foregroundStyle(.white.opacity(0.8))
+            Text(String(format: String(localized: "superswitch.no_results_subtitle"), searchText))
+                .font(.system(size: 9 * zoomScale, design: .monospaced))
+                .foregroundStyle(.white.opacity(0.4))
+                .lineLimit(2)
+                .multilineTextAlignment(.center)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(20 * zoomScale)
     }
     
     // MARK: - Footer
     
     private var footer: some View {
         HStack(spacing: 14 * zoomScale) {
-            Text("superswitch.footer_hint")
+            Text(String(format: String(localized: "superswitch.target_count"), visibleTargets.count))
                 .font(.system(size: 9 * zoomScale, design: .monospaced))
-                .foregroundStyle(.white.opacity(0.4))
+                .foregroundStyle(.cyan.opacity(0.7))
             
             Spacer()
+
+            Text("superswitch.footer_hint")
+                .font(.system(size: 8 * zoomScale, design: .monospaced))
+                .foregroundStyle(.white.opacity(0.35))
         }
         .padding(.horizontal)
         .padding(.vertical, 8 * zoomScale)
@@ -218,6 +306,12 @@ struct SuperSwitchView: View {
             }
         }
     }
+
+    private func presentAddSheet() {
+        SoundEffectManager.shared.playButtonClick()
+        HapticManager.shared.generic()
+        showAddSheet = true
+    }
 }
 
 // MARK: - Target Row
@@ -226,6 +320,7 @@ struct TargetRow: View {
     @ObservedObject private var prefs = PreferencesManager.shared
     private var zoomScale: CGFloat { CGFloat(prefs.preferences.windowZoomScale) }
     let target: SwitchTarget
+    let isRunning: Bool
     let onSwitch: () -> Void
     let onEdit: () -> Void
     let onDelete: () -> Void
@@ -235,71 +330,87 @@ struct TargetRow: View {
     @State private var pressResetWorkItem: DispatchWorkItem?
     
     var body: some View {
-        Button(action: {
-            SoundEffectManager.shared.playButtonClick()
-            Anim.with { isPressed = true }
-            pressResetWorkItem?.cancel()
-            let item = DispatchWorkItem {
-                Anim.with { isPressed = false }
-            }
-            pressResetWorkItem = item
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.06, execute: item)
-            onSwitch()
-        }) {
-            HStack(spacing: 10 * zoomScale) {
-                Image(systemName: target.iconName)
-                    .font(.system(size: 18 * zoomScale, weight: .medium))
-                    .foregroundStyle(.white.opacity(0.8))
-                    .frame(width: 24 * zoomScale)
-                    .symbolRenderingMode(.monochrome)
-                
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(target.name)
-                        .font(.system(size: 13 * zoomScale, weight: .medium, design: .monospaced))
-                        .foregroundStyle(.white)
-                        .lineLimit(1)
-                    
-                    Text(target.bundleIdentifier)
-                        .font(.system(size: 9 * zoomScale, design: .monospaced))
-                        .foregroundStyle(.white.opacity(0.4))
-                        .lineLimit(1)
+        HStack(spacing: 4 * zoomScale) {
+            Button(action: activate) {
+                HStack(spacing: 9 * zoomScale) {
+                    Image(systemName: target.iconName)
+                        .font(.system(size: 17 * zoomScale, weight: .medium))
+                        .foregroundStyle(isRunning ? .cyan : .white.opacity(0.72))
+                        .frame(width: 28 * zoomScale, height: 28 * zoomScale)
+                        .background(isRunning ? Color.cyan.opacity(0.1) : Color.white.opacity(0.05))
+                        .clipShape(RoundedRectangle(cornerRadius: 6 * zoomScale))
+                        .symbolRenderingMode(.monochrome)
+
+                    VStack(alignment: .leading, spacing: 3 * zoomScale) {
+                        HStack(spacing: 6 * zoomScale) {
+                            Text(target.name)
+                                .font(.system(size: 12 * zoomScale, weight: .semibold, design: .monospaced))
+                                .foregroundStyle(.white)
+                                .lineLimit(1)
+                            statusChip
+                        }
+
+                        Text(target.bundleIdentifier)
+                            .font(.system(size: 8 * zoomScale, design: .monospaced))
+                            .foregroundStyle(.white.opacity(0.38))
+                            .lineLimit(1)
+                            .truncationMode(.middle)
+                    }
+                    .layoutPriority(1)
+
+                    Spacer(minLength: 4 * zoomScale)
+
+                    if target.isValidShortcut {
+                        Text(target.shortcutDisplayString)
+                            .font(.system(size: 9 * zoomScale, weight: .bold, design: .monospaced))
+                            .foregroundStyle(.cyan.opacity(0.85))
+                            .padding(.horizontal, 6 * zoomScale)
+                            .frame(height: 20 * zoomScale)
+                            .background(Color.cyan.opacity(0.08))
+                            .clipShape(RoundedRectangle(cornerRadius: 4 * zoomScale))
+                    }
                 }
-                
-                Spacer()
-                
-                if target.isValidShortcut {
-                    Text(target.shortcutDisplayString)
-                        .font(.system(size: 11 * zoomScale, weight: .semibold, design: .monospaced))
-                        .foregroundStyle(.white.opacity(0.8))
-                        .padding(.horizontal, 7 * zoomScale)
-                        .padding(.vertical, 2 * zoomScale)
-                        .background(Color(white: 0.15))
-                        .overlay(
-                            Rectangle()
-                                .stroke(Color.white.opacity(0.2), lineWidth: 0.5 * zoomScale)
-                        
-                            .allowsHitTesting(false))
-                }
+                .contentShape(Rectangle())
             }
-            .padding(.horizontal)
-            .padding(.vertical, 8 * zoomScale)
-            .frame(minHeight: 44 * zoomScale)
-            .contentShape(Rectangle())
-            .background(
-                Rectangle()
-                    .fill(backgroundColor)
-            )
-            .overlay(
-                Rectangle()
-                    .stroke(borderColor, lineWidth: 1 * zoomScale)
-            .allowsHitTesting(false)            )
-            .scaleEffect(isPressed ? 0.98 : 1.0)
+            .buttonStyle(.plain)
+            .accessibilityLabel(target.name)
+            .accessibilityValue(Text(isRunning ? "superswitch.running" : "superswitch.not_running"))
+            .accessibilityHint(Text("superswitch.switch_hint"))
+
+            Menu {
+                Button(String(localized: "button.edit")) {
+                    SoundEffectManager.shared.playButtonClick()
+                    HapticManager.shared.generic()
+                    onEdit()
+                }
+                Divider()
+                Button(String(localized: "button.delete"), role: .destructive) {
+                    onDelete()
+                }
+            } label: {
+                Image(systemName: "ellipsis")
+                    .font(.system(size: 10 * zoomScale, weight: .bold))
+                    .foregroundStyle(.white.opacity(isHovered ? 0.8 : 0.45))
+                    .frame(width: 26 * zoomScale, height: 28 * zoomScale)
+                    .background(Color.white.opacity(isHovered ? 0.08 : 0.035))
+                    .clipShape(RoundedRectangle(cornerRadius: 5 * zoomScale))
+            }
+            .menuStyle(.borderlessButton)
+            .menuIndicator(.hidden)
+            .fixedSize()
+            .accessibilityLabel(Text("superswitch.more_actions"))
         }
-        .buttonStyle(.plain)
+        .padding(.horizontal, 8 * zoomScale)
+        .frame(minHeight: 50 * zoomScale)
+        .background(RoundedRectangle(cornerRadius: 7 * zoomScale).fill(backgroundColor))
+        .overlay(
+            RoundedRectangle(cornerRadius: 7 * zoomScale)
+                .stroke(borderColor, lineWidth: 1 * zoomScale)
+                .allowsHitTesting(false)
+        )
+        .scaleEffect(isPressed ? 0.985 : 1.0)
         .contextMenu {
             Button(String(format: String(localized: "superswitch.context_switch"), target.name)) {
-                SoundEffectManager.shared.playButtonClick()
-                HapticManager.shared.generic()
                 onSwitch()
             }
             Button(String(localized: "button.edit")) {
@@ -327,22 +438,49 @@ struct TargetRow: View {
             isPressed = false
         }
     }
+
+    private var statusChip: some View {
+        HStack(spacing: 3 * zoomScale) {
+            Circle()
+                .fill(isRunning ? Color.green : Color.white.opacity(0.3))
+                .frame(width: 5 * zoomScale, height: 5 * zoomScale)
+            Text(isRunning ? "superswitch.running" : "superswitch.not_running")
+                .lineLimit(1)
+        }
+        .font(.system(size: 6.5 * zoomScale, weight: .bold, design: .monospaced))
+        .foregroundStyle(isRunning ? .green : .white.opacity(0.35))
+    }
+
+    private func activate() {
+        Anim.with { isPressed = true }
+        pressResetWorkItem?.cancel()
+        let item = DispatchWorkItem {
+            Anim.with { isPressed = false }
+        }
+        pressResetWorkItem = item
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.06, execute: item)
+        onSwitch()
+    }
     
     private var backgroundColor: Color {
         if isPressed {
             return Color.white.opacity(0.15)
         } else if isHovered {
             return Color.white.opacity(0.1)
+        } else if isRunning {
+            return Color.cyan.opacity(0.045)
         } else {
-            return Color.clear
+            return Color.white.opacity(0.025)
         }
     }
     
     private var borderColor: Color {
         if isHovered {
             return Color.white.opacity(0.25)
+        } else if isRunning {
+            return Color.cyan.opacity(0.16)
         } else {
-            return Color.clear
+            return Color.white.opacity(0.07)
         }
     }
 }
@@ -366,103 +504,130 @@ struct AddSwitchTargetView: View {
     @State private var selectedAppIndex: Int = -1
     
     private let iconOptions = ["app.fill", "safari", "terminal", "doc.text", "folder", "gearshape.fill", "message.fill", "music.note", "photo", "video.fill", "gamecontroller", "creditcard"]
+    private var sheetScale: CGFloat { min(zoomScale, 1.35) }
+    private var draft: SuperSwitchTargetDraft {
+        SuperSwitchTargetDraft(name: name, bundleIdentifier: bundleIdentifier)
+    }
     
     var body: some View {
-        VStack(spacing: 16 * zoomScale) {
-            Text(target == nil ? String(localized: "superswitch.add_title") : String(localized: "superswitch.edit_title"))
-                .font(.system(size: 18 * zoomScale, weight: .bold, design: .monospaced))
-                .foregroundStyle(.white)
+        VStack(spacing: 0) {
+            HStack(spacing: 10 * sheetScale) {
+                Image(systemName: target == nil ? "plus.app.fill" : "slider.horizontal.3")
+                    .font(.system(size: 17 * sheetScale, weight: .semibold))
+                    .foregroundStyle(.cyan)
+                    .frame(width: 32 * sheetScale, height: 32 * sheetScale)
+                    .background(Color.cyan.opacity(0.1))
+                    .clipShape(RoundedRectangle(cornerRadius: 7 * sheetScale))
 
-            // Running apps picker
-            VStack(alignment: .leading, spacing: 6) {
-                Text("superswitch.running_app")
-                    .font(.system(size: 11 * zoomScale, weight: .semibold, design: .monospaced))
-                    .foregroundStyle(.white.opacity(0.7))
-
-                Picker("", selection: $selectedAppIndex) {
-                    Text("superswitch.custom").tag(-1)
-                    ForEach(0..<runningApps.count, id: \.self) { index in
-                        Text(runningApps[index].name).tag(index)
-                    }
+                VStack(alignment: .leading, spacing: 1 * sheetScale) {
+                    Text(target == nil ? String(localized: "superswitch.add_title") : String(localized: "superswitch.edit_title"))
+                        .font(.system(size: 15 * sheetScale, weight: .bold, design: .monospaced))
+                        .foregroundStyle(.white)
+                    Text("superswitch.form_subtitle")
+                        .font(.system(size: 8 * sheetScale, design: .monospaced))
+                        .foregroundStyle(.white.opacity(0.4))
                 }
-                .pickerStyle(.menu)
-                .onChange(of: selectedAppIndex) { _, newValue in
+
+                Spacer()
+
+                Button {
                     SoundEffectManager.shared.playButtonClick()
-                    HapticManager.shared.generic()
-                    if newValue >= 0 && newValue < runningApps.count {
-                        name = runningApps[newValue].name
-                        bundleIdentifier = runningApps[newValue].bundleID
-                    }
+                    dismiss()
+                } label: {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 10 * sheetScale, weight: .bold))
+                        .foregroundStyle(.white.opacity(0.55))
+                        .frame(width: 26 * sheetScale, height: 26 * sheetScale)
+                        .background(Color.white.opacity(0.06))
+                        .clipShape(Circle())
                 }
+                .buttonStyle(.plain)
+                .accessibilityLabel(Text("button.close"))
             }
+            .padding(14 * sheetScale)
 
-            // Name
-            VStack(alignment: .leading, spacing: 6) {
-                Text("field.name")
-                    .font(.system(size: 11 * zoomScale, weight: .semibold, design: .monospaced))
-                    .foregroundStyle(.white.opacity(0.7))
-                TextField("superswitch.name_placeholder", text: $name)
-                    .textFieldStyle(.roundedBorder)
-            }
+            Divider().background(Color.white.opacity(0.1))
 
-            // Bundle ID
-            VStack(alignment: .leading, spacing: 6) {
-                Text("field.bundle_identifier")
-                    .font(.system(size: 11 * zoomScale, weight: .semibold, design: .monospaced))
-                    .foregroundStyle(.white.opacity(0.7))
-                TextField("superswitch.bundle_placeholder", text: $bundleIdentifier)
-                    .textFieldStyle(.roundedBorder)
-            }
+            ScrollView {
+                VStack(spacing: 12 * sheetScale) {
+                    formSection(title: "superswitch.running_app", icon: "app.badge") {
+                        HStack(spacing: 6 * sheetScale) {
+                            Picker("", selection: $selectedAppIndex) {
+                                Text("superswitch.custom").tag(-1)
+                                ForEach(0..<runningApps.count, id: \.self) { index in
+                                    Text(runningApps[index].name).tag(index)
+                                }
+                            }
+                            .labelsHidden()
+                            .pickerStyle(.menu)
+                            .frame(maxWidth: .infinity)
 
-            // Icon picker
-            VStack(alignment: .leading, spacing: 6) {
-                Text("field.icon")
-                    .font(.system(size: 11 * zoomScale, weight: .semibold, design: .monospaced))
-                    .foregroundStyle(.white.opacity(0.7))
-
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 8 * zoomScale) {
-                        ForEach(iconOptions, id: \.self) { icon in
-                            Button(action: {
-                                SoundEffectManager.shared.playButtonClick()
-                                HapticManager.shared.generic()
-                                iconName = icon
-                            }) {
-                                Image(systemName: icon)
-                                    .font(.system(size: 18 * zoomScale))
-                                    .foregroundStyle(iconName == icon ? .green : .white.opacity(0.6))
-                                    .frame(width: 36 * zoomScale, height: 36 * zoomScale)
-                                    .background(
-                                        RoundedRectangle(cornerRadius: 6 * zoomScale)
-                                            .fill(iconName == icon ? Color.white.opacity(0.15) : Color.clear)
-                                    )
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 6 * zoomScale)
-                                            .stroke(iconName == icon ? Color.white.opacity(0.3) : Color.white.opacity(0.1), lineWidth: 1 * zoomScale)
-                                    
-                                        .allowsHitTesting(false))
+                            Button {
+                                loadRunningApps()
+                            } label: {
+                                Image(systemName: "arrow.clockwise")
+                                    .font(.system(size: 10 * sheetScale, weight: .semibold))
+                                    .frame(width: 28 * sheetScale, height: 28 * sheetScale)
+                                    .background(Color.white.opacity(0.06))
+                                    .clipShape(RoundedRectangle(cornerRadius: 5 * sheetScale))
                             }
                             .buttonStyle(.plain)
-                            .accessibilityLabel(Text(String(format: String(localized: "accessibility.select_icon_format"), icon)))
+                            .accessibilityLabel(Text("superswitch.refresh_apps"))
+                        }
+                        .onChange(of: selectedAppIndex) { _, newValue in
+                            SoundEffectManager.shared.playButtonClick()
+                            HapticManager.shared.generic()
+                            guard runningApps.indices.contains(newValue) else { return }
+                            name = runningApps[newValue].name
+                            bundleIdentifier = runningApps[newValue].bundleID
                         }
                     }
+
+                    formSection(title: "superswitch.details", icon: "text.alignleft") {
+                        VStack(spacing: 8 * sheetScale) {
+                            labeledField(label: "field.name", placeholder: "superswitch.name_placeholder", text: $name)
+                            labeledField(label: "field.bundle_identifier", placeholder: "superswitch.bundle_placeholder", text: $bundleIdentifier)
+                        }
+                    }
+
+                    formSection(title: "field.icon", icon: "square.grid.3x3") {
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 7 * sheetScale) {
+                                ForEach(iconOptions, id: \.self) { icon in
+                                    Button {
+                                        SoundEffectManager.shared.playButtonClick()
+                                        HapticManager.shared.generic()
+                                        iconName = icon
+                                    } label: {
+                                        Image(systemName: icon)
+                                            .font(.system(size: 16 * sheetScale))
+                                            .foregroundStyle(iconName == icon ? .black : .white.opacity(0.6))
+                                            .frame(width: 34 * sheetScale, height: 34 * sheetScale)
+                                            .background(iconName == icon ? Color.cyan.opacity(0.88) : Color.white.opacity(0.04))
+                                            .clipShape(RoundedRectangle(cornerRadius: 6 * sheetScale))
+                                            .overlay(
+                                                RoundedRectangle(cornerRadius: 6 * sheetScale)
+                                                    .stroke(Color.white.opacity(iconName == icon ? 0 : 0.08), lineWidth: 1 * sheetScale)
+                                                    .allowsHitTesting(false)
+                                            )
+                                    }
+                                    .buttonStyle(.plain)
+                                    .accessibilityLabel(Text(String(format: String(localized: "accessibility.select_icon_format"), icon)))
+                                }
+                            }
+                        }
+                    }
+
+                    formSection(title: "superswitch.shortcut_optional", icon: "command") {
+                        ShortcutPicker(key: $shortcutKey, modifiers: $shortcutModifiers, isRecording: $isRecordingShortcut)
+                    }
                 }
+                .padding(12 * sheetScale)
             }
-            
-            // Shortcut
-            VStack(alignment: .leading, spacing: 6) {
-                Text("superswitch.shortcut_optional")
-                    .font(.system(size: 11 * zoomScale, weight: .semibold, design: .monospaced))
-                    .foregroundStyle(.white.opacity(0.7))
-                
-                HStack(spacing: 8 * zoomScale) {
-                    ShortcutPicker(key: $shortcutKey, modifiers: $shortcutModifiers, isRecording: $isRecordingShortcut)
-                }
-            }
-            
-            Spacer()
-            
-            HStack(spacing: 12 * zoomScale) {
+
+            Divider().background(Color.white.opacity(0.1))
+
+            HStack(spacing: 10 * sheetScale) {
                 Button(String(localized: "button.cancel")) {
                     SoundEffectManager.shared.playButtonClick()
                     HapticManager.shared.generic()
@@ -476,35 +641,102 @@ struct AddSwitchTargetView: View {
                     save()
                 }
                 .buttonStyle(.borderedProminent)
-                .disabled(name.isEmpty || bundleIdentifier.isEmpty)
+                .tint(.cyan)
+                .disabled(!draft.canSave)
             }
+            .padding(12 * sheetScale)
         }
-        .padding()
-        .frame(width: 340 * zoomScale, height: 480 * zoomScale)
-        .background(Color.black)
+        .frame(width: 380 * sheetScale, height: 520 * sheetScale)
+        .background(Color(white: 0.025))
+        .overlay(
+            RoundedRectangle(cornerRadius: 10 * sheetScale)
+                .stroke(Color.white.opacity(0.12), lineWidth: 1 * sheetScale)
+                .allowsHitTesting(false)
+        )
+        .preferredColorScheme(.dark)
         .onAppear {
-            runningApps = viewModel.getRunningApps()
+            loadRunningApps(playFeedback: false)
             if let target = target {
                 name = target.name
                 bundleIdentifier = target.bundleIdentifier
                 iconName = target.iconName
                 shortcutKey = target.shortcutKey
                 shortcutModifiers = target.shortcutModifiers
-                // Try to find matching app
                 if let index = runningApps.firstIndex(where: { $0.bundleID == target.bundleIdentifier }) {
                     selectedAppIndex = index
                 }
             }
         }
     }
+
+    private func formSection<Content: View>(
+        title: LocalizedStringKey,
+        icon: String,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 8 * sheetScale) {
+            Label(title, systemImage: icon)
+                .font(.system(size: 9 * sheetScale, weight: .bold, design: .monospaced))
+                .foregroundStyle(.cyan.opacity(0.8))
+            content()
+        }
+        .padding(10 * sheetScale)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.white.opacity(0.035))
+        .clipShape(RoundedRectangle(cornerRadius: 8 * sheetScale))
+        .overlay(
+            RoundedRectangle(cornerRadius: 8 * sheetScale)
+                .stroke(Color.white.opacity(0.07), lineWidth: 1 * sheetScale)
+                .allowsHitTesting(false)
+        )
+    }
+
+    private func labeledField(
+        label: LocalizedStringKey,
+        placeholder: LocalizedStringKey,
+        text: Binding<String>
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 4 * sheetScale) {
+            Text(label)
+                .font(.system(size: 8 * sheetScale, weight: .medium, design: .monospaced))
+                .foregroundStyle(.white.opacity(0.55))
+            TextField(placeholder, text: text)
+                .textFieldStyle(.plain)
+                .font(.system(size: 10 * sheetScale, design: .monospaced))
+                .padding(.horizontal, 8 * sheetScale)
+                .frame(height: 30 * sheetScale)
+                .background(Color.black.opacity(0.5))
+                .clipShape(RoundedRectangle(cornerRadius: 5 * sheetScale))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 5 * sheetScale)
+                        .stroke(Color.white.opacity(0.1), lineWidth: 1 * sheetScale)
+                        .allowsHitTesting(false)
+                )
+        }
+    }
+
+    private func loadRunningApps(playFeedback: Bool = true) {
+        if playFeedback {
+            SoundEffectManager.shared.playButtonClick()
+            HapticManager.shared.generic()
+        }
+        let selectedBundleIdentifier = runningApps.indices.contains(selectedAppIndex)
+            ? runningApps[selectedAppIndex].bundleID
+            : bundleIdentifier
+        runningApps = viewModel.getRunningApps()
+        selectedAppIndex = runningApps.firstIndex { $0.bundleID == selectedBundleIdentifier } ?? -1
+    }
     
     private func save() {
         SoundEffectManager.shared.playButtonClick()
+        HapticManager.shared.success()
+        let draft = draft
+        guard draft.canSave else { return }
         if let existing = target {
             let updated = SwitchTarget(
                 id: existing.id,
-                name: name,
-                bundleIdentifier: bundleIdentifier,
+                name: draft.name,
+                bundleIdentifier: draft.bundleIdentifier,
                 iconName: iconName,
                 shortcutKey: shortcutKey,
                 shortcutModifiers: shortcutModifiers,
@@ -513,8 +745,8 @@ struct AddSwitchTargetView: View {
             viewModel.updateTarget(updated)
         } else {
             let new = SwitchTarget(
-                name: name,
-                bundleIdentifier: bundleIdentifier,
+                name: draft.name,
+                bundleIdentifier: draft.bundleIdentifier,
                 iconName: iconName,
                 shortcutKey: shortcutKey,
                 shortcutModifiers: shortcutModifiers

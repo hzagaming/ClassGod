@@ -19,7 +19,7 @@ struct BrowserBypasserView: View {
     
     private var zoomScale: CGFloat { CGFloat(prefs.preferences.windowZoomScale) }
     var body: some View {
-        ZStack {
+        ZStack(alignment: .top) {
             VStack(spacing: 0 * zoomScale) {
                 header
                 
@@ -45,6 +45,7 @@ struct BrowserBypasserView: View {
                 
                 footer
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(
@@ -128,13 +129,17 @@ struct BrowserBypasserView: View {
             
             Spacer()
             
-            Button(action: {
-                SoundEffectManager.shared.playButtonClick()
-                showAddSheet = true
-            }) {
-                Image(systemName: "plus.circle.fill")
-                    .foregroundStyle(.white)
-                    .symbolRenderingMode(.monochrome)
+            Button(action: presentAddSheet) {
+                HStack(spacing: 5 * zoomScale) {
+                    Image(systemName: "plus")
+                    Text("button.add")
+                }
+                .font(.system(size: 9 * zoomScale, weight: .bold, design: .monospaced))
+                .foregroundStyle(.black)
+                .padding(.horizontal, 9 * zoomScale)
+                .frame(height: 26 * zoomScale)
+                .background(Color.cyan.opacity(0.9))
+                .clipShape(RoundedRectangle(cornerRadius: 6 * zoomScale))
             }
             .buttonStyle(.plain)
             .accessibilityLabel(Text("button.add"))
@@ -235,7 +240,7 @@ struct BrowserBypasserView: View {
                 }
             }
         }
-        .frame(maxHeight: (prefs.preferences.panelMaxHeight - 200) * zoomScale)
+        .frame(maxHeight: .infinity)
     }
     
     // MARK: - Empty State
@@ -261,8 +266,19 @@ struct BrowserBypasserView: View {
                 .font(.system(size: 11 * zoomScale, design: .monospaced))
                 .foregroundStyle(.white.opacity(0.5))
                 .multilineTextAlignment(.center)
+
+            Button(action: presentAddSheet) {
+                Label("button.add_rule", systemImage: "plus")
+                    .font(.system(size: 10 * zoomScale, weight: .bold, design: .monospaced))
+                    .foregroundStyle(.black)
+                    .padding(.horizontal, 12 * zoomScale)
+                    .frame(height: 28 * zoomScale)
+                    .background(Color.cyan.opacity(0.9))
+                    .clipShape(RoundedRectangle(cornerRadius: 6 * zoomScale))
+            }
+            .buttonStyle(.plain)
         }
-        .frame(maxWidth: .infinity, minHeight: 120 * zoomScale)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding()
     }
     
@@ -332,6 +348,12 @@ struct BrowserBypasserView: View {
                 .transition(.opacity)
             }
         }
+    }
+
+    private func presentAddSheet() {
+        SoundEffectManager.shared.playButtonClick()
+        HapticManager.shared.generic()
+        showAddSheet = true
     }
 }
 

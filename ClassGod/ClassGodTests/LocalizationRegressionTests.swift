@@ -12,6 +12,7 @@ struct LocalizationRegressionTests {
         #expect(String(localized: "destintab.import_tabs", bundle: .main, locale: locale) == "Import Tabs…")
         #expect(String(localized: "destintab.export_tabs", bundle: .main, locale: locale) == "Export Tabs…")
         #expect(String(localized: "button.back", bundle: .main, locale: locale) == "Back")
+        #expect(String(localized: "button.cancel", bundle: .main, locale: locale) == "Cancel")
     }
 
     @Test("Wallpaper controls and widget states are localized")
@@ -83,6 +84,61 @@ struct LocalizationRegressionTests {
         #expect(String(localized: "fan.notification.high_temperature.title", bundle: .main, locale: english) == "ClassGod - High Temperature")
         #expect(chinese.localizedString(forKey: "fan.notification.high_temperature.title", value: nil, table: nil) == "ClassGod - 温度过高")
         #expect(String(format: String(localized: "fan.notification.high_temperature.body", bundle: .main, locale: english), "90°C", "85°C") == "Highest temperature reached 90°C (threshold: 85°C)")
+    }
+
+    @Test("Settings never expose localization keys in English")
+    func validatesSettingsLabels() {
+        let english = Locale(identifier: "en")
+        let expectations = [
+            "section.toast": "Toast Notifications",
+            "section.window_behavior": "Window Behavior",
+            "switch.always_new_tab": "Always open in new tab",
+            "maximize.none": "Disabled",
+            "maximize.fill_screen": "Fill Available Screen",
+            "maximize.fullscreen_borderless": "Borderless Full Screen",
+            "divider.none": "None",
+            "divider.thin": "Thin",
+            "divider.dashed": "Dashed",
+            "lang.system": "Follow System",
+        ]
+
+        for (key, expected) in expectations {
+            #expect(String(localized: String.LocalizationValue(key), bundle: .main, locale: english) == expected)
+        }
+
+        let englishOnlyKeys = [
+            "app_icon.calculator", "app_icon.hidden", "app_icon.notes", "app_icon.terminal",
+            "automation.subtitle", "button.add_rule", "button.open_console.subtitle",
+            "rule.any_matched", "rule.comparison.above", "rule.comparison.below", "rule.hold",
+            "rule.hysteresis", "rule.sensor.any_sensor", "rule.sensor.average_cpu",
+            "rule.sensor.highest_cpu", "rule.sensor.highest_gpu", "rule.sensor_missing",
+            "rule.target.all_fans", "rule.target.left_side", "rule.target.right_side", "rule.to",
+            "rule.when", "section.auto_max_rules", "section.auto_max_rules.caption",
+            "section.chaos_animation", "section.fan_general", "section.fan_mode",
+            "section.notifications", "section.stealth", "section.temperature",
+            "setting.alert_threshold", "setting.app_icon", "setting.app_icon.caption",
+            "setting.auto_detect.subtitle", "setting.close_on_click_outside",
+            "setting.close_on_click_outside.subtitle", "setting.compact_mode.subtitle",
+            "setting.confirm_clear.subtitle", "setting.confirm_delete.subtitle",
+            "setting.default_fan_mode", "setting.disable_on_sleep", "setting.disable_on_sleep.note",
+            "setting.disable_on_sleep.subtitle", "setting.enable_fan_control",
+            "setting.enable_fan_control.subtitle", "setting.enable_temp_alerts",
+            "setting.enable_temp_alerts.subtitle", "setting.gradual_time", "setting.haptic.subtitle",
+            "setting.instant_mode.subtitle", "setting.keep_on_top", "setting.keep_on_top.subtitle",
+            "setting.keyboard_nav.subtitle", "setting.maximize_behavior", "setting.minimize_animation",
+            "setting.popover_animation", "setting.popover_animation.subtitle",
+            "setting.remember_position", "setting.remember_position.subtitle",
+            "setting.show_browser_icon.subtitle", "setting.show_fan_in_menu_bar",
+            "setting.show_fan_in_menu_bar.subtitle", "setting.show_shortcut_badge.subtitle",
+            "setting.show_tab_count.subtitle", "setting.show_url_preview.subtitle",
+            "setting.sound_effects.subtitle", "setting.temp_alert_limit", "setting.temperature_unit",
+            "setting.toast.subtitle", "setting.update_interval", "setting.window_opacity",
+            "setting.window_zoom",
+        ]
+        for key in englishOnlyKeys {
+            let value = String(localized: String.LocalizationValue(key), bundle: .main, locale: english)
+            #expect(value.range(of: "\\p{Han}", options: .regularExpression) == nil)
+        }
     }
 
 }

@@ -5,6 +5,12 @@
 
 import SwiftUI
 
+nonisolated enum SettingsValueFormatter {
+    static func seconds(_ value: Double) -> String {
+        String(format: "%.1fs", value)
+    }
+}
+
 // MARK: - Toggle Row
 
 struct SettingsToggleRow: View {
@@ -35,7 +41,8 @@ struct SettingsToggleRow: View {
                     Text(subtitle)
                         .font(.system(size: 10 * zoomScale))
                         .foregroundStyle(.white.opacity(0.35))
-                        .lineLimit(1)
+                        .lineLimit(2)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
             }
 
@@ -118,6 +125,20 @@ struct SettingsSliderRow: View {
         self.range = range
         self.step = step
         self.displayFormatter = { String(format: format, Double(transform($0))) }
+    }
+
+    init(
+        label: LocalizedStringKey,
+        value: Binding<Double>,
+        range: ClosedRange<Double>,
+        step: Double,
+        displayFormatter: @escaping (Double) -> String
+    ) {
+        self.label = label
+        self._value = value
+        self.range = range
+        self.step = step
+        self.displayFormatter = displayFormatter
     }
 
     var body: some View {
@@ -267,7 +288,8 @@ struct SettingsActionRow: View {
                         Text(subtitle)
                             .font(.system(size: 10 * zoomScale))
                             .foregroundStyle(.white.opacity(0.35))
-                            .lineLimit(1)
+                            .lineLimit(2)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
                 }
 

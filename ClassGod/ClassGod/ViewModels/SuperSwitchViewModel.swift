@@ -22,6 +22,46 @@ nonisolated enum AppSwitchOutcome: Equatable {
     }
 }
 
+enum SuperSwitchCatalogPolicy {
+    static func filteredTargets(_ targets: [SwitchTarget], query: String) -> [SwitchTarget] {
+        let tokens = query
+            .split(whereSeparator: \.isWhitespace)
+            .map { $0.lowercased() }
+        guard !tokens.isEmpty else { return targets }
+        return targets.filter { target in
+            let searchableText = "\(target.name) \(target.bundleIdentifier)".lowercased()
+            return tokens.allSatisfy(searchableText.contains)
+        }
+    }
+}
+
+struct SuperSwitchShortcutRefreshPlan: Equatable {
+    let unregisterIDs: Set<UUID>
+    let targetIDsToRegister: [UUID]
+
+    static func make(
+        previouslyRegistered: Set<UUID>,
+        targets: [SwitchTarget]
+    ) -> SuperSwitchShortcutRefreshPlan {
+        SuperSwitchShortcutRefreshPlan(
+            unregisterIDs: previouslyRegistered,
+            targetIDsToRegister: targets.filter(\.isValidShortcut).map(\.id)
+        )
+    }
+}
+
+struct SuperSwitchTargetDraft: Equatable {
+    let name: String
+    let bundleIdentifier: String
+
+    init(name: String, bundleIdentifier: String) {
+        self.name = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        self.bundleIdentifier = bundleIdentifier.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    var canSave: Bool { !name.isEmpty && !bundleIdentifier.isEmpty }
+}
+
 @MainActor
 final class SuperSwitchViewModel: ObservableObject {
     @Published var targets: [SwitchTarget] = []
@@ -31,14 +71,25 @@ final class SuperSwitchViewModel: ObservableObject {
     @Published var showError = false
     @Published var toastMessage: String?
     @Published var showToast = false
+    @Published private(set) var runningBundleIdentifiers: Set<String> = []
     
     private var registeredTargetIDs: Set<UUID> = []
     private var toastWorkItem: DispatchWorkItem?
     private var toastState = TransientFeedbackState<String>()
+    private var workspaceCancellables: Set<AnyCancellable> = []
     
     init() {
         _targets = Published(initialValue: StorageManager.shared.loadSwitchTargets())
         refreshShortcuts()
+        refreshRunningApplications()
+        let workspaceCenter = NSWorkspace.shared.notificationCenter
+        [NSWorkspace.didLaunchApplicationNotification, NSWorkspace.didTerminateApplicationNotification]
+            .forEach { notification in
+                workspaceCenter.publisher(for: notification)
+                    .receive(on: RunLoop.main)
+                    .sink { [weak self] _ in self?.refreshRunningApplications() }
+                    .store(in: &workspaceCancellables)
+            }
     }
     
     deinit {
@@ -83,6 +134,8 @@ final class SuperSwitchViewModel: ObservableObject {
         registeredTargetIDs.remove(target.id)
         saveTargets()
         SoundEffectManager.shared.playTabDeleted()
+        HapticManager.shared.warning()
+        showToast(message: String(format: String(localized: "superswitch.toast.deleted"), target.name))
     }
     
     func switchToTarget(_ target: SwitchTarget) {
@@ -136,24 +189,36 @@ final class SuperSwitchViewModel: ObservableObject {
     }
     
     func getRunningApps() -> [(name: String, bundleID: String)] {
-        let apps = NSWorkspace.shared.runningApplications
-        return apps.compactMap { app in
-            guard let name = app.localizedName, let bundleID = app.bundleIdentifier, !app.isHidden else { return nil }
+        var seenBundleIdentifiers: Set<String> = []
+        return NSWorkspace.shared.runningApplications.compactMap { app in
+            guard app.activationPolicy == .regular,
+                  let name = app.localizedName,
+                  let bundleID = app.bundleIdentifier,
+                  bundleID != Bundle.main.bundleIdentifier,
+                  seenBundleIdentifiers.insert(bundleID).inserted else { return nil }
             return (name: name, bundleID: bundleID)
-        }.sorted { $0.name < $1.name }
+        }
+        .sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
+    }
+
+    func refreshRunningApplications() {
+        runningBundleIdentifiers = Set(NSWorkspace.shared.runningApplications.compactMap(\.bundleIdentifier))
     }
     
     private func refreshShortcuts() {
-        let currentIDs = Set(targets.map { $0.id })
-        let toRemove = registeredTargetIDs.subtracting(currentIDs)
-        for id in toRemove {
+        let plan = SuperSwitchShortcutRefreshPlan.make(
+            previouslyRegistered: registeredTargetIDs,
+            targets: targets
+        )
+        for id in plan.unregisterIDs {
             ShortcutManager.shared.unregisterShortcut(for: id)
         }
+        registeredTargetIDs.removeAll()
         for target in targets where target.isValidShortcut {
-            ShortcutManager.shared.unregisterShortcut(for: target.id)
-            _ = ShortcutManager.shared.registerShortcut(for: target)
+            if ShortcutManager.shared.registerShortcut(for: target) {
+                registeredTargetIDs.insert(target.id)
+            }
         }
-        registeredTargetIDs = currentIDs
     }
 
     private func presentSwitchFailure(target: SwitchTarget, detail: String) {

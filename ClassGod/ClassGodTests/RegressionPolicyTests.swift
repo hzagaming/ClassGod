@@ -78,6 +78,43 @@ struct RegressionPolicyTests {
         #expect(AppSwitchOutcome.launch(hasApplication: true, hasError: true) == .failure)
     }
 
+    @Test("SuperSwitch search matches names and bundle identifiers")
+    func filtersSuperSwitchTargets() {
+        let safari = SwitchTarget(name: "Safari Study", bundleIdentifier: "com.apple.Safari")
+        let notes = SwitchTarget(name: "Quick Notes", bundleIdentifier: "com.apple.Notes")
+
+        #expect(SuperSwitchCatalogPolicy.filteredTargets([safari, notes], query: " safari apple ").map(\.id) == [safari.id])
+        #expect(SuperSwitchCatalogPolicy.filteredTargets([safari, notes], query: "com.apple.notes").map(\.id) == [notes.id])
+        #expect(SuperSwitchCatalogPolicy.filteredTargets([safari, notes], query: "  ").map(\.id) == [safari.id, notes.id])
+        #expect(SuperSwitchCatalogPolicy.filteredTargets([safari, notes], query: "missing").isEmpty)
+    }
+
+    @Test("SuperSwitch refresh removes stale shortcuts and registers only valid targets")
+    func plansSuperSwitchShortcutRefresh() {
+        let staleID = UUID()
+        let invalid = SwitchTarget(name: "No Shortcut", bundleIdentifier: "com.example.none")
+        let valid = SwitchTarget(name: "Finder", bundleIdentifier: "com.apple.finder", shortcutKey: "F7")
+
+        let plan = SuperSwitchShortcutRefreshPlan.make(
+            previouslyRegistered: [staleID, invalid.id],
+            targets: [invalid, valid]
+        )
+
+        #expect(plan.unregisterIDs == [staleID, invalid.id])
+        #expect(plan.targetIDsToRegister == [valid.id])
+    }
+
+    @Test("SuperSwitch target drafts trim input and reject blank values")
+    func normalizesSuperSwitchTargetDrafts() {
+        let valid = SuperSwitchTargetDraft(name: "  Study  ", bundleIdentifier: " com.example.study\n")
+        let invalid = SuperSwitchTargetDraft(name: " \t", bundleIdentifier: "com.example.empty")
+
+        #expect(valid.name == "Study")
+        #expect(valid.bundleIdentifier == "com.example.study")
+        #expect(valid.canSave)
+        #expect(!invalid.canSave)
+    }
+
     @Test("Dismissed boot sequences reject stale callbacks")
     func cancelsBootSequenceCallbacks() {
         var session = BootSequenceSession()
@@ -161,5 +198,23 @@ struct RegressionPolicyTests {
         try PreferencesExportWriter.write(Data("new".utf8), to: destination)
 
         #expect(try Data(contentsOf: destination) == Data("new".utf8))
+    }
+
+    @Test("Settings navigation exposes every page with stable metadata")
+    func validatesSettingsNavigation() {
+        #expect(SettingsPage.allCases == [.general, .shortcuts, .appearance, .browser, .advanced, .fan])
+        #expect(Set(SettingsPage.allCases.map(\.id)).count == SettingsPage.allCases.count)
+        #expect(SettingsWindowLayoutPolicy.baseWidth == 580)
+        #expect(SettingsWindowLayoutPolicy.baseHeight == 500)
+        for page in SettingsPage.allCases {
+            #expect(!page.iconName.isEmpty)
+            #expect(!page.accessibilityTitle.isEmpty)
+        }
+    }
+
+    @Test("Fractional refresh intervals keep their precision")
+    func formatsSettingsIntervals() {
+        #expect(SettingsValueFormatter.seconds(0.5) == "0.5s")
+        #expect(SettingsValueFormatter.seconds(10) == "10.0s")
     }
 }

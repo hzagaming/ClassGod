@@ -36,7 +36,7 @@ struct FanControlSettingsView: View {
                         value: $prefs.preferences.fanControlUpdateInterval,
                         range: 0.5...10,
                         step: 0.5,
-                        suffix: "s"
+                        displayFormatter: SettingsValueFormatter.seconds
                     )
                 }
 

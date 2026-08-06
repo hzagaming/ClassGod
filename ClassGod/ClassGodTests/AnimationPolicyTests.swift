@@ -21,6 +21,9 @@ struct AnimationPolicyTests {
     @Test("Launch presentation always enters the main panel")
     func resolvesInitialWindowPresentation() {
         #expect(LaunchWindowPresentationPolicy.shouldShowMainWindow)
+        #expect(LaunchWindowPresentationPolicy.shouldResetBeforeInitialShow(isVisible: true, isKeyWindow: false))
+        #expect(!LaunchWindowPresentationPolicy.shouldResetBeforeInitialShow(isVisible: false, isKeyWindow: false))
+        #expect(!LaunchWindowPresentationPolicy.shouldResetBeforeInitialShow(isVisible: true, isKeyWindow: true))
     }
 
     @Test("Overlapping sounds reuse idle channels and stay bounded")
