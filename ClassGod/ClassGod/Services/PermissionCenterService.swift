@@ -660,6 +660,12 @@ enum PermissionSettingsDestination {
     }
 }
 
+nonisolated enum PermissionRefreshQueuePolicy {
+    static func shouldQueueFollowUp(isChecking: Bool, afterAuthorization: Bool) -> Bool {
+        isChecking && afterAuthorization
+    }
+}
+
 @MainActor
 final class PermissionCenterService: ObservableObject {
     static let shared = PermissionCenterService()
@@ -676,9 +682,14 @@ final class PermissionCenterService: ObservableObject {
     
     private init() {}
     
-    func refreshAll() {
+    func refreshAll(afterAuthorization: Bool = false) {
         guard !isChecking else {
-            refreshRequestedWhileChecking = true
+            if PermissionRefreshQueuePolicy.shouldQueueFollowUp(
+                isChecking: isChecking,
+                afterAuthorization: afterAuthorization
+            ) {
+                refreshRequestedWhileChecking = true
+            }
             return
         }
         isChecking = true
@@ -759,13 +770,13 @@ final class PermissionCenterService: ObservableObject {
         if !PermissionRequestRefreshPolicy.shouldRefreshOnCompletion(type) {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
                 self?.finishRequest(type)
-                self?.refreshAll()
+                self?.refreshAll(afterAuthorization: true)
             }
         } else {
             DispatchQueue.main.asyncAfter(deadline: .now() + 60) { [weak self] in
                 guard self?.requestTracker.contains(type) == true else { return }
                 self?.finishRequest(type)
-                self?.refreshAll()
+                self?.refreshAll(afterAuthorization: true)
             }
         }
     }
@@ -789,7 +800,7 @@ final class PermissionCenterService: ObservableObject {
         { [weak self] in
             DispatchQueue.main.async {
                 self?.finishRequest(type)
-                self?.refreshAll()
+                self?.refreshAll(afterAuthorization: true)
             }
         }
     }

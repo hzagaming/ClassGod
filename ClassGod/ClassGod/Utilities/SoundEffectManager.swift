@@ -16,6 +16,16 @@ nonisolated enum SoundPlaybackPolicy {
     }
 }
 
+nonisolated enum UserInteractionFeedbackPolicy {
+    static func shouldEmit<Value: Equatable>(
+        currentValue: Value,
+        newValue: Value,
+        isUserInitiated: Bool
+    ) -> Bool {
+        isUserInitiated && currentValue != newValue
+    }
+}
+
 enum SoundEffect: String, CaseIterable {
     case popoverOpen = "PopoverOpen"
     case popoverClose = "PopoverClose"

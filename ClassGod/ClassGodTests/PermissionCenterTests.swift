@@ -3,6 +3,22 @@ import Testing
 
 @Suite("Permission Center catalog")
 struct PermissionCenterTests {
+    @Test("Routine permission refreshes coalesce while authorization results are retained")
+    func coalescesPermissionRefreshes() {
+        #expect(!PermissionRefreshQueuePolicy.shouldQueueFollowUp(
+            isChecking: true,
+            afterAuthorization: false
+        ))
+        #expect(PermissionRefreshQueuePolicy.shouldQueueFollowUp(
+            isChecking: true,
+            afterAuthorization: true
+        ))
+        #expect(!PermissionRefreshQueuePolicy.shouldQueueFollowUp(
+            isChecking: false,
+            afterAuthorization: true
+        ))
+    }
+
     @Test("Lists every supported ClassGod permission")
     func completeCatalog() {
         #expect(PermissionType.allCases.count == 20)

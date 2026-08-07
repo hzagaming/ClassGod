@@ -26,6 +26,19 @@ struct AnimationPolicyTests {
         #expect(!LaunchWindowPresentationPolicy.shouldResetBeforeInitialShow(isVisible: true, isKeyWindow: true))
     }
 
+    @Test("Chaos completion advances without animation callbacks")
+    func completesChaosWindowsDeterministically() {
+        var progress = LaunchChaosProgress(totalWindows: 2)
+
+        let first = progress.recordClosedWindow()
+        let second = progress.recordClosedWindow()
+        let third = progress.recordClosedWindow()
+
+        #expect(!first)
+        #expect(second)
+        #expect(third)
+    }
+
     @Test("Overlapping sounds reuse idle channels and stay bounded")
     func selectsSoundChannels() {
         #expect(SoundPlaybackPolicy.channelIndex(isPlaying: [true, false], limit: 4) == 1)

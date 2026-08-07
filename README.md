@@ -55,7 +55,21 @@ ClassGod/
     └── Settings/                  # 设置面板
 ```
 
-## 最新公告：v1.5.26
+## 最新公告：v1.5.27
+
+### BrowserBypasser / 交互反馈 / 权限 / 壁纸深度修复
+
+- [x] **BrowserBypasser 行交互**：整行执行与启用开关完全拆分，禁用规则不能误执行但仍可重新启用，右键菜单同步禁用
+- [x] **规则输入安全**：名称和 URL Pattern 自动裁剪，纯空白规则不能保存；保存和删除保持单次反馈
+- [x] **设置 SFX / 触感**：Toggle、Slider、Picker 仅响应用户真实改值，导入、恢复和状态同步不再连播
+- [x] **SuperSwitch / Ghost Protocol**：编辑恢复 Picker、刷新应用目录与 Finder 自动回退不再误判为用户操作
+- [x] **Permission Center 刷新**：合并打开窗口和回前台产生的普通重叠检查，同时保留授权完成后的必要复查
+- [x] **壁纸 BGM 同步**：切换循环模式立即更新活动 GIF / 视频播放器，不再沿用旧播放策略
+- [x] **启动与全功能复查**：品牌页、Chaos 和主 Panel 不再依赖 AppKit 动画完成回调，未激活场景也能稳定进入主页；并复查 Clipo、风扇识别、官方 Widgets、天气与 Activity Monitor 生命周期
+- [x] **质量回归**：主应用 131 项与 Helper 17 项测试通过，并完成 Debug / Release、Analyze、字符串目录、plist、产物和签名校验
+- [x] **版本号更新**：实际构建产物更新为 v1.5.27 (Build 52)
+
+## 历史公告：v1.5.26
 
 ### SuperSwitch / Permission Center / 设置 / UIUX 深度优化
 

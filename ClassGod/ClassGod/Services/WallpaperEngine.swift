@@ -264,6 +264,7 @@ final class WallpaperEngine: ObservableObject {
         guard let index = modes.firstIndex(of: playbackMode) else { return }
         playbackMode = modes[(index + 1) % modes.count]
         saveSettings()
+        NotificationCenter.default.post(name: .wallpaperStateDidChange, object: nil)
     }
     
     func nextWallpaper() {

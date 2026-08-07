@@ -8,13 +8,27 @@
 import Cocoa
 import SwiftUI
 
+nonisolated struct LaunchChaosProgress {
+    let totalWindows: Int
+    private(set) var closedWindows = 0
+
+    init(totalWindows: Int) {
+        self.totalWindows = max(0, totalWindows)
+    }
+
+    mutating func recordClosedWindow() -> Bool {
+        closedWindows = min(closedWindows + 1, totalWindows)
+        return closedWindows >= totalWindows
+    }
+}
+
 final class LaunchAnimationManager {
     static let shared = LaunchAnimationManager()
     
     private var glitchWindows: [NSWindow] = []
     private var isAnimating = false
     private var pendingCompletion: (() -> Void)?
-    private var closedCount = 0
+    private var progress = LaunchChaosProgress(totalWindows: 0)
     private var totalWindows = 0
     private weak var mainWindow: NSWindow?
     private var flashWindow: NSWindow?
@@ -34,10 +48,10 @@ final class LaunchAnimationManager {
         isAnimating = true
         self.mainWindow = mainWindow
         pendingCompletion = completion
-        closedCount = 0
         // Each particle is a real NSWindow. Keep the total safely below AppKit's
         // excessive-live-window threshold after accounting for feature windows.
         totalWindows = min(max(PreferencesManager.shared.preferences.chaosParticleCount, 12), 48)
+        progress = LaunchChaosProgress(totalWindows: totalWindows)
         
         guard let screen = NSScreen.main else {
             finish()
@@ -74,20 +88,13 @@ final class LaunchAnimationManager {
                 
                 window.alphaValue = 0
                 window.orderFront(nil)
-                
-                NSAnimationContext.runAnimationGroup { ctx in
-                    ctx.duration = 0.08
-                    window.animator().alphaValue = 1.0
-                }
+                window.alphaValue = 1
                 
                 self.jitterWindow(window)
                 
                 // Reveal main window gradually as wave expands
                 if showOrder == 30 {
-                    NSAnimationContext.runAnimationGroup { ctx in
-                        ctx.duration = 0.8
-                        mainWindow.animator().alphaValue = 0.4
-                    }
+                    mainWindow.alphaValue = 0.4
                 }
                 
                 // SFX: dense sound during spawn
@@ -118,31 +125,22 @@ final class LaunchAnimationManager {
             DispatchQueue.main.asyncAfter(deadline: .now() + closeDelay) { [weak self] in
                 guard let self, self.isAnimating else { return }
                 
-                NSAnimationContext.runAnimationGroup { ctx in
-                    ctx.duration = 0.035
-                    window.animator().alphaValue = 0
-                } completionHandler: {
-                    window.orderOut(nil)
-                    self.closedCount += 1
-                    
-                    let progress = Double(self.closedCount) / Double(self.totalWindows)
-                    let targetAlpha = 0.6 + (progress * 0.4)
-                    mainWindow.alphaValue = targetAlpha
-                    
-                    // SFX during close phase
-                    if closeOrder == 20 {
-                        SoundEffectManager.shared.playCloseBurst(count: 4)
-                    }
-                    
-                    if self.closedCount >= self.totalWindows {
-                        SoundEffectManager.shared.playHackerRevealSound()
-                        NSAnimationContext.runAnimationGroup { ctx in
-                            ctx.duration = 0.25
-                            mainWindow.animator().alphaValue = 1.0
-                        } completionHandler: {
-                            self.finish()
-                        }
-                    }
+                window.alphaValue = 0
+                window.orderOut(nil)
+                let didComplete = self.progress.recordClosedWindow()
+
+                let completionRatio = Double(self.progress.closedWindows) / Double(max(1, self.totalWindows))
+                mainWindow.alphaValue = 0.6 + (completionRatio * 0.4)
+
+                // SFX during close phase
+                if closeOrder == 20 {
+                    SoundEffectManager.shared.playCloseBurst(count: 4)
+                }
+
+                if didComplete {
+                    SoundEffectManager.shared.playHackerRevealSound()
+                    mainWindow.alphaValue = 1
+                    self.finish()
                 }
             }
         }
@@ -197,22 +195,16 @@ final class LaunchAnimationManager {
         window.level = .statusBar
         window.backgroundColor = color
         window.isOpaque = true
-        window.alphaValue = 0
+        window.alphaValue = 0.25
         window.orderFront(nil)
         flashWindow = window
-        
-        NSAnimationContext.runAnimationGroup { ctx in
-            ctx.duration = 0.03
-            window.animator().alphaValue = 0.25
-        } completionHandler: {
-            NSAnimationContext.runAnimationGroup { ctx in
-                ctx.duration = 0.08
-                window.animator().alphaValue = 0
-            } completionHandler: {
-                window.orderOut(nil)
-                if self.flashWindow === window {
-                    self.flashWindow = nil
-                }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.11) { [weak self, weak window] in
+            guard let window else { return }
+            window.alphaValue = 0
+            window.orderOut(nil)
+            if self?.flashWindow === window {
+                self?.flashWindow = nil
             }
         }
     }
@@ -398,10 +390,7 @@ final class LaunchAnimationManager {
             DispatchQueue.main.asyncAfter(deadline: .now() + Double(i) * 0.08 + Double.random(in: 0.1...0.5)) {
                 guard window.isVisible else { return }
                 let targetAlpha = CGFloat.random(in: 0.2...0.9)
-                NSAnimationContext.runAnimationGroup { ctx in
-                    ctx.duration = 0.02
-                    window.animator().alphaValue = targetAlpha
-                }
+                window.alphaValue = targetAlpha
             }
         }
     }

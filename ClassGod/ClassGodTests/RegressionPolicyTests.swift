@@ -115,6 +115,17 @@ struct RegressionPolicyTests {
         #expect(!invalid.canSave)
     }
 
+    @Test("BrowserBypasser rule drafts trim input and reject blank values")
+    func normalizesBrowserBypassRuleDrafts() {
+        let valid = BrowserBypassRuleDraft(name: "  Canvas Quiz  ", targetURLPattern: " canvas.*quiz\n")
+        let invalid = BrowserBypassRuleDraft(name: " \t", targetURLPattern: "docs.example")
+
+        #expect(valid.name == "Canvas Quiz")
+        #expect(valid.targetURLPattern == "canvas.*quiz")
+        #expect(valid.canSave)
+        #expect(!invalid.canSave)
+    }
+
     @Test("Dismissed boot sequences reject stale callbacks")
     func cancelsBootSequenceCallbacks() {
         var session = BootSequenceSession()

@@ -41,6 +41,20 @@ enum BypassType: String, Codable, CaseIterable {
     }
 }
 
+nonisolated struct BrowserBypassRuleDraft {
+    let name: String
+    let targetURLPattern: String
+
+    init(name: String, targetURLPattern: String) {
+        self.name = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        self.targetURLPattern = targetURLPattern.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    var canSave: Bool {
+        !name.isEmpty && !targetURLPattern.isEmpty
+    }
+}
+
 struct BypassRule: Codable, Identifiable, Equatable {
     let id: UUID
     var name: String

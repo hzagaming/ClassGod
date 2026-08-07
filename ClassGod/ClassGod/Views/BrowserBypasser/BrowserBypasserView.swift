@@ -74,7 +74,6 @@ struct BrowserBypasserView: View {
         )) {
             Button(String(localized: "button.cancel"), role: .cancel) { ruleToDelete = nil }
             Button(String(localized: "button.delete"), role: .destructive) {
-                SoundEffectManager.shared.playTabDeleted()
                 HapticManager.shared.warning()
                 if let rule = ruleToDelete {
                     viewModel.deleteRule(rule)
@@ -373,70 +372,69 @@ struct RuleRow: View {
     @State private var pressResetWorkItem: DispatchWorkItem?
     
     var body: some View {
-        Button(action: {
-            SoundEffectManager.shared.playButtonClick()
-            Anim.with { isPressed = true }
-            pressResetWorkItem?.cancel()
-            let item = DispatchWorkItem {
-                Anim.with { isPressed = false }
-            }
-            pressResetWorkItem = item
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.06, execute: item)
-            onRun()
-        }) {
-            HStack(spacing: 10 * zoomScale) {
-                Image(systemName: rule.bypassType.iconName)
-                    .font(.system(size: 18 * zoomScale, weight: .medium))
-                    .foregroundStyle(rule.isEnabled ? .green : .white.opacity(0.3))
-                    .frame(width: 24 * zoomScale)
-                    .symbolRenderingMode(.monochrome)
-                
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(rule.name)
-                        .font(.system(size: 13 * zoomScale, weight: .medium, design: .monospaced))
-                        .foregroundStyle(rule.isEnabled ? .white : .white.opacity(0.4))
-                        .lineLimit(1)
+        HStack(spacing: 8 * zoomScale) {
+            Button(action: activate) {
+                HStack(spacing: 10 * zoomScale) {
+                    Image(systemName: rule.bypassType.iconName)
+                        .font(.system(size: 18 * zoomScale, weight: .medium))
+                        .foregroundStyle(rule.isEnabled ? .green : .white.opacity(0.3))
+                        .frame(width: 24 * zoomScale)
+                        .symbolRenderingMode(.monochrome)
                     
-                    Text(rule.bypassType.displayName)
-                        .font(.system(size: 9 * zoomScale, design: .monospaced))
-                        .foregroundStyle(.white.opacity(0.4))
-                        .lineLimit(1)
-                }
-                
-                Spacer()
-                
-                Toggle("", isOn: .init(
-                    get: { rule.isEnabled },
-                    set: { _ in
-                        SoundEffectManager.shared.playButtonClick()
-                        HapticManager.shared.generic()
-                        onToggle()
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(rule.name)
+                            .font(.system(size: 13 * zoomScale, weight: .medium, design: .monospaced))
+                            .foregroundStyle(rule.isEnabled ? .white : .white.opacity(0.4))
+                            .lineLimit(1)
+
+                        Text(rule.bypassType.displayName)
+                            .font(.system(size: 9 * zoomScale, design: .monospaced))
+                            .foregroundStyle(.white.opacity(0.4))
+                            .lineLimit(1)
                     }
-                ))
-                .toggleStyle(.switch)
-                .scaleEffect(0.7 * zoomScale)
+
+                    Spacer()
+                }
+                .contentShape(Rectangle())
             }
-            .padding(.horizontal)
-            .padding(.vertical, 8 * zoomScale)
-            .frame(minHeight: 44 * zoomScale)
-            .contentShape(Rectangle())
-            .background(
-                Rectangle()
-                    .fill(backgroundColor)
-            )
-            .overlay(
-                Rectangle()
-                    .stroke(borderColor, lineWidth: 1 * zoomScale)
-            .allowsHitTesting(false)            )
-            .scaleEffect(isPressed ? 0.98 : 1.0)
+            .buttonStyle(.plain)
+            .disabled(!rule.isEnabled)
+            .accessibilityLabel(Text(rule.name))
+            .accessibilityHint(Text(String(format: String(localized: "bypass.context.run"), rule.bypassType.displayName)))
+
+            Toggle("", isOn: .init(
+                get: { rule.isEnabled },
+                set: { _ in
+                    SoundEffectManager.shared.playButtonClick()
+                    HapticManager.shared.generic()
+                    onToggle()
+                }
+            ))
+            .labelsHidden()
+            .toggleStyle(.switch)
+            .scaleEffect(0.7 * zoomScale)
+            .accessibilityLabel(Text("bypass.enable_immediately"))
         }
-        .buttonStyle(.plain)
+        .padding(.horizontal)
+        .padding(.vertical, 8 * zoomScale)
+        .frame(minHeight: 44 * zoomScale)
+        .contentShape(Rectangle())
+        .background(
+            Rectangle()
+                .fill(backgroundColor)
+        )
+        .overlay(
+            Rectangle()
+                .stroke(borderColor, lineWidth: 1 * zoomScale)
+                .allowsHitTesting(false)
+        )
+        .scaleEffect(isPressed ? 0.98 : 1.0)
         .contextMenu {
             Button(String(format: String(localized: "bypass.context.run"), rule.bypassType.displayName)) {
-                SoundEffectManager.shared.playButtonClick()
                 HapticManager.shared.generic()
                 onRun()
             }
+            .disabled(!rule.isEnabled)
             Button(String(localized: "button.edit")) {
                 SoundEffectManager.shared.playButtonClick()
                 HapticManager.shared.generic()
@@ -462,6 +460,17 @@ struct RuleRow: View {
             pressResetWorkItem = nil
             isPressed = false
         }
+    }
+
+    private func activate() {
+        Anim.with { isPressed = true }
+        pressResetWorkItem?.cancel()
+        let item = DispatchWorkItem {
+            Anim.with { isPressed = false }
+        }
+        pressResetWorkItem = item
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.06, execute: item)
+        onRun()
     }
     
     private var backgroundColor: Color {
@@ -496,6 +505,42 @@ struct AddBypassRuleView: View {
     @State private var targetURLPattern: String = ""
     @State private var bypassType: BypassType = .exitFullscreen
     @State private var isEnabled: Bool = true
+
+    private var draft: BrowserBypassRuleDraft {
+        BrowserBypassRuleDraft(name: name, targetURLPattern: targetURLPattern)
+    }
+
+    private var bypassTypeBinding: Binding<BypassType> {
+        Binding(
+            get: { bypassType },
+            set: { newValue in
+                guard UserInteractionFeedbackPolicy.shouldEmit(
+                    currentValue: bypassType,
+                    newValue: newValue,
+                    isUserInitiated: true
+                ) else { return }
+                bypassType = newValue
+                SoundEffectManager.shared.playButtonClick()
+                HapticManager.shared.generic()
+            }
+        )
+    }
+
+    private var enabledBinding: Binding<Bool> {
+        Binding(
+            get: { isEnabled },
+            set: { newValue in
+                guard UserInteractionFeedbackPolicy.shouldEmit(
+                    currentValue: isEnabled,
+                    newValue: newValue,
+                    isUserInitiated: true
+                ) else { return }
+                isEnabled = newValue
+                SoundEffectManager.shared.playButtonClick()
+                HapticManager.shared.generic()
+            }
+        )
+    }
     
     var body: some View {
         VStack(spacing: 16 * zoomScale) {
@@ -555,7 +600,7 @@ struct AddBypassRuleView: View {
                     .font(.system(size: 11 * zoomScale, weight: .semibold, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.7))
                 
-                Picker("", selection: $bypassType) {
+                Picker("", selection: bypassTypeBinding) {
                     ForEach(BypassType.allCases, id: \.self) { type in
                         HStack(spacing: 6 * zoomScale) {
                             Image(systemName: type.iconName)
@@ -572,20 +617,12 @@ struct AddBypassRuleView: View {
                 }
                 .pickerStyle(.radioGroup)
                 .foregroundStyle(.white)
-                .onChange(of: bypassType) { _, _ in
-                    SoundEffectManager.shared.playButtonClick()
-                    HapticManager.shared.generic()
-                }
             }
             
             // Enabled toggle
-            Toggle("bypass.enable_immediately", isOn: $isEnabled)
+            Toggle("bypass.enable_immediately", isOn: enabledBinding)
                 .font(.system(size: 11 * zoomScale, design: .monospaced))
                 .foregroundStyle(.white.opacity(0.7))
-                .onChange(of: isEnabled) { _, _ in
-                    SoundEffectManager.shared.playButtonClick()
-                    HapticManager.shared.generic()
-                }
             
             Spacer()
             
@@ -605,7 +642,7 @@ struct AddBypassRuleView: View {
                     save()
                 }
                 .buttonStyle(.borderedProminent)
-                .disabled(name.isEmpty || targetURLPattern.isEmpty)
+                .disabled(!draft.canSave)
             }
         }
         .padding()
@@ -622,12 +659,13 @@ struct AddBypassRuleView: View {
     }
     
     private func save() {
-        SoundEffectManager.shared.playButtonClick()
+        let draft = draft
+        guard draft.canSave else { return }
         if let existing = rule {
             let updated = BypassRule(
                 id: existing.id,
-                name: name,
-                targetURLPattern: targetURLPattern,
+                name: draft.name,
+                targetURLPattern: draft.targetURLPattern,
                 bypassType: bypassType,
                 isEnabled: isEnabled,
                 createdAt: existing.createdAt
@@ -635,8 +673,8 @@ struct AddBypassRuleView: View {
             viewModel.updateRule(updated)
         } else {
             let new = BypassRule(
-                name: name,
-                targetURLPattern: targetURLPattern,
+                name: draft.name,
+                targetURLPattern: draft.targetURLPattern,
                 bypassType: bypassType,
                 isEnabled: isEnabled
             )

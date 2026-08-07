@@ -54,6 +54,29 @@ struct WallpaperSettingsTests {
         #expect(WallpaperLoopPolicy.action(mode: .singleLoop, isEnabled: true, isPlaying: false) == .stop)
     }
 
+    @MainActor
+    @Test("Changing playback mode synchronizes active wallpaper players")
+    func broadcastsPlaybackModeChanges() async {
+        let engine = WallpaperEngine.shared
+        let originalMode = engine.playbackMode
+
+        await confirmation { confirmed in
+            let token = NotificationCenter.default.addObserver(
+                forName: .wallpaperStateDidChange,
+                object: nil,
+                queue: .main
+            ) { _ in
+                confirmed()
+            }
+            engine.cyclePlaybackMode()
+            NotificationCenter.default.removeObserver(token)
+        }
+
+        while engine.playbackMode != originalMode {
+            engine.cyclePlaybackMode()
+        }
+    }
+
     @Test("Animated images respect playback state and safe frame timing")
     func resolvesAnimatedImagePlayback() {
         #expect(AnimatedImagePlaybackPolicy.shouldAnimate(isEnabled: true, isPlaying: true))

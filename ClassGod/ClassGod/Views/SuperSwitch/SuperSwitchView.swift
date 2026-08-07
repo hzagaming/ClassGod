@@ -508,6 +508,12 @@ struct AddSwitchTargetView: View {
     private var draft: SuperSwitchTargetDraft {
         SuperSwitchTargetDraft(name: name, bundleIdentifier: bundleIdentifier)
     }
+    private var runningAppSelection: Binding<Int> {
+        Binding(
+            get: { selectedAppIndex },
+            set: { selectRunningApp(at: $0, isUserInitiated: true) }
+        )
+    }
     
     var body: some View {
         VStack(spacing: 0) {
@@ -552,7 +558,7 @@ struct AddSwitchTargetView: View {
                 VStack(spacing: 12 * sheetScale) {
                     formSection(title: "superswitch.running_app", icon: "app.badge") {
                         HStack(spacing: 6 * sheetScale) {
-                            Picker("", selection: $selectedAppIndex) {
+                            Picker("", selection: runningAppSelection) {
                                 Text("superswitch.custom").tag(-1)
                                 ForEach(0..<runningApps.count, id: \.self) { index in
                                     Text(runningApps[index].name).tag(index)
@@ -573,13 +579,6 @@ struct AddSwitchTargetView: View {
                             }
                             .buttonStyle(.plain)
                             .accessibilityLabel(Text("superswitch.refresh_apps"))
-                        }
-                        .onChange(of: selectedAppIndex) { _, newValue in
-                            SoundEffectManager.shared.playButtonClick()
-                            HapticManager.shared.generic()
-                            guard runningApps.indices.contains(newValue) else { return }
-                            name = runningApps[newValue].name
-                            bundleIdentifier = runningApps[newValue].bundleID
                         }
                     }
 
@@ -725,6 +724,22 @@ struct AddSwitchTargetView: View {
             : bundleIdentifier
         runningApps = viewModel.getRunningApps()
         selectedAppIndex = runningApps.firstIndex { $0.bundleID == selectedBundleIdentifier } ?? -1
+    }
+
+    private func selectRunningApp(at index: Int, isUserInitiated: Bool) {
+        let shouldEmitFeedback = UserInteractionFeedbackPolicy.shouldEmit(
+            currentValue: selectedAppIndex,
+            newValue: index,
+            isUserInitiated: isUserInitiated
+        )
+        selectedAppIndex = index
+        if shouldEmitFeedback {
+            SoundEffectManager.shared.playButtonClick()
+            HapticManager.shared.generic()
+        }
+        guard runningApps.indices.contains(index) else { return }
+        name = runningApps[index].name
+        bundleIdentifier = runningApps[index].bundleID
     }
     
     private func save() {

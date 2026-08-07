@@ -22,6 +22,21 @@ struct SettingsToggleRow: View {
     @ObservedObject private var prefs = PreferencesManager.shared
 
     private var zoomScale: CGFloat { CGFloat(prefs.preferences.windowZoomScale) }
+    private var interactionBinding: Binding<Bool> {
+        Binding(
+            get: { isOn },
+            set: { newValue in
+                guard UserInteractionFeedbackPolicy.shouldEmit(
+                    currentValue: isOn,
+                    newValue: newValue,
+                    isUserInitiated: true
+                ) else { return }
+                isOn = newValue
+                SoundEffectManager.shared.playButtonClick()
+                HapticManager.shared.generic()
+            }
+        )
+    }
 
     var body: some View {
         HStack(spacing: 10 * zoomScale) {
@@ -48,7 +63,7 @@ struct SettingsToggleRow: View {
 
             Spacer()
 
-            Toggle("", isOn: $isOn)
+            Toggle("", isOn: interactionBinding)
                 .toggleStyle(.switch)
                 .controlSize(.small)
                 .labelsHidden()
@@ -62,10 +77,6 @@ struct SettingsToggleRow: View {
         )
         .onHover { isHovered = $0 }
         .animation(Anim.enabled ? .easeInOut(duration: Anim.duration) : nil, value: isHovered)
-        .onChange(of: isOn) { _, _ in
-            SoundEffectManager.shared.playButtonClick()
-            HapticManager.shared.generic()
-        }
     }
 }
 
@@ -83,6 +94,20 @@ struct SettingsSliderRow: View {
     private var zoomScale: CGFloat { CGFloat(prefs.preferences.windowZoomScale) }
 
     private let displayFormatter: (Double) -> String
+    private var interactionBinding: Binding<Double> {
+        Binding(
+            get: { value },
+            set: { newValue in
+                guard UserInteractionFeedbackPolicy.shouldEmit(
+                    currentValue: value,
+                    newValue: newValue,
+                    isUserInitiated: true
+                ) else { return }
+                value = newValue
+                playThrottledFeedback()
+            }
+        )
+    }
 
     init(
         label: LocalizedStringKey,
@@ -148,7 +173,7 @@ struct SettingsSliderRow: View {
                 .foregroundStyle(.white)
                 .frame(minWidth: 100 * zoomScale, alignment: .leading)
 
-            Slider(value: $value, in: range, step: step)
+            Slider(value: interactionBinding, in: range, step: step)
                 .frame(height: 16 * zoomScale)
                 .accessibilityLabel(label)
                 .accessibilityValue(Text(verbatim: displayFormatter(value)))
@@ -166,9 +191,6 @@ struct SettingsSliderRow: View {
         )
         .onHover { isHovered = $0 }
         .animation(Anim.enabled ? .easeInOut(duration: Anim.duration) : nil, value: isHovered)
-        .onChange(of: value) { _, _ in
-            playThrottledFeedback()
-        }
     }
 
     private func playThrottledFeedback() {
@@ -192,6 +214,21 @@ struct SettingsPickerRow<T: Hashable>: View {
     @ObservedObject private var prefs = PreferencesManager.shared
 
     private var zoomScale: CGFloat { CGFloat(prefs.preferences.windowZoomScale) }
+    private var interactionBinding: Binding<T> {
+        Binding(
+            get: { selection },
+            set: { newValue in
+                guard UserInteractionFeedbackPolicy.shouldEmit(
+                    currentValue: selection,
+                    newValue: newValue,
+                    isUserInitiated: true
+                ) else { return }
+                selection = newValue
+                SoundEffectManager.shared.playButtonClick()
+                HapticManager.shared.generic()
+            }
+        )
+    }
 
     enum PickerStyleType {
         case segmented
@@ -207,7 +244,7 @@ struct SettingsPickerRow<T: Hashable>: View {
 
             switch style {
             case .segmented:
-                Picker("", selection: $selection) {
+                Picker("", selection: interactionBinding) {
                     ForEach(options, id: \.self) { option in
                         Text(displayName(option)).tag(option)
                     }
@@ -217,7 +254,7 @@ struct SettingsPickerRow<T: Hashable>: View {
                 .accessibilityLabel(label)
 
             case .radio:
-                Picker("", selection: $selection) {
+                Picker("", selection: interactionBinding) {
                     ForEach(options, id: \.self) { option in
                         Text(displayName(option)).tag(option)
                     }
@@ -227,7 +264,7 @@ struct SettingsPickerRow<T: Hashable>: View {
                 .accessibilityLabel(label)
 
             case .menu:
-                Picker("", selection: $selection) {
+                Picker("", selection: interactionBinding) {
                     ForEach(options, id: \.self) { option in
                         Text(displayName(option)).tag(option)
                     }
@@ -245,10 +282,6 @@ struct SettingsPickerRow<T: Hashable>: View {
         )
         .onHover { isHovered = $0 }
         .animation(Anim.enabled ? .easeInOut(duration: Anim.duration) : nil, value: isHovered)
-        .onChange(of: selection) { _, _ in
-            SoundEffectManager.shared.playButtonClick()
-            HapticManager.shared.generic()
-        }
     }
 }
 

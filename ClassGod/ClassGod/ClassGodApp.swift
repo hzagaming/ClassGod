@@ -251,13 +251,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func closeSplashScreen() {
         guard let window = splashWindow else { return }
-        NSAnimationContext.runAnimationGroup { ctx in
-            ctx.duration = Anim.duration
-            window.animator().alphaValue = 0
-        } completionHandler: { [weak self] in
-            window.orderOut(nil)
-            self?.splashWindow = nil
-        }
+        window.alphaValue = 0
+        window.orderOut(nil)
+        splashWindow = nil
     }
 
     // MARK: - Main Window

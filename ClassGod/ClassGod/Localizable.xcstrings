@@ -10334,16 +10334,6 @@
         }
       }
     },
-    "HackerDesktop" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "黑客桌面"
-          }
-        }
-      }
-    },
     "hackerdesktop.about_hint" : {
       "localizations" : {
         "en" : {
@@ -11062,60 +11052,6 @@
             "value" : "0"
           }
         }
-      }
-    },
-    "weather.condition.clear" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Clear" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "晴朗" } }
-      }
-    },
-    "weather.condition.clear_night" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Clear Night" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "晴夜" } }
-      }
-    },
-    "weather.condition.cloudy" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Cloudy" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "多云" } }
-      }
-    },
-    "weather.condition.fog" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Fog" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "有雾" } }
-      }
-    },
-    "weather.condition.partly_cloudy" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Partly Cloudy" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "局部多云" } }
-      }
-    },
-    "weather.condition.rain" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Rain" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "有雨" } }
-      }
-    },
-    "weather.condition.snow" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Snow" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "有雪" } }
-      }
-    },
-    "weather.condition.storm" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Thunderstorm" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "雷暴" } }
-      }
-    },
-    "weather.condition.wind" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Windy" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "有风" } }
       }
     },
     "hackerdesktop.widgets.hacker" : {
@@ -14532,22 +14468,6 @@
         }
       }
     },
-    "permission.required_pending" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Required Pending"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "必需待授权"
-          }
-        }
-      }
-    },
     "permission.required_for" : {
       "localizations" : {
         "en" : {
@@ -14560,6 +14480,22 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "用于:"
+          }
+        }
+      }
+    },
+    "permission.required_pending" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Required Pending"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "必需待授权"
           }
         }
       }
@@ -19234,6 +19170,7 @@
       }
     },
     "setting.show_on_launch" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -19298,6 +19235,7 @@
       }
     },
     "setting.show_on_launch.subtitle" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -21425,6 +21363,22 @@
         }
       }
     },
+    "superswitch.details" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Target Details"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "目标信息"
+          }
+        }
+      }
+    },
     "superswitch.edit_title" : {
       "localizations" : {
         "en" : {
@@ -21489,54 +21443,6 @@
         }
       }
     },
-    "superswitch.name_placeholder" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "App Name"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "应用名称"
-          }
-        }
-      }
-    },
-    "superswitch.running_app" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Running Application"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "运行中的应用"
-          }
-        }
-      }
-    },
-    "superswitch.details" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Target Details"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "目标信息"
-          }
-        }
-      }
-    },
     "superswitch.form_subtitle" : {
       "localizations" : {
         "en" : {
@@ -21565,6 +21471,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "更多目标操作"
+          }
+        }
+      }
+    },
+    "superswitch.name_placeholder" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "App Name"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "应用名称"
           }
         }
       }
@@ -21649,6 +21571,22 @@
         }
       }
     },
+    "superswitch.running_app" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Running Application"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "运行中的应用"
+          }
+        }
+      }
+    },
     "superswitch.search_placeholder" : {
       "localizations" : {
         "en" : {
@@ -21661,6 +21599,38 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "搜索名称或 Bundle ID"
+          }
+        }
+      }
+    },
+    "superswitch.shortcut_optional" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shortcut (optional)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "快捷键（可选）"
+          }
+        }
+      }
+    },
+    "superswitch.subtitle" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quick app switcher"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "快捷应用切换器"
           }
         }
       }
@@ -21709,38 +21679,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "已移除 %@"
-          }
-        }
-      }
-    },
-    "superswitch.shortcut_optional" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Shortcut (optional)"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "快捷键（可选）"
-          }
-        }
-      }
-    },
-    "superswitch.subtitle" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Quick app switcher"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "快捷应用切换器"
           }
         }
       }
@@ -23967,6 +23905,150 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "壁纸音量"
+          }
+        }
+      }
+    },
+    "weather.condition.clear" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "晴朗"
+          }
+        }
+      }
+    },
+    "weather.condition.clear_night" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear Night"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "晴夜"
+          }
+        }
+      }
+    },
+    "weather.condition.cloudy" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cloudy"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "多云"
+          }
+        }
+      }
+    },
+    "weather.condition.fog" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fog"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "有雾"
+          }
+        }
+      }
+    },
+    "weather.condition.partly_cloudy" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Partly Cloudy"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "局部多云"
+          }
+        }
+      }
+    },
+    "weather.condition.rain" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rain"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "有雨"
+          }
+        }
+      }
+    },
+    "weather.condition.snow" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Snow"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "有雪"
+          }
+        }
+      }
+    },
+    "weather.condition.storm" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thunderstorm"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "雷暴"
+          }
+        }
+      }
+    },
+    "weather.condition.wind" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Windy"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "有风"
           }
         }
       }

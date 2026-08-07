@@ -31,4 +31,23 @@ struct InteractionFeedbackTests {
         #expect(!AsyncRequestPolicy.shouldApply(request: 1, current: 2, isCancelled: false))
         #expect(!AsyncRequestPolicy.shouldApply(request: 2, current: 2, isCancelled: true))
     }
+
+    @Test("Control feedback is emitted only for changed user input")
+    func scopesControlFeedback() {
+        #expect(UserInteractionFeedbackPolicy.shouldEmit(
+            currentValue: 0,
+            newValue: 1,
+            isUserInitiated: true
+        ))
+        #expect(!UserInteractionFeedbackPolicy.shouldEmit(
+            currentValue: 0,
+            newValue: 1,
+            isUserInitiated: false
+        ))
+        #expect(!UserInteractionFeedbackPolicy.shouldEmit(
+            currentValue: 1,
+            newValue: 1,
+            isUserInitiated: true
+        ))
+    }
 }

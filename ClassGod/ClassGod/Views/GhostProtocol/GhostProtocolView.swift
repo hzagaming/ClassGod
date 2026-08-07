@@ -11,6 +11,36 @@ struct GhostProtocolView: View {
     var onClose: () -> Void
 
     private var zoomScale: CGFloat { CGFloat(prefs.preferences.windowZoomScale) }
+    private var destinationBinding: Binding<String> {
+        Binding(
+            get: { controller.settings.targetBundleIdentifier },
+            set: { newValue in
+                guard UserInteractionFeedbackPolicy.shouldEmit(
+                    currentValue: controller.settings.targetBundleIdentifier,
+                    newValue: newValue,
+                    isUserInitiated: true
+                ) else { return }
+                controller.settings.targetBundleIdentifier = newValue
+                SoundEffectManager.shared.play(.settingsChanged)
+                HapticManager.shared.generic()
+            }
+        )
+    }
+    private var hideOthersBinding: Binding<Bool> {
+        Binding(
+            get: { controller.settings.hideOtherApplications },
+            set: { newValue in
+                guard UserInteractionFeedbackPolicy.shouldEmit(
+                    currentValue: controller.settings.hideOtherApplications,
+                    newValue: newValue,
+                    isUserInitiated: true
+                ) else { return }
+                controller.settings.hideOtherApplications = newValue
+                SoundEffectManager.shared.play(.settingsChanged)
+                HapticManager.shared.generic()
+            }
+        )
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -149,7 +179,7 @@ struct GhostProtocolView: View {
 
     private var destinationSection: some View {
         sectionCard(title: "ghost.cover_title", icon: "rectangle.inset.filled.and.person.filled") {
-            Picker("ghost.cover_title", selection: $controller.settings.targetBundleIdentifier) {
+            Picker("ghost.cover_title", selection: destinationBinding) {
                 ForEach(controller.destinations) { destination in
                     Label(destination.name, systemImage: destination.iconName)
                         .tag(destination.bundleIdentifier)
@@ -157,10 +187,6 @@ struct GhostProtocolView: View {
             }
             .pickerStyle(.menu)
             .disabled(controller.state != .idle)
-            .onChange(of: controller.settings.targetBundleIdentifier) { _, _ in
-                SoundEffectManager.shared.play(.settingsChanged)
-                HapticManager.shared.generic()
-            }
 
             HStack(spacing: 6 * zoomScale) {
                 Circle()
@@ -179,7 +205,7 @@ struct GhostProtocolView: View {
 
     private var behaviorSection: some View {
         sectionCard(title: "ghost.behavior_title", icon: "eye.slash.fill") {
-            Toggle(isOn: $controller.settings.hideOtherApplications) {
+            Toggle(isOn: hideOthersBinding) {
                 VStack(alignment: .leading, spacing: 2 * zoomScale) {
                     Text("ghost.hide_others")
                         .font(.system(size: 11 * zoomScale, weight: .medium, design: .monospaced))
@@ -191,10 +217,6 @@ struct GhostProtocolView: View {
             }
             .toggleStyle(.switch)
             .disabled(controller.state != .idle)
-            .onChange(of: controller.settings.hideOtherApplications) { _, _ in
-                SoundEffectManager.shared.play(.settingsChanged)
-                HapticManager.shared.generic()
-            }
 
             if controller.state == .idle {
                 Text(String(format: String(localized: "ghost.preview_format"), controller.previewHideCount))
