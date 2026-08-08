@@ -401,6 +401,16 @@ enum PermissionType: String, CaseIterable, Identifiable, Equatable {
 
 enum PermissionReviewPlan {
     static let all = PermissionType.allCases
+
+    static func pending(
+        types: [PermissionType] = PermissionType.allCases,
+        statuses: [PermissionType: PermissionStatus]
+    ) -> [PermissionType] {
+        let requested = Set(types)
+        return PermissionType.allCases.filter { type in
+            requested.contains(type) && !PermissionCatalogPolicy.state(for: type, statuses: statuses).isGranted
+        }
+    }
 }
 
 nonisolated enum PermissionRequestRefreshPolicy {

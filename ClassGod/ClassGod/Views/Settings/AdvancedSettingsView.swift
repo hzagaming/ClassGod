@@ -123,7 +123,7 @@ struct AdvancedSettingsView: View {
                     title: "section.about",
                     icon: "info.circle",
                     defaultExpanded: false,
-                    accentColor: .cyan
+                    accentColor: prefs.preferences.themeAccent.color
                 ) {
                     HStack {
                         Text(String(localized: "about.version"))
@@ -227,7 +227,7 @@ struct AdvancedSettingsView: View {
             HStack(spacing: 8) {
                 Image(systemName: icon)
                     .font(.system(size: 11))
-                    .foregroundStyle(.cyan.opacity(0.8))
+                    .foregroundStyle(prefs.preferences.themeAccent.color.opacity(0.8))
                 Text(label)
                     .font(.system(size: 11, weight: .medium, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.7))

@@ -36,6 +36,12 @@ struct FanControlView: View {
     private var helperHealthy: Bool {
         viewModel.helperAvailable || !helperRequired
     }
+    private var canRequestHelperAuthorization: Bool {
+        HelperAuthorizationPolicy.canRequest(
+            status: helper.status,
+            hasEmbeddedService: helper.hasEmbeddedService
+        )
+    }
 
     private var helperAuthorizationButton: some View {
         Button(action: {
@@ -56,8 +62,8 @@ struct FanControlView: View {
             .padding(.vertical, 4 * zoomScale)
         }
         .buttonStyle(.plain)
-        .disabled(helper.status == .notFound)
-        .opacity(helper.status == .notFound ? 0.4 : 1)
+        .disabled(!canRequestHelperAuthorization)
+        .opacity(canRequestHelperAuthorization ? 1 : 0.4)
     }
 
     private var helperStatusMessage: String {
@@ -75,7 +81,9 @@ struct FanControlView: View {
         case .notRegistered:
             return String(localized: "helper.status.not_registered")
         case .notFound:
-            return String(localized: "helper.status.not_found")
+            return String(localized: helper.hasEmbeddedService
+                          ? "helper.status.service_unavailable"
+                          : "helper.status.not_found")
         }
     }
 
@@ -91,7 +99,6 @@ struct FanControlView: View {
                     }
                     .padding(.vertical, 10 * zoomScale)
                 }
-                .frame(maxHeight: (prefs.preferences.panelMaxHeight - 140) * zoomScale)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -309,7 +316,7 @@ struct FanControlView: View {
                     }) {
                         Text(unit == .celsius ? "°C" : "°F")
                             .font(.system(size: 9 * zoomScale, weight: .bold, design: .monospaced))
-                            .foregroundStyle(.cyan.opacity(0.7))
+                            .foregroundStyle(prefs.preferences.themeAccent.color.opacity(0.7))
                     }
                     .buttonStyle(.plain)
 
@@ -320,7 +327,7 @@ struct FanControlView: View {
                     }) {
                         Text("button.reset")
                             .font(.system(size: 9 * zoomScale, weight: .medium, design: .monospaced))
-                            .foregroundStyle(.cyan.opacity(0.7))
+                            .foregroundStyle(prefs.preferences.themeAccent.color.opacity(0.7))
                     }
                     .buttonStyle(.plain)
                 }
@@ -343,7 +350,7 @@ struct FanControlView: View {
                                 .padding(.vertical, 3 * zoomScale)
                                 .background(
                                     viewModel.sensorFilter == filter
-                                    ? Color.cyan.opacity(0.8)
+                                    ? prefs.preferences.themeAccent.color.opacity(0.8)
                                     : Color.white.opacity(0.05)
                                 )
                                 .clipShape(Capsule())
@@ -441,12 +448,12 @@ struct FanControlView: View {
                         Text("fan.rescan")
                             .font(.system(size: 9 * zoomScale, weight: .medium, design: .monospaced))
                     }
-                    .foregroundStyle(.cyan.opacity(0.7))
+                    .foregroundStyle(prefs.preferences.themeAccent.color.opacity(0.7))
                     .padding(.horizontal, 6 * zoomScale)
                     .padding(.vertical, 2 * zoomScale)
                     .overlay(
                         RoundedRectangle(cornerRadius: 4 * zoomScale)
-                            .stroke(Color.cyan.opacity(0.3), lineWidth: 1 * zoomScale)
+                            .stroke(prefs.preferences.themeAccent.color.opacity(0.3), lineWidth: 1 * zoomScale)
                             .allowsHitTesting(false)
                     )
                 }
@@ -476,9 +483,6 @@ struct FanControlView: View {
                         Spacer()
                     }
 
-                    if !viewModel.helperAvailable, helperRequired {
-                        helperAuthorizationButton
-                    }
                 }
                 .padding(.horizontal)
                 .padding(.vertical, 6 * zoomScale)
@@ -487,6 +491,32 @@ struct FanControlView: View {
                     RoundedRectangle(cornerRadius: 4 * zoomScale)
                         .stroke(Color.yellow.opacity(0.15), lineWidth: 1 * zoomScale)
                         .allowsHitTesting(false)
+                )
+                .padding(.horizontal)
+            }
+
+            if !hasControllableFans {
+                HStack(spacing: 10 * zoomScale) {
+                    Image(systemName: "slider.horizontal.3")
+                        .font(.system(size: 15 * zoomScale))
+                        .foregroundStyle(prefs.preferences.themeAccent.color)
+                    VStack(alignment: .leading, spacing: 2 * zoomScale) {
+                        Text("fan.manual_unlock.title")
+                            .font(.system(size: 10 * zoomScale, weight: .bold, design: .monospaced))
+                            .foregroundStyle(.white.opacity(0.88))
+                        Text("fan.manual_unlock.subtitle")
+                            .font(.system(size: 8 * zoomScale, design: .monospaced))
+                            .foregroundStyle(.white.opacity(0.42))
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    Spacer()
+                    helperAuthorizationButton
+                }
+                .padding(10 * zoomScale)
+                .background(prefs.preferences.themeAccent.color.opacity(0.05))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 7 * zoomScale)
+                        .stroke(prefs.preferences.themeAccent.color.opacity(0.18), lineWidth: zoomScale)
                 )
                 .padding(.horizontal)
             }
@@ -525,6 +555,7 @@ struct FanControlView: View {
                         fan: fan,
                         mode: viewModel.fanMode,
                         zoomScale: zoomScale,
+                        accentColor: prefs.preferences.themeAccent.color,
                         history: viewModel.historyForFan(id: fan.id),
                         onRPMChange: { newRPM in
                             viewModel.setFanRPM(newRPM, fanID: fan.id, debounce: true)
@@ -593,7 +624,7 @@ struct FanControlView: View {
                             Text("fan.copy_sensor_data")
                                 .font(.system(size: 10 * zoomScale, weight: .medium, design: .monospaced))
                         }
-                        .foregroundStyle(.cyan.opacity(0.7))
+                        .foregroundStyle(prefs.preferences.themeAccent.color.opacity(0.7))
                         .padding(.horizontal, 8 * zoomScale)
                         .padding(.vertical, 4 * zoomScale)
                     }
@@ -798,6 +829,7 @@ struct FanRow: View {
     let fan: FanInfo
     let mode: FanControlMode
     let zoomScale: CGFloat
+    let accentColor: Color
     var history: [Double] = []
     var onRPMChange: ((Double) -> Void)?
 
@@ -811,7 +843,7 @@ struct FanRow: View {
         switch fan.availability {
         case .controllable: return .green
         case .readOnly: return .yellow
-        case .detected: return .cyan
+        case .detected: return accentColor
         }
     }
 
@@ -824,7 +856,7 @@ struct FanRow: View {
     }
 
     private var barColor: Color {
-        guard fan.maximumRPM > fan.minimumRPM else { return .cyan }
+        guard fan.maximumRPM > fan.minimumRPM else { return accentColor }
         if fan.actualRPM > fan.maximumRPM * 0.9 {
             return .red
         } else if fan.actualRPM > fan.maximumRPM * 0.6 {

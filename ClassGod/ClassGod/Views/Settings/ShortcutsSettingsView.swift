@@ -36,7 +36,7 @@ struct ShortcutsSettingsView: View {
                     title: "section.global_shortcut",
                     icon: "keyboard",
                     defaultExpanded: true,
-                    accentColor: .cyan
+                    accentColor: prefs.preferences.themeAccent.color
                 ) {
                     HStack(spacing: 12) {
                         Text(String(localized: "setting.show_panel"))

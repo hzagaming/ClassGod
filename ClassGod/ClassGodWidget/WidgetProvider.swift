@@ -34,6 +34,13 @@ struct WidgetProvider: TimelineProvider {
         let diskTotal = WidgetMetricNormalization.nonnegativeFinite(store.double(forKey: .diskTotal))
         return WidgetEntry(
             date: date,
+            accent: store.contains(.accentRed)
+                ? WidgetAccentPolicy.normalized(
+                    red: store.double(forKey: .accentRed),
+                    green: store.double(forKey: .accentGreen),
+                    blue: store.double(forKey: .accentBlue)
+                )
+                : .default,
             cpuUsage: WidgetMetricNormalization.percentage(store.double(forKey: .cpuUsage)),
             memoryUsage: WidgetMetricNormalization.boundedComponent(
                 store.double(forKey: .memoryUsage),
@@ -123,6 +130,10 @@ struct WidgetExtensionStore {
     
     func bool(forKey key: WidgetDataKey) -> Bool {
         defaults.bool(forKey: key.rawValue)
+    }
+
+    func contains(_ key: WidgetDataKey) -> Bool {
+        defaults.object(forKey: key.rawValue) != nil
     }
     
     func date(forKey key: WidgetDataKey) -> Date? {

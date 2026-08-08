@@ -43,7 +43,7 @@ struct CryptoWidgetView: View {
                 HStack {
                     Image(systemName: "diamond.circle.fill")
                         .font(.system(size: 10))
-                        .foregroundStyle(.cyan)
+                        .foregroundStyle(entry.accentColor)
                     Text("ETH")
                         .font(.system(size: 9, weight: .bold, design: .monospaced))
                         .foregroundStyle(.white.opacity(0.5))
@@ -82,7 +82,7 @@ struct CryptoWidgetView: View {
                     HStack(spacing: 4) {
                         Image(systemName: "diamond.circle.fill")
                             .font(.system(size: 14))
-                            .foregroundStyle(.cyan)
+                            .foregroundStyle(entry.accentColor)
                         Text("ETH")
                             .font(.system(size: 10, weight: .bold, design: .monospaced))
                             .foregroundStyle(.white.opacity(0.5))

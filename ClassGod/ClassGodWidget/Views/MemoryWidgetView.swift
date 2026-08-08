@@ -108,6 +108,6 @@ struct MemoryWidgetView: View {
     private var memColor: Color {
         if usageRatio > 0.85 { return .red }
         if usageRatio > 0.6 { return .orange }
-        return .cyan
+        return entry.accentColor
     }
 }

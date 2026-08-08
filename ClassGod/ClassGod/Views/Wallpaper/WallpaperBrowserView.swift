@@ -118,7 +118,7 @@ struct WallpaperBrowserView: View {
                         .fill(Color(white: 0.06))
                     Image(systemName: engine.currentWallpaper?.type.iconName ?? "photo")
                         .font(.system(size: 22 * zoomScale))
-                        .foregroundStyle(engine.currentWallpaper != nil ? .cyan : .white.opacity(0.2))
+                        .foregroundStyle(engine.currentWallpaper != nil ? prefs.preferences.themeAccent.color : .white.opacity(0.2))
                 }
                 .frame(width: 56 * zoomScale, height: 56 * zoomScale)
                 
@@ -158,14 +158,14 @@ struct WallpaperBrowserView: View {
                         Text("wallpaper.desktop")
                             .font(.system(size: 8 * zoomScale, weight: .bold, design: .monospaced))
                     }
-                    .foregroundStyle(.cyan.opacity(0.8))
+                    .foregroundStyle(prefs.preferences.themeAccent.color.opacity(0.8))
                     .padding(.horizontal, 8 * zoomScale)
                     .padding(.vertical, 4 * zoomScale)
-                    .background(Color.cyan.opacity(0.1))
+                    .background(prefs.preferences.themeAccent.color.opacity(0.1))
                     .clipShape(Capsule())
                     .overlay(
                         Capsule()
-                            .stroke(Color.cyan.opacity(0.25), lineWidth: 1 * zoomScale)
+                            .stroke(prefs.preferences.themeAccent.color.opacity(0.25), lineWidth: 1 * zoomScale)
                     )
                 }
             }
@@ -174,7 +174,7 @@ struct WallpaperBrowserView: View {
             .clipShape(RoundedRectangle(cornerRadius: 12 * zoomScale))
             .overlay(
                 RoundedRectangle(cornerRadius: 12 * zoomScale)
-                    .stroke(engine.isEnabled ? Color.cyan.opacity(0.15) : Color.white.opacity(0.06), lineWidth: 1 * zoomScale)
+                    .stroke(engine.isEnabled ? prefs.preferences.themeAccent.color.opacity(0.15) : Color.white.opacity(0.06), lineWidth: 1 * zoomScale)
             )
             
             // Transport controls pill
@@ -192,7 +192,7 @@ struct WallpaperBrowserView: View {
                     Image(systemName: engine.isPlaying ? "pause.circle.fill" : "play.circle.fill")
                         .font(.system(size: 34 * zoomScale))
                         .foregroundStyle(engine.currentWallpaper != nil ? .white : .white.opacity(0.2))
-                        .shadow(color: engine.isPlaying ? Color.cyan.opacity(0.35) : Color.clear, radius: 10 * zoomScale)
+                        .shadow(color: engine.isPlaying ? prefs.preferences.themeAccent.color.opacity(0.35) : Color.clear, radius: 10 * zoomScale)
                 }
                 .buttonStyle(.plain)
                 .disabled(engine.currentWallpaper == nil)
@@ -271,7 +271,7 @@ struct WallpaperBrowserView: View {
                     HStack(spacing: 6 * zoomScale) {
                         Image(systemName: "desktopcomputer")
                             .font(.system(size: 10 * zoomScale))
-                            .foregroundStyle(engine.showOnDesktop ? .cyan : .white.opacity(0.3))
+                            .foregroundStyle(engine.showOnDesktop ? prefs.preferences.themeAccent.color : .white.opacity(0.3))
                         Toggle("", isOn: .init(
                             get: { engine.showOnDesktop },
                             set: { _ in
@@ -350,12 +350,12 @@ struct WallpaperBrowserView: View {
                     }
                     .padding(.horizontal, 10 * zoomScale)
                     .padding(.vertical, 5 * zoomScale)
-                    .background(Color.cyan.opacity(0.15))
-                    .foregroundStyle(.cyan)
+                    .background(prefs.preferences.themeAccent.color.opacity(0.15))
+                    .foregroundStyle(prefs.preferences.themeAccent.color)
                     .clipShape(Capsule())
                     .overlay(
                         Capsule()
-                            .stroke(Color.cyan.opacity(0.3), lineWidth: 1 * zoomScale)
+                            .stroke(prefs.preferences.themeAccent.color.opacity(0.3), lineWidth: 1 * zoomScale)
                     )
                 }
                 .buttonStyle(.plain)
@@ -445,8 +445,8 @@ struct WallpaperBrowserView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 8 * zoomScale))
                 .overlay(
                     RoundedRectangle(cornerRadius: 8 * zoomScale)
-                        .stroke(isSelected ? Color.cyan.opacity(0.6) : (isHovered ? Color.white.opacity(0.12) : Color.clear), lineWidth: isSelected ? 2 : 1)
-                        .shadow(color: isSelected ? Color.cyan.opacity(0.25) : Color.clear, radius: 4 * zoomScale)
+                        .stroke(isSelected ? prefs.preferences.themeAccent.color.opacity(0.6) : (isHovered ? Color.white.opacity(0.12) : Color.clear), lineWidth: isSelected ? 2 : 1)
+                        .shadow(color: isSelected ? prefs.preferences.themeAccent.color.opacity(0.25) : Color.clear, radius: 4 * zoomScale)
                         .allowsHitTesting(false)
                 )
                 .scaleEffect(isHovered ? 1.03 : 1.0)
@@ -455,7 +455,7 @@ struct WallpaperBrowserView: View {
                 VStack(spacing: 2 * zoomScale) {
                     Text(item.name)
                         .font(.system(size: 9 * zoomScale, design: .monospaced))
-                        .foregroundStyle(isSelected ? .cyan : .white.opacity(0.6))
+                        .foregroundStyle(isSelected ? prefs.preferences.themeAccent.color : .white.opacity(0.6))
                         .lineLimit(1)
                         .frame(maxWidth: .infinity, alignment: .center)
                     

@@ -151,7 +151,7 @@ struct HackerDesktopView: View {
                 .foregroundStyle(WidgetDataStore.shared.usesSharedContainer ? .green.opacity(0.75) : .yellow.opacity(0.75))
                 
                 HStack(spacing: 12 * zoomScale) {
-                    StatBadge(label: "CPU", value: "\(Int(SystemMonitor.shared.cpu.total))%", color: .cyan)
+                    StatBadge(label: "CPU", value: "\(Int(SystemMonitor.shared.cpu.total))%", color: prefs.preferences.themeAccent.color)
                     StatBadge(label: "RAM", value: "\(Int(SystemMonitor.shared.memory.usedPercent * 100))%", color: .green)
                     StatBadge(
                         label: "Battery",
@@ -319,7 +319,7 @@ struct HackerDesktopView: View {
                         Text("hackerdesktop.add_task")
                             .font(.system(size: 11 * zoomScale, weight: .bold, design: .monospaced))
                     }
-                    .foregroundStyle(.cyan)
+                    .foregroundStyle(prefs.preferences.themeAccent.color)
                     .padding(.vertical, 6 * zoomScale)
                 }
                 .buttonStyle(.plain)
@@ -345,7 +345,7 @@ struct HackerDesktopView: View {
                     }
                 }
                 Button("hackerdesktop.add_files", systemImage: "plus") { selectFiles() }
-                    .widgetDataButtonStyle(zoomScale: zoomScale)
+                    .widgetDataButtonStyle(zoomScale: zoomScale, accentColor: prefs.preferences.themeAccent.color)
             }
 
             ConfigSection(title: "hackerdesktop.apps", icon: "app.badge") {
@@ -356,7 +356,7 @@ struct HackerDesktopView: View {
                     }
                 }
                 Button("hackerdesktop.add_apps", systemImage: "plus") { selectApplications() }
-                    .widgetDataButtonStyle(zoomScale: zoomScale)
+                    .widgetDataButtonStyle(zoomScale: zoomScale, accentColor: prefs.preferences.themeAccent.color)
             }
         }
     }
@@ -447,14 +447,14 @@ struct HackerDesktopView: View {
                     terminalLogs.append("")
                     saveData(for: [.terminal], immediate: true)
                 }
-                .widgetDataButtonStyle(zoomScale: zoomScale)
+                .widgetDataButtonStyle(zoomScale: zoomScale, accentColor: prefs.preferences.themeAccent.color)
                 .disabled(terminalLogs.count >= WidgetContentPolicy.maxLogLines)
             }
 
             ConfigSection(title: "hackerdesktop.ascii_art", icon: "textformat") {
                 TextEditor(text: $asciiArt)
                     .font(.system(size: 10 * zoomScale, design: .monospaced))
-                    .foregroundStyle(.cyan.opacity(0.75))
+                    .foregroundStyle(prefs.preferences.themeAccent.color.opacity(0.75))
                     .scrollContentBackground(.hidden)
                     .background(Color(white: 0.04))
                     .clipShape(RoundedRectangle(cornerRadius: 8 * zoomScale))
@@ -500,10 +500,10 @@ struct HackerDesktopView: View {
                 } label: {
                     Label("hackerdesktop.native_widgets.refresh", systemImage: "arrow.clockwise")
                         .font(.system(size: 10 * zoomScale, weight: .bold, design: .monospaced))
-                        .foregroundStyle(.cyan)
+                        .foregroundStyle(prefs.preferences.themeAccent.color)
                         .padding(.horizontal, 10 * zoomScale)
                         .padding(.vertical, 7 * zoomScale)
-                        .background(Color.cyan.opacity(0.1))
+                        .background(prefs.preferences.themeAccent.color.opacity(0.1))
                         .clipShape(RoundedRectangle(cornerRadius: 6 * zoomScale))
                 }
                 .buttonStyle(.plain)
@@ -520,7 +520,7 @@ struct HackerDesktopView: View {
                     HStack(alignment: .top, spacing: 8 * zoomScale) {
                         Text(item.category)
                             .font(.system(size: 10 * zoomScale, weight: .bold, design: .monospaced))
-                            .foregroundStyle(.cyan.opacity(0.75))
+                            .foregroundStyle(prefs.preferences.themeAccent.color.opacity(0.75))
                             .frame(width: 52 * zoomScale, alignment: .leading)
                         Text(item.list)
                             .font(.system(size: 10 * zoomScale, design: .monospaced))
@@ -537,7 +537,7 @@ struct HackerDesktopView: View {
                 .font(.system(size: 9 * zoomScale, weight: .bold, design: .monospaced))
                 .foregroundStyle(.black)
                 .frame(width: 18 * zoomScale, height: 18 * zoomScale)
-                .background(Color.cyan)
+                .background(prefs.preferences.themeAccent.color)
                 .clipShape(Circle())
             Text(text)
                 .font(.system(size: 10 * zoomScale, design: .monospaced))
@@ -550,7 +550,7 @@ struct HackerDesktopView: View {
             VStack(spacing: 8 * zoomScale) {
                 Image(systemName: "square.grid.2x2")
                     .font(.system(size: 40 * zoomScale, weight: .light))
-                    .foregroundStyle(.cyan.opacity(0.4))
+                    .foregroundStyle(prefs.preferences.themeAccent.color.opacity(0.4))
                 
                 Text("hackerdesktop.about_title")
                     .font(.system(size: 14 * zoomScale, weight: .bold, design: .monospaced))
@@ -578,7 +578,7 @@ struct HackerDesktopView: View {
                     HStack(alignment: .top, spacing: 8 * zoomScale) {
                         Text(item.category)
                             .font(.system(size: 10 * zoomScale, weight: .bold, design: .monospaced))
-                            .foregroundStyle(.cyan.opacity(0.7))
+                            .foregroundStyle(prefs.preferences.themeAccent.color.opacity(0.7))
                             .frame(width: 50 * zoomScale, alignment: .leading)
                         Text(item.list)
                             .font(.system(size: 10 * zoomScale, design: .monospaced))
@@ -873,14 +873,14 @@ private struct TabButton: View {
                 Text(title)
                     .font(.system(size: 11 * zoomScale, weight: .medium, design: .monospaced))
             }
-            .foregroundStyle(isSelected ? .cyan : .white.opacity(0.5))
+            .foregroundStyle(isSelected ? prefs.preferences.themeAccent.color : .white.opacity(0.5))
             .padding(.horizontal, 12 * zoomScale)
             .padding(.vertical, 6 * zoomScale)
-            .background(isSelected ? Color.cyan.opacity(0.1) : Color.clear)
+            .background(isSelected ? prefs.preferences.themeAccent.color.opacity(0.1) : Color.clear)
             .clipShape(Capsule())
             .overlay(
                 Capsule()
-                    .stroke(isSelected ? Color.cyan.opacity(0.3) : Color.clear, lineWidth: 1 * zoomScale)
+                    .stroke(isSelected ? prefs.preferences.themeAccent.color.opacity(0.3) : Color.clear, lineWidth: 1 * zoomScale)
             )
         }
         .buttonStyle(.plain)
@@ -899,7 +899,7 @@ private struct ConfigSection<Content: View>: View {
             HStack(spacing: 6 * zoomScale) {
                 Image(systemName: icon)
                     .font(.system(size: 10 * zoomScale))
-                    .foregroundStyle(.cyan.opacity(0.7))
+                    .foregroundStyle(prefs.preferences.themeAccent.color.opacity(0.7))
                 Text(title)
                     .font(.system(size: 11 * zoomScale, weight: .bold, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.6))
@@ -946,13 +946,13 @@ private extension View {
             .foregroundStyle(.white.opacity(0.4))
     }
 
-    func widgetDataButtonStyle(zoomScale: CGFloat) -> some View {
+    func widgetDataButtonStyle(zoomScale: CGFloat, accentColor: Color) -> some View {
         buttonStyle(.plain)
             .font(.system(size: 9 * zoomScale, weight: .bold, design: .monospaced))
-            .foregroundStyle(.cyan)
+            .foregroundStyle(accentColor)
             .padding(.horizontal, 9 * zoomScale)
             .padding(.vertical, 6 * zoomScale)
-            .background(Color.cyan.opacity(0.1))
+            .background(accentColor.opacity(0.1))
             .clipShape(RoundedRectangle(cornerRadius: 6 * zoomScale))
     }
 }

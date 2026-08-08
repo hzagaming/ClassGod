@@ -10,6 +10,7 @@ struct DestinTabView: View {
     @StateObject private var viewModel = TabListViewModel()
     @ObservedObject private var prefs = PreferencesManager.shared
     private var zoomScale: CGFloat { CGFloat(prefs.preferences.windowZoomScale) }
+    private var accent: Color { prefs.preferences.themeAccent.color }
     @State private var showAddSheet = false
     @State private var editingTab: BrowserTab?
     @State private var toastMessage: String?
@@ -329,10 +330,10 @@ struct DestinTabView: View {
                 }) {
                     Image(systemName: viewModel.isBulkMode ? "checkmark.square.fill" : "square")
                         .font(.system(size: 12 * zoomScale))
-                        .foregroundStyle(viewModel.isBulkMode ? .cyan : .white.opacity(0.6))
+                        .foregroundStyle(viewModel.isBulkMode ? accent : Color.white.opacity(0.6))
                         .frame(width: 26 * zoomScale, height: 26 * zoomScale)
-                        .background(viewModel.isBulkMode ? Color.cyan.opacity(0.1) : Color(white: 0.08))
-                        .overlay(Rectangle().stroke(viewModel.isBulkMode ? Color.cyan.opacity(0.3) : Color.white.opacity(0.1), lineWidth: 1 * zoomScale))
+                        .background(viewModel.isBulkMode ? accent.opacity(0.1) : Color(white: 0.08))
+                        .overlay(Rectangle().stroke(viewModel.isBulkMode ? accent.opacity(0.3) : Color.white.opacity(0.1), lineWidth: 1 * zoomScale))
                 }
                 .buttonStyle(.plain)
                 .help(viewModel.isBulkMode ? String(localized: "destintab.exit_bulk_mode") : String(localized: "destintab.bulk_select"))
@@ -344,7 +345,7 @@ struct DestinTabView: View {
                 HStack(spacing: 8) {
                     Text(String(format: String(localized: "destintab.selected_count"), visibleSelectedIDs.count))
                         .font(.system(size: 10 * zoomScale, design: .monospaced))
-                        .foregroundStyle(.cyan)
+                        .foregroundStyle(accent)
 
                     Spacer()
 
@@ -400,10 +401,10 @@ struct DestinTabView: View {
                         HStack {
                             Image(systemName: "pin.fill")
                                 .font(.system(size: 8 * zoomScale))
-                                .foregroundStyle(.cyan.opacity(0.6))
+                                .foregroundStyle(accent.opacity(0.6))
                             Text("destintab.pinned")
                                 .font(.system(size: 8 * zoomScale, weight: .bold, design: .monospaced))
-                                .foregroundStyle(.cyan.opacity(0.6))
+                                .foregroundStyle(accent.opacity(0.6))
                             Spacer()
                         }
                         .padding(.horizontal, 12 * zoomScale)
@@ -473,7 +474,6 @@ struct DestinTabView: View {
                 }
             }
         }
-        .frame(maxHeight: prefs.preferences.panelMaxHeight * zoomScale)
     }
 
     // MARK: - Empty State
@@ -638,6 +638,7 @@ struct TabRow: View {
     @FocusState private var isFocused: Bool
     @ObservedObject private var prefs = PreferencesManager.shared
     private var zoomScale: CGFloat { CGFloat(prefs.preferences.windowZoomScale) }
+    private var accent: Color { prefs.preferences.themeAccent.color }
 
     var body: some View {
         Button(action: {
@@ -661,7 +662,7 @@ struct TabRow: View {
                 if viewModel.isBulkMode {
                     Image(systemName: isSelected ? "checkmark.square.fill" : "square")
                         .font(.system(size: 14 * zoomScale))
-                        .foregroundStyle(isSelected ? .cyan : .white.opacity(0.3))
+                        .foregroundStyle(isSelected ? accent : Color.white.opacity(0.3))
                         .frame(width: 20 * zoomScale)
                 }
 
@@ -669,7 +670,7 @@ struct TabRow: View {
                 if tab.isPinned && !viewModel.isBulkMode {
                     Image(systemName: "pin.fill")
                         .font(.system(size: 9 * zoomScale))
-                        .foregroundStyle(.cyan.opacity(0.7))
+                        .foregroundStyle(accent.opacity(0.7))
                         .frame(width: 14 * zoomScale)
                 }
 
@@ -706,11 +707,11 @@ struct TabRow: View {
                 if tab.hasTag && !viewModel.isBulkMode {
                     Text(tab.displayTag)
                         .font(.system(size: 8 * zoomScale, weight: .bold, design: .monospaced))
-                        .foregroundStyle(.cyan.opacity(0.8))
+                        .foregroundStyle(accent.opacity(0.8))
                         .padding(.horizontal, 5 * zoomScale)
                         .padding(.vertical, 1 * zoomScale)
-                        .background(Color.cyan.opacity(0.08))
-                        .overlay(Rectangle().stroke(Color.cyan.opacity(0.2), lineWidth: 0.5 * zoomScale))
+                        .background(accent.opacity(0.08))
+                        .overlay(Rectangle().stroke(accent.opacity(0.2), lineWidth: 0.5 * zoomScale))
                 }
 
                 // Last accessed
@@ -739,7 +740,7 @@ struct TabRow: View {
                         }) {
                             Image(systemName: tab.isPinned ? "pin.slash" : "pin")
                                 .font(.system(size: 11 * zoomScale))
-                                .foregroundStyle(.cyan)
+                                .foregroundStyle(accent)
                         }
                         .buttonStyle(.plain)
                         .accessibilityLabel(Text(tab.isPinned ? String(localized: "destintab.unpin") : String(localized: "destintab.pin")))
@@ -800,7 +801,7 @@ struct TabRow: View {
 
     private var backgroundColor: Color {
         if isSelected && viewModel.isBulkMode {
-            return Color.cyan.opacity(0.12)
+            return accent.opacity(0.12)
         }
         if isPressed { return Color.white.opacity(0.15) }
         if isHovered { return Color.white.opacity(0.1) }
@@ -809,7 +810,7 @@ struct TabRow: View {
     }
 
     private var borderColor: Color {
-        if isSelected && viewModel.isBulkMode { return Color.cyan.opacity(0.3) }
+        if isSelected && viewModel.isBulkMode { return accent.opacity(0.3) }
         if isHovered || isFocused { return Color.white.opacity(0.25) }
         return Color.clear
     }

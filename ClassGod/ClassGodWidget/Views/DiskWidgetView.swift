@@ -96,6 +96,6 @@ struct DiskWidgetView: View {
     private var diskColor: Color {
         if usedRatio > 0.9 { return .red }
         if usedRatio > 0.75 { return .orange }
-        return .cyan
+        return entry.accentColor
     }
 }

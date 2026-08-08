@@ -16,6 +16,7 @@ struct ActivityMonitorView: View {
     var onClose: () -> Void
     
     private var zoomScale: CGFloat { CGFloat(prefs.preferences.windowZoomScale) }
+    private var accent: Color { prefs.preferences.themeAccent.color }
     
     var body: some View {
         ZStack {
@@ -64,7 +65,7 @@ struct ActivityMonitorView: View {
             
             Image(systemName: "waveform.path.ecg.rectangle")
                 .font(.system(size: 14 * zoomScale))
-                .foregroundStyle(.cyan)
+                .foregroundStyle(accent)
             
             VStack(alignment: .leading, spacing: 0) {
                 Text("activity.title")
@@ -164,7 +165,7 @@ struct ActivityMonitorView: View {
             .foregroundStyle(selected ? .black : .white.opacity(0.7))
             .padding(.horizontal, 12 * zoomScale)
             .padding(.vertical, 5 * zoomScale)
-            .background(selected ? Color.cyan.opacity(0.85) : Color(white: 0.08))
+            .background(selected ? accent.opacity(0.85) : Color(white: 0.08))
             .clipShape(RoundedRectangle(cornerRadius: 6 * zoomScale))
         }
         .buttonStyle(.plain)
@@ -253,7 +254,7 @@ struct ActivityMonitorView: View {
             .frame(width: width * zoomScale, alignment: .leading)
         }
         .buttonStyle(.plain)
-        .foregroundStyle(viewModel.sortKey == key ? .cyan.opacity(0.9) : .white.opacity(0.5))
+        .foregroundStyle(viewModel.sortKey == key ? accent.opacity(0.9) : Color.white.opacity(0.5))
     }
     
     private func processRow(_ proc: ProcessMonitorInfo, index: Int) -> some View {
@@ -298,7 +299,7 @@ struct ActivityMonitorView: View {
                 HStack(spacing: 4 * zoomScale) {
                     Image(systemName: "arrow.down")
                         .font(.system(size: 7 * zoomScale))
-                        .foregroundStyle(.cyan)
+                        .foregroundStyle(accent)
                     Text(viewModel.formatSpeed(proc.diskReadBytesPerSecond))
                 }
                 .frame(width: 80 * zoomScale, alignment: .trailing)
@@ -327,7 +328,7 @@ struct ActivityMonitorView: View {
                 HStack(spacing: 4 * zoomScale) {
                     Image(systemName: "arrow.up")
                         .font(.system(size: 7 * zoomScale))
-                        .foregroundStyle(.cyan)
+                        .foregroundStyle(accent)
                     Text(viewModel.formatSpeed(proc.networkSentBytesPerSecond))
                     if proc.isEstimatedNetwork {
                         Text("*")
@@ -344,10 +345,10 @@ struct ActivityMonitorView: View {
         .padding(.vertical, 5 * zoomScale)
         .background(index % 2 == 0 ? Color(white: 0.025) : Color(white: 0.045))
         .font(.system(size: 10 * zoomScale, design: .monospaced))
-        .foregroundStyle(viewModel.selectedProcess?.id == proc.id ? .cyan : .white.opacity(0.85))
+        .foregroundStyle(viewModel.selectedProcess?.id == proc.id ? accent : Color.white.opacity(0.85))
         .overlay(
             Rectangle()
-                .fill(viewModel.selectedProcess?.id == proc.id ? Color.cyan.opacity(0.12) : Color.clear)
+                .fill(viewModel.selectedProcess?.id == proc.id ? accent.opacity(0.12) : Color.clear)
                 .allowsHitTesting(false)
         )
         .contextMenu {
@@ -384,7 +385,7 @@ struct ActivityMonitorView: View {
         let icon = iconForProcessName(name)
         return Image(systemName: icon)
             .font(.system(size: 11 * zoomScale))
-            .foregroundStyle(.cyan.opacity(0.7))
+            .foregroundStyle(accent.opacity(0.7))
             .frame(width: 18 * zoomScale, height: 18 * zoomScale)
             .background(Color(white: 0.1))
             .clipShape(RoundedRectangle(cornerRadius: 4 * zoomScale))
@@ -445,7 +446,7 @@ struct ActivityMonitorView: View {
             summaryItem("User", value: String(format: "%.1f%%", monitor.cpu.user), color: .blue)
             summaryItem("System", value: String(format: "%.1f%%", monitor.cpu.system), color: .red)
             summaryItem("Idle", value: String(format: "%.1f%%", monitor.cpu.idle), color: .green)
-            summaryItem("Total", value: String(format: "%.1f%%", monitor.cpu.total), color: .cyan)
+            summaryItem("Total", value: String(format: "%.1f%%", monitor.cpu.total), color: accent)
             Spacer()
             Text(String(format: String(localized: "activity.process_count"), monitor.processes.count))
                 .font(.system(size: 9 * zoomScale, design: .monospaced))
@@ -455,7 +456,7 @@ struct ActivityMonitorView: View {
     
     private var memorySummary: some View {
         HStack(spacing: 16 * zoomScale) {
-            summaryItem("Physical", value: viewModel.formatBytes(monitor.memory.total), color: .cyan)
+            summaryItem("Physical", value: viewModel.formatBytes(monitor.memory.total), color: accent)
             summaryItem("Used", value: viewModel.formatBytes(monitor.memory.used), color: .yellow)
             summaryItem("Free", value: viewModel.formatBytes(monitor.memory.free), color: .green)
             summaryItem("Wired", value: viewModel.formatBytes(monitor.memory.wired), color: .orange)
@@ -467,7 +468,7 @@ struct ActivityMonitorView: View {
     
     private var energySummary: some View {
         HStack(spacing: 16 * zoomScale) {
-            summaryItem("Battery", value: String(format: "%.0f%%", monitor.battery.level * 100), color: monitor.battery.isCharging ? .green : .cyan)
+            summaryItem("Battery", value: String(format: "%.0f%%", monitor.battery.level * 100), color: monitor.battery.isCharging ? .green : accent)
             summaryItem("State", value: monitor.battery.isCharging ? String(localized: "battery.charging") : String(localized: "battery.discharging"), color: monitor.battery.isCharging ? .green : .white.opacity(0.7))
             summaryItem("Cycles", value: "\(monitor.battery.cycleCount)", color: .yellow)
             Spacer()
@@ -487,7 +488,7 @@ struct ActivityMonitorView: View {
         HStack(spacing: 16 * zoomScale) {
             let totalRead = monitor.processes.reduce(0) { $0 + $1.diskReadBytesPerSecond }
             let totalWrite = monitor.processes.reduce(0) { $0 + $1.diskWriteBytesPerSecond }
-            summaryItem("Total Read", value: viewModel.formatSpeed(totalRead), color: .cyan)
+            summaryItem("Total Read", value: viewModel.formatSpeed(totalRead), color: accent)
             summaryItem("Total Write", value: viewModel.formatSpeed(totalWrite), color: .orange)
             Spacer()
             if let disk = monitor.disks.first {
@@ -500,7 +501,7 @@ struct ActivityMonitorView: View {
     private var networkSummary: some View {
         HStack(spacing: 16 * zoomScale) {
             summaryItem("Download", value: viewModel.formatSpeed(UInt64(monitor.network.deltaIn)), color: .green)
-            summaryItem("Upload", value: viewModel.formatSpeed(UInt64(monitor.network.deltaOut)), color: .cyan)
+            summaryItem("Upload", value: viewModel.formatSpeed(UInt64(monitor.network.deltaOut)), color: accent)
             summaryItem("Total In", value: viewModel.formatBytes(monitor.network.bytesIn), color: .white.opacity(0.7))
             summaryItem("Total Out", value: viewModel.formatBytes(monitor.network.bytesOut), color: .white.opacity(0.7))
             Spacer()

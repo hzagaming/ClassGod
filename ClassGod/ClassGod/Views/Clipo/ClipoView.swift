@@ -42,6 +42,7 @@ struct ClipoView: View {
     let onClose: () -> Void
 
     private var zoomScale: CGFloat { CGFloat(prefs.preferences.windowZoomScale) }
+    private var accent: Color { prefs.preferences.themeAccent.color }
     private var filteredHistory: [ClipoItem] {
         service.filteredHistory(query: searchText, type: selectedType)
     }
@@ -120,7 +121,7 @@ struct ClipoView: View {
             .accessibilityLabel(Text("button.close"))
 
             Image(systemName: "clipboard.fill")
-                .foregroundStyle(.cyan)
+                .foregroundStyle(accent)
             VStack(alignment: .leading, spacing: 1 * zoomScale) {
                 Text("Clipo")
                     .font(.system(size: 14 * zoomScale, weight: .bold, design: .monospaced))
@@ -163,7 +164,7 @@ struct ClipoView: View {
                         .foregroundStyle(section == item ? .black : .white.opacity(0.55))
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 7 * zoomScale)
-                        .background(section == item ? Color.cyan : Color.white.opacity(0.04))
+                        .background(section == item ? accent : Color.white.opacity(0.04))
                         .clipShape(RoundedRectangle(cornerRadius: 6 * zoomScale))
                 }
                 .buttonStyle(.plain)
@@ -204,7 +205,7 @@ struct ClipoView: View {
                 } label: {
                     Label("clipo.capture", systemImage: "plus.rectangle.on.rectangle")
                 }
-                .clipoButtonStyle(zoomScale: zoomScale, color: .cyan)
+                .clipoButtonStyle(zoomScale: zoomScale, color: accent)
 
                 Button {
                     confirmClearHistory = true
@@ -250,7 +251,7 @@ struct ClipoView: View {
                 .foregroundStyle(selected ? .black : .white.opacity(0.5))
                 .padding(.horizontal, 9 * zoomScale)
                 .padding(.vertical, 5 * zoomScale)
-                .background(selected ? Color.cyan : Color.white.opacity(0.05))
+                .background(selected ? accent : Color.white.opacity(0.05))
                 .clipShape(Capsule())
         }
         .buttonStyle(.plain)
@@ -277,7 +278,7 @@ struct ClipoView: View {
         ScrollView {
             VStack(spacing: 14 * zoomScale) {
                 LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 4), spacing: 10 * zoomScale) {
-                    insightCard(value: service.history.count, title: "clipo.stat.total", icon: "archivebox", color: .cyan)
+                    insightCard(value: service.history.count, title: "clipo.stat.total", icon: "archivebox", color: accent)
                     insightCard(value: copiesToday, title: "clipo.stat.today", icon: "calendar", color: .green)
                     insightCard(value: service.history.filter(\.isPinned).count, title: "clipo.stat.pinned", icon: "pin.fill", color: .orange)
                     insightCard(value: Set(service.history.compactMap(\.sourceApp)).count, title: "clipo.stat.sources", icon: "app.badge", color: .purple)
@@ -294,7 +295,7 @@ struct ClipoView: View {
                                 GeometryReader { geometry in
                                     ZStack(alignment: .leading) {
                                         Capsule().fill(Color.white.opacity(0.05))
-                                        Capsule().fill(Color.cyan.opacity(0.65))
+                                        Capsule().fill(accent.opacity(0.65))
                                             .frame(width: service.history.isEmpty ? 0 : geometry.size.width * CGFloat(count) / CGFloat(service.history.count))
                                     }
                                 }
@@ -313,7 +314,7 @@ struct ClipoView: View {
                         ForEach(Array(topSources.enumerated()), id: \.element.name) { index, source in
                             HStack {
                                 Text("\(index + 1)")
-                                    .foregroundStyle(.cyan)
+                                    .foregroundStyle(accent)
                                 Text(source.name)
                                     .lineLimit(1)
                                 Spacer()
@@ -348,7 +349,7 @@ struct ClipoView: View {
                             Text("clipo.settings.history_limit")
                             Spacer()
                             Text("\(service.settings.maxHistoryItems)")
-                                .foregroundStyle(.cyan)
+                                .foregroundStyle(accent)
                         }
                     }
                     .font(.system(size: 10 * zoomScale, design: .monospaced))
@@ -371,7 +372,7 @@ struct ClipoView: View {
                             format: String(localized: "clipo.seconds_format"),
                             service.settings.pasteDelay
                         ))
-                            .foregroundStyle(.cyan)
+                            .foregroundStyle(accent)
                             .frame(width: 48 * zoomScale)
                     }
                     .font(.system(size: 10 * zoomScale, design: .monospaced))
@@ -409,16 +410,16 @@ struct ClipoView: View {
                             service.settings.sensitiveBundleIdentifiers.append(value)
                             newSensitiveBundle = ""
                         }
-                        .clipoButtonStyle(zoomScale: zoomScale, color: .cyan)
+                        .clipoButtonStyle(zoomScale: zoomScale, color: accent)
                     }
                 }
 
                 clipoPanel(title: "clipo.settings.data", icon: "externaldrive") {
                     HStack {
                         Button("clipo.export") { exportStore() }
-                            .clipoButtonStyle(zoomScale: zoomScale, color: .cyan)
+                            .clipoButtonStyle(zoomScale: zoomScale, color: accent)
                         Button("clipo.import") { selectImportStore() }
-                            .clipoButtonStyle(zoomScale: zoomScale, color: .cyan)
+                            .clipoButtonStyle(zoomScale: zoomScale, color: accent)
                         Spacer()
                         Button("clipo.reset") { confirmReset = true }
                             .clipoButtonStyle(zoomScale: zoomScale, color: .red)
@@ -465,7 +466,7 @@ struct ClipoView: View {
         VStack(alignment: .leading, spacing: 10 * zoomScale) {
             Label(title, systemImage: icon)
                 .font(.system(size: 11 * zoomScale, weight: .bold, design: .monospaced))
-                .foregroundStyle(.cyan)
+                .foregroundStyle(accent)
             content()
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -539,14 +540,17 @@ struct ClipoView: View {
 
 private struct ClipoHistoryRow: View {
     @ObservedObject private var service = ClipoService.shared
+    @ObservedObject private var prefs = PreferencesManager.shared
     let item: ClipoItem
     let zoomScale: CGFloat
+
+    private var accent: Color { prefs.preferences.themeAccent.color }
 
     var body: some View {
         HStack(spacing: 10 * zoomScale) {
             ZStack {
                 RoundedRectangle(cornerRadius: 7 * zoomScale)
-                    .fill(Color.cyan.opacity(0.08))
+                    .fill(accent.opacity(0.08))
                     .frame(width: 38 * zoomScale, height: 38 * zoomScale)
                 if item.type == .image, let image = thumbnail {
                     Image(nsImage: image)
@@ -556,7 +560,7 @@ private struct ClipoHistoryRow: View {
                         .clipShape(RoundedRectangle(cornerRadius: 5 * zoomScale))
                 } else {
                     Image(systemName: item.type.iconName)
-                        .foregroundStyle(.cyan)
+                        .foregroundStyle(accent)
                 }
             }
 
@@ -633,16 +637,19 @@ private struct ClipoHistoryRow: View {
 
 private struct ClipoSlotCard: View {
     @ObservedObject private var service = ClipoService.shared
+    @ObservedObject private var prefs = PreferencesManager.shared
     let number: Int
     let item: ClipoItem?
     let zoomScale: CGFloat
+
+    private var accent: Color { prefs.preferences.themeAccent.color }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8 * zoomScale) {
             HStack {
                 Text("#\(number)")
                     .font(.system(size: 12 * zoomScale, weight: .bold, design: .monospaced))
-                    .foregroundStyle(.cyan)
+                    .foregroundStyle(accent)
                 Spacer()
                 Text("⌥⌘\(number) / ⌥\(number)")
                     .font(.system(size: 7 * zoomScale, design: .monospaced))
@@ -672,13 +679,13 @@ private struct ClipoSlotCard: View {
                 Button("clipo.save_clipboard") {
                     service.saveCurrentClipboard(to: number)
                 }
-                .clipoButtonStyle(zoomScale: zoomScale, color: .cyan)
+                .clipoButtonStyle(zoomScale: zoomScale, color: accent)
             }
         }
         .padding(10 * zoomScale)
         .frame(maxWidth: .infinity, minHeight: 132 * zoomScale, alignment: .top)
         .background(Color.white.opacity(0.025))
-        .overlay(RoundedRectangle(cornerRadius: 9 * zoomScale).stroke(item == nil ? Color.white.opacity(0.06) : Color.cyan.opacity(0.18)))
+        .overlay(RoundedRectangle(cornerRadius: 9 * zoomScale).stroke(item == nil ? Color.white.opacity(0.06) : accent.opacity(0.18)))
     }
 
     private func slotButton(

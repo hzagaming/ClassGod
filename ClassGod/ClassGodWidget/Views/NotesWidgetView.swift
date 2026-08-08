@@ -25,7 +25,7 @@ struct NotesWidgetView: View {
                 HStack {
                     Image(systemName: "note.text")
                         .font(.system(size: 9))
-                        .foregroundStyle(.cyan.opacity(0.6))
+                        .foregroundStyle(entry.accentColor.opacity(0.6))
                     Text("NOTE")
                         .font(.system(size: 9, weight: .bold, design: .monospaced))
                         .foregroundStyle(.white.opacity(0.4))
@@ -33,7 +33,7 @@ struct NotesWidgetView: View {
                 }
                 
                 if entry.noteContent.isEmpty {
-                    WidgetEmptyState(icon: "note.text", title: "WIDGET_EMPTY_NOTES")
+                    WidgetEmptyState(icon: "note.text", title: "WIDGET_EMPTY_NOTES", accentColor: entry.accentColor)
                 } else {
                     Text(entry.noteContent)
                         .font(.system(size: 10, design: .monospaced))
@@ -53,7 +53,7 @@ struct NotesWidgetView: View {
                 HStack {
                     Image(systemName: "note.text")
                         .font(.system(size: 10))
-                        .foregroundStyle(.cyan.opacity(0.6))
+                        .foregroundStyle(entry.accentColor.opacity(0.6))
                     Text("NOTES")
                         .font(.system(size: 10, weight: .bold, design: .monospaced))
                         .foregroundStyle(.white.opacity(0.4))
@@ -61,7 +61,7 @@ struct NotesWidgetView: View {
                 }
                 
                 if entry.noteContent.isEmpty {
-                    WidgetEmptyState(icon: "note.text", title: "WIDGET_EMPTY_NOTES")
+                    WidgetEmptyState(icon: "note.text", title: "WIDGET_EMPTY_NOTES", accentColor: entry.accentColor)
                 } else {
                     Text(entry.noteContent)
                         .font(.system(size: 11, design: .monospaced))

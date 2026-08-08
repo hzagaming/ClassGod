@@ -8,12 +8,59 @@
 import Foundation
 import Security
 
+#if canImport(SwiftUI)
+import SwiftUI
+#endif
+
 #if canImport(WidgetKit)
 import WidgetKit
 #endif
 
 /// App Group identifier for data sharing between main app and widgets.
 nonisolated let widgetAppGroupID = "group.com.hanazar.classgod"
+
+nonisolated struct ThemeAccent: Codable, Equatable, Hashable, Sendable {
+    let red: Double
+    let green: Double
+    let blue: Double
+
+    static let `default` = ThemeAccent(red: 0, green: 1, blue: 1)
+
+    init(red: Double, green: Double, blue: Double) {
+        self.red = Self.component(red)
+        self.green = Self.component(green)
+        self.blue = Self.component(blue)
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(
+            red: try container.decode(Double.self, forKey: .red),
+            green: try container.decode(Double.self, forKey: .green),
+            blue: try container.decode(Double.self, forKey: .blue)
+        )
+    }
+
+    private static func component(_ value: Double) -> Double {
+        guard value.isFinite else { return 0 }
+        return min(1, max(0, value))
+    }
+}
+
+nonisolated enum WidgetAccentPolicy {
+    static func normalized(red: Double, green: Double, blue: Double) -> ThemeAccent {
+        guard red.isFinite, green.isFinite, blue.isFinite else { return .default }
+        return ThemeAccent(red: red, green: green, blue: blue)
+    }
+}
+
+#if canImport(SwiftUI)
+extension ThemeAccent {
+    var color: Color {
+        Color(.sRGB, red: red, green: green, blue: blue, opacity: 1)
+    }
+}
+#endif
 
 nonisolated enum ClassGodWidgetKind: String, CaseIterable, Sendable {
     case cpu = "CPUWidget"
@@ -322,6 +369,9 @@ enum WidgetDataKey: String {
     case terminalLogs = "widget.terminalLogs"
     case asciiArt = "widget.asciiArt"
     case lastUpdate = "widget.lastUpdate"
+    case accentRed = "widget.accentRed"
+    case accentGreen = "widget.accentGreen"
+    case accentBlue = "widget.accentBlue"
 }
 
 // MARK: - Widget Data Store
@@ -435,6 +485,12 @@ final class WidgetDataStore {
         set(isCharging, forKey: .batteryIsCharging)
         set(WidgetMetricNormalization.nonnegativeFinite(uptime), forKey: .uptimeSeconds)
         set(Date(), forKey: .lastUpdate)
+    }
+
+    func saveAccent(_ accent: ThemeAccent) {
+        set(accent.red, forKey: .accentRed)
+        set(accent.green, forKey: .accentGreen)
+        set(accent.blue, forKey: .accentBlue)
     }
     
     // MARK: - Trigger Widget Reload

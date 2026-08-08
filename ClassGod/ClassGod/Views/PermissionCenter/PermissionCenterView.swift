@@ -112,13 +112,13 @@ struct PermissionCenterView: View {
                 HStack(spacing: 4 * zoomScale) {
                     Image(systemName: "person.badge.key.fill")
                         .font(.system(size: 9 * zoomScale))
-                    Text("permission.first_time_setup")
+                    Text("permission.maximize_access")
                         .font(.system(size: 9 * zoomScale, weight: .medium, design: .monospaced))
                 }
                 .foregroundStyle(.black)
                 .padding(.horizontal, 10 * zoomScale)
                 .padding(.vertical, 5 * zoomScale)
-                .background(Color.cyan.opacity(0.8))
+                .background(prefs.preferences.themeAccent.color.opacity(0.85))
                 .clipShape(RoundedRectangle(cornerRadius: 6 * zoomScale))
             }
             .buttonStyle(.plain)
@@ -172,7 +172,7 @@ struct PermissionCenterView: View {
                 statusMetric(
                     value: summary.manualReview,
                     label: "permission.filter.manual",
-                    color: .cyan
+                    color: prefs.preferences.themeAccent.color
                 )
                 statusMetric(
                     value: summary.requiredPending,
@@ -240,7 +240,7 @@ struct PermissionCenterView: View {
             .foregroundStyle(selected ? .black : .white.opacity(0.7))
             .padding(.horizontal, 10 * zoomScale)
             .padding(.vertical, 4 * zoomScale)
-            .background(selected ? Color.cyan.opacity(0.85) : Color(white: 0.08))
+            .background(selected ? prefs.preferences.themeAccent.color.opacity(0.85) : Color(white: 0.08))
             .clipShape(RoundedRectangle(cornerRadius: 6 * zoomScale))
         }
         .buttonStyle(.plain)
@@ -271,7 +271,7 @@ struct PermissionCenterView: View {
                             .foregroundStyle(selectedStatusFilter == filter ? .black : .white.opacity(0.6))
                             .padding(.horizontal, 8 * zoomScale)
                             .frame(height: 24 * zoomScale)
-                            .background(selectedStatusFilter == filter ? Color.cyan.opacity(0.85) : Color(white: 0.08))
+                            .background(selectedStatusFilter == filter ? prefs.preferences.themeAccent.color.opacity(0.85) : Color(white: 0.08))
                             .clipShape(RoundedRectangle(cornerRadius: 5 * zoomScale))
                         }
                         .buttonStyle(.plain)
@@ -400,7 +400,7 @@ struct PermissionCenterView: View {
             HStack(spacing: 6 * zoomScale) {
                 Image(systemName: group.category.iconName)
                     .font(.system(size: 10 * zoomScale))
-                    .foregroundStyle(.cyan)
+                    .foregroundStyle(prefs.preferences.themeAccent.color)
                 Text(group.category.displayName)
                     .font(.system(size: 10 * zoomScale, weight: .bold, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.8))
@@ -438,7 +438,7 @@ struct PermissionCenterView: View {
                     .foregroundStyle(.white)
                 HStack(spacing: 4 * zoomScale) {
                     metadataChip(item.type.requirement.displayName, color: requirementColor(item.type.requirement))
-                    metadataChip(item.requestMethod.displayName, color: .cyan)
+                    metadataChip(item.requestMethod.displayName, color: prefs.preferences.themeAccent.color)
                     metadataChip(item.statusDetection.displayName, color: item.requiresManualReview ? .orange : .green)
                 }
                 Text(item.description)
@@ -452,7 +452,7 @@ struct PermissionCenterView: View {
                         .foregroundStyle(.white.opacity(0.35))
                     Text(item.features.joined(separator: ", "))
                         .font(.system(size: 7 * zoomScale, weight: .medium, design: .monospaced))
-                        .foregroundStyle(.cyan.opacity(0.7))
+                        .foregroundStyle(prefs.preferences.themeAccent.color.opacity(0.7))
                         .lineLimit(1)
                 }
             }
@@ -486,7 +486,7 @@ struct PermissionCenterView: View {
                         .foregroundStyle(.black)
                         .padding(.horizontal, 10 * zoomScale)
                         .padding(.vertical, 4 * zoomScale)
-                        .background(state.isGranted ? Color.white.opacity(0.7) : Color.cyan.opacity(0.8))
+                        .background(state.isGranted ? Color.white.opacity(0.7) : prefs.preferences.themeAccent.color.opacity(0.8))
                         .clipShape(RoundedRectangle(cornerRadius: 5 * zoomScale))
                 }
                 .buttonStyle(.plain)
@@ -531,14 +531,14 @@ struct PermissionCenterView: View {
         case .denied: .orange
         case .notDetermined: .yellow
         case .restricted: .red
-        case .manualReview: .cyan
+        case .manualReview: prefs.preferences.themeAccent.color
         }
     }
 
     private func requirementColor(_ requirement: PermissionRequirement) -> Color {
         switch requirement {
         case .required: .orange
-        case .recommended: .cyan
+        case .recommended: prefs.preferences.themeAccent.color
         case .optional: .white.opacity(0.35)
         }
     }
@@ -671,7 +671,7 @@ struct PermissionOnboardingView: View {
                                 .foregroundStyle(.black)
                                 .padding(.horizontal, 16 * zoomScale)
                                 .padding(.vertical, 6 * zoomScale)
-                                .background(Color.cyan.opacity(0.85))
+                                .background(prefs.preferences.themeAccent.color.opacity(0.85))
                                 .clipShape(RoundedRectangle(cornerRadius: 6 * zoomScale))
                         }
                         .buttonStyle(.plain)
@@ -712,7 +712,7 @@ struct PermissionOnboardingView: View {
         .frame(minWidth: 420 * zoomScale, minHeight: 320 * zoomScale)
         .onAppear {
             let itemsByType = Dictionary(uniqueKeysWithValues: service.allPermissions.map { ($0.type, $0) })
-            setupPermissions = PermissionReviewPlan.all.compactMap { itemsByType[$0] }
+            setupPermissions = PermissionReviewPlan.pending(statuses: service.statuses).compactMap { itemsByType[$0] }
             step = 0
         }
     }
@@ -759,10 +759,10 @@ struct PermissionOnboardingView: View {
                     ForEach(item.features, id: \.self) { feature in
                         Text(feature)
                             .font(.system(size: 8 * zoomScale, weight: .medium, design: .monospaced))
-                            .foregroundStyle(.cyan)
+                            .foregroundStyle(prefs.preferences.themeAccent.color)
                             .padding(.horizontal, 6 * zoomScale)
                             .padding(.vertical, 2 * zoomScale)
-                            .background(Color.cyan.opacity(0.1))
+                            .background(prefs.preferences.themeAccent.color.opacity(0.1))
                             .clipShape(RoundedRectangle(cornerRadius: 4 * zoomScale))
                     }
                 }

@@ -180,4 +180,30 @@ struct WidgetDataStoreTests {
         #expect(WidgetDeepLink.launchURL(bundleIdentifier: "com.example.") == nil)
         #expect(WidgetDeepLink.launchURL(bundleIdentifier: String(repeating: "a", count: 256)) == nil)
     }
+
+    @Test("Theme accents clamp RGB values and preserve the hacker black background")
+    func normalizesThemeAccent() {
+        let accent = ThemeAccent(red: -1, green: 0.5, blue: 2)
+
+        #expect(accent.red == 0)
+        #expect(accent.green == 0.5)
+        #expect(accent.blue == 1)
+        #expect(ThemeAccent.default == ThemeAccent(red: 0, green: 1, blue: 1))
+    }
+
+    @Test("Decoded theme accents cannot bypass RGB normalization")
+    func normalizesDecodedThemeAccent() throws {
+        let data = Data(#"{"red":-2,"green":0.4,"blue":3}"#.utf8)
+        let accent = try JSONDecoder().decode(ThemeAccent.self, from: data)
+
+        #expect(accent == ThemeAccent(red: 0, green: 0.4, blue: 1))
+    }
+
+    @Test("Widget accent snapshots use normalized shared RGB values")
+    func normalizesWidgetAccentSnapshot() {
+        let accent = WidgetAccentPolicy.normalized(red: .nan, green: -0.5, blue: 1.5)
+
+        #expect(accent == .default)
+        #expect(WidgetAccentPolicy.normalized(red: 0.2, green: 0.4, blue: 0.6) == ThemeAccent(red: 0.2, green: 0.4, blue: 0.6))
+    }
 }

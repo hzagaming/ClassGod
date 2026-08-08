@@ -84,7 +84,7 @@ struct BatteryWidgetView: View {
         if batteryLevel < 20 { return .red }
         if batteryLevel < 50 { return .orange }
         if entry.batteryIsCharging { return .green }
-        return .cyan
+        return entry.accentColor
     }
 
     private var batteryLevel: Double {

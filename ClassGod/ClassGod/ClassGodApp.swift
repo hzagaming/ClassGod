@@ -22,8 +22,48 @@ nonisolated enum LaunchWindowPresentationPolicy {
 }
 
 nonisolated enum SettingsWindowLayoutPolicy {
-    static let baseWidth: CGFloat = 580
-    static let baseHeight: CGFloat = 500
+    static let baseWidth: CGFloat = 720
+    static let baseHeight: CGFloat = 620
+}
+
+nonisolated enum FeatureWindowKind: CaseIterable {
+    case destinTab, superSwitch, ghostProtocol, browserBypasser, assessPrepHack
+    case settings, wallpaper, hackerDesktop, clipo, errorHub, fanControl
+    case activityMonitor, permissionCenter, fakeLock
+}
+
+nonisolated struct FeatureWindowLayout: Equatable {
+    let defaultWidth: CGFloat
+    let defaultHeight: CGFloat
+    let minimumWidth: CGFloat
+    let minimumHeight: CGFloat
+}
+
+nonisolated enum FeatureWindowLayoutPolicy {
+    static func layout(for kind: FeatureWindowKind) -> FeatureWindowLayout {
+        switch kind {
+        case .destinTab: return .init(defaultWidth: 520, defaultHeight: 620, minimumWidth: 360, minimumHeight: 360)
+        case .superSwitch: return .init(defaultWidth: 620, defaultHeight: 660, minimumWidth: 420, minimumHeight: 400)
+        case .ghostProtocol: return .init(defaultWidth: 640, defaultHeight: 620, minimumWidth: 420, minimumHeight: 380)
+        case .browserBypasser: return .init(defaultWidth: 680, defaultHeight: 640, minimumWidth: 440, minimumHeight: 400)
+        case .assessPrepHack: return .init(defaultWidth: 700, defaultHeight: 680, minimumWidth: 460, minimumHeight: 420)
+        case .settings: return .init(defaultWidth: 720, defaultHeight: 620, minimumWidth: 560, minimumHeight: 460)
+        case .wallpaper: return .init(defaultWidth: 860, defaultHeight: 600, minimumWidth: 580, minimumHeight: 420)
+        case .hackerDesktop: return .init(defaultWidth: 940, defaultHeight: 680, minimumWidth: 680, minimumHeight: 480)
+        case .clipo: return .init(defaultWidth: 780, defaultHeight: 640, minimumWidth: 560, minimumHeight: 420)
+        case .errorHub: return .init(defaultWidth: 700, defaultHeight: 640, minimumWidth: 460, minimumHeight: 400)
+        case .fanControl: return .init(defaultWidth: 680, defaultHeight: 680, minimumWidth: 500, minimumHeight: 460)
+        case .activityMonitor: return .init(defaultWidth: 1_000, defaultHeight: 680, minimumWidth: 720, minimumHeight: 480)
+        case .permissionCenter: return .init(defaultWidth: 900, defaultHeight: 680, minimumWidth: 680, minimumHeight: 500)
+        case .fakeLock: return .init(defaultWidth: 760, defaultHeight: 650, minimumWidth: 560, minimumHeight: 440)
+        }
+    }
+}
+
+nonisolated enum FeatureWindowResizePolicy {
+    static func shouldApplyScale(previousZoom: Double, currentZoom: Double) -> Bool {
+        previousZoom.isFinite && currentZoom.isFinite && abs(previousZoom - currentZoom) > 0.000_1
+    }
 }
 
 enum WidgetHostSnapshot {
@@ -43,6 +83,7 @@ enum WidgetHostSnapshot {
             isCharging: monitor.battery.isCharging,
             uptime: Date().timeIntervalSince(monitor.system.bootTime ?? Date())
         )
+        store.saveAccent(PreferencesManager.shared.preferences.themeAccent)
         if reloadWidgets {
             store.reloadWidgets(ClassGodWidgetKind.systemKinds)
         }
@@ -105,6 +146,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var fanControlWindow: NSWindow?
     var activityMonitorWindow: NSWindow?
     var permissionCenterWindow: NSWindow?
+    var fakeLockWindow: NSWindow?
     var showPopoverCustomHotKeyID: UInt32?
     var panicHotKeyID: UInt32?
     var clipoHotKeyIDs: [UInt32] = []
@@ -112,7 +154,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var splashWindow: NSWindow?
     private var clickOutsideMonitor: Any?
     private var widgetSnapshotTimer: Timer?
+    private var widgetAccentReloadWorkItem: DispatchWorkItem?
     private var windowTransitions = WindowTransitionTracker<ObjectIdentifier>()
+    private var lastObservedPreferences = PreferencesManager.shared.preferences
 
     private var targetWindowAlpha: CGFloat {
         CGFloat(PreferencesManager.shared.preferences.windowOpacity)
@@ -142,19 +186,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             self.setupShowPopoverShortcut()
             self.setupPanicShortcut()
             self.setupGlobalHotKeyHandler()
+            FakeLockService.shared.start()
             ClipoService.shared.start()
             self.clipoHotKeyIDs = ClipoService.shared.registerDefaultHotKeys { [weak self] in
                 self?.toggleClipoWindow()
             }
 
-            PreferencesManager.shared.onPreferencesChanged = { [weak self] _ in
-                self?.setupShowPopoverShortcut()
-                self?.updateStatusItemIcon()
-                self?.updateStatusItemTimer()
-                self?.updateMainWindowSize()
-                self?.updateAllWindowLevels()
-                self?.updateClickOutsideMonitor()
-                self?.updateAllWindowSizes()
+            PreferencesManager.shared.onPreferencesChanged = { [weak self] preferences in
+                self?.preferencesDidChange(preferences)
             }
             
             // Apply saved icon style immediately
@@ -336,6 +375,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             self?.showActivityMonitorWindow()
         }, onOpenPermissionCenter: { [weak self] in
             self?.showPermissionCenterWindow()
+        }, onOpenFakeLock: { [weak self] in
+            self?.showFakeLockWindow()
         })
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Color.clear)
@@ -351,13 +392,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func setupDestinTabWindow() {
         let prefs = PreferencesManager.shared.preferences
         let zoom = CGFloat(prefs.windowZoomScale)
-        let size = constrainedWindowSize(
-            base: NSSize(
-                width: prefs.panelWidth,
-                height: min(prefs.panelMaxHeight, CGFloat(prefs.maxTabsInPopover) * CGFloat(prefs.rowHeight) + 120)
-            ),
-            zoom: zoom
-        )
+        let size = featureWindowSize(.destinTab, zoom: zoom)
 
         let window = DraggableWindow(
             contentRect: NSRect(origin: .zero, size: size),
@@ -365,6 +400,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             backing: .buffered,
             defer: false
         )
+        configureFeatureWindow(window, kind: .destinTab, zoom: zoom)
 
         window.level = .normal
         window.backgroundColor = .clear
@@ -460,10 +496,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func setupSuperSwitchWindow() {
         let prefs = PreferencesManager.shared.preferences
         let zoom = CGFloat(prefs.windowZoomScale)
-        let size = constrainedWindowSize(
-            base: NSSize(width: prefs.panelWidth, height: prefs.panelMaxHeight),
-            zoom: zoom
-        )
+        let size = featureWindowSize(.superSwitch, zoom: zoom)
 
         let window = DraggableWindow(
             contentRect: NSRect(origin: .zero, size: size),
@@ -471,6 +504,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             backing: .buffered,
             defer: false
         )
+        configureFeatureWindow(window, kind: .superSwitch, zoom: zoom)
 
         window.level = .normal
         window.backgroundColor = .clear
@@ -565,10 +599,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func setupGhostProtocolWindow() {
         let prefs = PreferencesManager.shared.preferences
         let zoom = CGFloat(prefs.windowZoomScale)
-        let size = constrainedWindowSize(
-            base: NSSize(width: prefs.panelWidth, height: prefs.panelMaxHeight),
-            zoom: zoom
-        )
+        let size = featureWindowSize(.ghostProtocol, zoom: zoom)
 
         let window = DraggableWindow(
             contentRect: NSRect(origin: .zero, size: size),
@@ -576,6 +607,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             backing: .buffered,
             defer: false
         )
+        configureFeatureWindow(window, kind: .ghostProtocol, zoom: zoom)
         window.level = windowLevel
         window.backgroundColor = .clear
         window.hasShadow = true
@@ -667,10 +699,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func setupBrowserBypasserWindow() {
         let prefs = PreferencesManager.shared.preferences
         let zoom = CGFloat(prefs.windowZoomScale)
-        let size = constrainedWindowSize(
-            base: NSSize(width: prefs.panelWidth, height: prefs.panelMaxHeight),
-            zoom: zoom
-        )
+        let size = featureWindowSize(.browserBypasser, zoom: zoom)
 
         let window = DraggableWindow(
             contentRect: NSRect(origin: .zero, size: size),
@@ -678,6 +707,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             backing: .buffered,
             defer: false
         )
+        configureFeatureWindow(window, kind: .browserBypasser, zoom: zoom)
 
         window.level = .normal
         window.backgroundColor = .clear
@@ -772,10 +802,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func setupAssessPrepHackWindow() {
         let prefs = PreferencesManager.shared.preferences
         let zoom = CGFloat(prefs.windowZoomScale)
-        let size = constrainedWindowSize(
-            base: NSSize(width: prefs.panelWidth, height: prefs.panelMaxHeight),
-            zoom: zoom
-        )
+        let size = featureWindowSize(.assessPrepHack, zoom: zoom)
 
         let window = DraggableWindow(
             contentRect: NSRect(origin: .zero, size: size),
@@ -783,6 +810,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             backing: .buffered,
             defer: false
         )
+        configureFeatureWindow(window, kind: .assessPrepHack, zoom: zoom)
 
         window.level = .normal
         window.backgroundColor = .clear
@@ -879,13 +907,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func setupSettingsWindow() {
         let prefs = PreferencesManager.shared.preferences
         let zoom = CGFloat(prefs.windowZoomScale)
-        let size = constrainedWindowSize(
-            base: NSSize(
-                width: SettingsWindowLayoutPolicy.baseWidth,
-                height: SettingsWindowLayoutPolicy.baseHeight
-            ),
-            zoom: zoom
-        )
+        let size = featureWindowSize(.settings, zoom: zoom)
 
         let window = DraggableWindow(
             contentRect: NSRect(origin: .zero, size: size),
@@ -893,6 +915,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             backing: .buffered,
             defer: false
         )
+        configureFeatureWindow(window, kind: .settings, zoom: zoom)
 
         window.level = .normal
         window.backgroundColor = .clear
@@ -986,7 +1009,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func setupWallpaperBrowserWindow() {
         let prefs = PreferencesManager.shared.preferences
         let zoom = CGFloat(prefs.windowZoomScale)
-        let size = constrainedWindowSize(base: NSSize(width: 520, height: 480), zoom: zoom)
+        let size = featureWindowSize(.wallpaper, zoom: zoom)
 
         let window = DraggableWindow(
             contentRect: NSRect(origin: .zero, size: size),
@@ -994,6 +1017,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             backing: .buffered,
             defer: false
         )
+        configureFeatureWindow(window, kind: .wallpaper, zoom: zoom)
 
         window.level = windowLevel
         window.backgroundColor = .clear
@@ -1089,12 +1113,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let zoom = CGFloat(prefs.windowZoomScale)
         guard let screen = NSScreen.main else { return }
         let screenFrame = screen.visibleFrame
-        let size = constrainedWindowSize(
-            base: NSSize(width: 900, height: 600),
-            zoom: zoom,
-            margin: 100,
-            screen: screen
-        )
+        let size = featureWindowSize(.hackerDesktop, zoom: zoom, margin: 100, screen: screen)
 
         let window = DraggableWindow(
             contentRect: NSRect(origin: .zero, size: size),
@@ -1102,6 +1121,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             backing: .buffered,
             defer: false
         )
+        configureFeatureWindow(window, kind: .hackerDesktop, zoom: zoom)
 
         window.level = windowLevel
         window.backgroundColor = .clear
@@ -1193,12 +1213,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func setupClipoWindow() {
         let prefs = PreferencesManager.shared.preferences
         let zoom = CGFloat(prefs.windowZoomScale)
-        let size = constrainedWindowSize(
-            base: NSSize(width: 760, height: 620),
-            zoom: zoom,
-            margin: 80,
-            screen: NSScreen.main
-        )
+        let size = featureWindowSize(.clipo, zoom: zoom, margin: 80, screen: NSScreen.main)
 
         let window = DraggableWindow(
             contentRect: NSRect(origin: .zero, size: size),
@@ -1206,6 +1221,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             backing: .buffered,
             defer: false
         )
+        configureFeatureWindow(window, kind: .clipo, zoom: zoom)
         window.level = windowLevel
         window.backgroundColor = .clear
         window.hasShadow = true
@@ -1292,7 +1308,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func setupErrorHubWindow() {
         let prefs = PreferencesManager.shared.preferences
         let zoom = CGFloat(prefs.windowZoomScale)
-        let size = constrainedWindowSize(base: NSSize(width: 520, height: 600), zoom: zoom)
+        let size = featureWindowSize(.errorHub, zoom: zoom)
 
         let window = DraggableWindow(
             contentRect: NSRect(origin: .zero, size: size),
@@ -1300,6 +1316,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             backing: .buffered,
             defer: false
         )
+        configureFeatureWindow(window, kind: .errorHub, zoom: zoom)
 
         window.level = windowLevel
         window.backgroundColor = .clear
@@ -1397,10 +1414,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func setupFanControlWindow() {
         let prefs = PreferencesManager.shared.preferences
         let zoom = CGFloat(prefs.windowZoomScale)
-        let size = constrainedWindowSize(
-            base: NSSize(width: min(520, prefs.panelWidth * 1.3), height: prefs.panelMaxHeight),
-            zoom: zoom
-        )
+        let size = featureWindowSize(.fanControl, zoom: zoom)
 
         let window = DraggableWindow(
             contentRect: NSRect(origin: .zero, size: size),
@@ -1408,6 +1422,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             backing: .buffered,
             defer: false
         )
+        configureFeatureWindow(window, kind: .fanControl, zoom: zoom)
 
         window.level = windowLevel
         window.backgroundColor = .clear
@@ -1505,12 +1520,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let zoom = CGFloat(prefs.windowZoomScale)
         guard let screen = NSScreen.main else { return }
         let screenFrame = screen.visibleFrame
-        let size = constrainedWindowSize(
-            base: NSSize(width: 960, height: 640),
-            zoom: zoom,
-            margin: 80,
-            screen: screen
-        )
+        let size = featureWindowSize(.activityMonitor, zoom: zoom, margin: 80, screen: screen)
 
         let window = DraggableWindow(
             contentRect: NSRect(origin: .zero, size: size),
@@ -1518,6 +1528,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             backing: .buffered,
             defer: false
         )
+        configureFeatureWindow(window, kind: .activityMonitor, zoom: zoom)
 
         window.level = windowLevel
         window.backgroundColor = .clear
@@ -1610,12 +1621,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let zoom = CGFloat(prefs.windowZoomScale)
         guard let screen = NSScreen.main else { return }
         let screenFrame = screen.visibleFrame
-        let size = constrainedWindowSize(
-            base: NSSize(width: 820, height: 620),
-            zoom: zoom,
-            margin: 80,
-            screen: screen
-        )
+        let size = featureWindowSize(.permissionCenter, zoom: zoom, margin: 80, screen: screen)
 
         let window = DraggableWindow(
             contentRect: NSRect(origin: .zero, size: size),
@@ -1623,6 +1629,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             backing: .buffered,
             defer: false
         )
+        configureFeatureWindow(window, kind: .permissionCenter, zoom: zoom)
 
         window.level = windowLevel
         window.backgroundColor = .clear
@@ -1707,6 +1714,103 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
+    // MARK: - Fake Lock Window
+
+    private func setupFakeLockWindow() {
+        let prefs = PreferencesManager.shared.preferences
+        let zoom = CGFloat(prefs.windowZoomScale)
+        let size = featureWindowSize(.fakeLock, zoom: zoom, margin: 80, screen: NSScreen.main)
+        let window = DraggableWindow(
+            contentRect: NSRect(origin: .zero, size: size),
+            styleMask: [.borderless],
+            backing: .buffered,
+            defer: false
+        )
+        configureFeatureWindow(window, kind: .fakeLock, zoom: zoom)
+        window.level = windowLevel
+        window.backgroundColor = .clear
+        window.hasShadow = true
+        window.isMovableByWindowBackground = false
+        window.isReleasedWhenClosed = false
+        window.isOpaque = false
+        window.contentView?.wantsLayer = true
+        window.contentView?.layer?.cornerRadius = prefs.panelCornerRadius * zoom
+        window.contentView?.layer?.masksToBounds = true
+
+        if let mainWindow {
+            window.setFrameOrigin(NSPoint(
+                x: mainWindow.frame.midX - size.width / 2,
+                y: mainWindow.frame.midY - size.height / 2
+            ))
+        } else if let screen = NSScreen.main {
+            window.setFrameOrigin(NSPoint(
+                x: screen.visibleFrame.midX - size.width / 2,
+                y: screen.visibleFrame.midY - size.height / 2
+            ))
+        }
+        constrainWindowToVisibleScreen(window)
+
+        let rootView = FakeLockWindowView(onClose: { [weak self] in
+            self?.hideFakeLockWindow()
+        })
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.clear)
+        .overlay(WindowResizeHandles())
+        window.contentView = NSHostingView(rootView: rootView)
+        fakeLockWindow = window
+    }
+
+    func showFakeLockWindow(animated: Bool = true) {
+        guard let window = fakeLockWindow else {
+            setupFakeLockWindow()
+            showFakeLockWindow(animated: animated)
+            return
+        }
+        guard beginWindowTransition(window, targetVisible: true) != nil else { return }
+        SoundEffectManager.shared.playWindowOpen(feature: "fakelock")
+        if animated && Anim.enabled {
+            window.alphaValue = 0
+            window.makeKeyAndOrderFront(nil)
+            NSAnimationContext.runAnimationGroup { context in
+                context.duration = Anim.duration
+                context.timingFunction = .init(name: .easeOut)
+                window.animator().alphaValue = targetWindowAlpha
+            }
+        } else {
+            window.alphaValue = targetWindowAlpha
+            window.makeKeyAndOrderFront(nil)
+        }
+    }
+
+    func hideFakeLockWindow() {
+        guard let window = fakeLockWindow,
+              let transition = beginWindowTransition(window, targetVisible: false) else { return }
+        SoundEffectManager.shared.playWindowClose(feature: "fakelock")
+        guard Anim.enabled else {
+            window.alphaValue = 0
+            window.orderOut(nil)
+            return
+        }
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = Anim.duration
+            context.timingFunction = .init(name: .easeIn)
+            window.animator().alphaValue = 0
+        } completionHandler: { [weak self, weak window] in
+            guard let self, let window,
+                  self.isCurrentWindowTransition(transition, for: window, targetVisible: false) else { return }
+            window.orderOut(nil)
+        }
+    }
+
+    @objc func toggleFakeLockWindow() {
+        guard let window = fakeLockWindow else {
+            setupFakeLockWindow()
+            showFakeLockWindow(animated: true)
+            return
+        }
+        windowTargetIsVisible(window) ? hideFakeLockWindow() : showFakeLockWindow(animated: true)
+    }
+
     private func updateMainWindowSize() {
         guard let window = mainWindow else { return }
         let prefs = PreferencesManager.shared.preferences
@@ -1735,6 +1839,33 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         return NSSize(
             width: min(requested.width, max(1, visibleFrame.width - margin)),
             height: min(requested.height, max(1, visibleFrame.height - margin))
+        )
+    }
+
+    private func featureWindowSize(
+        _ kind: FeatureWindowKind,
+        zoom: CGFloat,
+        margin: CGFloat = 40,
+        screen: NSScreen? = nil
+    ) -> NSSize {
+        let layout = FeatureWindowLayoutPolicy.layout(for: kind)
+        return constrainedWindowSize(
+            base: NSSize(width: layout.defaultWidth, height: layout.defaultHeight),
+            zoom: zoom,
+            margin: margin,
+            screen: screen
+        )
+    }
+
+    private func configureFeatureWindow(
+        _ window: DraggableWindow,
+        kind: FeatureWindowKind,
+        zoom: CGFloat
+    ) {
+        let layout = FeatureWindowLayoutPolicy.layout(for: kind)
+        window.minimumWindowSize = NSSize(
+            width: layout.minimumWidth * zoom,
+            height: layout.minimumHeight * zoom
         )
     }
 
@@ -1854,6 +1985,64 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         )
     }
 
+    private func preferencesDidChange(_ preferences: AppPreferences) {
+        let previous = lastObservedPreferences
+        lastObservedPreferences = preferences
+
+        if previous.showPopoverKeyCode != preferences.showPopoverKeyCode
+            || previous.showPopoverModifiers != preferences.showPopoverModifiers {
+            setupShowPopoverShortcut()
+        }
+        if previous.menuBarIconStyle != preferences.menuBarIconStyle
+            || previous.showTabCountBadge != preferences.showTabCountBadge
+            || previous.enableFanControl != preferences.enableFanControl
+            || previous.fanControlShowInMenuBar != preferences.fanControlShowInMenuBar
+            || previous.fanControlTemperatureUnit != preferences.fanControlTemperatureUnit {
+            updateStatusItemIcon()
+        }
+        if previous.enableFanControl != preferences.enableFanControl
+            || previous.fanControlShowInMenuBar != preferences.fanControlShowInMenuBar
+            || previous.fanControlUpdateInterval != preferences.fanControlUpdateInterval {
+            updateStatusItemTimer()
+        }
+        if previous.keepWindowOnTop != preferences.keepWindowOnTop {
+            updateAllWindowLevels()
+        }
+        if previous.closeOnClickOutside != preferences.closeOnClickOutside {
+            updateClickOutsideMonitor()
+        }
+        if previous.windowOpacity != preferences.windowOpacity {
+            updateVisibleWindowOpacity()
+        }
+
+        let mainLayoutChanged = previous.panelWidth != preferences.panelWidth
+            || previous.panelMaxHeight != preferences.panelMaxHeight
+            || previous.rowHeight != preferences.rowHeight
+            || previous.maxTabsInPopover != preferences.maxTabsInPopover
+        let zoomChanged = FeatureWindowResizePolicy.shouldApplyScale(
+            previousZoom: previous.windowZoomScale,
+            currentZoom: preferences.windowZoomScale
+        )
+        if mainLayoutChanged || zoomChanged {
+            updateMainWindowSize()
+        }
+        if zoomChanged {
+            updateAllWindowSizes(
+                previousZoom: previous.windowZoomScale,
+                currentZoom: preferences.windowZoomScale
+            )
+        }
+        if previous.themeAccent != preferences.themeAccent {
+            WidgetDataStore.shared.saveAccent(preferences.themeAccent)
+            widgetAccentReloadWorkItem?.cancel()
+            let workItem = DispatchWorkItem {
+                WidgetDataStore.shared.reloadAllWidgets()
+            }
+            widgetAccentReloadWorkItem = workItem
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.25, execute: workItem)
+        }
+    }
+
     private func updateAllWindowLevels() {
         let level = windowLevel
         mainWindow?.level = level
@@ -1870,91 +2059,52 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         fanControlWindow?.level = level
         activityMonitorWindow?.level = level
         permissionCenterWindow?.level = level
+        fakeLockWindow?.level = level
     }
 
-    func updateAllWindowSizes() {
-        let prefs = PreferencesManager.shared.preferences
-        let zoom = CGFloat(prefs.windowZoomScale)
-
-        // mainWindow
-        if let w = mainWindow {
-            let baseH = min(prefs.panelMaxHeight, CGFloat(prefs.maxTabsInPopover) * CGFloat(prefs.rowHeight) + 120)
-            w.setContentSize(constrainedWindowSize(base: NSSize(width: prefs.panelWidth, height: baseH), zoom: zoom, screen: w.screen))
-        }
-
-        // destinTabWindow
-        if let w = destinTabWindow {
-            let baseH = min(prefs.panelMaxHeight, CGFloat(prefs.maxTabsInPopover) * CGFloat(prefs.rowHeight) + 120)
-            w.setContentSize(constrainedWindowSize(base: NSSize(width: prefs.panelWidth, height: baseH), zoom: zoom, screen: w.screen))
-        }
-
-        // superSwitchWindow
-        if let w = superSwitchWindow {
-            w.setContentSize(constrainedWindowSize(base: NSSize(width: prefs.panelWidth, height: prefs.panelMaxHeight), zoom: zoom, screen: w.screen))
-        }
-
-        // ghostProtocolWindow
-        if let w = ghostProtocolWindow {
-            w.setContentSize(constrainedWindowSize(base: NSSize(width: prefs.panelWidth, height: prefs.panelMaxHeight), zoom: zoom, screen: w.screen))
-        }
-
-        // browserBypasserWindow
-        if let w = browserBypasserWindow {
-            w.setContentSize(constrainedWindowSize(base: NSSize(width: prefs.panelWidth, height: prefs.panelMaxHeight), zoom: zoom, screen: w.screen))
-        }
-
-        // assessPrepHackWindow
-        if let w = assessPrepHackWindow {
-            w.setContentSize(constrainedWindowSize(base: NSSize(width: prefs.panelWidth, height: prefs.panelMaxHeight), zoom: zoom, screen: w.screen))
-        }
-
-        // settingsWindow
-        if let w = settingsWindow {
-            let base = NSSize(
-                width: SettingsWindowLayoutPolicy.baseWidth,
-                height: SettingsWindowLayoutPolicy.baseHeight
-            )
-            w.setContentSize(constrainedWindowSize(base: base, zoom: zoom, screen: w.screen))
-        }
-
-        // wallpaperBrowserWindow
-        if let w = wallpaperBrowserWindow {
-            let base = NSSize(width: 520, height: 480)
-            w.setContentSize(constrainedWindowSize(base: base, zoom: zoom, screen: w.screen))
-        }
-
-        // fanControlWindow
-        if let w = fanControlWindow {
-            let base = NSSize(width: min(520, prefs.panelWidth * 1.3), height: prefs.panelMaxHeight)
-            w.setContentSize(constrainedWindowSize(base: base, zoom: zoom, screen: w.screen))
-        }
-
-        // activityMonitorWindow
-        if let w = activityMonitorWindow, let screen = NSScreen.main {
-            w.setContentSize(constrainedWindowSize(base: NSSize(width: 960, height: 640), zoom: zoom, margin: 80, screen: screen))
-        }
-
-        // permissionCenterWindow
-        if let w = permissionCenterWindow, let screen = NSScreen.main {
-            w.setContentSize(constrainedWindowSize(base: NSSize(width: 820, height: 620), zoom: zoom, margin: 80, screen: screen))
-        }
-
-        // hackerDesktopWindow
-        if let w = hackerDesktopWindow, let screen = NSScreen.main {
-            w.setContentSize(constrainedWindowSize(base: NSSize(width: 900, height: 600), zoom: zoom, margin: 100, screen: screen))
-        }
-
-        if let w = clipoWindow {
-            w.setContentSize(constrainedWindowSize(base: NSSize(width: 760, height: 620), zoom: zoom, margin: 80, screen: w.screen))
-        }
-
+    private func updateVisibleWindowOpacity() {
         let windows = [
-            mainWindow, destinTabWindow, superSwitchWindow, ghostProtocolWindow, browserBypasserWindow,
-            assessPrepHackWindow, settingsWindow, wallpaperBrowserWindow,
-            hackerDesktopWindow, clipoWindow, errorHubWindow, fanControlWindow,
-            activityMonitorWindow, permissionCenterWindow
+            mainWindow, destinTabWindow, superSwitchWindow, ghostProtocolWindow,
+            browserBypasserWindow, assessPrepHackWindow, settingsWindow,
+            wallpaperBrowserWindow, hackerDesktopWindow, clipoWindow, errorHubWindow,
+            fanControlWindow, activityMonitorWindow, permissionCenterWindow, fakeLockWindow,
         ]
-        for window in windows.compactMap({ $0 }) {
+        for window in windows.compactMap({ $0 }) where windowTargetIsVisible(window) {
+            window.alphaValue = targetWindowAlpha
+        }
+    }
+
+    private func updateAllWindowSizes(previousZoom: Double, currentZoom: Double) {
+        guard previousZoom > 0, currentZoom > 0 else { return }
+        let ratio = CGFloat(currentZoom / previousZoom)
+        let windows: [(DraggableWindow?, FeatureWindowKind)] = [
+            (destinTabWindow as? DraggableWindow, .destinTab),
+            (superSwitchWindow as? DraggableWindow, .superSwitch),
+            (ghostProtocolWindow as? DraggableWindow, .ghostProtocol),
+            (browserBypasserWindow as? DraggableWindow, .browserBypasser),
+            (assessPrepHackWindow as? DraggableWindow, .assessPrepHack),
+            (settingsWindow as? DraggableWindow, .settings),
+            (wallpaperBrowserWindow as? DraggableWindow, .wallpaper),
+            (hackerDesktopWindow as? DraggableWindow, .hackerDesktop),
+            (clipoWindow as? DraggableWindow, .clipo),
+            (errorHubWindow as? DraggableWindow, .errorHub),
+            (fanControlWindow as? DraggableWindow, .fanControl),
+            (activityMonitorWindow as? DraggableWindow, .activityMonitor),
+            (permissionCenterWindow as? DraggableWindow, .permissionCenter),
+            (fakeLockWindow as? DraggableWindow, .fakeLock),
+        ]
+        for (window, kind) in windows {
+            guard let window else { continue }
+            configureFeatureWindow(window, kind: kind, zoom: CGFloat(currentZoom))
+            let scaled = NSSize(
+                width: window.contentView?.bounds.width ?? window.frame.width,
+                height: window.contentView?.bounds.height ?? window.frame.height
+            )
+            window.setContentSize(constrainedWindowSize(
+                base: NSSize(width: scaled.width * ratio, height: scaled.height * ratio),
+                zoom: 1,
+                screen: window.screen
+            ))
             constrainWindowToVisibleScreen(window)
         }
     }
@@ -1995,6 +2145,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             (errorHubWindow, { [weak self] in self?.hideErrorHubWindow() }),
             (activityMonitorWindow, { [weak self] in self?.hideActivityMonitorWindow() }),
             (permissionCenterWindow, { [weak self] in self?.hidePermissionCenterWindow() }),
+            (fakeLockWindow, { [weak self] in self?.hideFakeLockWindow() }),
             // FanControl is intentionally excluded: it should only close via its own close button.
         ]
 
@@ -2065,6 +2216,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         statusItemTimer?.invalidate()
         widgetSnapshotTimer?.invalidate()
         widgetSnapshotTimer = nil
+        widgetAccentReloadWorkItem?.cancel()
+        widgetAccentReloadWorkItem = nil
         SystemMonitor.shared.stop(client: .widgetHost)
         statusItemUpdateTask?.cancel()
         statusItemUpdateTask = nil
@@ -2077,6 +2230,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         AssessPrepHackViewModel.shared.stopAllBypasses()
         GhostProtocolController.shared.shutdown()
         ClipoService.shared.stop()
+        FakeLockService.shared.stop()
         
         if let id = showPopoverCustomHotKeyID {
             ShortcutManager.shared.unregisterCustomHotKey(id: id)
@@ -2142,6 +2296,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             window.orderOut(nil)
         }
         if let window = permissionCenterWindow {
+            window.orderOut(nil)
+        }
+        if let window = fakeLockWindow {
             window.orderOut(nil)
         }
     }
@@ -2377,9 +2534,10 @@ struct MenuBarWindowView: View {
     var onOpenErrorHub: () -> Void = {}
     var onOpenActivityMonitor: () -> Void = {}
     var onOpenPermissionCenter: () -> Void = {}
+    var onOpenFakeLock: () -> Void = {}
 
     var body: some View {
-        MenuBarView(onClose: onClose, onOpenDestinTab: onOpenDestinTab, onOpenSuperSwitch: onOpenSuperSwitch, onOpenGhostProtocol: onOpenGhostProtocol, onOpenBrowserBypasser: onOpenBrowserBypasser, onOpenAssessPrepHack: onOpenAssessPrepHack, onOpenSettings: onOpenSettings, onOpenWallpaper: onOpenWallpaper, onOpenHackerDesktop: onOpenHackerDesktop, onOpenClipo: onOpenClipo, onOpenFanControl: onOpenFanControl, onOpenErrorHub: onOpenErrorHub, onOpenActivityMonitor: onOpenActivityMonitor, onOpenPermissionCenter: onOpenPermissionCenter)
+        MenuBarView(onClose: onClose, onOpenDestinTab: onOpenDestinTab, onOpenSuperSwitch: onOpenSuperSwitch, onOpenGhostProtocol: onOpenGhostProtocol, onOpenBrowserBypasser: onOpenBrowserBypasser, onOpenAssessPrepHack: onOpenAssessPrepHack, onOpenSettings: onOpenSettings, onOpenWallpaper: onOpenWallpaper, onOpenHackerDesktop: onOpenHackerDesktop, onOpenClipo: onOpenClipo, onOpenFanControl: onOpenFanControl, onOpenErrorHub: onOpenErrorHub, onOpenActivityMonitor: onOpenActivityMonitor, onOpenPermissionCenter: onOpenPermissionCenter, onOpenFakeLock: onOpenFakeLock)
     }
 }
 
@@ -2545,7 +2703,7 @@ struct SettingsContainerView: View {
                 .id(selectedPage)
         }
         .background(Color.black)
-        .tint(.cyan)
+        .tint(prefs.preferences.themeAccent.color)
         .preferredColorScheme(.dark)
         .overlay(
             RoundedRectangle(cornerRadius: 12 * zoomScale)
@@ -2571,7 +2729,7 @@ struct SettingsContainerView: View {
                         .foregroundStyle(isSelected ? .black : .white.opacity(0.62))
                         .padding(.horizontal, 8 * zoomScale)
                         .frame(height: 28 * zoomScale)
-                        .background(isSelected ? Color.cyan.opacity(0.86) : Color.white.opacity(0.035))
+                        .background(isSelected ? prefs.preferences.themeAccent.color.opacity(0.86) : Color.white.opacity(0.035))
                         .clipShape(RoundedRectangle(cornerRadius: 6 * zoomScale))
                     }
                     .buttonStyle(.plain)
@@ -2619,6 +2777,14 @@ struct PermissionCenterWindowView: View {
     
     var body: some View {
         PermissionCenterView(onClose: onClose)
+    }
+}
+
+struct FakeLockWindowView: View {
+    var onClose: () -> Void
+
+    var body: some View {
+        FakeLockView(onClose: onClose)
     }
 }
 

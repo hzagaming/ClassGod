@@ -8,6 +8,9 @@ import SwiftUI
 
 struct WidgetEntry: TimelineEntry {
     let date: Date
+    let accent: ThemeAccent
+
+    var accentColor: Color { accent.color }
     
     // System
     let cpuUsage: Double
@@ -42,6 +45,7 @@ struct WidgetEntry: TimelineEntry {
     static var preview: WidgetEntry {
         WidgetEntry(
             date: Date(),
+            accent: .default,
             cpuUsage: 42.5,
             memoryUsage: 8.2,
             memoryTotal: 16.0,
@@ -99,6 +103,7 @@ struct WidgetEntry: TimelineEntry {
     static var placeholder: WidgetEntry {
         WidgetEntry(
             date: Date(),
+            accent: .default,
             cpuUsage: 0,
             memoryUsage: 0,
             memoryTotal: 16,
@@ -128,12 +133,13 @@ struct WidgetEntry: TimelineEntry {
 struct WidgetEmptyState: View {
     let icon: String
     let title: LocalizedStringKey
+    var accentColor: Color = ThemeAccent.default.color
 
     var body: some View {
         VStack(spacing: 5) {
             Image(systemName: icon)
                 .font(.system(size: 20))
-                .foregroundStyle(.cyan.opacity(0.55))
+                .foregroundStyle(accentColor.opacity(0.55))
             Text(title)
                 .font(.system(size: 9, weight: .medium, design: .monospaced))
                 .foregroundStyle(.white.opacity(0.55))

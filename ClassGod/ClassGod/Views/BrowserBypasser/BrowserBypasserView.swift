@@ -18,6 +18,7 @@ struct BrowserBypasserView: View {
     var onClose: () -> Void
     
     private var zoomScale: CGFloat { CGFloat(prefs.preferences.windowZoomScale) }
+    private var accent: Color { prefs.preferences.themeAccent.color }
     var body: some View {
         ZStack(alignment: .top) {
             VStack(spacing: 0 * zoomScale) {
@@ -137,7 +138,7 @@ struct BrowserBypasserView: View {
                 .foregroundStyle(.black)
                 .padding(.horizontal, 9 * zoomScale)
                 .frame(height: 26 * zoomScale)
-                .background(Color.cyan.opacity(0.9))
+                .background(accent.opacity(0.9))
                 .clipShape(RoundedRectangle(cornerRadius: 6 * zoomScale))
             }
             .buttonStyle(.plain)
@@ -272,7 +273,7 @@ struct BrowserBypasserView: View {
                     .foregroundStyle(.black)
                     .padding(.horizontal, 12 * zoomScale)
                     .frame(height: 28 * zoomScale)
-                    .background(Color.cyan.opacity(0.9))
+                    .background(accent.opacity(0.9))
                     .clipShape(RoundedRectangle(cornerRadius: 6 * zoomScale))
             }
             .buttonStyle(.plain)

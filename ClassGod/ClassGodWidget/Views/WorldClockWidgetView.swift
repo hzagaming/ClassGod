@@ -38,7 +38,7 @@ struct WorldClockWidgetView: View {
                     HStack {
                         Text(city.0)
                             .font(.system(size: 10, weight: .bold, design: .monospaced))
-                            .foregroundStyle(.cyan.opacity(0.7))
+                            .foregroundStyle(entry.accentColor.opacity(0.7))
                             .frame(width: 32, alignment: .leading)
                         Text(timeInZone(city.1))
                             .font(.system(size: 14, weight: .bold, design: .monospaced))
@@ -64,7 +64,7 @@ struct WorldClockWidgetView: View {
                     HStack {
                         Text(city.0)
                             .font(.system(size: 11, weight: .bold, design: .monospaced))
-                            .foregroundStyle(.cyan.opacity(0.7))
+                            .foregroundStyle(entry.accentColor.opacity(0.7))
                             .frame(width: 36, alignment: .leading)
                         Text(timeInZone(city.1))
                             .font(.system(size: 18, weight: .bold, design: .monospaced))

@@ -27,7 +27,7 @@ struct WeatherWidgetView: View {
                 VStack(spacing: 3) {
                     Image(systemName: weather.condition.rawValue)
                         .font(.system(size: 25))
-                        .foregroundStyle(.cyan)
+                        .foregroundStyle(entry.accentColor)
                     Text(temperatureText)
                         .font(.system(size: 19, weight: .bold, design: .monospaced))
                         .foregroundStyle(.white)
@@ -53,7 +53,7 @@ struct WeatherWidgetView: View {
                 HStack(spacing: 14) {
                     Image(systemName: weather.condition.rawValue)
                         .font(.system(size: 34))
-                        .foregroundStyle(.cyan)
+                        .foregroundStyle(entry.accentColor)
 
                     VStack(alignment: .leading, spacing: 2) {
                         Text(temperatureText)
@@ -125,7 +125,7 @@ struct WeatherWidgetView: View {
         VStack(spacing: 6) {
             Image(systemName: "cloud.slash")
                 .font(.system(size: 24))
-                .foregroundStyle(.cyan.opacity(0.55))
+                .foregroundStyle(entry.accentColor.opacity(0.55))
             Text("WIDGET_WEATHER_NOT_CONFIGURED")
                 .font(.system(size: 9, weight: .medium, design: .monospaced))
                 .foregroundStyle(.white.opacity(0.5))

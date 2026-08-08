@@ -15,7 +15,7 @@ struct FanControlSettingsView: View {
                     title: "section.fan_general",
                     icon: "fanblades",
                     defaultExpanded: true,
-                    accentColor: .cyan
+                    accentColor: prefs.preferences.themeAccent.color
                 ) {
                     SettingsToggleRow(
                         icon: "power",
@@ -136,7 +136,7 @@ struct FanControlSettingsView: View {
                                 Text("button.add_rule")
                                     .font(.system(size: 11, weight: .medium, design: .monospaced))
                             }
-                            .foregroundStyle(.cyan)
+                            .foregroundStyle(prefs.preferences.themeAccent.color)
                             .padding(.horizontal, 10)
                             .padding(.vertical, 6)
                         }

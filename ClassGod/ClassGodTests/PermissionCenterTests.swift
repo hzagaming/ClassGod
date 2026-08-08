@@ -65,6 +65,23 @@ struct PermissionCenterTests {
         #expect(PermissionReviewPlan.all == PermissionType.allCases)
     }
 
+    @Test("Maximum permission review skips granted access and preserves catalog order")
+    func pendingPermissionReviewScope() {
+        let statuses = makeStatuses([
+            .accessibility: .granted,
+            .appleEvents: .denied,
+            .inputMonitoring: .notDetermined,
+            .filesAndFolders: .manualReview,
+        ])
+
+        let pending = PermissionReviewPlan.pending(
+            types: [.filesAndFolders, .accessibility, .inputMonitoring, .appleEvents],
+            statuses: statuses
+        )
+
+        #expect(pending == [.inputMonitoring, .appleEvents, .filesAndFolders])
+    }
+
     @Test("Every permission communicates whether access is required")
     func permissionRequirementMetadata() {
         #expect(PermissionType.accessibility.requirement == .required)

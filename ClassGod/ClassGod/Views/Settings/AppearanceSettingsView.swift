@@ -3,6 +3,7 @@
 //  ClassGod
 //
 
+import AppKit
 import SwiftUI
 
 struct AppearanceSettingsView: View {
@@ -69,9 +70,6 @@ struct AppearanceSettingsView: View {
                     ) {
                         Int($0 * 100)
                     }
-                    .onChange(of: prefs.preferences.windowZoomScale) { _, _ in
-                        (NSApp.delegate as? AppDelegate)?.updateAllWindowSizes()
-                    }
                 }
 
                 StatefulCollapsibleSection(
@@ -88,6 +86,58 @@ struct AppearanceSettingsView: View {
                         style: .segmented
                     )
 
+                    HStack(spacing: 12) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("setting.accent_color")
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundStyle(.white)
+                            Text("setting.accent_color.subtitle")
+                                .font(.system(size: 10))
+                                .foregroundStyle(.white.opacity(0.35))
+                        }
+                        Spacer()
+                        ColorPicker(
+                            "",
+                            selection: accentBinding,
+                            supportsOpacity: false
+                        )
+                        .labelsHidden()
+                        .accessibilityLabel(Text("setting.accent_color"))
+                    }
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 8)
+
+                    HStack(spacing: 8) {
+                        ForEach(accentPresets, id: \.self) { accent in
+                            Button {
+                                prefs.preferences.themeAccent = accent
+                                SoundEffectManager.shared.playButtonClick()
+                                HapticManager.shared.generic()
+                            } label: {
+                                Circle()
+                                    .fill(accent.color)
+                                    .frame(width: 20, height: 20)
+                                    .overlay(
+                                        Circle().stroke(
+                                            prefs.preferences.themeAccent == accent ? Color.white : Color.white.opacity(0.18),
+                                            lineWidth: prefs.preferences.themeAccent == accent ? 2 : 1
+                                        )
+                                    )
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityLabel(Text("setting.accent_preset"))
+                        }
+                        Spacer()
+                        Button("button.reset") {
+                            prefs.preferences.themeAccent = .default
+                            SoundEffectManager.shared.playButtonClick()
+                        }
+                        .buttonStyle(.plain)
+                        .font(.system(size: 10, weight: .medium, design: .monospaced))
+                        .foregroundStyle(prefs.preferences.themeAccent.color)
+                    }
+                    .padding(.horizontal, 10)
+
                     SettingsSliderRow(
                         label: "setting.window_opacity",
                         value: $prefs.preferences.windowOpacity,
@@ -103,7 +153,7 @@ struct AppearanceSettingsView: View {
                     title: "section.display",
                     icon: "eye",
                     defaultExpanded: true,
-                    accentColor: .cyan
+                    accentColor: prefs.preferences.themeAccent.color
                 ) {
                     SettingsToggleRow(
                         icon: "globe",
@@ -182,6 +232,31 @@ struct AppearanceSettingsView: View {
             .padding(.horizontal, 8)
             .padding(.vertical, 8)
         }
+    }
+
+    private var accentBinding: Binding<Color> {
+        Binding(
+            get: { prefs.preferences.themeAccent.color },
+            set: { color in
+                guard let converted = NSColor(color).usingColorSpace(.sRGB) else { return }
+                prefs.preferences.themeAccent = ThemeAccent(
+                    red: converted.redComponent,
+                    green: converted.greenComponent,
+                    blue: converted.blueComponent
+                )
+            }
+        )
+    }
+
+    private var accentPresets: [ThemeAccent] {
+        [
+            .default,
+            ThemeAccent(red: 0.35, green: 0.55, blue: 1),
+            ThemeAccent(red: 0.6, green: 0.35, blue: 1),
+            ThemeAccent(red: 1, green: 0.32, blue: 0.55),
+            ThemeAccent(red: 0.25, green: 1, blue: 0.45),
+            ThemeAccent(red: 1, green: 0.72, blue: 0.2),
+        ]
     }
 }
 

@@ -255,6 +255,7 @@ struct AppPreferences: Codable, Equatable {
     var panelMaxHeight: Double
     var panelCornerRadius: Double
     var theme: AppTheme
+    var themeAccent: ThemeAccent
     var showURLPreview: Bool
     var rowHeight: Double
     var showBrowserIcon: Bool
@@ -332,6 +333,7 @@ struct AppPreferences: Codable, Equatable {
         panelMaxHeight: Double,
         panelCornerRadius: Double,
         theme: AppTheme,
+        themeAccent: ThemeAccent,
         showURLPreview: Bool,
         rowHeight: Double,
         showBrowserIcon: Bool,
@@ -401,6 +403,7 @@ struct AppPreferences: Codable, Equatable {
         self.panelMaxHeight = panelMaxHeight
         self.panelCornerRadius = panelCornerRadius
         self.theme = theme
+        self.themeAccent = themeAccent
         self.showURLPreview = showURLPreview
         self.rowHeight = rowHeight
         self.showBrowserIcon = showBrowserIcon
@@ -473,6 +476,7 @@ struct AppPreferences: Codable, Equatable {
         panelMaxHeight: 500,
         panelCornerRadius: 12,
         theme: .system,
+        themeAccent: .default,
         showURLPreview: true,
         rowHeight: 44,
         showBrowserIcon: true,
@@ -484,7 +488,7 @@ struct AppPreferences: Codable, Equatable {
         fontSizeScale: 1.0,
         enableBlurBackground: true,
         listDividerStyle: .thin,
-        version: 4,
+        version: 5,
         animationSpeed: .fast,
         enableDebugLogging: false,
         enableSoundEffects: true,
@@ -554,6 +558,7 @@ extension AppPreferences {
         case panelMaxHeight
         case panelCornerRadius
         case theme
+        case themeAccent
         case showURLPreview
         case rowHeight
         case showBrowserIcon
@@ -640,6 +645,7 @@ extension AppPreferences {
         preferences.panelMaxHeight = try container.decodeIfPresent(Double.self, forKey: .panelMaxHeight) ?? preferences.panelMaxHeight
         preferences.panelCornerRadius = try container.decodeIfPresent(Double.self, forKey: .panelCornerRadius) ?? preferences.panelCornerRadius
         preferences.theme = try container.decodeIfPresent(AppTheme.self, forKey: .theme) ?? preferences.theme
+        preferences.themeAccent = try container.decodeIfPresent(ThemeAccent.self, forKey: .themeAccent) ?? preferences.themeAccent
         preferences.showURLPreview = try container.decodeIfPresent(Bool.self, forKey: .showURLPreview) ?? preferences.showURLPreview
         preferences.rowHeight = try container.decodeIfPresent(Double.self, forKey: .rowHeight) ?? preferences.rowHeight
         preferences.showBrowserIcon = try container.decodeIfPresent(Bool.self, forKey: .showBrowserIcon) ?? preferences.showBrowserIcon

@@ -50,7 +50,7 @@ struct ClockWidgetView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(dayString)
                         .font(.system(size: 14, weight: .bold, design: .monospaced))
-                        .foregroundStyle(.cyan.opacity(0.8))
+                        .foregroundStyle(entry.accentColor.opacity(0.8))
                     Text(entry.clockCity)
                         .font(.system(size: 12, design: .monospaced))
                         .foregroundStyle(.white.opacity(0.35))

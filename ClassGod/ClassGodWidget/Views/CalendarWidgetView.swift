@@ -47,7 +47,7 @@ struct CalendarWidgetView: View {
                                 .font(.system(size: 9, weight: day == today ? .bold : .medium, design: .monospaced))
                                 .foregroundStyle(day == today ? .black : .white.opacity(0.7))
                                 .frame(width: 18, height: 18)
-                                .background(day == today ? Color.cyan : Color.clear)
+                                .background(day == today ? entry.accentColor : Color.clear)
                                 .clipShape(Circle())
                         } else {
                             Color.clear.frame(width: 18, height: 18)

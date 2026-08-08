@@ -33,7 +33,7 @@ struct TerminalLogWidgetView: View {
                 }
                 
                 if entry.terminalLogs.isEmpty {
-                    WidgetEmptyState(icon: "terminal", title: "WIDGET_EMPTY_LOGS")
+                    WidgetEmptyState(icon: "terminal", title: "WIDGET_EMPTY_LOGS", accentColor: entry.accentColor)
                 } else {
                     VStack(alignment: .leading, spacing: 2) {
                         ForEach(Array(entry.terminalLogs.prefix(3).enumerated()), id: \.offset) { _, line in
@@ -64,7 +64,7 @@ struct TerminalLogWidgetView: View {
                 }
                 
                 if entry.terminalLogs.isEmpty {
-                    WidgetEmptyState(icon: "terminal", title: "WIDGET_EMPTY_LOGS")
+                    WidgetEmptyState(icon: "terminal", title: "WIDGET_EMPTY_LOGS", accentColor: entry.accentColor)
                 } else {
                     VStack(alignment: .leading, spacing: 3) {
                         ForEach(Array(entry.terminalLogs.prefix(5).enumerated()), id: \.offset) { _, line in

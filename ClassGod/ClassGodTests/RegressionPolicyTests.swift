@@ -215,12 +215,65 @@ struct RegressionPolicyTests {
     func validatesSettingsNavigation() {
         #expect(SettingsPage.allCases == [.general, .shortcuts, .appearance, .browser, .advanced, .fan])
         #expect(Set(SettingsPage.allCases.map(\.id)).count == SettingsPage.allCases.count)
-        #expect(SettingsWindowLayoutPolicy.baseWidth == 580)
-        #expect(SettingsWindowLayoutPolicy.baseHeight == 500)
+        #expect(SettingsWindowLayoutPolicy.baseWidth == 720)
+        #expect(SettingsWindowLayoutPolicy.baseHeight == 620)
         for page in SettingsPage.allCases {
             #expect(!page.iconName.isEmpty)
             #expect(!page.accessibilityTitle.isEmpty)
         }
+    }
+
+    @Test("Feature windows have independent defaults and minimum sizes")
+    func validatesFeatureWindowLayouts() {
+        let layouts = FeatureWindowKind.allCases.map(FeatureWindowLayoutPolicy.layout(for:))
+        #expect(Set(layouts.map(\.defaultWidth)).count >= 6)
+        #expect(Set(layouts.map(\.defaultHeight)).count >= 5)
+        #expect(layouts.allSatisfy { $0.defaultWidth >= $0.minimumWidth })
+        #expect(layouts.allSatisfy { $0.defaultHeight >= $0.minimumHeight })
+        #expect(FeatureWindowLayoutPolicy.layout(for: .wallpaper).defaultWidth == 860)
+        #expect(FeatureWindowLayoutPolicy.layout(for: .fanControl).defaultWidth == 680)
+        #expect(FeatureWindowLayoutPolicy.layout(for: .permissionCenter).defaultWidth == 900)
+    }
+
+    @Test("Unrelated preference changes never reset manually resized feature windows")
+    func preservesManualFeatureWindowSizes() {
+        #expect(!FeatureWindowResizePolicy.shouldApplyScale(previousZoom: 1, currentZoom: 1))
+        #expect(FeatureWindowResizePolicy.shouldApplyScale(previousZoom: 1, currentZoom: 1.2))
+    }
+
+    @Test("Fake Lock normalizes safe browser URLs")
+    func normalizesFakeLockURLs() {
+        #expect(FakeLockURLPolicy.normalized("  example.com/test  ")?.absoluteString == "https://example.com/test")
+        #expect(FakeLockURLPolicy.normalized("https://example.com")?.host == "example.com")
+        #expect(FakeLockURLPolicy.normalized("") == nil)
+        #expect(FakeLockURLPolicy.normalized("ftp://example.com") == nil)
+        #expect(FakeLockURLPolicy.normalized("https://") == nil)
+    }
+
+    @Test("Fake Lock applies independent backward and forward navigation locks")
+    func validatesFakeLockNavigationPolicy() {
+        #expect(FakeLockNavigationPolicy.decision(
+            for: .backward,
+            lockBackward: true,
+            lockForward: false
+        ) == .blocked)
+        #expect(FakeLockNavigationPolicy.decision(
+            for: .forward,
+            lockBackward: true,
+            lockForward: false
+        ) == .allowed)
+        #expect(FakeLockNavigationPolicy.decision(
+            for: .forward,
+            lockBackward: false,
+            lockForward: true
+        ) == .blocked)
+    }
+
+    @Test("MapTest sessions always request full screen")
+    func validatesFakeLockFullScreenPolicy() {
+        #expect(FakeLockSessionPolicy.shouldOpenFullScreen(mode: .mapTestBypass, requested: false))
+        #expect(FakeLockSessionPolicy.shouldOpenFullScreen(mode: .safeBrowser, requested: true))
+        #expect(!FakeLockSessionPolicy.shouldOpenFullScreen(mode: .safeBrowser, requested: false))
     }
 
     @Test("Fractional refresh intervals keep their precision")

@@ -30,7 +30,7 @@ struct NetworkWidgetView: View {
                     VStack(spacing: 2) {
                         Image(systemName: "arrow.down")
                             .font(.system(size: 10))
-                            .foregroundStyle(.cyan)
+                            .foregroundStyle(entry.accentColor)
                         Text(formatSpeed(entry.networkDown))
                             .font(.system(size: 10, weight: .bold, design: .monospaced))
                             .foregroundStyle(.white)
@@ -64,7 +64,7 @@ struct NetworkWidgetView: View {
                     HStack(spacing: 6) {
                         Image(systemName: "arrow.down.circle.fill")
                             .font(.system(size: 14))
-                            .foregroundStyle(.cyan)
+                            .foregroundStyle(entry.accentColor)
                         VStack(alignment: .leading, spacing: 1) {
                             Text("DOWN")
                                 .font(.system(size: 8, design: .monospaced))

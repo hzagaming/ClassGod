@@ -24,7 +24,7 @@ struct QuoteWidgetView: View {
             VStack(spacing: 6) {
                 Text("❝")
                     .font(.system(size: 16))
-                    .foregroundStyle(.cyan.opacity(0.4))
+                    .foregroundStyle(entry.accentColor.opacity(0.4))
                 
                 Text(entry.quoteText)
                     .font(.system(size: 10, design: .monospaced))
@@ -46,7 +46,7 @@ struct QuoteWidgetView: View {
             VStack(spacing: 8) {
                 Text("❝")
                     .font(.system(size: 20))
-                    .foregroundStyle(.cyan.opacity(0.4))
+                    .foregroundStyle(entry.accentColor.opacity(0.4))
                 
                 Text(entry.quoteText)
                     .font(.system(size: 12, design: .monospaced))

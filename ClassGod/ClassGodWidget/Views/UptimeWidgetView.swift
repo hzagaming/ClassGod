@@ -20,7 +20,7 @@ struct UptimeWidgetView: View {
                 HStack(alignment: .lastTextBaseline, spacing: 2) {
                     Text("\(days)")
                         .font(.system(size: 20, weight: .bold, design: .monospaced))
-                        .foregroundStyle(.cyan)
+                        .foregroundStyle(entry.accentColor)
                     Text("d")
                         .font(.system(size: 10, design: .monospaced))
                         .foregroundStyle(.white.opacity(0.4))

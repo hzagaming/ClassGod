@@ -94,7 +94,7 @@ struct CPUWidgetView: View {
     private var cpuColor: Color {
         if entry.cpuUsage > 80 { return .red }
         if entry.cpuUsage > 50 { return .orange }
-        return .cyan
+        return entry.accentColor
     }
     
     private var statusText: LocalizedStringKey {

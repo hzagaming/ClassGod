@@ -60,7 +60,7 @@ struct BrowserSettingsView: View {
                     title: "section.supported_browsers",
                     icon: "checkmark.circle",
                     defaultExpanded: false,
-                    accentColor: .cyan
+                    accentColor: prefs.preferences.themeAccent.color
                 ) {
                     VStack(alignment: .leading, spacing: 4) {
                         browserRow(name: "browser.safari", icon: "safari", bundleID: BrowserType.safari.bundleIdentifier)

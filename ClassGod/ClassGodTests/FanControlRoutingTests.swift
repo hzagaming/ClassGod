@@ -199,4 +199,68 @@ struct FanControlRoutingTests {
 
         #expect(first.id == refreshed.id)
     }
+
+    @Test("Manual fan targets clamp to the writable hardware range")
+    func normalizesManualFanTargets() {
+        #expect(FanRPMTargetPolicy.normalized(
+            requested: 8_000,
+            minimum: 1_200,
+            maximum: 6_000
+        ) == 6_000)
+        #expect(FanRPMTargetPolicy.normalized(
+            requested: 800,
+            minimum: 1_200,
+            maximum: 6_000
+        ) == 1_200)
+        #expect(FanRPMTargetPolicy.normalized(
+            requested: .nan,
+            minimum: 1_200,
+            maximum: 6_000
+        ) == nil)
+        #expect(FanRPMTargetPolicy.normalized(
+            requested: 2_000,
+            minimum: 6_000,
+            maximum: 1_200
+        ) == nil)
+    }
+
+    @Test("Embedded helper assets remain authorizable when Service Management cannot locate them")
+    func embeddedHelperAuthorizationFallback() {
+        #expect(HelperAuthorizationPolicy.canRequest(
+            status: .notFound,
+            hasEmbeddedService: true
+        ))
+        #expect(!HelperAuthorizationPolicy.canRequest(
+            status: .notFound,
+            hasEmbeddedService: false
+        ))
+    }
+
+    @Test("Helper bundle validation requires both the daemon plist and executable")
+    func validatesEmbeddedHelperAssets() throws {
+        let bundleURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let plistURL = bundleURL.appendingPathComponent(HelperBundlePolicy.daemonRelativePath)
+        let executableURL = bundleURL.appendingPathComponent(HelperBundlePolicy.executableRelativePath)
+        defer { try? FileManager.default.removeItem(at: bundleURL) }
+
+        try FileManager.default.createDirectory(
+            at: plistURL.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+        try FileManager.default.createDirectory(
+            at: executableURL.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+        try Data("plist".utf8).write(to: plistURL)
+        try Data("helper".utf8).write(to: executableURL)
+        try FileManager.default.setAttributes(
+            [.posixPermissions: 0o755],
+            ofItemAtPath: executableURL.path
+        )
+
+        #expect(HelperBundlePolicy.hasEmbeddedService(in: bundleURL))
+        try FileManager.default.removeItem(at: executableURL)
+        #expect(!HelperBundlePolicy.hasEmbeddedService(in: bundleURL))
+    }
 }

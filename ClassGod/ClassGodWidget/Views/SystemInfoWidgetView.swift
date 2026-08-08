@@ -24,7 +24,7 @@ struct SystemInfoWidgetView: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text("SYS_INFO")
                     .font(.system(size: 9, weight: .bold, design: .monospaced))
-                    .foregroundStyle(.cyan.opacity(0.6))
+                    .foregroundStyle(entry.accentColor.opacity(0.6))
                 Text(hostName)
                     .font(.system(size: 11, weight: .medium, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.8))
@@ -50,7 +50,7 @@ struct SystemInfoWidgetView: View {
                 HStack {
                     Text("SYSTEM INFORMATION")
                         .font(.system(size: 9, weight: .bold, design: .monospaced))
-                        .foregroundStyle(.cyan.opacity(0.6))
+                        .foregroundStyle(entry.accentColor.opacity(0.6))
                     Spacer()
                 }
                 

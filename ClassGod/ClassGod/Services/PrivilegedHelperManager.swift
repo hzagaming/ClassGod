@@ -9,6 +9,30 @@ enum HelperAuthorizationStatus: Equatable {
     case notFound
 }
 
+enum HelperBundlePolicy {
+    static let daemonRelativePath = "Contents/Library/LaunchDaemons/com.hanazar.classgod.helper.plist"
+    static let executableRelativePath = "Contents/Resources/ClassGodHelper"
+
+    static func hasEmbeddedService(
+        in bundleURL: URL,
+        fileManager: FileManager = .default
+    ) -> Bool {
+        let plistURL = bundleURL.appendingPathComponent(daemonRelativePath)
+        let executableURL = bundleURL.appendingPathComponent(executableRelativePath)
+        return fileManager.fileExists(atPath: plistURL.path)
+            && fileManager.isExecutableFile(atPath: executableURL.path)
+    }
+}
+
+enum HelperAuthorizationPolicy {
+    static func canRequest(
+        status: HelperAuthorizationStatus,
+        hasEmbeddedService: Bool
+    ) -> Bool {
+        status != .notFound || hasEmbeddedService
+    }
+}
+
 @MainActor
 final class PrivilegedHelperManager: ObservableObject {
     static let shared = PrivilegedHelperManager()
@@ -17,6 +41,9 @@ final class PrivilegedHelperManager: ObservableObject {
     @Published private(set) var status: HelperAuthorizationStatus = .notRegistered
 
     private let service = SMAppService.daemon(plistName: plistName)
+    var hasEmbeddedService: Bool {
+        HelperBundlePolicy.hasEmbeddedService(in: Bundle.main.bundleURL)
+    }
 
     private init() {
         refreshStatus()
@@ -44,9 +71,13 @@ final class PrivilegedHelperManager: ObservableObject {
         switch refreshStatus() {
         case .enabled, .requiresApproval:
             return status
-        case .notFound:
-            throw CocoaError(.fileNoSuchFile)
-        case .notRegistered:
+        case .notRegistered, .notFound:
+            guard HelperAuthorizationPolicy.canRequest(
+                status: status,
+                hasEmbeddedService: hasEmbeddedService
+            ) else {
+                throw CocoaError(.fileNoSuchFile)
+            }
             do {
                 try service.register()
             } catch {

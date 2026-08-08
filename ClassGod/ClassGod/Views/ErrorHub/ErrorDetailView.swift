@@ -20,6 +20,7 @@ struct ErrorDetailView: View {
     @State private var showRelated = false
     
     private var zoomScale: CGFloat { CGFloat(prefs.preferences.windowZoomScale) }
+    private var accent: Color { prefs.preferences.themeAccent.color }
     
     var body: some View {
         ZStack {
@@ -160,14 +161,14 @@ struct ErrorDetailView: View {
                     Text(String(localized: "error.open_in_encyclopedia"))
                         .font(.system(size: 8 * zoomScale, weight: .bold, design: .monospaced))
                 }
-                .foregroundStyle(.cyan)
+                .foregroundStyle(accent)
                 .padding(.horizontal, 8 * zoomScale)
                 .padding(.vertical, 3 * zoomScale)
-                .background(.cyan.opacity(0.1))
+                .background(accent.opacity(0.1))
                 .cornerRadius(4 * zoomScale)
                 .overlay(
                     RoundedRectangle(cornerRadius: 4 * zoomScale)
-                        .stroke(.cyan.opacity(0.3), lineWidth: 1 * zoomScale)
+                        .stroke(accent.opacity(0.3), lineWidth: 1 * zoomScale)
                         .allowsHitTesting(false)
                 )
             }
@@ -427,7 +428,7 @@ struct ErrorDetailView: View {
                         }) {
                             Text("button.open")
                                 .font(.system(size: 9 * zoomScale, weight: .bold, design: .monospaced))
-                                .foregroundStyle(.cyan)
+                                .foregroundStyle(accent)
                         }
                         .buttonStyle(.plain)
                     }

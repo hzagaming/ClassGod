@@ -14,7 +14,9 @@ class DraggableWindow: NSWindow {
     // MARK: - Resize Configuration
 
     private let resizeMargin: CGFloat = 12
-    private let minWindowSize = NSSize(width: 200, height: 120)
+    var minimumWindowSize = NSSize(width: 200, height: 120) {
+        didSet { minSize = minimumWindowSize }
+    }
 
     private enum ResizeEdge {
         case none
@@ -196,42 +198,42 @@ class DraggableWindow: NSWindow {
 
         switch currentResizeEdge {
         case .right:
-            newFrame.size.width = max(minWindowSize.width, initialFrame.size.width + deltaX)
+            newFrame.size.width = max(minimumWindowSize.width, initialFrame.size.width + deltaX)
 
         case .left:
-            let newWidth = max(minWindowSize.width, initialFrame.size.width - deltaX)
+            let newWidth = max(minimumWindowSize.width, initialFrame.size.width - deltaX)
             newFrame.origin.x = initialFrame.origin.x + initialFrame.size.width - newWidth
             newFrame.size.width = newWidth
 
         case .top:
-            newFrame.size.height = max(minWindowSize.height, initialFrame.size.height + deltaY)
+            newFrame.size.height = max(minimumWindowSize.height, initialFrame.size.height + deltaY)
 
         case .bottom:
-            let newHeight = max(minWindowSize.height, initialFrame.size.height - deltaY)
+            let newHeight = max(minimumWindowSize.height, initialFrame.size.height - deltaY)
             newFrame.origin.y = initialFrame.origin.y + initialFrame.size.height - newHeight
             newFrame.size.height = newHeight
 
         case .topRight:
-            newFrame.size.width  = max(minWindowSize.width,  initialFrame.size.width + deltaX)
-            newFrame.size.height = max(minWindowSize.height, initialFrame.size.height + deltaY)
+            newFrame.size.width  = max(minimumWindowSize.width,  initialFrame.size.width + deltaX)
+            newFrame.size.height = max(minimumWindowSize.height, initialFrame.size.height + deltaY)
 
         case .topLeft:
-            let newWidth = max(minWindowSize.width, initialFrame.size.width - deltaX)
+            let newWidth = max(minimumWindowSize.width, initialFrame.size.width - deltaX)
             newFrame.origin.x = initialFrame.origin.x + initialFrame.size.width - newWidth
             newFrame.size.width = newWidth
-            newFrame.size.height = max(minWindowSize.height, initialFrame.size.height + deltaY)
+            newFrame.size.height = max(minimumWindowSize.height, initialFrame.size.height + deltaY)
 
         case .bottomRight:
-            newFrame.size.width = max(minWindowSize.width, initialFrame.size.width + deltaX)
-            let newHeight = max(minWindowSize.height, initialFrame.size.height - deltaY)
+            newFrame.size.width = max(minimumWindowSize.width, initialFrame.size.width + deltaX)
+            let newHeight = max(minimumWindowSize.height, initialFrame.size.height - deltaY)
             newFrame.origin.y = initialFrame.origin.y + initialFrame.size.height - newHeight
             newFrame.size.height = newHeight
 
         case .bottomLeft:
-            let newWidth = max(minWindowSize.width, initialFrame.size.width - deltaX)
+            let newWidth = max(minimumWindowSize.width, initialFrame.size.width - deltaX)
             newFrame.origin.x = initialFrame.origin.x + initialFrame.size.width - newWidth
             newFrame.size.width = newWidth
-            let newHeight = max(minWindowSize.height, initialFrame.size.height - deltaY)
+            let newHeight = max(minimumWindowSize.height, initialFrame.size.height - deltaY)
             newFrame.origin.y = initialFrame.origin.y + initialFrame.size.height - newHeight
             newFrame.size.height = newHeight
 

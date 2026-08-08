@@ -30,14 +30,14 @@ struct FileWidgetView: View {
                 }
                 
                 if entry.filePaths.isEmpty {
-                    WidgetEmptyState(icon: "doc", title: "WIDGET_EMPTY_FILES")
+                    WidgetEmptyState(icon: "doc", title: "WIDGET_EMPTY_FILES", accentColor: entry.accentColor)
                 } else {
                     VStack(alignment: .leading, spacing: 5) {
                         ForEach(entry.filePaths.prefix(3)) { file in
                             HStack(spacing: 6) {
                                 Image(systemName: "doc.fill")
                                     .font(.system(size: 10))
-                                    .foregroundStyle(.cyan.opacity(0.6))
+                                    .foregroundStyle(entry.accentColor.opacity(0.6))
                                 Text(file.name)
                                     .font(.system(size: 10, design: .monospaced))
                                     .foregroundStyle(.white.opacity(0.75))
@@ -63,14 +63,14 @@ struct FileWidgetView: View {
                 }
                 
                 if entry.filePaths.isEmpty {
-                    WidgetEmptyState(icon: "doc", title: "WIDGET_EMPTY_FILES")
+                    WidgetEmptyState(icon: "doc", title: "WIDGET_EMPTY_FILES", accentColor: entry.accentColor)
                 } else {
                     VStack(alignment: .leading, spacing: 6) {
                         ForEach(entry.filePaths.prefix(5)) { file in
                             HStack(spacing: 8) {
                                 Image(systemName: iconForFile(file.name))
                                     .font(.system(size: 12))
-                                    .foregroundStyle(.cyan.opacity(0.6))
+                                    .foregroundStyle(entry.accentColor.opacity(0.6))
                                 VStack(alignment: .leading, spacing: 1) {
                                     Text(file.name)
                                         .font(.system(size: 11, design: .monospaced))

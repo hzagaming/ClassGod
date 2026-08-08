@@ -32,6 +32,7 @@ struct MenuBarView: View {
     var onOpenErrorHub: () -> Void
     var onOpenActivityMonitor: () -> Void
     var onOpenPermissionCenter: () -> Void
+    var onOpenFakeLock: () -> Void
     
     private var zoomScale: CGFloat { CGFloat(prefs.preferences.windowZoomScale) }
     var body: some View {
@@ -80,6 +81,13 @@ struct MenuBarView: View {
                             title: "BrowserBypasser",
                             description: "menu.browser_bypasser.description",
                             action: onOpenBrowserBypasser
+                        )
+
+                        FeatureButton(
+                            icon: "lock.rectangle.stack.fill",
+                            title: "fake_lock.title",
+                            description: "menu.fake_lock.description",
+                            action: onOpenFakeLock
                         )
                         
                         FeatureButton(
@@ -206,9 +214,9 @@ struct MenuBarView: View {
         HStack(spacing: 10 * zoomScale) {
             Image(systemName: "fanblades")
                 .font(.system(size: 16 * zoomScale))
-                .foregroundStyle(.cyan)
+                .foregroundStyle(prefs.preferences.themeAccent.color)
                 .frame(width: 32 * zoomScale, height: 32 * zoomScale)
-                .background(Color.cyan.opacity(0.1))
+                .background(prefs.preferences.themeAccent.color.opacity(0.1))
                 .clipShape(RoundedRectangle(cornerRadius: 8 * zoomScale))
 
             VStack(alignment: .leading, spacing: 2 * zoomScale) {
@@ -236,13 +244,13 @@ struct MenuBarView: View {
             Button(action: openFanControl) {
                 Text("button.open")
                     .font(.system(size: 9 * zoomScale, weight: .bold, design: .monospaced))
-                    .foregroundStyle(.cyan)
+                    .foregroundStyle(prefs.preferences.themeAccent.color)
                     .padding(.horizontal, 10 * zoomScale)
                     .padding(.vertical, 4 * zoomScale)
-                    .background(Color.cyan.opacity(0.1))
+                    .background(prefs.preferences.themeAccent.color.opacity(0.1))
                     .overlay(
                         RoundedRectangle(cornerRadius: 4 * zoomScale)
-                            .stroke(Color.cyan.opacity(0.3), lineWidth: 1 * zoomScale)
+                            .stroke(prefs.preferences.themeAccent.color.opacity(0.3), lineWidth: 1 * zoomScale)
                     )
             }
             .buttonStyle(.plain)
@@ -468,5 +476,5 @@ struct FeatureButton: View {
 }
 
 #Preview {
-    MenuBarView(onClose: {}, onOpenDestinTab: {}, onOpenSuperSwitch: {}, onOpenGhostProtocol: {}, onOpenBrowserBypasser: {}, onOpenAssessPrepHack: {}, onOpenSettings: {}, onOpenWallpaper: {}, onOpenHackerDesktop: {}, onOpenClipo: {}, onOpenFanControl: {}, onOpenErrorHub: {}, onOpenActivityMonitor: {}, onOpenPermissionCenter: {})
+    MenuBarView(onClose: {}, onOpenDestinTab: {}, onOpenSuperSwitch: {}, onOpenGhostProtocol: {}, onOpenBrowserBypasser: {}, onOpenAssessPrepHack: {}, onOpenSettings: {}, onOpenWallpaper: {}, onOpenHackerDesktop: {}, onOpenClipo: {}, onOpenFanControl: {}, onOpenErrorHub: {}, onOpenActivityMonitor: {}, onOpenPermissionCenter: {}, onOpenFakeLock: {})
 }

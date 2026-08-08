@@ -8963,6 +8963,22 @@
         }
       }
     },
+    "fan.error.helper_service_unavailable" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Helper is embedded, but macOS Service Management cannot register this app build. Use a properly signed ClassGod app and try again."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Helper 已嵌入，但 macOS 服务管理无法注册此应用构建。请使用正确签名的 ClassGod 应用后重试。"
+          }
+        }
+      }
+    },
     "fan.error.mode_set_failed" : {
       "localizations" : {
         "en" : {
@@ -11210,6 +11226,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "风扇控制 Helper 尚未请求 macOS 授权。"
+          }
+        }
+      }
+    },
+    "helper.status.service_unavailable" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Helper is embedded, but macOS Service Management cannot register this app build. Authorization can still be retried."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Helper 已嵌入，但 macOS 服务管理无法注册此应用构建；仍可重新尝试授权。"
           }
         }
       }
@@ -24747,6 +24779,54 @@
         }
       }
     },
+    "fake_lock.action.enable" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Enable Guard"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"启用锁定"}}}},
+    "fake_lock.action.unlock" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Unlock"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"解除锁定"}}}},
+    "fake_lock.error.browser_missing" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"The selected browser is not installed."}},"zh-Hans":{"stringUnit":{"state":"translated","value":"未安装所选浏览器。"}}}},
+    "fake_lock.error.invalid_url" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Enter a valid HTTP or HTTPS address."}},"zh-Hans":{"stringUnit":{"state":"translated","value":"请输入有效的 HTTP 或 HTTPS 地址。"}}}},
+    "fake_lock.error.not_active" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Start a browser session first."}},"zh-Hans":{"stringUnit":{"state":"translated","value":"请先启动浏览器会话。"}}}},
+    "fake_lock.error.script_create" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Could not create the browser control script."}},"zh-Hans":{"stringUnit":{"state":"translated","value":"无法创建浏览器控制脚本。"}}}},
+    "fake_lock.error.script_failed" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Browser control failed."}},"zh-Hans":{"stringUnit":{"state":"translated","value":"浏览器控制失败。"}}}},
+    "fake_lock.fullscreen" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Open in Full Screen"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"全屏打开"}}}},
+    "fake_lock.fullscreen.subtitle" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"MapTest Bypass always starts in full screen"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"MapTest Bypass 始终以全屏启动"}}}},
+    "fake_lock.go_backward" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Back"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"后退"}}}},
+    "fake_lock.go_forward" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Forward"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"前进"}}}},
+    "fake_lock.guard.disabled" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Navigation guard disabled"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"导航锁定已解除"}}}},
+    "fake_lock.guard.enabled" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Navigation guard enabled"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"导航锁定已启用"}}}},
+    "fake_lock.lock_backward" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Lock Back"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"锁定后退"}}}},
+    "fake_lock.lock_forward" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Lock Forward"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"锁定前进"}}}},
+    "fake_lock.mode.maptest" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"MapTest Bypass"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"MapTest Bypass"}}}},
+    "fake_lock.mode.maptest.description" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Open the assigned MapTest URL in full screen with the selected local navigation guard."}},"zh-Hans":{"stringUnit":{"state":"translated","value":"全屏打开指定的 MapTest 网址，并应用所选的本地导航锁定。"}}}},
+    "fake_lock.mode.safe_browser" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Safe Browser"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"Safe Browser"}}}},
+    "fake_lock.mode.safe_browser.description" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Open an assigned page with independent backward and forward controls."}},"zh-Hans":{"stringUnit":{"state":"translated","value":"打开指定页面，并独立控制后退与前进方向。"}}}},
+    "fake_lock.safety_note" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Controls only the browser and page you choose; third-party security controls are not modified."}},"zh-Hans":{"stringUnit":{"state":"translated","value":"仅控制你指定的浏览器与页面，不修改第三方安全机制。"}}}},
+    "fake_lock.section.browser" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Browser and Address"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"浏览器与网址"}}}},
+    "fake_lock.section.mode" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Mode"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"模式"}}}},
+    "fake_lock.section.navigation" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Navigation Guard"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"导航锁定"}}}},
+    "fake_lock.section.shortcut" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Global Shortcut"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"全局快捷键"}}}},
+    "fake_lock.session.active" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"SESSION ACTIVE"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"会话运行中"}}}},
+    "fake_lock.session.inactive" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"SESSION IDLE"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"会话未启动"}}}},
+    "fake_lock.shortcut.conflict" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Shortcut unavailable or conflicts with another action"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"快捷键不可用或与其他操作冲突"}}}},
+    "fake_lock.shortcut.description" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Starts the session when idle, or toggles the navigation guard while active."}},"zh-Hans":{"stringUnit":{"state":"translated","value":"未启动时开启会话，运行中切换导航锁定。"}}}},
+    "fake_lock.shortcut.registered" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Global shortcut registered"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"全局快捷键已注册"}}}},
+    "fake_lock.start" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Start Session"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"启动会话"}}}},
+    "fake_lock.status.active" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Browser session protected"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"浏览器会话已锁定"}}}},
+    "fake_lock.status.direction_locked" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"This navigation direction is locked."}},"zh-Hans":{"stringUnit":{"state":"translated","value":"该导航方向已锁定。"}}}},
+    "fake_lock.status.navigation_sent" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Navigation command sent"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"已发送导航指令"}}}},
+    "fake_lock.status.ready" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Ready to start"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"可以启动"}}}},
+    "fake_lock.status.stopped" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Browser session stopped"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"浏览器会话已停止"}}}},
+    "fake_lock.status.unlocked" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Navigation guard unlocked"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"导航锁定已解除"}}}},
+    "fake_lock.stop" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Stop"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"停止"}}}},
+    "fake_lock.subtitle" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Controlled full-screen browser session"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"受控全屏浏览器会话"}}}},
+    "fake_lock.title" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Fake Lock"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"Fake Lock"}}}},
+    "fake_lock.url" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Target URL"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"目标网址"}}}},
+    "fake_lock.warning.fullscreen_permission" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"The page opened, but full screen requires Accessibility permission."}},"zh-Hans":{"stringUnit":{"state":"translated","value":"页面已打开，但全屏操作需要辅助功能权限。"}}}},
+    "fan.manual_unlock.subtitle" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Authorize the helper to unlock writable RPM targets on supported hardware."}},"zh-Hans":{"stringUnit":{"state":"translated","value":"授权辅助工具后，可在受支持硬件上解锁可写 RPM 目标。"}}}},
+    "fan.manual_unlock.title" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Manual speed control is read-only"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"手动风速当前为只读"}}}},
+    "menu.fake_lock.description" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Open a controlled browser session with navigation guards"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"打开带导航锁定的受控浏览器会话"}}}},
+    "permission.maximize_access" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Maximize Access"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"最大化权限"}}}},
+    "setting.accent_color" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Accent Color"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"强调色"}}}},
+    "setting.accent_color.subtitle" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Keep the black base and customize interface highlights"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"保持黑色底色，自定义界面高亮颜色"}}}},
+    "setting.accent_preset" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Accent color preset"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"强调色预设"}}}},
     "Widgets" : {
       "localizations" : {
         "zh-Hans" : {

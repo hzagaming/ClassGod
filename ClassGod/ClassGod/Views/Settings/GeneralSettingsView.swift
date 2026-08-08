@@ -15,7 +15,7 @@ struct GeneralSettingsView: View {
                     title: "section.behavior",
                     icon: "switch.2",
                     defaultExpanded: true,
-                    accentColor: .cyan
+                    accentColor: prefs.preferences.themeAccent.color
                 ) {
                     SettingsToggleRow(
                         icon: "eye",

@@ -277,7 +277,7 @@ struct HexDumpView: View {
             ForEach(lines, id: \.self) { line in
                 Text(line)
                     .font(.system(size: 9, design: .monospaced))
-                    .foregroundStyle(Color.cyan.opacity(0.85))
+                    .foregroundStyle(PreferencesManager.shared.preferences.themeAccent.color.opacity(0.85))
                     .lineLimit(1)
             }
         }

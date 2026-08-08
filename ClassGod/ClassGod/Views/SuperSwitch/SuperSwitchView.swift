@@ -121,10 +121,10 @@ struct SuperSwitchView: View {
 
             Text("\(viewModel.targets.count)")
                 .font(.system(size: 9 * zoomScale, weight: .bold, design: .monospaced))
-                .foregroundStyle(.cyan)
+                .foregroundStyle(prefs.preferences.themeAccent.color)
                 .padding(.horizontal, 6 * zoomScale)
                 .padding(.vertical, 2 * zoomScale)
-                .background(Color.cyan.opacity(0.1))
+                .background(prefs.preferences.themeAccent.color.opacity(0.1))
                 .clipShape(Capsule())
             
             Spacer()
@@ -138,7 +138,7 @@ struct SuperSwitchView: View {
                 .foregroundStyle(.black)
                 .padding(.horizontal, 9 * zoomScale)
                 .frame(height: 26 * zoomScale)
-                .background(Color.cyan.opacity(0.9))
+                .background(prefs.preferences.themeAccent.color.opacity(0.9))
                 .clipShape(RoundedRectangle(cornerRadius: 6 * zoomScale))
             }
             .buttonStyle(.plain)
@@ -236,7 +236,7 @@ struct SuperSwitchView: View {
                     .foregroundStyle(.black)
                     .padding(.horizontal, 12 * zoomScale)
                     .frame(height: 28 * zoomScale)
-                    .background(Color.cyan.opacity(0.9))
+                    .background(prefs.preferences.themeAccent.color.opacity(0.9))
                     .clipShape(RoundedRectangle(cornerRadius: 6 * zoomScale))
             }
             .buttonStyle(.plain)
@@ -249,7 +249,7 @@ struct SuperSwitchView: View {
         VStack(spacing: 8 * zoomScale) {
             Image(systemName: "magnifyingglass")
                 .font(.system(size: 22 * zoomScale))
-                .foregroundStyle(.cyan.opacity(0.65))
+                .foregroundStyle(prefs.preferences.themeAccent.color.opacity(0.65))
             Text("superswitch.no_results")
                 .font(.system(size: 12 * zoomScale, weight: .bold, design: .monospaced))
                 .foregroundStyle(.white.opacity(0.8))
@@ -269,7 +269,7 @@ struct SuperSwitchView: View {
         HStack(spacing: 14 * zoomScale) {
             Text(String(format: String(localized: "superswitch.target_count"), visibleTargets.count))
                 .font(.system(size: 9 * zoomScale, design: .monospaced))
-                .foregroundStyle(.cyan.opacity(0.7))
+                .foregroundStyle(prefs.preferences.themeAccent.color.opacity(0.7))
             
             Spacer()
 
@@ -335,9 +335,9 @@ struct TargetRow: View {
                 HStack(spacing: 9 * zoomScale) {
                     Image(systemName: target.iconName)
                         .font(.system(size: 17 * zoomScale, weight: .medium))
-                        .foregroundStyle(isRunning ? .cyan : .white.opacity(0.72))
+                        .foregroundStyle(isRunning ? prefs.preferences.themeAccent.color : .white.opacity(0.72))
                         .frame(width: 28 * zoomScale, height: 28 * zoomScale)
-                        .background(isRunning ? Color.cyan.opacity(0.1) : Color.white.opacity(0.05))
+                        .background(isRunning ? prefs.preferences.themeAccent.color.opacity(0.1) : Color.white.opacity(0.05))
                         .clipShape(RoundedRectangle(cornerRadius: 6 * zoomScale))
                         .symbolRenderingMode(.monochrome)
 
@@ -363,10 +363,10 @@ struct TargetRow: View {
                     if target.isValidShortcut {
                         Text(target.shortcutDisplayString)
                             .font(.system(size: 9 * zoomScale, weight: .bold, design: .monospaced))
-                            .foregroundStyle(.cyan.opacity(0.85))
+                            .foregroundStyle(prefs.preferences.themeAccent.color.opacity(0.85))
                             .padding(.horizontal, 6 * zoomScale)
                             .frame(height: 20 * zoomScale)
-                            .background(Color.cyan.opacity(0.08))
+                            .background(prefs.preferences.themeAccent.color.opacity(0.08))
                             .clipShape(RoundedRectangle(cornerRadius: 4 * zoomScale))
                     }
                 }
@@ -468,7 +468,7 @@ struct TargetRow: View {
         } else if isHovered {
             return Color.white.opacity(0.1)
         } else if isRunning {
-            return Color.cyan.opacity(0.045)
+            return prefs.preferences.themeAccent.color.opacity(0.045)
         } else {
             return Color.white.opacity(0.025)
         }
@@ -478,7 +478,7 @@ struct TargetRow: View {
         if isHovered {
             return Color.white.opacity(0.25)
         } else if isRunning {
-            return Color.cyan.opacity(0.16)
+            return prefs.preferences.themeAccent.color.opacity(0.16)
         } else {
             return Color.white.opacity(0.07)
         }
@@ -520,9 +520,9 @@ struct AddSwitchTargetView: View {
             HStack(spacing: 10 * sheetScale) {
                 Image(systemName: target == nil ? "plus.app.fill" : "slider.horizontal.3")
                     .font(.system(size: 17 * sheetScale, weight: .semibold))
-                    .foregroundStyle(.cyan)
+                    .foregroundStyle(prefs.preferences.themeAccent.color)
                     .frame(width: 32 * sheetScale, height: 32 * sheetScale)
-                    .background(Color.cyan.opacity(0.1))
+                    .background(prefs.preferences.themeAccent.color.opacity(0.1))
                     .clipShape(RoundedRectangle(cornerRadius: 7 * sheetScale))
 
                 VStack(alignment: .leading, spacing: 1 * sheetScale) {
@@ -602,7 +602,7 @@ struct AddSwitchTargetView: View {
                                             .font(.system(size: 16 * sheetScale))
                                             .foregroundStyle(iconName == icon ? .black : .white.opacity(0.6))
                                             .frame(width: 34 * sheetScale, height: 34 * sheetScale)
-                                            .background(iconName == icon ? Color.cyan.opacity(0.88) : Color.white.opacity(0.04))
+                                            .background(iconName == icon ? prefs.preferences.themeAccent.color.opacity(0.88) : Color.white.opacity(0.04))
                                             .clipShape(RoundedRectangle(cornerRadius: 6 * sheetScale))
                                             .overlay(
                                                 RoundedRectangle(cornerRadius: 6 * sheetScale)
@@ -640,7 +640,7 @@ struct AddSwitchTargetView: View {
                     save()
                 }
                 .buttonStyle(.borderedProminent)
-                .tint(.cyan)
+                .tint(prefs.preferences.themeAccent.color)
                 .disabled(!draft.canSave)
             }
             .padding(12 * sheetScale)
@@ -676,7 +676,7 @@ struct AddSwitchTargetView: View {
         VStack(alignment: .leading, spacing: 8 * sheetScale) {
             Label(title, systemImage: icon)
                 .font(.system(size: 9 * sheetScale, weight: .bold, design: .monospaced))
-                .foregroundStyle(.cyan.opacity(0.8))
+                .foregroundStyle(prefs.preferences.themeAccent.color.opacity(0.8))
             content()
         }
         .padding(10 * sheetScale)

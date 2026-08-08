@@ -298,7 +298,8 @@ struct ErrorHubView: View {
                             TagPill(
                                 tag: tag,
                                 isSelected: selectedTag == tag,
-                                zoomScale: zoomScale
+                                zoomScale: zoomScale,
+                                accent: prefs.preferences.themeAccent.color
                             ) {
                                 SoundEffectManager.shared.playButtonClick()
                                 selectedTag = selectedTag == tag ? nil : tag
@@ -534,6 +535,7 @@ struct TagPill: View {
     let tag: String
     let isSelected: Bool
     let zoomScale: CGFloat
+    let accent: Color
     let action: () -> Void
     
     var body: some View {
@@ -543,11 +545,11 @@ struct TagPill: View {
                 .foregroundStyle(isSelected ? .white : .white.opacity(0.5))
                 .padding(.horizontal, 8 * zoomScale)
                 .padding(.vertical, 3 * zoomScale)
-                .background(isSelected ? .cyan.opacity(0.2) : Color(white: 0.05))
+                .background(isSelected ? accent.opacity(0.2) : Color(white: 0.05))
                 .cornerRadius(4 * zoomScale)
                 .overlay(
                     RoundedRectangle(cornerRadius: 4 * zoomScale)
-                        .stroke(isSelected ? .cyan.opacity(0.5) : Color.white.opacity(0.05), lineWidth: 1 * zoomScale)
+                        .stroke(isSelected ? accent.opacity(0.5) : Color.white.opacity(0.05), lineWidth: 1 * zoomScale)
                         .allowsHitTesting(false)
                 )
         }

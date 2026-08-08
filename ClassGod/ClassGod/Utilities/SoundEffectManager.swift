@@ -316,6 +316,10 @@ final class SoundEffectManager {
             playSound(named: "Basso")
         case "ghostprotocol":
             playSound(named: "Submarine")
+        case "clipo":
+            playSound(named: "Glass")
+        case "fakelock":
+            playSound(named: "Submarine")
         default:
             playPopoverOpen()
         }
@@ -325,7 +329,8 @@ final class SoundEffectManager {
         guard isEnabled else { return }
         switch feature {
         case "destintab", "superswitch", "browserbypasser", "assessprephack", "hackerdesktop",
-             "fancontrol", "activitymonitor", "permissioncenter", "errorhub", "ghostprotocol":
+             "fancontrol", "activitymonitor", "permissioncenter", "errorhub", "ghostprotocol",
+             "clipo", "fakelock":
             playSound(named: "Tink")
         default:
             playPopoverClose()

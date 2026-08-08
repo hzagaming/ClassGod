@@ -29,11 +29,11 @@ struct TodoWidgetView: View {
                     Spacer()
                     Text("\(entry.todoItems.filter(\.isDone).count)/\(entry.todoItems.count)")
                         .font(.system(size: 9, design: .monospaced))
-                        .foregroundStyle(.cyan.opacity(0.6))
+                        .foregroundStyle(entry.accentColor.opacity(0.6))
                 }
                 
                 if entry.todoItems.isEmpty {
-                    WidgetEmptyState(icon: "checkmark.square", title: "WIDGET_EMPTY_TODO")
+                    WidgetEmptyState(icon: "checkmark.square", title: "WIDGET_EMPTY_TODO", accentColor: entry.accentColor)
                 } else {
                     VStack(alignment: .leading, spacing: 4) {
                         ForEach(entry.todoItems.prefix(3)) { item in
@@ -70,11 +70,11 @@ struct TodoWidgetView: View {
                         entry.todoItems.count
                     ))
                         .font(.system(size: 9, design: .monospaced))
-                        .foregroundStyle(.cyan.opacity(0.6))
+                        .foregroundStyle(entry.accentColor.opacity(0.6))
                 }
                 
                 if entry.todoItems.isEmpty {
-                    WidgetEmptyState(icon: "checkmark.square", title: "WIDGET_EMPTY_TODO")
+                    WidgetEmptyState(icon: "checkmark.square", title: "WIDGET_EMPTY_TODO", accentColor: entry.accentColor)
                 } else {
                     VStack(alignment: .leading, spacing: 5) {
                         ForEach(entry.todoItems.prefix(5)) { item in

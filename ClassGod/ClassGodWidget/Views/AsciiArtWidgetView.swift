@@ -13,12 +13,12 @@ struct AsciiArtWidgetView: View {
         ZStack {
             Color.black
             if entry.asciiArt.isEmpty {
-                WidgetEmptyState(icon: "textformat", title: "WIDGET_EMPTY_ASCII")
+                WidgetEmptyState(icon: "textformat", title: "WIDGET_EMPTY_ASCII", accentColor: entry.accentColor)
                     .padding(10)
             } else {
                 Text(entry.asciiArt)
                     .font(.system(size: 10, design: .monospaced))
-                    .foregroundStyle(.cyan.opacity(0.7))
+                    .foregroundStyle(entry.accentColor.opacity(0.7))
                     .multilineTextAlignment(.center)
                     .lineLimit(8)
                     .minimumScaleFactor(0.65)

@@ -24,6 +24,17 @@ nonisolated enum FanNotificationPolicy {
     }
 }
 
+nonisolated enum FanRPMTargetPolicy {
+    static func normalized(requested: Double, minimum: Double, maximum: Double) -> Double? {
+        guard requested.isFinite,
+              minimum.isFinite,
+              maximum.isFinite,
+              minimum >= 0,
+              maximum > minimum else { return nil }
+        return min(maximum, max(minimum, requested))
+    }
+}
+
 @MainActor
 enum FanRuleSensorResolver {
     static func value(
@@ -438,21 +449,28 @@ final class FanControlViewModel: ObservableObject {
 
     func setFanRPM(_ rpm: Double, fanID: Int, debounce: Bool = false) {
         guard let position = FanControlRouting.position(of: fanID, in: fans),
-              fans[position].canControl else {
+              fans[position].canControl,
+              let normalizedRPM = FanRPMTargetPolicy.normalized(
+                requested: rpm,
+                minimum: fans[position].minimumRPM,
+                maximum: fans[position].maximumRPM
+              ) else {
             showError(message: String(localized: "fan.error.read_only"))
             return
         }
+        fans[position].targetRPM = normalizedRPM
+        fanTargets[fanID] = normalizedRPM
         if debounce {
             let token = UUID()
             pendingRPMWriteTokens[fanID] = token
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { [weak self] in
                 guard let self, self.pendingRPMWriteTokens[fanID] == token else { return }
                 self.pendingRPMWriteTokens.removeValue(forKey: fanID)
-                self._applySetFanRPM(rpm, fanID: fanID)
+                self._applySetFanRPM(normalizedRPM, fanID: fanID)
             }
         } else {
             pendingRPMWriteTokens.removeValue(forKey: fanID)
-            _applySetFanRPM(rpm, fanID: fanID)
+            _applySetFanRPM(normalizedRPM, fanID: fanID)
         }
     }
 
@@ -891,8 +909,12 @@ final class FanControlViewModel: ObservableObject {
             case .requiresApproval:
                 showToast(message: String(localized: "fan.toast.helper_approval_required"))
                 PrivilegedHelperManager.shared.openApprovalSettings()
-            case .notRegistered, .notFound:
+            case .notRegistered:
                 showError(message: String(localized: "fan.error.helper_not_found"))
+            case .notFound:
+                showError(message: String(localized: PrivilegedHelperManager.shared.hasEmbeddedService
+                                          ? "fan.error.helper_service_unavailable"
+                                          : "fan.error.helper_not_found"))
             }
         } catch {
             showError(message: String(format: String(localized: "fan.error.helper_authorization"), error.localizedDescription))
