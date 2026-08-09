@@ -8,8 +8,11 @@ import UniformTypeIdentifiers
 
 struct AdvancedSettingsView: View {
     @ObservedObject var prefs = PreferencesManager.shared
+    @StateObject private var uninstallService = UninstallService.shared
     @State private var showResetConfirmation = false
     @State private var showClearConfirmation = false
+    @State private var showUninstallConfirmation = false
+    @State private var showFinalUninstallConfirmation = false
     @State private var dataOperationResult: DataOperationResult?
 
     enum DataOperationResult {
@@ -75,6 +78,32 @@ struct AdvancedSettingsView: View {
                         },
                         isDestructive: true
                     )
+                }
+
+                StatefulCollapsibleSection(
+                    title: "section.uninstall",
+                    icon: "trash.slash.fill",
+                    defaultExpanded: false,
+                    accentColor: .red
+                ) {
+                    SettingsActionRow(
+                        icon: "trash.fill",
+                        title: "uninstall.action",
+                        subtitle: "uninstall.action.subtitle",
+                        action: { showUninstallConfirmation = true },
+                        isDestructive: true
+                    )
+                    .disabled(uninstallService.isUninstalling)
+
+                    if uninstallService.isUninstalling {
+                        HStack(spacing: 8) {
+                            ProgressView().controlSize(.small)
+                            Text("uninstall.in_progress")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        .padding(.horizontal, 10)
+                    }
                 }
 
                 StatefulCollapsibleSection(
@@ -180,6 +209,37 @@ struct AdvancedSettingsView: View {
             }
         } message: {
             Text(String(localized: "clear.confirm.message"))
+        }
+        .alert(String(localized: "uninstall.confirm.title"), isPresented: $showUninstallConfirmation) {
+            Button(String(localized: "button.cancel"), role: .cancel) {}
+            Button(String(localized: "uninstall.confirm.continue"), role: .destructive) {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                    showFinalUninstallConfirmation = true
+                }
+            }
+        } message: {
+            Text(String(localized: "uninstall.confirm.message"))
+        }
+        .alert(String(localized: "uninstall.final.title"), isPresented: $showFinalUninstallConfirmation) {
+            Button(String(localized: "button.cancel"), role: .cancel) {}
+            Button(String(localized: "uninstall.final.action"), role: .destructive) {
+                uninstallService.uninstall()
+            }
+        } message: {
+            Text(String(localized: "uninstall.final.message"))
+        }
+        .alert(
+            String(localized: "uninstall.error.title"),
+            isPresented: Binding(
+                get: { uninstallService.errorMessage != nil },
+                set: { if !$0 { uninstallService.clearError() } }
+            )
+        ) {
+            Button(String(localized: "button.ok"), role: .cancel) {
+                uninstallService.clearError()
+            }
+        } message: {
+            Text(uninstallService.errorMessage ?? String(localized: "uninstall.error.failed"))
         }
         .alert(dataOperationResult?.title ?? "", isPresented: $showDataOperationResult) {
             Button(String(localized: "button.ok"), role: .cancel) {}

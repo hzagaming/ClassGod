@@ -492,6 +492,49 @@ struct PermissionSummary: Equatable {
     let requiredPending: Int
 }
 
+struct PermissionGateProgress: Equatable {
+    let completed: Int
+    let total: Int
+    let pending: [PermissionType]
+
+    var isUnlocked: Bool { total > 0 && completed == total }
+}
+
+enum PermissionGatePolicy {
+    static func progress(
+        statuses: [PermissionType: PermissionStatus],
+        manuallyConfirmed: Set<PermissionType>
+    ) -> PermissionGateProgress {
+        let confirmed = sanitizedManualConfirmations(manuallyConfirmed)
+        let pending = PermissionType.allCases.filter { type in
+            if type.requiresManualReview {
+                return !confirmed.contains(type)
+            }
+            return PermissionCatalogPolicy.state(for: type, statuses: statuses) != .granted
+        }
+        return PermissionGateProgress(
+            completed: PermissionType.allCases.count - pending.count,
+            total: PermissionType.allCases.count,
+            pending: pending
+        )
+    }
+
+    static func sanitizedManualConfirmations(
+        _ confirmations: Set<PermissionType>
+    ) -> Set<PermissionType> {
+        confirmations.filter(\.requiresManualReview)
+    }
+
+    static func canSetManualConfirmation(
+        for type: PermissionType,
+        confirmed: Bool,
+        didOpenSettings: Bool
+    ) -> Bool {
+        guard type.requiresManualReview else { return false }
+        return !confirmed || didOpenSettings
+    }
+}
+
 enum PermissionCatalogPolicy {
     static func items(
         from items: [PermissionItemInfo],
@@ -683,14 +726,58 @@ final class PermissionCenterService: ObservableObject {
     @Published var statuses: [PermissionType: PermissionStatus] = [:]
     @Published var isChecking = false
     @Published private(set) var pendingRequests: Set<PermissionType> = []
+    @Published private(set) var manuallyConfirmed: Set<PermissionType>
+    @Published private(set) var openedManualReviews: Set<PermissionType> = []
+    @Published private(set) var isGateUnlocked = false
     private var refreshRequestedWhileChecking = false
     private var requestTracker = PermissionRequestTracker()
+    private let manualConfirmationsKey = "com.hanazar.classgod.permissionGate.manualConfirmations"
     
     var allPermissions: [PermissionItemInfo] {
         PermissionType.allCases.map { PermissionItemInfo(type: $0) }
     }
     
-    private init() {}
+    private init() {
+        let rawValues = UserDefaults.standard.stringArray(forKey: manualConfirmationsKey) ?? []
+        manuallyConfirmed = PermissionGatePolicy.sanitizedManualConfirmations(
+            Set(rawValues.compactMap(PermissionType.init(rawValue:)))
+        )
+        updateGateState()
+    }
+
+    var gateProgress: PermissionGateProgress {
+        PermissionGatePolicy.progress(
+            statuses: statuses,
+            manuallyConfirmed: manuallyConfirmed
+        )
+    }
+
+    func isManuallyConfirmed(_ type: PermissionType) -> Bool {
+        manuallyConfirmed.contains(type)
+    }
+
+    func canConfirmManualReview(_ type: PermissionType) -> Bool {
+        isManuallyConfirmed(type) || openedManualReviews.contains(type)
+    }
+
+    func setManualConfirmation(_ type: PermissionType, confirmed: Bool) {
+        guard PermissionGatePolicy.canSetManualConfirmation(
+            for: type,
+            confirmed: confirmed,
+            didOpenSettings: openedManualReviews.contains(type)
+                || manuallyConfirmed.contains(type)
+        ) else { return }
+        if confirmed {
+            manuallyConfirmed.insert(type)
+        } else {
+            manuallyConfirmed.remove(type)
+        }
+        UserDefaults.standard.set(
+            manuallyConfirmed.map(\.rawValue).sorted(),
+            forKey: manualConfirmationsKey
+        )
+        updateGateState()
+    }
     
     func refreshAll(afterAuthorization: Bool = false) {
         guard !isChecking else {
@@ -714,6 +801,7 @@ final class PermissionCenterService: ObservableObject {
                 guard let self else { return }
                 self.statuses = newStatuses
                 self.isChecking = false
+                self.updateGateState()
                 if self.refreshRequestedWhileChecking {
                     self.refreshRequestedWhileChecking = false
                     self.refreshAll()
@@ -729,6 +817,9 @@ final class PermissionCenterService: ObservableObject {
             refreshAll()
             return
         case .openSettings:
+            if type.requiresManualReview {
+                openedManualReviews.insert(type)
+            }
             Self.openSystemSettings(for: type)
             return
         case .prompt:
@@ -804,6 +895,10 @@ final class PermissionCenterService: ObservableObject {
     private func finishRequest(_ type: PermissionType) {
         requestTracker.end(type)
         pendingRequests = requestTracker.active
+    }
+
+    private func updateGateState() {
+        isGateUnlocked = gateProgress.isUnlocked
     }
 
     private func completionHandler(for type: PermissionType) -> @Sendable () -> Void {

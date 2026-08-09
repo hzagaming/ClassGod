@@ -418,7 +418,9 @@ struct PermissionCenterView: View {
     private func permissionCard(_ item: PermissionItemInfo) -> some View {
         let status = service.statuses[item.type]
         let state = PermissionCatalogPolicy.state(for: item.type, statuses: service.statuses)
-        let statusColor = color(for: state)
+        let manualConfirmed = service.isManuallyConfirmed(item.type)
+        let isComplete = item.requiresManualReview ? manualConfirmed : state.isGranted
+        let statusColor = isComplete ? Color.green : color(for: state)
         
         return HStack(spacing: 10 * zoomScale) {
             // Icon
@@ -465,7 +467,7 @@ struct PermissionCenterView: View {
                     Circle()
                         .fill(statusColor)
                         .frame(width: 6 * zoomScale, height: 6 * zoomScale)
-                    Text(statusTitle(state))
+                    Text(manualConfirmed ? String(localized: "permission.gate.complete") : statusTitle(state))
                         .font(.system(size: 9 * zoomScale, weight: .bold, design: .monospaced))
                         .foregroundStyle(statusColor)
                 }
@@ -486,18 +488,35 @@ struct PermissionCenterView: View {
                         .foregroundStyle(.black)
                         .padding(.horizontal, 10 * zoomScale)
                         .padding(.vertical, 4 * zoomScale)
-                        .background(state.isGranted ? Color.white.opacity(0.7) : prefs.preferences.themeAccent.color.opacity(0.8))
+                        .background(isComplete ? Color.white.opacity(0.7) : prefs.preferences.themeAccent.color.opacity(0.8))
                         .clipShape(RoundedRectangle(cornerRadius: 5 * zoomScale))
                 }
                 .buttonStyle(.plain)
                 .disabled(service.isChecking || service.isRequesting(item.type))
+
+                if item.requiresManualReview {
+                    Button {
+                        SoundEffectManager.shared.playButtonClick()
+                        HapticManager.shared.generic()
+                        service.setManualConfirmation(item.type, confirmed: !manualConfirmed)
+                    } label: {
+                        Text(manualConfirmed
+                             ? String(localized: "permission.gate.undo_confirmation")
+                             : String(localized: "permission.gate.confirm_review"))
+                            .font(.system(size: 8 * zoomScale, weight: .bold, design: .monospaced))
+                            .foregroundStyle(manualConfirmed ? .green : .white.opacity(0.72))
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(!manualConfirmed && !service.canConfirmManualReview(item.type))
+                    .opacity(!manualConfirmed && !service.canConfirmManualReview(item.type) ? 0.42 : 1)
+                }
             }
         }
         .padding(10 * zoomScale)
         .background(Color(white: 0.05))
         .overlay(
             RoundedRectangle(cornerRadius: 8 * zoomScale)
-                .stroke(statusColor.opacity(state.isGranted ? 0.2 : 0.1), lineWidth: 1 * zoomScale)
+                .stroke(statusColor.opacity(isComplete ? 0.2 : 0.1), lineWidth: 1 * zoomScale)
         )
         .clipShape(RoundedRectangle(cornerRadius: 8 * zoomScale))
     }

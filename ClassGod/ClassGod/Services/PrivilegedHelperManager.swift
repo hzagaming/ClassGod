@@ -92,4 +92,21 @@ final class PrivilegedHelperManager: ObservableObject {
     func openApprovalSettings() {
         SMAppService.openSystemSettingsLoginItems()
     }
+
+    func unregisterForUninstall() throws {
+        switch refreshStatus() {
+        case .notRegistered, .notFound:
+            return
+        case .enabled, .requiresApproval:
+            do {
+                try service.unregister()
+            } catch {
+                let refreshed = refreshStatus()
+                guard refreshed == .notRegistered || refreshed == .notFound else {
+                    throw error
+                }
+            }
+            status = .notRegistered
+        }
+    }
 }

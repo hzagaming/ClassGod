@@ -8,9 +8,17 @@
 import SwiftUI
 import AppKit
 import Carbon
+import Combine
+
+nonisolated enum LaunchDestination: Equatable {
+    case mainPanel
+    case permissionGate
+}
 
 nonisolated enum LaunchWindowPresentationPolicy {
-    static let shouldShowMainWindow = true
+    static func destination(isPermissionGateUnlocked: Bool) -> LaunchDestination {
+        isPermissionGateUnlocked ? .mainPanel : .permissionGate
+    }
 
     static func splashDelay(preferred: Double, animationDuration: Double) -> Double {
         animationDuration > 0 ? preferred : 1
@@ -146,6 +154,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var fanControlWindow: NSWindow?
     var activityMonitorWindow: NSWindow?
     var permissionCenterWindow: NSWindow?
+    var permissionGateWindow: NSWindow?
     var fakeLockWindow: NSWindow?
     var showPopoverCustomHotKeyID: UInt32?
     var panicHotKeyID: UInt32?
@@ -157,6 +166,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var widgetAccentReloadWorkItem: DispatchWorkItem?
     private var windowTransitions = WindowTransitionTracker<ObjectIdentifier>()
     private var lastObservedPreferences = PreferencesManager.shared.preferences
+    private var permissionGateCancellable: AnyCancellable?
+    private var launchAnimationCompleted = false
+    private var gatedFeaturesActive = false
+    private var mainWindowContentInstalled = false
+    private var applicationObserversInstalled = false
+    private var globalHotKeyHandlerInstalled = false
 
     private var targetWindowAlpha: CGFloat {
         CGFloat(PreferencesManager.shared.preferences.windowOpacity)
@@ -167,13 +182,23 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        // Initialize the wallpaper controller early. Widgets are provided by WidgetKit.
-        _ = DesktopWallpaperController.shared
-        
         let launchAnimationDuration = Anim.duration
         showSplashScreen()
 
-        // Phase 1: Splash (2s) -> Phase 2: Chaos Animation -> Phase 3: Main Window
+        let permissionService = PermissionCenterService.shared
+        permissionGateCancellable = permissionService.$isGateUnlocked
+            .removeDuplicates()
+            .sink { [weak self] _ in
+                self?.presentPostLaunchDestination()
+            }
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(permissionStateNeedsRefresh),
+            name: NSApplication.didBecomeActiveNotification,
+            object: nil
+        )
+        permissionService.refreshAll()
+
         let launchDelay = LaunchWindowPresentationPolicy.splashDelay(
             preferred: 2,
             animationDuration: launchAnimationDuration
@@ -181,83 +206,146 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         DispatchQueue.main.asyncAfter(deadline: .now() + launchDelay) { [weak self] in
             guard let self = self else { return }
             self.closeSplashScreen()
-            self.setupStatusItem()
-            self.startWidgetSnapshotSync()
-            self.setupShowPopoverShortcut()
-            self.setupPanicShortcut()
-            self.setupGlobalHotKeyHandler()
-            FakeLockService.shared.start()
-            ClipoService.shared.start()
-            self.clipoHotKeyIDs = ClipoService.shared.registerDefaultHotKeys { [weak self] in
-                self?.toggleClipoWindow()
-            }
-
-            PreferencesManager.shared.onPreferencesChanged = { [weak self] preferences in
-                self?.preferencesDidChange(preferences)
-            }
-            
-            // Apply saved icon style immediately
             AppIconManager.shared.refreshIcon()
-            self.updateClickOutsideMonitor()
-            
-            NotificationCenter.default.addObserver(
-                self,
-                selector: #selector(self.tabsDidChange),
-                name: .classGodTabsDidChange,
-                object: nil
-            )
-            
-            NotificationCenter.default.addObserver(
-                self,
-                selector: #selector(self.windowPositionDidChange),
-                name: .draggableWindowDidMove,
-                object: nil
-            )
-            
-            NotificationCenter.default.addObserver(
-                self,
-                selector: #selector(self.showErrorHubFromNotification(_:)),
-                name: .classGodShowErrorHubEntry,
-                object: nil
-            )
-
-            NotificationCenter.default.addObserver(
-                self,
-                selector: #selector(self.hideClipoForPaste),
-                name: .clipoWillPaste,
-                object: nil
-            )
-
-            // Phase 2: Setup only the main window. Feature windows are created
-            // lazily on first use to avoid launch-time rendering side effects and
-            // unnecessary work for windows the user may never open.
             self.setupMainWindow()
             if let window = self.mainWindow {
                 window.alphaValue = 0
                 window.orderBack(nil)
-                
-                // Phase 3: Chaos glitch animation
                 LaunchAnimationManager.shared.startChaosAnimation(mainWindow: window) { [weak self, weak window] in
-                    // Phase 4: Animation complete
-                    if LaunchWindowPresentationPolicy.shouldShowMainWindow {
-                        if let window,
-                           LaunchWindowPresentationPolicy.shouldResetBeforeInitialShow(
-                               isVisible: window.isVisible,
-                               isKeyWindow: window.isKeyWindow
-                           ) {
-                            window.alphaValue = 0
-                            window.orderOut(nil)
-                        }
-                        self?.showMainWindow(animated: false)
-                    } else {
-                        window?.alphaValue = 0
-                        window?.orderOut(nil)
+                    if let window,
+                       LaunchWindowPresentationPolicy.shouldResetBeforeInitialShow(
+                           isVisible: window.isVisible,
+                           isKeyWindow: window.isKeyWindow
+                       ) {
+                        window.alphaValue = 0
+                        window.orderOut(nil)
                     }
+                    self?.launchAnimationCompleted = true
+                    self?.presentPostLaunchDestination()
                 }
             }
-
-            // Permission checks are deferred to feature views — no blocking on launch
         }
+    }
+
+    @objc private func permissionStateNeedsRefresh() {
+        PermissionCenterService.shared.refreshAll()
+    }
+
+    private func presentPostLaunchDestination() {
+        guard launchAnimationCompleted else { return }
+        switch LaunchWindowPresentationPolicy.destination(
+            isPermissionGateUnlocked: PermissionCenterService.shared.isGateUnlocked
+        ) {
+        case .mainPanel:
+            activateGatedFeatures()
+            hidePermissionGateWindow()
+            showMainWindow(animated: false)
+        case .permissionGate:
+            deactivateGatedFeatures()
+            hideGatedWindows()
+            showPermissionGateWindow()
+        }
+    }
+
+    private func activateGatedFeatures() {
+        guard !gatedFeaturesActive else { return }
+        gatedFeaturesActive = true
+        installMainWindowContentIfNeeded()
+        _ = DesktopWallpaperController.shared
+
+        if statusItem == nil {
+            setupStatusItem()
+        } else {
+            updateStatusItemTimer()
+            updateStatusItemIcon()
+        }
+        startWidgetSnapshotSync()
+        setupShowPopoverShortcut()
+        setupPanicShortcut()
+        if !globalHotKeyHandlerInstalled {
+            setupGlobalHotKeyHandler()
+            globalHotKeyHandlerInstalled = true
+        }
+        FakeLockService.shared.start()
+        ClipoService.shared.start()
+        clipoHotKeyIDs = ClipoService.shared.registerDefaultHotKeys { [weak self] in
+            self?.toggleClipoWindow()
+        }
+        PreferencesManager.shared.onPreferencesChanged = { [weak self] preferences in
+            self?.preferencesDidChange(preferences)
+        }
+        installApplicationObserversIfNeeded()
+        AppIconManager.shared.refreshIcon()
+        updateClickOutsideMonitor()
+        NotificationCenter.default.post(name: .classGodTabsDidChange, object: nil)
+    }
+
+    private func deactivateGatedFeatures() {
+        guard gatedFeaturesActive else { return }
+        gatedFeaturesActive = false
+        PreferencesManager.shared.onPreferencesChanged = nil
+        statusItemTimer?.invalidate()
+        statusItemTimer = nil
+        statusItemUpdateTask?.cancel()
+        statusItemUpdateTask = nil
+        statusItem?.button?.title = ""
+        widgetSnapshotTimer?.invalidate()
+        widgetSnapshotTimer = nil
+        SystemMonitor.shared.stop(client: .widgetHost)
+        widgetAccentReloadWorkItem?.cancel()
+        widgetAccentReloadWorkItem = nil
+        FakeLockService.shared.stop()
+        ClipoService.shared.stop()
+        GhostProtocolController.shared.shutdown()
+        AssessPrepHackViewModel.shared.stopAllBypasses()
+        DesktopWallpaperController.shared.hideWallpapers()
+        SMCService.shared.restoreSystemFanControl()
+
+        if let id = showPopoverCustomHotKeyID {
+            ShortcutManager.shared.unregisterCustomHotKey(id: id)
+            showPopoverCustomHotKeyID = nil
+        }
+        if let id = panicHotKeyID {
+            ShortcutManager.shared.unregisterCustomHotKey(id: id)
+            panicHotKeyID = nil
+        }
+        for id in clipoHotKeyIDs {
+            ShortcutManager.shared.unregisterCustomHotKey(id: id)
+        }
+        clipoHotKeyIDs.removeAll()
+        if let monitor = clickOutsideMonitor {
+            NSEvent.removeMonitor(monitor)
+            clickOutsideMonitor = nil
+        }
+    }
+
+    private func installApplicationObserversIfNeeded() {
+        guard !applicationObserversInstalled else { return }
+        applicationObserversInstalled = true
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(tabsDidChange),
+            name: .classGodTabsDidChange,
+            object: nil
+        )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(windowPositionDidChange),
+            name: .draggableWindowDidMove,
+            object: nil
+        )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(showErrorHubFromNotification(_:)),
+            name: .classGodShowErrorHubEntry,
+            object: nil
+        )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(hideClipoForPaste),
+            name: .clipoWillPaste,
+            object: nil
+        )
     }
 
     // MARK: - Splash Screen
@@ -322,10 +410,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         window.isReleasedWhenClosed = false
         window.isOpaque = false
         
-        // Apply corner radius to the window itself
-        window.contentView?.wantsLayer = true
-        window.contentView?.layer?.cornerRadius = prefs.panelCornerRadius * zoom
-        window.contentView?.layer?.masksToBounds = true
         window.alphaValue = targetWindowAlpha
 
         // Restore saved position or center on screen
@@ -347,6 +431,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             window.setFrameOrigin(NSPoint(x: x, y: y))
         }
 
+        window.contentView = NSHostingView(rootView: Color.black)
+        window.contentView?.wantsLayer = true
+        window.contentView?.layer?.cornerRadius = prefs.panelCornerRadius * zoom
+        window.contentView?.layer?.masksToBounds = true
+        mainWindow = window
+    }
+
+    private func installMainWindowContentIfNeeded() {
+        guard !mainWindowContentInstalled, let window = mainWindow else { return }
         let rootView = MenuBarWindowView(onClose: { [weak self] in
             self?.hideMainWindow()
         }, onOpenDestinTab: { [weak self] in
@@ -383,8 +476,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             .overlay(WindowResizeHandles())
 
         window.contentView = NSHostingView(rootView: rootView)
-
-        mainWindow = window
+        let prefs = PreferencesManager.shared.preferences
+        window.contentView?.wantsLayer = true
+        window.contentView?.layer?.cornerRadius = prefs.panelCornerRadius * CGFloat(prefs.windowZoomScale)
+        window.contentView?.layer?.masksToBounds = true
+        mainWindowContentInstalled = true
     }
     
     // MARK: - DestinTab Window
@@ -1406,6 +1502,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     @objc func showErrorHubFromNotification(_ notification: Notification) {
+        guard PermissionCenterService.shared.isGateUnlocked else {
+            showPermissionGateWindow()
+            return
+        }
         showErrorHubWindow(animated: true)
     }
 
@@ -1611,6 +1711,69 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             hideActivityMonitorWindow()
         } else {
             showActivityMonitorWindow(animated: true)
+        }
+    }
+
+    // MARK: - Permission Gate Window
+
+    private func setupPermissionGateWindow() {
+        let zoom = CGFloat(PreferencesManager.shared.preferences.windowZoomScale)
+        let size = constrainedWindowSize(
+            base: NSSize(width: 860, height: 680),
+            zoom: zoom,
+            margin: 60
+        )
+        let window = DraggableWindow(
+            contentRect: NSRect(origin: .zero, size: size),
+            styleMask: [.borderless],
+            backing: .buffered,
+            defer: false
+        )
+        window.minimumWindowSize = NSSize(width: 680 * zoom, height: 520 * zoom)
+        window.level = .floating
+        window.backgroundColor = .black
+        window.hasShadow = true
+        window.isReleasedWhenClosed = false
+        window.isOpaque = false
+        window.contentView = NSHostingView(rootView: PermissionGateView {
+            NSApp.terminate(nil)
+        })
+        window.contentView?.wantsLayer = true
+        window.contentView?.layer?.cornerRadius = 14 * zoom
+        window.contentView?.layer?.masksToBounds = true
+        centerWindowOnScreen(window)
+        permissionGateWindow = window
+    }
+
+    private func showPermissionGateWindow() {
+        guard let window = permissionGateWindow else {
+            setupPermissionGateWindow()
+            showPermissionGateWindow()
+            return
+        }
+        NSApp.activate(ignoringOtherApps: true)
+        window.alphaValue = targetWindowAlpha
+        window.makeKeyAndOrderFront(nil)
+    }
+
+    private func hidePermissionGateWindow() {
+        permissionGateWindow?.orderOut(nil)
+    }
+
+    private func hideGatedWindows() {
+        let windows = [
+            mainWindow, destinTabWindow, superSwitchWindow, ghostProtocolWindow,
+            browserBypasserWindow, assessPrepHackWindow, settingsWindow,
+            wallpaperBrowserWindow, hackerDesktopWindow, clipoWindow, errorHubWindow,
+            fanControlWindow, activityMonitorWindow, permissionCenterWindow, fakeLockWindow,
+        ]
+        for window in windows.compactMap({ $0 }) {
+            _ = windowTransitions.begin(
+                for: ObjectIdentifier(window),
+                targetVisible: false,
+                currentVisible: window.isVisible && window.alphaValue > 0
+            )
+            window.orderOut(nil)
         }
     }
 
@@ -1878,6 +2041,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func showMainWindow(animated: Bool = false) {
+        guard PermissionCenterService.shared.isGateUnlocked else {
+            showPermissionGateWindow()
+            return
+        }
         guard let window = mainWindow else { return }
         guard beginWindowTransition(window, targetVisible: true) != nil else { return }
 
@@ -1942,6 +2109,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc func toggleMainWindow() {
+        guard PermissionCenterService.shared.isGateUnlocked else {
+            showPermissionGateWindow()
+            return
+        }
         guard let window = mainWindow else {
             // If window doesn't exist yet, create and show it
             setupMainWindow()
@@ -2213,6 +2384,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationWillTerminate(_ notification: Notification) {
+        permissionGateCancellable?.cancel()
+        permissionGateCancellable = nil
         statusItemTimer?.invalidate()
         widgetSnapshotTimer?.invalidate()
         widgetSnapshotTimer = nil
@@ -2298,12 +2471,19 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         if let window = permissionCenterWindow {
             window.orderOut(nil)
         }
+        if let window = permissionGateWindow {
+            window.orderOut(nil)
+        }
         if let window = fakeLockWindow {
             window.orderOut(nil)
         }
     }
 
     func application(_ application: NSApplication, open urls: [URL]) {
+        guard PermissionCenterService.shared.isGateUnlocked else {
+            showPermissionGateWindow()
+            return
+        }
         for url in urls {
             guard let bundleIdentifier = WidgetDeepLink.launchBundleIdentifier(from: url) else { continue }
             guard let applicationURL = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleIdentifier) else {
@@ -2494,6 +2674,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     
     private func setupGlobalHotKeyHandler() {
         ShortcutManager.shared.addHotKeyHandler { id in
+            guard PermissionCenterService.shared.isGateUnlocked else { return }
             // Try BrowserTab first
             let tabs = StorageManager.shared.loadTabs()
             if let tab = tabs.first(where: { $0.id == id }) {

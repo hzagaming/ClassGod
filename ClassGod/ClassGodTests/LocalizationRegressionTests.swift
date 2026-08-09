@@ -37,6 +37,18 @@ struct LocalizationRegressionTests {
         #expect(chinese.localizedString(forKey: "clipo.seconds_format", value: nil, table: nil) == "%.2f 秒")
     }
 
+    @Test("Permission gate and uninstall warnings are localized")
+    func validatesPermissionGateAndUninstallLabels() throws {
+        let english = Locale(identifier: "en")
+        let chineseURL = try #require(Bundle.main.url(forResource: "zh-Hans", withExtension: "lproj"))
+        let chinese = try #require(Bundle(url: chineseURL))
+
+        #expect(String(localized: "permission.gate.title", bundle: .main, locale: english) == "Permission Setup Required")
+        #expect(String(localized: "uninstall.final.action", bundle: .main, locale: english) == "Uninstall Now")
+        #expect(chinese.localizedString(forKey: "permission.gate.requirement", value: nil, table: nil) == "必须完成全部 20 项权限")
+        #expect(chinese.localizedString(forKey: "uninstall.final.title", value: nil, table: nil) == "再次确认，确定要彻底卸载？")
+    }
+
     @Test("Clipo import and todo accessibility messages are localized")
     func validatesNewSafetyAndAccessibilityLabels() throws {
         let english = Locale(identifier: "en")

@@ -18,9 +18,10 @@ struct AnimationPolicyTests {
         #expect(LaunchWindowPresentationPolicy.splashDelay(preferred: 2, animationDuration: 0.2) == 2)
     }
 
-    @Test("Launch presentation always enters the main panel")
+    @Test("Launch presentation routes through the permission gate")
     func resolvesInitialWindowPresentation() {
-        #expect(LaunchWindowPresentationPolicy.shouldShowMainWindow)
+        #expect(LaunchWindowPresentationPolicy.destination(isPermissionGateUnlocked: true) == .mainPanel)
+        #expect(LaunchWindowPresentationPolicy.destination(isPermissionGateUnlocked: false) == .permissionGate)
         #expect(LaunchWindowPresentationPolicy.shouldResetBeforeInitialShow(isVisible: true, isKeyWindow: false))
         #expect(!LaunchWindowPresentationPolicy.shouldResetBeforeInitialShow(isVisible: false, isKeyWindow: false))
         #expect(!LaunchWindowPresentationPolicy.shouldResetBeforeInitialShow(isVisible: true, isKeyWindow: true))

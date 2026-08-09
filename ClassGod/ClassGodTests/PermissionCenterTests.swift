@@ -82,6 +82,75 @@ struct PermissionCenterTests {
         #expect(pending == [.inputMonitoring, .appleEvents, .filesAndFolders])
     }
 
+    @Test("Application gate requires every automatic and manual permission")
+    func completePermissionGate() {
+        let automatic = PermissionType.allCases.filter { !$0.requiresManualReview }
+        let manual = Set(PermissionType.allCases.filter(\.requiresManualReview))
+        let granted = makeStatuses(Dictionary(uniqueKeysWithValues: automatic.map { ($0, .granted) }))
+
+        let unlocked = PermissionGatePolicy.progress(
+            statuses: granted,
+            manuallyConfirmed: manual
+        )
+        #expect(unlocked.completed == PermissionType.allCases.count)
+        #expect(unlocked.isUnlocked)
+
+        let missingManual = PermissionGatePolicy.progress(
+            statuses: granted,
+            manuallyConfirmed: manual.subtracting([.filesAndFolders])
+        )
+        #expect(!missingManual.isUnlocked)
+        #expect(missingManual.pending == [.filesAndFolders])
+
+        var denied = granted
+        denied[.camera] = PermissionStatus(
+            type: .camera,
+            state: .denied,
+            lastChecked: .distantPast,
+            detail: nil
+        )
+        let missingAutomatic = PermissionGatePolicy.progress(
+            statuses: denied,
+            manuallyConfirmed: manual
+        )
+        #expect(!missingAutomatic.isUnlocked)
+        #expect(missingAutomatic.pending == [.camera])
+    }
+
+    @Test("Manual permission confirmations only accept manual-review catalog entries")
+    func sanitizesManualPermissionConfirmations() {
+        let sanitized = PermissionGatePolicy.sanitizedManualConfirmations([
+            .accessibility,
+            .filesAndFolders,
+            .developerTools,
+        ])
+        #expect(sanitized == [.filesAndFolders, .developerTools])
+    }
+
+    @Test("Manual review can only be confirmed after opening System Settings")
+    func requiresManualReviewVisit() {
+        #expect(PermissionGatePolicy.canSetManualConfirmation(
+            for: .filesAndFolders,
+            confirmed: true,
+            didOpenSettings: true
+        ))
+        #expect(!PermissionGatePolicy.canSetManualConfirmation(
+            for: .filesAndFolders,
+            confirmed: true,
+            didOpenSettings: false
+        ))
+        #expect(!PermissionGatePolicy.canSetManualConfirmation(
+            for: .accessibility,
+            confirmed: true,
+            didOpenSettings: true
+        ))
+        #expect(PermissionGatePolicy.canSetManualConfirmation(
+            for: .filesAndFolders,
+            confirmed: false,
+            didOpenSettings: false
+        ))
+    }
+
     @Test("Every permission communicates whether access is required")
     func permissionRequirementMetadata() {
         #expect(PermissionType.accessibility.requirement == .required)
