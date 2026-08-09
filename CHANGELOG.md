@@ -21,6 +21,7 @@
 - **功能窗口高度耦合**：DestinTab 与 Fan Control 不再读取主面板高度作为内部上限，大窗口能够完整利用可用空间。
 - **主题数据健壮性**：强调色初始化、反序列化和 Widget 快照统一裁剪 RGB，损坏或非有限共享值安全回退默认色。
 - **SFX / BGM 自查**：新功能的启动、停止、锁定、导航失败与浏览器选择保留短音效/触感反馈；壁纸视频音轨生命周期保持原策略，不新增持续 BGM。
+- **Release 签名清理**：App 与 Widget 的 Release 构建不再注入 `get-task-allow` 调试权限，打包产物只保留功能必需的 entitlement。
 - **质量回归**：新增风扇目标、Helper 包校验、权限审查、Fake Lock、窗口策略、主题与 Widget 快照测试；主应用 143 项与 Helper 17 项全部通过，并完成 Debug / Release、Analyze、字符串目录、plist、Helper 嵌入、产物版本与签名校验。
 - 版本号更新为 v1.5.28 (Build 53)
 
