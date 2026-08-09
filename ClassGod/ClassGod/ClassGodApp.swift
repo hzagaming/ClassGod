@@ -1751,12 +1751,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             showPermissionGateWindow()
             return
         }
+        PermissionCenterService.shared.startLiveMonitoring()
         NSApp.activate(ignoringOtherApps: true)
         window.alphaValue = targetWindowAlpha
         window.makeKeyAndOrderFront(nil)
     }
 
     private func hidePermissionGateWindow() {
+        PermissionCenterService.shared.stopLiveMonitoring()
         permissionGateWindow?.orderOut(nil)
     }
 
@@ -1828,6 +1830,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             showPermissionCenterWindow(animated: animated)
             return
         }
+        PermissionCenterService.shared.startLiveMonitoring()
         guard beginWindowTransition(window, targetVisible: true) != nil else { return }
 
         SoundEffectManager.shared.playWindowOpen(feature: "permissioncenter")
@@ -1848,6 +1851,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func hidePermissionCenterWindow() {
+        PermissionCenterService.shared.stopLiveMonitoring()
         guard let window = permissionCenterWindow,
               let transition = beginWindowTransition(window, targetVisible: false) else { return }
         SoundEffectManager.shared.playWindowClose(feature: "permissioncenter")
@@ -2384,6 +2388,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationWillTerminate(_ notification: Notification) {
+        PermissionCenterService.shared.stopLiveMonitoring()
         permissionGateCancellable?.cancel()
         permissionGateCancellable = nil
         statusItemTimer?.invalidate()

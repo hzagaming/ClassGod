@@ -25,7 +25,11 @@ struct PermissionGateView: View {
             RoundedRectangle(cornerRadius: 14 * zoomScale)
                 .stroke(accent.opacity(0.28), lineWidth: 1 * zoomScale)
         )
-        .onAppear { service.refreshAll() }
+        .onAppear {
+            service.startLiveMonitoring()
+            service.refreshAll()
+        }
+        .onDisappear { service.stopLiveMonitoring() }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
             service.refreshAll()
         }

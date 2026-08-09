@@ -3,20 +3,39 @@ import Testing
 
 @Suite("Permission Center catalog")
 struct PermissionCenterTests {
-    @Test("Routine permission refreshes coalesce while authorization results are retained")
+    @Test("Every permission refresh requested during a check is retained")
     func coalescesPermissionRefreshes() {
-        #expect(!PermissionRefreshQueuePolicy.shouldQueueFollowUp(
-            isChecking: true,
-            afterAuthorization: false
-        ))
-        #expect(PermissionRefreshQueuePolicy.shouldQueueFollowUp(
-            isChecking: true,
-            afterAuthorization: true
-        ))
-        #expect(!PermissionRefreshQueuePolicy.shouldQueueFollowUp(
-            isChecking: false,
-            afterAuthorization: true
-        ))
+        #expect(PermissionRefreshQueuePolicy.shouldQueueFollowUp(isChecking: true))
+        #expect(!PermissionRefreshQueuePolicy.shouldQueueFollowUp(isChecking: false))
+    }
+
+    @Test("Live permission checks run at a millisecond-scale interval")
+    func livePermissionRefreshInterval() {
+        #expect(PermissionLiveRefreshPolicy.intervalNanoseconds == 100_000_000)
+    }
+
+    @Test("Live checks publish UI updates only when authorization changes")
+    func authorizationChangeDetection() {
+        let current = makeStatuses([.camera: .denied])
+        let sameState = [
+            PermissionType.camera: PermissionStatus(
+                type: .camera,
+                state: .denied,
+                lastChecked: .now,
+                detail: nil
+            )
+        ]
+        let granted = makeStatuses([.camera: .granted])
+
+        #expect(!PermissionStatusChangePolicy.hasChanges(current: current, updated: sameState))
+        #expect(PermissionStatusChangePolicy.hasChanges(current: current, updated: granted))
+    }
+
+    @Test("Apple Events starts its target when the permission API cannot resolve it")
+    func preparesAppleEventsTarget() {
+        #expect(AppleEventsPermissionCheck.needsTargetLaunch(status: -600))
+        #expect(!AppleEventsPermissionCheck.needsTargetLaunch(status: 0))
+        #expect(!AppleEventsPermissionCheck.needsTargetLaunch(status: -1744))
     }
 
     @Test("Lists every supported ClassGod permission")

@@ -649,8 +649,14 @@ enum PermissionCatalogPolicy {
 }
 
 enum AppleEventsPermissionCheck {
+    nonisolated static let targetBundleIdentifier = "com.apple.systemevents"
+
     nonisolated static func isGranted(status: OSStatus) -> Bool {
         status == noErr
+    }
+
+    nonisolated static func needsTargetLaunch(status: OSStatus) -> Bool {
+        status == procNotFound
     }
 
     nonisolated static func status() -> OSStatus {
@@ -662,7 +668,7 @@ enum AppleEventsPermissionCheck {
     }
 
     private nonisolated static func determinePermission(askUserIfNeeded: Bool) -> OSStatus {
-        let target = NSAppleEventDescriptor(bundleIdentifier: "com.apple.systemevents")
+        let target = NSAppleEventDescriptor(bundleIdentifier: targetBundleIdentifier)
         return AEDeterminePermissionToAutomateTarget(
             target.aeDesc,
             typeWildCard,
@@ -714,8 +720,25 @@ enum PermissionSettingsDestination {
 }
 
 nonisolated enum PermissionRefreshQueuePolicy {
-    static func shouldQueueFollowUp(isChecking: Bool, afterAuthorization: Bool) -> Bool {
-        isChecking && afterAuthorization
+    static func shouldQueueFollowUp(isChecking: Bool) -> Bool {
+        isChecking
+    }
+}
+
+nonisolated enum PermissionLiveRefreshPolicy {
+    static let intervalNanoseconds: UInt64 = 100_000_000
+}
+
+enum PermissionStatusChangePolicy {
+    static func hasChanges(
+        current: [PermissionType: PermissionStatus],
+        updated: [PermissionType: PermissionStatus]
+    ) -> Bool {
+        guard current.count == updated.count else { return true }
+        return PermissionType.allCases.contains { type in
+            current[type]?.state != updated[type]?.state
+                || current[type]?.detail != updated[type]?.detail
+        }
     }
 }
 
@@ -729,8 +752,11 @@ final class PermissionCenterService: ObservableObject {
     @Published private(set) var manuallyConfirmed: Set<PermissionType>
     @Published private(set) var openedManualReviews: Set<PermissionType> = []
     @Published private(set) var isGateUnlocked = false
+    private var refreshInProgress = false
     private var refreshRequestedWhileChecking = false
+    private var queuedRefreshShowsProgress = false
     private var requestTracker = PermissionRequestTracker()
+    private var liveRefreshTask: Task<Void, Never>?
     private let manualConfirmationsKey = "com.hanazar.classgod.permissionGate.manualConfirmations"
     
     var allPermissions: [PermissionItemInfo] {
@@ -780,37 +806,62 @@ final class PermissionCenterService: ObservableObject {
     }
     
     func refreshAll(afterAuthorization: Bool = false) {
-        guard !isChecking else {
-            if PermissionRefreshQueuePolicy.shouldQueueFollowUp(
-                isChecking: isChecking,
-                afterAuthorization: afterAuthorization
-            ) {
+        requestRefresh(showsProgress: !afterAuthorization)
+    }
+
+    func startLiveMonitoring() {
+        guard liveRefreshTask == nil else { return }
+        liveRefreshTask = Task { [weak self] in
+            await Self.prepareAppleEventsTargetIfNeeded()
+            guard let self else { return }
+            self.requestRefresh(showsProgress: false)
+            while !Task.isCancelled {
+                do {
+                    try await Task.sleep(nanoseconds: PermissionLiveRefreshPolicy.intervalNanoseconds)
+                } catch {
+                    return
+                }
+                self.requestRefresh(showsProgress: false)
+            }
+        }
+    }
+
+    func stopLiveMonitoring() {
+        liveRefreshTask?.cancel()
+        liveRefreshTask = nil
+    }
+
+    private func requestRefresh(showsProgress: Bool) {
+        guard !refreshInProgress else {
+            if PermissionRefreshQueuePolicy.shouldQueueFollowUp(isChecking: refreshInProgress) {
                 refreshRequestedWhileChecking = true
+                queuedRefreshShowsProgress = queuedRefreshShowsProgress || showsProgress
             }
             return
         }
-        isChecking = true
-        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-            var newStatuses: [PermissionType: PermissionStatus] = [:]
-            let now = Date()
-            for type in PermissionType.allCases {
-                let (state, detail) = Self.checkStatus(type)
-                newStatuses[type] = PermissionStatus(type: type, state: state, lastChecked: now, detail: detail)
-            }
-            DispatchQueue.main.async {
-                guard let self else { return }
+        refreshInProgress = true
+        if showsProgress { isChecking = true }
+        Task { [weak self] in
+            let newStatuses = await Self.collectStatuses()
+            guard let self else { return }
+            if showsProgress
+                || PermissionStatusChangePolicy.hasChanges(current: self.statuses, updated: newStatuses) {
                 self.statuses = newStatuses
-                self.isChecking = false
-                self.updateGateState()
-                if self.refreshRequestedWhileChecking {
-                    self.refreshRequestedWhileChecking = false
-                    self.refreshAll()
-                }
+            }
+            self.refreshInProgress = false
+            if showsProgress { self.isChecking = false }
+            self.updateGateState()
+            if self.refreshRequestedWhileChecking {
+                let nextShowsProgress = self.queuedRefreshShowsProgress
+                self.refreshRequestedWhileChecking = false
+                self.queuedRefreshShowsProgress = false
+                self.requestRefresh(showsProgress: nextShowsProgress)
             }
         }
     }
     
     func requestPermission(_ type: PermissionType) {
+        startLiveMonitoring()
         let fallbackState: PermissionAuthorizationState = type.requiresManualReview ? .manualReview : .notDetermined
         switch PermissionRequestPolicy.action(for: type, state: statuses[type]?.state ?? fallbackState) {
         case .refresh:
@@ -837,8 +888,11 @@ final class PermissionCenterService: ObservableObject {
                 _ = CGRequestListenEventAccess()
             }
         case .appleEvents:
-            DispatchQueue.global(qos: .userInitiated).async {
-                _ = AppleEventsPermissionCheck.request()
+            Task {
+                await Self.prepareAppleEventsTargetIfNeeded()
+                _ = await Task.detached(priority: .userInitiated) {
+                    AppleEventsPermissionCheck.request()
+                }.value
                 completed()
             }
         case .screenRecording:
@@ -910,7 +964,45 @@ final class PermissionCenterService: ObservableObject {
         }
     }
 
-    private nonisolated static func checkStatus(_ type: PermissionType) -> (PermissionAuthorizationState, String?) {
+    private nonisolated static func collectStatuses() async -> [PermissionType: PermissionStatus] {
+        var statuses: [PermissionType: PermissionStatus] = [:]
+        for type in PermissionType.allCases {
+            let (state, detail) = await checkStatus(type)
+            statuses[type] = PermissionStatus(
+                type: type,
+                state: state,
+                lastChecked: Date(),
+                detail: detail
+            )
+        }
+        return statuses
+    }
+
+    private static func prepareAppleEventsTargetIfNeeded() async {
+        let status = await Task.detached(priority: .userInitiated) {
+            AppleEventsPermissionCheck.status()
+        }.value
+        guard AppleEventsPermissionCheck.needsTargetLaunch(status: status),
+              NSRunningApplication.runningApplications(
+                withBundleIdentifier: AppleEventsPermissionCheck.targetBundleIdentifier
+              ).isEmpty,
+              let url = NSWorkspace.shared.urlForApplication(
+                withBundleIdentifier: AppleEventsPermissionCheck.targetBundleIdentifier
+              ) else { return }
+
+        let configuration = NSWorkspace.OpenConfiguration()
+        configuration.activates = false
+        configuration.addsToRecentItems = false
+        await withCheckedContinuation { continuation in
+            NSWorkspace.shared.openApplication(at: url, configuration: configuration) { _, _ in
+                continuation.resume()
+            }
+        }
+    }
+
+    private nonisolated static func checkStatus(
+        _ type: PermissionType
+    ) async -> (PermissionAuthorizationState, String?) {
         switch type {
         case .accessibility:
             let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: false]
@@ -975,19 +1067,18 @@ final class PermissionCenterService: ObservableObject {
             }
             
         case .notifications:
-            let semaphore = DispatchSemaphore(value: 0)
-            var state = PermissionAuthorizationState.notDetermined
-            UNUserNotificationCenter.current().getNotificationSettings { settings in
-                switch settings.authorizationStatus {
-                case .authorized, .provisional, .ephemeral: state = .granted
-                case .notDetermined: state = .notDetermined
-                case .denied: state = .denied
-                @unknown default: state = .restricted
+            return await withCheckedContinuation { continuation in
+                UNUserNotificationCenter.current().getNotificationSettings { settings in
+                    let state: PermissionAuthorizationState
+                    switch settings.authorizationStatus {
+                    case .authorized, .provisional, .ephemeral: state = .granted
+                    case .notDetermined: state = .notDetermined
+                    case .denied: state = .denied
+                    @unknown default: state = .restricted
+                    }
+                    continuation.resume(returning: (state, nil))
                 }
-                semaphore.signal()
             }
-            _ = semaphore.wait(timeout: .now() + 0.5)
-            return (state, nil)
             
         case .contacts:
             return (authorizationState(for: CNContactStore.authorizationStatus(for: .contacts)), nil)

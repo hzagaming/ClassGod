@@ -58,8 +58,10 @@ struct PermissionCenterView: View {
             }
         }
         .onAppear {
+            service.startLiveMonitoring()
             service.refreshAll()
         }
+        .onDisappear { service.stopLiveMonitoring() }
         .onReceive(NotificationCenter.default.publisher(for: .permissionCenterWindowDidShow)) { _ in
             service.refreshAll()
         }
