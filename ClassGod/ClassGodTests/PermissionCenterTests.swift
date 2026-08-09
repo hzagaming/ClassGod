@@ -1,4 +1,8 @@
+import Contacts
+import EventKit
+import Photos
 import Testing
+import UserNotifications
 @testable import ClassGod
 
 @Suite("Permission Center catalog")
@@ -12,6 +16,27 @@ struct PermissionCenterTests {
     @Test("Live permission checks run at a millisecond-scale interval")
     func livePermissionRefreshInterval() {
         #expect(PermissionLiveRefreshPolicy.intervalNanoseconds == 100_000_000)
+        #expect(PermissionLiveRefreshPolicy.fullScanStride == 10)
+        #expect(!PermissionLiveRefreshPolicy.requiresFullScan(tick: 1))
+        #expect(PermissionLiveRefreshPolicy.requiresFullScan(tick: 10))
+    }
+
+    @Test("Live checks poll unresolved access immediately and granted access periodically")
+    func livePermissionProbePlan() {
+        let states = Dictionary(uniqueKeysWithValues: PermissionType.allCases.map { type in
+            (type, type.requiresManualReview
+                ? PermissionAuthorizationState.manualReview
+                : PermissionAuthorizationState.granted)
+        })
+        var statuses = makeStatuses(states)
+        statuses[.camera] = PermissionStatus(
+            type: .camera,
+            state: .denied,
+            lastChecked: .distantPast,
+            detail: nil
+        )
+
+        #expect(PermissionLiveRefreshPolicy.immediateTypes(statuses: statuses) == [.camera])
     }
 
     @Test("Live checks publish UI updates only when authorization changes")
@@ -185,8 +210,31 @@ struct PermissionCenterTests {
         #expect(!PermissionAuthorizationState.denied.isGranted)
         #expect(!PermissionAuthorizationState.notDetermined.isGranted)
         #expect(!PermissionAuthorizationState.restricted.isGranted)
+        #expect(!PermissionAuthorizationState.limited.isGranted)
         #expect(!PermissionAuthorizationState.manualReview.isGranted)
         #expect(PermissionAuthorizationState.manualReview.needsManualReview)
+    }
+
+    @Test("Only full authorization grades unlock the permission gate")
+    func fullAuthorizationGrades() {
+        #expect(PermissionAuthorizationPolicy.state(for: PHAuthorizationStatus.authorized) == .granted)
+        #expect(PermissionAuthorizationPolicy.state(for: PHAuthorizationStatus.limited) == .limited)
+        #expect(PermissionAuthorizationPolicy.state(for: CNAuthorizationStatus.authorized) == .granted)
+        #expect(PermissionAuthorizationPolicy.state(for: EKAuthorizationStatus.fullAccess) == .granted)
+        #expect(PermissionAuthorizationPolicy.state(for: EKAuthorizationStatus.writeOnly) == .limited)
+        #expect(PermissionAuthorizationPolicy.state(for: UNAuthorizationStatus.authorized) == .granted)
+        #expect(PermissionAuthorizationPolicy.state(for: UNAuthorizationStatus.provisional) == .limited)
+    }
+
+    @Test("Granted requests resolve immediately during live monitoring")
+    func resolvesGrantedRequests() {
+        let active: Set<PermissionType> = [.camera, .microphone]
+        let statuses = makeStatuses([
+            .camera: .granted,
+            .microphone: .denied,
+        ])
+
+        #expect(PermissionRequestResolutionPolicy.resolved(active: active, statuses: statuses) == [.camera])
     }
 
     @Test("Every asynchronous prompt refreshes after its completion callback")

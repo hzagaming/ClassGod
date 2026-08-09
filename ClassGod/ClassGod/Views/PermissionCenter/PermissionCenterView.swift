@@ -43,6 +43,10 @@ struct PermissionCenterView: View {
     private var summary: PermissionSummary {
         PermissionCatalogPolicy.summary(for: PermissionType.allCases, statuses: service.statuses)
     }
+
+    private var latestCheckDate: Date? {
+        service.statuses.values.map(\.lastChecked).max()
+    }
     
     var body: some View {
         ZStack {
@@ -549,6 +553,7 @@ struct PermissionCenterView: View {
     private func color(for state: PermissionAuthorizationState) -> Color {
         switch state {
         case .granted: .green
+        case .limited: .yellow
         case .denied: .orange
         case .notDetermined: .yellow
         case .restricted: .red
@@ -588,8 +593,12 @@ struct PermissionCenterView: View {
             .disabled(service.isChecking)
             
             Spacer()
-            
-            Text(service.isChecking ? String(localized: "permission.checking") : String(format: String(localized: "permission.last_checked"), formatTime(service.statuses.values.first?.lastChecked)))
+
+            Label("permission.live_status", systemImage: "waveform.path.ecg")
+                .font(.system(size: 8 * zoomScale, weight: .bold, design: .monospaced))
+                .foregroundStyle(.green.opacity(0.8))
+
+            Text(service.isChecking ? String(localized: "permission.checking") : String(format: String(localized: "permission.last_checked"), formatTime(latestCheckDate)))
                 .font(.system(size: 8 * zoomScale, design: .monospaced))
                 .foregroundStyle(.white.opacity(0.35))
         }

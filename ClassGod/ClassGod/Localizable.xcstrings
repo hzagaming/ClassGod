@@ -14258,6 +14258,38 @@
         }
       }
     },
+    "permission.limited" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limited Access"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "部分授权"
+          }
+        }
+      }
+    },
+    "permission.live_status" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "LIVE · 100ms"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "实时 · 100ms"
+          }
+        }
+      }
+    },
     "permission.manual_review" : {
       "localizations" : {
         "en" : {

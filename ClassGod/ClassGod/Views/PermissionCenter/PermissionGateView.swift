@@ -55,9 +55,13 @@ struct PermissionGateView: View {
                     .foregroundStyle(.white.opacity(0.52))
             }
             Spacer()
-            Text("permission.gate.brand")
-                .font(.system(size: 9 * zoomScale, weight: .bold, design: .monospaced))
-                .foregroundStyle(accent.opacity(0.75))
+            VStack(alignment: .trailing, spacing: 4 * zoomScale) {
+                Text("permission.gate.brand")
+                    .foregroundStyle(accent.opacity(0.75))
+                Label("permission.live_status", systemImage: "waveform.path.ecg")
+                    .foregroundStyle(.green.opacity(0.8))
+            }
+            .font(.system(size: 9 * zoomScale, weight: .bold, design: .monospaced))
         }
         .padding(.horizontal, 18 * zoomScale)
         .padding(.vertical, 14 * zoomScale)
@@ -106,7 +110,9 @@ struct PermissionGateView: View {
         let state = PermissionCatalogPolicy.state(for: type, statuses: service.statuses)
         let confirmed = service.isManuallyConfirmed(type)
         let complete = type.requiresManualReview ? confirmed : state.isGranted
-        let color: Color = complete ? .green : (state == .restricted ? .red : .orange)
+        let color: Color = complete
+            ? .green
+            : (state == .restricted ? .red : (state == .limited ? .yellow : .orange))
 
         return HStack(spacing: 11 * zoomScale) {
             Image(systemName: type.iconName)

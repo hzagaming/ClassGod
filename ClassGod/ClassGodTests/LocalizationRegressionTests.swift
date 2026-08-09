@@ -44,8 +44,10 @@ struct LocalizationRegressionTests {
         let chinese = try #require(Bundle(url: chineseURL))
 
         #expect(String(localized: "permission.gate.title", bundle: .main, locale: english) == "Permission Setup Required")
+        #expect(String(localized: "permission.limited", bundle: .main, locale: english) == "Limited Access")
         #expect(String(localized: "uninstall.final.action", bundle: .main, locale: english) == "Uninstall Now")
         #expect(chinese.localizedString(forKey: "permission.gate.requirement", value: nil, table: nil) == "必须完成全部 20 项权限")
+        #expect(chinese.localizedString(forKey: "permission.live_status", value: nil, table: nil) == "实时 · 100ms")
         #expect(chinese.localizedString(forKey: "uninstall.final.title", value: nil, table: nil) == "再次确认，确定要彻底卸载？")
     }
 

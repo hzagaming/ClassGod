@@ -64,21 +64,74 @@ enum PermissionRequirement: Equatable {
 
 enum PermissionAuthorizationState: Equatable {
     case granted
+    case limited
     case denied
     case notDetermined
     case restricted
     case manualReview
 
-    var isGranted: Bool { self == .granted }
-    var needsManualReview: Bool { self == .manualReview }
+    nonisolated var isGranted: Bool {
+        if case .granted = self { return true }
+        return false
+    }
+
+    nonisolated var needsManualReview: Bool {
+        if case .manualReview = self { return true }
+        return false
+    }
 
     var displayName: String {
         switch self {
         case .granted: String(localized: "permission.granted")
+        case .limited: String(localized: "permission.limited")
         case .denied: String(localized: "permission.denied")
         case .notDetermined: String(localized: "permission.not_determined")
         case .restricted: String(localized: "permission.restricted")
         case .manualReview: String(localized: "permission.manual_review")
+        }
+    }
+}
+
+nonisolated enum PermissionAuthorizationPolicy {
+    static func state(for status: PHAuthorizationStatus) -> PermissionAuthorizationState {
+        switch status {
+        case .authorized: .granted
+        case .limited: .limited
+        case .notDetermined: .notDetermined
+        case .restricted: .restricted
+        case .denied: .denied
+        @unknown default: .restricted
+        }
+    }
+
+    static func state(for status: CNAuthorizationStatus) -> PermissionAuthorizationState {
+        switch status {
+        case .authorized: .granted
+        case .notDetermined: .notDetermined
+        case .restricted: .restricted
+        case .denied: .denied
+        @unknown default: .restricted
+        }
+    }
+
+    static func state(for status: EKAuthorizationStatus) -> PermissionAuthorizationState {
+        switch status {
+        case .authorized, .fullAccess: .granted
+        case .writeOnly: .limited
+        case .notDetermined: .notDetermined
+        case .restricted: .restricted
+        case .denied: .denied
+        @unknown default: .restricted
+        }
+    }
+
+    static func state(for status: UNAuthorizationStatus) -> PermissionAuthorizationState {
+        switch status {
+        case .authorized: .granted
+        case .provisional, .ephemeral: .limited
+        case .notDetermined: .notDetermined
+        case .denied: .denied
+        @unknown default: .restricted
         }
     }
 }
@@ -374,7 +427,7 @@ enum PermissionType: String, CaseIterable, Identifiable, Equatable {
         canPrompt ? .nativePrompt : .systemSettings
     }
 
-    var requiresManualReview: Bool {
+    nonisolated var requiresManualReview: Bool {
         switch self {
         case .filesAndFolders, .developerTools, .appManagement, .mediaLibrary, .localNetwork:
             return true
@@ -440,7 +493,7 @@ enum PermissionRequestPolicy {
         state: PermissionAuthorizationState
     ) -> PermissionRequestAction {
         if state.isGranted { return .refresh }
-        if state.needsManualReview || state == .restricted { return .openSettings }
+        if state.needsManualReview || state == .restricted || state == .limited { return .openSettings }
         if state == .denied, !booleanPreflightOnly.contains(type) { return .openSettings }
         return type.canPrompt ? .prompt : .openSettings
     }
@@ -624,7 +677,7 @@ enum PermissionCatalogPolicy {
         statuses: [PermissionType: PermissionStatus]
     ) -> [Int] {
         let stateRank = switch state(for: type, statuses: statuses) {
-        case .denied, .restricted, .notDetermined: 0
+        case .denied, .restricted, .limited, .notDetermined: 0
         case .manualReview: 1
         case .granted: 2
         }
@@ -727,6 +780,19 @@ nonisolated enum PermissionRefreshQueuePolicy {
 
 nonisolated enum PermissionLiveRefreshPolicy {
     static let intervalNanoseconds: UInt64 = 100_000_000
+    static let fullScanStride = 10
+
+    static func requiresFullScan(tick: Int) -> Bool {
+        tick.isMultiple(of: fullScanStride)
+    }
+
+    static func immediateTypes(
+        statuses: [PermissionType: PermissionStatus]
+    ) -> [PermissionType] {
+        PermissionType.allCases.filter {
+            !$0.requiresManualReview && statuses[$0]?.state != .granted
+        }
+    }
 }
 
 enum PermissionStatusChangePolicy {
@@ -739,6 +805,24 @@ enum PermissionStatusChangePolicy {
             current[type]?.state != updated[type]?.state
                 || current[type]?.detail != updated[type]?.detail
         }
+    }
+}
+
+nonisolated enum PermissionRequestResolutionPolicy {
+    static func resolved(
+        active: Set<PermissionType>,
+        statuses: [PermissionType: PermissionStatus]
+    ) -> Set<PermissionType> {
+        Set(active.filter { statuses[$0]?.state.isGranted == true })
+    }
+}
+
+private enum PermissionRefreshScope: Equatable {
+    case all
+    case immediate
+
+    func merged(with other: PermissionRefreshScope) -> PermissionRefreshScope {
+        self == .all || other == .all ? .all : .immediate
     }
 }
 
@@ -755,6 +839,8 @@ final class PermissionCenterService: ObservableObject {
     private var refreshInProgress = false
     private var refreshRequestedWhileChecking = false
     private var queuedRefreshShowsProgress = false
+    private var queuedRefreshScope = PermissionRefreshScope.immediate
+    private var liveRefreshTick = 0
     private var requestTracker = PermissionRequestTracker()
     private var liveRefreshTask: Task<Void, Never>?
     private let manualConfirmationsKey = "com.hanazar.classgod.permissionGate.manualConfirmations"
@@ -806,22 +892,27 @@ final class PermissionCenterService: ObservableObject {
     }
     
     func refreshAll(afterAuthorization: Bool = false) {
-        requestRefresh(showsProgress: !afterAuthorization)
+        requestRefresh(showsProgress: !afterAuthorization, scope: .all)
     }
 
     func startLiveMonitoring() {
         guard liveRefreshTask == nil else { return }
+        liveRefreshTick = 0
         liveRefreshTask = Task { [weak self] in
             await Self.prepareAppleEventsTargetIfNeeded()
             guard let self else { return }
-            self.requestRefresh(showsProgress: false)
+            self.requestRefresh(showsProgress: false, scope: .all)
             while !Task.isCancelled {
                 do {
                     try await Task.sleep(nanoseconds: PermissionLiveRefreshPolicy.intervalNanoseconds)
                 } catch {
                     return
                 }
-                self.requestRefresh(showsProgress: false)
+                self.liveRefreshTick += 1
+                let scope: PermissionRefreshScope = PermissionLiveRefreshPolicy.requiresFullScan(
+                    tick: self.liveRefreshTick
+                ) ? .all : .immediate
+                self.requestRefresh(showsProgress: false, scope: scope)
             }
         }
     }
@@ -829,39 +920,53 @@ final class PermissionCenterService: ObservableObject {
     func stopLiveMonitoring() {
         liveRefreshTask?.cancel()
         liveRefreshTask = nil
+        liveRefreshTick = 0
     }
 
-    private func requestRefresh(showsProgress: Bool) {
+    private func requestRefresh(showsProgress: Bool, scope: PermissionRefreshScope) {
         guard !refreshInProgress else {
             if PermissionRefreshQueuePolicy.shouldQueueFollowUp(isChecking: refreshInProgress) {
                 refreshRequestedWhileChecking = true
                 queuedRefreshShowsProgress = queuedRefreshShowsProgress || showsProgress
+                queuedRefreshScope = queuedRefreshScope.merged(with: scope)
             }
             return
         }
+        let types = scope == .all
+            ? PermissionType.allCases
+            : PermissionLiveRefreshPolicy.immediateTypes(statuses: statuses)
+        guard !types.isEmpty else { return }
         refreshInProgress = true
         if showsProgress { isChecking = true }
         Task { [weak self] in
-            let newStatuses = await Self.collectStatuses()
+            let refreshedStatuses = await Self.collectStatuses(types: types)
             guard let self else { return }
+            let newStatuses = self.statuses.merging(refreshedStatuses) { _, refreshed in refreshed }
             if showsProgress
                 || PermissionStatusChangePolicy.hasChanges(current: self.statuses, updated: newStatuses) {
                 self.statuses = newStatuses
+            }
+            for type in PermissionRequestResolutionPolicy.resolved(
+                active: self.requestTracker.active,
+                statuses: newStatuses
+            ) {
+                self.finishRequest(type)
             }
             self.refreshInProgress = false
             if showsProgress { self.isChecking = false }
             self.updateGateState()
             if self.refreshRequestedWhileChecking {
                 let nextShowsProgress = self.queuedRefreshShowsProgress
+                let nextScope = self.queuedRefreshScope
                 self.refreshRequestedWhileChecking = false
                 self.queuedRefreshShowsProgress = false
-                self.requestRefresh(showsProgress: nextShowsProgress)
+                self.queuedRefreshScope = .immediate
+                self.requestRefresh(showsProgress: nextShowsProgress, scope: nextScope)
             }
         }
     }
     
     func requestPermission(_ type: PermissionType) {
-        startLiveMonitoring()
         let fallbackState: PermissionAuthorizationState = type.requiresManualReview ? .manualReview : .notDetermined
         switch PermissionRequestPolicy.action(for: type, state: statuses[type]?.state ?? fallbackState) {
         case .refresh:
@@ -964,9 +1069,11 @@ final class PermissionCenterService: ObservableObject {
         }
     }
 
-    private nonisolated static func collectStatuses() async -> [PermissionType: PermissionStatus] {
+    private nonisolated static func collectStatuses(
+        types: [PermissionType]
+    ) async -> [PermissionType: PermissionStatus] {
         var statuses: [PermissionType: PermissionStatus] = [:]
-        for type in PermissionType.allCases {
+        for type in types {
             let (state, detail) = await checkStatus(type)
             statuses[type] = PermissionStatus(
                 type: type,
@@ -1038,13 +1145,7 @@ final class PermissionCenterService: ObservableObject {
 
         case .photos:
             let status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
-            switch status {
-            case .authorized, .limited: return (.granted, nil)
-            case .notDetermined: return (.notDetermined, nil)
-            case .restricted: return (.restricted, nil)
-            case .denied: return (.denied, nil)
-            @unknown default: return (.restricted, nil)
-            }
+            return (PermissionAuthorizationPolicy.state(for: status), nil)
 
         case .speechRecognition:
             let status = SFSpeechRecognizer.authorizationStatus()
@@ -1069,25 +1170,19 @@ final class PermissionCenterService: ObservableObject {
         case .notifications:
             return await withCheckedContinuation { continuation in
                 UNUserNotificationCenter.current().getNotificationSettings { settings in
-                    let state: PermissionAuthorizationState
-                    switch settings.authorizationStatus {
-                    case .authorized, .provisional, .ephemeral: state = .granted
-                    case .notDetermined: state = .notDetermined
-                    case .denied: state = .denied
-                    @unknown default: state = .restricted
-                    }
+                    let state = PermissionAuthorizationPolicy.state(for: settings.authorizationStatus)
                     continuation.resume(returning: (state, nil))
                 }
             }
             
         case .contacts:
-            return (authorizationState(for: CNContactStore.authorizationStatus(for: .contacts)), nil)
+            return (PermissionAuthorizationPolicy.state(for: CNContactStore.authorizationStatus(for: .contacts)), nil)
             
         case .reminders:
-            return (authorizationState(for: EKEventStore.authorizationStatus(for: .reminder)), nil)
+            return (PermissionAuthorizationPolicy.state(for: EKEventStore.authorizationStatus(for: .reminder)), nil)
             
         case .calendar:
-            return (authorizationState(for: EKEventStore.authorizationStatus(for: .event)), nil)
+            return (PermissionAuthorizationPolicy.state(for: EKEventStore.authorizationStatus(for: .event)), nil)
             
         case .bluetooth:
             let auth = CBCentralManager.authorization
@@ -1111,26 +1206,6 @@ final class PermissionCenterService: ObservableObject {
         }
     }
 
-    private nonisolated static func authorizationState(for status: CNAuthorizationStatus) -> PermissionAuthorizationState {
-        switch status {
-        case .authorized, .limited: .granted
-        case .notDetermined: .notDetermined
-        case .restricted: .restricted
-        case .denied: .denied
-        @unknown default: .restricted
-        }
-    }
-
-    private nonisolated static func authorizationState(for status: EKAuthorizationStatus) -> PermissionAuthorizationState {
-        switch status {
-        case .authorized, .fullAccess, .writeOnly: .granted
-        case .notDetermined: .notDetermined
-        case .restricted: .restricted
-        case .denied: .denied
-        @unknown default: .restricted
-        }
-    }
-    
     private static func openSystemSettings(for type: PermissionType) {
         guard let url = PermissionSettingsDestination.url(for: type) else { return }
         NSWorkspace.shared.open(url)
