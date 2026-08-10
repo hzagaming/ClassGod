@@ -55,6 +55,7 @@ struct PermissionCenterView: View {
             VStack(spacing: 0) {
                 headerBar
                 progressBar
+                privacyPromise
                 categoryFilterBar
                 statusFilterBar
                 permissionList
@@ -212,6 +213,30 @@ struct PermissionCenterView: View {
                 .foregroundStyle(.white.opacity(0.45))
         }
         .font(.system(size: 8 * zoomScale, weight: .medium, design: .monospaced))
+    }
+
+    private var privacyPromise: some View {
+        HStack(spacing: 9 * zoomScale) {
+            Image(systemName: "lock.shield.fill")
+                .font(.system(size: 12 * zoomScale, weight: .semibold))
+                .foregroundStyle(.green)
+            VStack(alignment: .leading, spacing: 1 * zoomScale) {
+                Text("permission.privacy.title")
+                    .font(.system(size: 9 * zoomScale, weight: .bold, design: .monospaced))
+                    .foregroundStyle(.green)
+                Text("permission.privacy.detail")
+                    .font(.system(size: 7.5 * zoomScale, design: .monospaced))
+                    .foregroundStyle(.white.opacity(0.45))
+                    .lineLimit(2)
+            }
+            Spacer()
+        }
+        .padding(.horizontal, 12 * zoomScale)
+        .padding(.vertical, 7 * zoomScale)
+        .background(Color.green.opacity(0.035))
+        .overlay(alignment: .bottom) {
+            Rectangle().fill(Color.green.opacity(0.1)).frame(height: 1 * zoomScale)
+        }
     }
     
     // MARK: - Category Filter

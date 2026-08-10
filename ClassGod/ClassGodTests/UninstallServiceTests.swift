@@ -14,9 +14,37 @@ struct UninstallServiceTests {
         #expect(plan.packageIdentifier == "com.hanazar.classgod.pkg")
         #expect(plan.userDataURLs.contains(home.appendingPathComponent("Library/Application Support/ClassGod", isDirectory: true)))
         #expect(plan.userDataURLs.contains(home.appendingPathComponent("Library/Application Support/com.hanazar.classgod", isDirectory: true)))
+        #expect(plan.userDataURLs.contains(home.appendingPathComponent("Library/Containers/com.hanazar.classgod", isDirectory: true)))
         #expect(plan.userDataURLs.contains(home.appendingPathComponent("Library/Containers/com.hanazar.classgod.ClassGodWidget", isDirectory: true)))
+        #expect(plan.userDataURLs.contains(home.appendingPathComponent("Library/Application Scripts/group.com.hanazar.classgod", isDirectory: true)))
+        #expect(plan.userDataURLs.contains(home.appendingPathComponent("Library/Cookies/com.hanazar.classgod.binarycookies")))
         #expect(!plan.userDataURLs.contains(home))
+        #expect(plan.systemURLs.contains(URL(fileURLWithPath: "/Library/Application Support/ClassGod", isDirectory: true)))
         #expect(plan.isSafe)
+    }
+
+    @Test("Uninstall resets every ClassGod permission domain and defaults domain")
+    func resetsPermissionsAndDefaults() throws {
+        let plan = try #require(UninstallPlan.make(
+            bundleURL: URL(fileURLWithPath: "/Applications/ClassGod.app", isDirectory: true),
+            homeDirectory: URL(fileURLWithPath: "/Users/tester", isDirectory: true)
+        ))
+        let commands = try #require(UninstallCommandBuilder.commands(
+            plan: plan,
+            userName: "tester"
+        ))
+
+        #expect(UninstallPlan.permissionBundleIdentifiers == [
+            "com.hanazar.classgod",
+            "com.hanazar.classgod.ClassGodWidget",
+            "com.hanazar.classgod.helper",
+        ])
+        for identifier in UninstallPlan.permissionBundleIdentifiers {
+            #expect(commands.contains { $0.contains("tccutil reset All '\(identifier)'") })
+        }
+        #expect(commands.contains { $0.contains("defaults delete 'com.hanazar.classgod'") })
+        #expect(commands.contains { $0.contains("defaults delete 'com.hanazar.classgod.ClassGodWidget'") })
+        #expect(commands.contains { $0.contains("pkill -x ClassGodWidget") })
     }
 
     @Test("Uninstall plan rejects broad or unexpected application targets")

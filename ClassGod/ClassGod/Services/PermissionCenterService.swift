@@ -48,10 +48,12 @@ enum PermissionCategory: String, CaseIterable, Identifiable, Equatable {
     }
 }
 
-enum PermissionRequirement: Equatable {
+enum PermissionRequirement: CaseIterable, Identifiable, Equatable {
     case required
     case recommended
     case optional
+
+    var id: Self { self }
 
     var displayName: String {
         switch self {
@@ -453,14 +455,16 @@ enum PermissionType: String, CaseIterable, Identifiable, Equatable {
 }
 
 enum PermissionReviewPlan {
-    static let all = PermissionType.allCases
+    static let all = PermissionRequirement.allCases.flatMap { requirement in
+        PermissionType.allCases.filter { $0.requirement == requirement }
+    }
 
     static func pending(
         types: [PermissionType] = PermissionType.allCases,
         statuses: [PermissionType: PermissionStatus]
     ) -> [PermissionType] {
         let requested = Set(types)
-        return PermissionType.allCases.filter { type in
+        return all.filter { type in
             requested.contains(type) && !PermissionCatalogPolicy.state(for: type, statuses: statuses).isGranted
         }
     }
@@ -496,6 +500,16 @@ enum PermissionRequestPolicy {
         if state.needsManualReview || state == .restricted || state == .limited { return .openSettings }
         if state == .denied, !booleanPreflightOnly.contains(type) { return .openSettings }
         return type.canPrompt ? .prompt : .openSettings
+    }
+}
+
+nonisolated enum PermissionRequestFallbackPolicy {
+    static func shouldOpenSettings(
+        for type: PermissionType,
+        requestGranted: Bool
+    ) -> Bool {
+        guard !requestGranted else { return false }
+        return type == .inputMonitoring || type == .screenRecording
     }
 }
 
@@ -559,15 +573,16 @@ enum PermissionGatePolicy {
         manuallyConfirmed: Set<PermissionType>
     ) -> PermissionGateProgress {
         let confirmed = sanitizedManualConfirmations(manuallyConfirmed)
-        let pending = PermissionType.allCases.filter { type in
+        let gatedTypes = PermissionType.allCases.filter { $0.requirement == .required }
+        let pending = gatedTypes.filter { type in
             if type.requiresManualReview {
                 return !confirmed.contains(type)
             }
             return PermissionCatalogPolicy.state(for: type, statuses: statuses) != .granted
         }
         return PermissionGateProgress(
-            completed: PermissionType.allCases.count - pending.count,
-            total: PermissionType.allCases.count,
+            completed: gatedTypes.count - pending.count,
+            total: gatedTypes.count,
             pending: pending
         )
     }
@@ -585,6 +600,12 @@ enum PermissionGatePolicy {
     ) -> Bool {
         guard type.requiresManualReview else { return false }
         return !confirmed || didOpenSettings
+    }
+}
+
+nonisolated enum PermissionGateSessionPolicy {
+    static func isUnlocked(progressUnlocked: Bool, skipped: Bool) -> Bool {
+        progressUnlocked || skipped
     }
 }
 
@@ -740,6 +761,10 @@ enum AppleEventsPermissionCheck {
 }
 
 enum PermissionSettingsDestination {
+    nonisolated static let privacyRootURL = URL(
+        string: "x-apple.systempreferences:com.apple.settings.PrivacySecurity.extension"
+    )
+
     nonisolated static func url(for type: PermissionType) -> URL? {
         if type == .notifications {
             return URL(
@@ -836,6 +861,7 @@ final class PermissionCenterService: ObservableObject {
     @Published private(set) var manuallyConfirmed: Set<PermissionType>
     @Published private(set) var openedManualReviews: Set<PermissionType> = []
     @Published private(set) var isGateUnlocked = false
+    @Published private(set) var isGateSkippedForSession = false
     private var refreshInProgress = false
     private var refreshRequestedWhileChecking = false
     private var queuedRefreshShowsProgress = false
@@ -888,6 +914,11 @@ final class PermissionCenterService: ObservableObject {
             manuallyConfirmed.map(\.rawValue).sorted(),
             forKey: manualConfirmationsKey
         )
+        updateGateState()
+    }
+
+    func skipGateForCurrentSession() {
+        isGateSkippedForSession = true
         updateGateState()
     }
     
@@ -989,8 +1020,12 @@ final class PermissionCenterService: ObservableObject {
             let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true]
             _ = AXIsProcessTrustedWithOptions(options as CFDictionary)
         case .inputMonitoring:
-            if !CGPreflightListenEventAccess() {
-                _ = CGRequestListenEventAccess()
+            let granted = CGPreflightListenEventAccess() || CGRequestListenEventAccess()
+            if PermissionRequestFallbackPolicy.shouldOpenSettings(
+                for: type,
+                requestGranted: granted
+            ) {
+                Self.openSystemSettings(for: type)
             }
         case .appleEvents:
             Task {
@@ -1001,8 +1036,12 @@ final class PermissionCenterService: ObservableObject {
                 completed()
             }
         case .screenRecording:
-            if !CGPreflightScreenCaptureAccess() {
-                CGRequestScreenCaptureAccess()
+            let granted = CGPreflightScreenCaptureAccess() || CGRequestScreenCaptureAccess()
+            if PermissionRequestFallbackPolicy.shouldOpenSettings(
+                for: type,
+                requestGranted: granted
+            ) {
+                Self.openSystemSettings(for: type)
             }
         case .microphone:
             AVCaptureDevice.requestAccess(for: .audio) { _ in completed() }
@@ -1057,7 +1096,10 @@ final class PermissionCenterService: ObservableObject {
     }
 
     private func updateGateState() {
-        isGateUnlocked = gateProgress.isUnlocked
+        isGateUnlocked = PermissionGateSessionPolicy.isUnlocked(
+            progressUnlocked: gateProgress.isUnlocked,
+            skipped: isGateSkippedForSession
+        )
     }
 
     private func completionHandler(for type: PermissionType) -> @Sendable () -> Void {
@@ -1207,8 +1249,12 @@ final class PermissionCenterService: ObservableObject {
     }
 
     private static func openSystemSettings(for type: PermissionType) {
-        guard let url = PermissionSettingsDestination.url(for: type) else { return }
-        NSWorkspace.shared.open(url)
+        if let url = PermissionSettingsDestination.url(for: type), NSWorkspace.shared.open(url) {
+            return
+        }
+        if let fallback = PermissionSettingsDestination.privacyRootURL {
+            NSWorkspace.shared.open(fallback)
+        }
     }
 }
 

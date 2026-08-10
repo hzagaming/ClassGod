@@ -15,6 +15,7 @@ struct PermissionGateView: View {
         VStack(spacing: 0) {
             header
             progressSection
+            privacyPromise
             permissionList
             footer
         }
@@ -96,14 +97,56 @@ struct PermissionGateView: View {
 
     private var permissionList: some View {
         ScrollView {
-            LazyVStack(spacing: 7 * zoomScale) {
-                ForEach(PermissionType.allCases) { type in
-                    permissionRow(type)
+            LazyVStack(alignment: .leading, spacing: 14 * zoomScale) {
+                ForEach(PermissionRequirement.allCases) { requirement in
+                    let types = PermissionReviewPlan.all.filter { $0.requirement == requirement }
+                    VStack(alignment: .leading, spacing: 7 * zoomScale) {
+                        HStack(spacing: 8 * zoomScale) {
+                            Text(requirement.displayName)
+                                .font(.system(size: 9 * zoomScale, weight: .bold, design: .monospaced))
+                                .foregroundStyle(requirementColor(requirement))
+                            Rectangle()
+                                .fill(requirementColor(requirement).opacity(0.2))
+                                .frame(height: 1 * zoomScale)
+                        }
+
+                        ForEach(types) { type in
+                            permissionRow(type)
+                        }
+                    }
                 }
             }
             .padding(14 * zoomScale)
         }
         .background(Color(white: 0.015))
+    }
+
+    private var privacyPromise: some View {
+        HStack(spacing: 10 * zoomScale) {
+            Image(systemName: "lock.shield.fill")
+                .font(.system(size: 15 * zoomScale, weight: .semibold))
+                .foregroundStyle(.green)
+                .frame(width: 32 * zoomScale, height: 32 * zoomScale)
+                .background(Color.green.opacity(0.1))
+                .clipShape(Circle())
+
+            VStack(alignment: .leading, spacing: 2 * zoomScale) {
+                Text("permission.privacy.title")
+                    .font(.system(size: 9 * zoomScale, weight: .bold, design: .monospaced))
+                    .foregroundStyle(.green)
+                Text("permission.privacy.detail")
+                    .font(.system(size: 8 * zoomScale, design: .monospaced))
+                    .foregroundStyle(.white.opacity(0.5))
+                    .lineLimit(2)
+            }
+            Spacer()
+        }
+        .padding(.horizontal, 18 * zoomScale)
+        .padding(.vertical, 9 * zoomScale)
+        .background(Color.green.opacity(0.035))
+        .overlay(alignment: .bottom) {
+            Rectangle().fill(Color.green.opacity(0.12)).frame(height: 1 * zoomScale)
+        }
     }
 
     private func permissionRow(_ type: PermissionType) -> some View {
@@ -229,27 +272,50 @@ struct PermissionGateView: View {
         }
     }
 
-    private var footer: some View {
-        HStack(spacing: 10 * zoomScale) {
-            Image(systemName: "info.circle")
-                .foregroundStyle(accent.opacity(0.7))
-            Text("permission.gate.system_note")
-                .font(.system(size: 8 * zoomScale, design: .monospaced))
-                .foregroundStyle(.white.opacity(0.42))
-                .lineLimit(2)
-            Spacer()
-            Button {
-                service.refreshAll()
-            } label: {
-                Label("permission.refresh_status", systemImage: "arrow.clockwise")
-            }
-            .buttonStyle(.bordered)
-            .disabled(service.isChecking)
+    private func requirementColor(_ requirement: PermissionRequirement) -> Color {
+        switch requirement {
+        case .required: .orange
+        case .recommended: accent
+        case .optional: .white.opacity(0.42)
+        }
+    }
 
-            Button(role: .destructive, action: onQuit) {
-                Label("button.quit", systemImage: "power")
+    private var footer: some View {
+        VStack(spacing: 8 * zoomScale) {
+            HStack(spacing: 8 * zoomScale) {
+                Image(systemName: "info.circle")
+                    .foregroundStyle(accent.opacity(0.7))
+                Text("permission.gate.system_note")
+                    .font(.system(size: 8 * zoomScale, design: .monospaced))
+                    .foregroundStyle(.white.opacity(0.42))
+                    .lineLimit(2)
+                Spacer()
             }
-            .buttonStyle(.bordered)
+
+            HStack(spacing: 10 * zoomScale) {
+                Spacer()
+                Button {
+                    service.refreshAll()
+                } label: {
+                    Label("permission.refresh_status", systemImage: "arrow.clockwise")
+                }
+                .buttonStyle(.bordered)
+                .disabled(service.isChecking)
+
+                Button {
+                    SoundEffectManager.shared.playButtonClick()
+                    HapticManager.shared.generic()
+                    service.skipGateForCurrentSession()
+                } label: {
+                    Label("permission.gate.skip", systemImage: "arrow.right.circle.fill")
+                }
+                .buttonStyle(.borderedProminent)
+
+                Button(role: .destructive, action: onQuit) {
+                    Label("button.quit", systemImage: "power")
+                }
+                .buttonStyle(.bordered)
+            }
         }
         .font(.system(size: 9 * zoomScale, weight: .semibold, design: .monospaced))
         .padding(.horizontal, 18 * zoomScale)

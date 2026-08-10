@@ -43,12 +43,17 @@ struct LocalizationRegressionTests {
         let chineseURL = try #require(Bundle.main.url(forResource: "zh-Hans", withExtension: "lproj"))
         let chinese = try #require(Bundle(url: chineseURL))
 
-        #expect(String(localized: "permission.gate.title", bundle: .main, locale: english) == "Permission Setup Required")
+        #expect(String(localized: "permission.gate.title", bundle: .main, locale: english) == "Permission Setup")
         #expect(String(localized: "permission.limited", bundle: .main, locale: english) == "Limited Access")
+        #expect(String(localized: "permission.privacy.title", bundle: .main, locale: english) == "Local Privacy Promise")
         #expect(String(localized: "uninstall.final.action", bundle: .main, locale: english) == "Uninstall Now")
-        #expect(chinese.localizedString(forKey: "permission.gate.requirement", value: nil, table: nil) == "必须完成全部 20 项权限")
+        #expect(String(localized: "uninstall.cleanup.permissions", bundle: .main, locale: english) == "Reset all ClassGod privacy permissions")
+        #expect(chinese.localizedString(forKey: "permission.gate.requirement", value: nil, table: nil) == "可选权限已置于最底部，可随时补充")
+        #expect(chinese.localizedString(forKey: "permission.privacy.detail", value: nil, table: nil).contains("不会上传"))
+        #expect(chinese.localizedString(forKey: "permission.gate.skip", value: nil, table: nil) == "暂时跳过并使用")
         #expect(chinese.localizedString(forKey: "permission.live_status", value: nil, table: nil) == "实时 · 100ms")
         #expect(chinese.localizedString(forKey: "uninstall.final.title", value: nil, table: nil) == "再次确认，确定要彻底卸载？")
+        #expect(chinese.localizedString(forKey: "uninstall.cleanup.data", value: nil, table: nil) == "删除偏好、缓存、历史记录、壁纸与 Widget 数据")
     }
 
     @Test("Clipo import and todo accessibility messages are localized")

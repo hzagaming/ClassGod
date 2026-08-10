@@ -104,9 +104,14 @@ struct PermissionCenterTests {
         #expect(!PermissionType.speechRecognition.requiresManualReview)
     }
 
-    @Test("Full review includes every permission in catalog order")
+    @Test("Full review groups permissions by requirement with optional access last")
     func fullReviewScope() {
-        #expect(PermissionReviewPlan.all == PermissionType.allCases)
+        #expect(Set(PermissionReviewPlan.all) == Set(PermissionType.allCases))
+        let optionalStart = PermissionReviewPlan.all.firstIndex { $0.requirement == .optional }
+        #expect(optionalStart != nil)
+        if let optionalStart {
+            #expect(PermissionReviewPlan.all[optionalStart...].allSatisfy { $0.requirement == .optional })
+        }
     }
 
     @Test("Maximum permission review skips granted access and preserves catalog order")
@@ -123,10 +128,10 @@ struct PermissionCenterTests {
             statuses: statuses
         )
 
-        #expect(pending == [.inputMonitoring, .appleEvents, .filesAndFolders])
+        #expect(pending == [.appleEvents, .inputMonitoring, .filesAndFolders])
     }
 
-    @Test("Application gate requires every automatic and manual permission")
+    @Test("Application gate blocks only on required permissions")
     func completePermissionGate() {
         let automatic = PermissionType.allCases.filter { !$0.requiresManualReview }
         let manual = Set(PermissionType.allCases.filter(\.requiresManualReview))
@@ -136,19 +141,13 @@ struct PermissionCenterTests {
             statuses: granted,
             manuallyConfirmed: manual
         )
-        #expect(unlocked.completed == PermissionType.allCases.count)
+        #expect(unlocked.completed == PermissionType.allCases.filter { $0.requirement == .required }.count)
+        #expect(unlocked.total == PermissionType.allCases.filter { $0.requirement == .required }.count)
         #expect(unlocked.isUnlocked)
 
-        let missingManual = PermissionGatePolicy.progress(
-            statuses: granted,
-            manuallyConfirmed: manual.subtracting([.filesAndFolders])
-        )
-        #expect(!missingManual.isUnlocked)
-        #expect(missingManual.pending == [.filesAndFolders])
-
         var denied = granted
-        denied[.camera] = PermissionStatus(
-            type: .camera,
+        denied[.accessibility] = PermissionStatus(
+            type: .accessibility,
             state: .denied,
             lastChecked: .distantPast,
             detail: nil
@@ -158,7 +157,26 @@ struct PermissionCenterTests {
             manuallyConfirmed: manual
         )
         #expect(!missingAutomatic.isUnlocked)
-        #expect(missingAutomatic.pending == [.camera])
+        #expect(missingAutomatic.pending == [.accessibility])
+
+        var optionalDenied = granted
+        optionalDenied[.camera] = PermissionStatus(
+            type: .camera,
+            state: .denied,
+            lastChecked: .distantPast,
+            detail: nil
+        )
+        #expect(PermissionGatePolicy.progress(
+            statuses: optionalDenied,
+            manuallyConfirmed: []
+        ).isUnlocked)
+    }
+
+    @Test("Permission gate can be skipped for the current session")
+    func permissionGateSessionSkip() {
+        #expect(!PermissionGateSessionPolicy.isUnlocked(progressUnlocked: false, skipped: false))
+        #expect(PermissionGateSessionPolicy.isUnlocked(progressUnlocked: false, skipped: true))
+        #expect(PermissionGateSessionPolicy.isUnlocked(progressUnlocked: true, skipped: false))
     }
 
     @Test("Manual permission confirmations only accept manual-review catalog entries")
@@ -260,6 +278,26 @@ struct PermissionCenterTests {
         #expect(PermissionRequestPolicy.action(for: .screenRecording, state: .denied) == .prompt)
     }
 
+    @Test("Failed boolean permission prompts fall back to System Settings")
+    func booleanPermissionSettingsFallback() {
+        #expect(PermissionRequestFallbackPolicy.shouldOpenSettings(
+            for: .inputMonitoring,
+            requestGranted: false
+        ))
+        #expect(PermissionRequestFallbackPolicy.shouldOpenSettings(
+            for: .screenRecording,
+            requestGranted: false
+        ))
+        #expect(!PermissionRequestFallbackPolicy.shouldOpenSettings(
+            for: .screenRecording,
+            requestGranted: true
+        ))
+        #expect(!PermissionRequestFallbackPolicy.shouldOpenSettings(
+            for: .accessibility,
+            requestGranted: false
+        ))
+    }
+
     @Test("Repeated permission clicks are coalesced until completion")
     func permissionRequestTracker() {
         var tracker = PermissionRequestTracker()
@@ -292,6 +330,14 @@ struct PermissionCenterTests {
         #expect(
             PermissionSettingsDestination.url(for: .notifications)?.absoluteString
                 == "x-apple.systempreferences:com.apple.Notifications-Settings.extension?id=com.hanazar.classgod"
+        )
+        #expect(
+            PermissionSettingsDestination.url(for: .inputMonitoring)?.absoluteString
+                == "x-apple.systempreferences:com.apple.preference.security?Privacy_ListenEvent"
+        )
+        #expect(
+            PermissionSettingsDestination.url(for: .screenRecording)?.absoluteString
+                == "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture"
         )
     }
 

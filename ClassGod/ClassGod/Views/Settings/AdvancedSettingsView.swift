@@ -95,6 +95,24 @@ struct AdvancedSettingsView: View {
                     )
                     .disabled(uninstallService.isUninstalling)
 
+                    VStack(alignment: .leading, spacing: 7) {
+                        Label("uninstall.cleanup.permissions", systemImage: "hand.raised.slash.fill")
+                        Label("uninstall.cleanup.data", systemImage: "externaldrive.badge.xmark")
+                        Label("uninstall.cleanup.helper", systemImage: "gearshape.2.fill")
+                        Label("uninstall.cleanup.receipt", systemImage: "shippingbox.fill")
+                    }
+                    .font(.system(size: 10, weight: .medium, design: .monospaced))
+                    .foregroundStyle(.white.opacity(0.52))
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 11)
+                    .padding(.vertical, 9)
+                    .background(Color.red.opacity(0.045))
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 7)
+                            .stroke(Color.red.opacity(0.14), lineWidth: 1)
+                    }
+                    .clipShape(RoundedRectangle(cornerRadius: 7))
+
                     if uninstallService.isUninstalling {
                         HStack(spacing: 8) {
                             ProgressView().controlSize(.small)

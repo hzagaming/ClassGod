@@ -1,26 +1,39 @@
 import AppKit
 import Combine
 import Foundation
+import UserNotifications
 
 struct UninstallPlan: Equatable {
     static let applicationPath = "/Applications/ClassGod.app"
     static let bundleIdentifier = "com.hanazar.classgod"
     static let widgetBundleIdentifier = "com.hanazar.classgod.ClassGodWidget"
+    static let helperBundleIdentifier = "com.hanazar.classgod.helper"
     static let packageIdentifier = "com.hanazar.classgod.pkg"
+    static let permissionBundleIdentifiers = [
+        bundleIdentifier,
+        widgetBundleIdentifier,
+        helperBundleIdentifier,
+    ]
     private static let userRelativePaths = [
         "Library/Preferences/\(bundleIdentifier).plist",
         "Library/Preferences/\(widgetBundleIdentifier).plist",
         "Library/Application Support/ClassGod",
         "Library/Application Support/\(bundleIdentifier)",
+        "Library/Caches/ClassGod",
         "Library/Caches/\(bundleIdentifier)",
         "Library/Caches/\(widgetBundleIdentifier)",
         "Library/HTTPStorages/\(bundleIdentifier)",
+        "Library/HTTPStorages/\(bundleIdentifier).binarycookies",
+        "Library/Cookies/\(bundleIdentifier).binarycookies",
         "Library/Logs/ClassGod",
         "Library/Saved Application State/\(bundleIdentifier).savedState",
         "Library/WebKit/\(bundleIdentifier)",
+        "Library/Containers/\(bundleIdentifier)",
         "Library/Containers/\(widgetBundleIdentifier)",
         "Library/Group Containers/group.com.hanazar.classgod",
+        "Library/Application Scripts/\(bundleIdentifier)",
         "Library/Application Scripts/\(widgetBundleIdentifier)",
+        "Library/Application Scripts/group.com.hanazar.classgod",
     ]
 
     let bundleURL: URL
@@ -36,11 +49,15 @@ struct UninstallPlan: Equatable {
               isValidHomeDirectory(home) else { return nil }
 
         let userDataURLs = Self.userRelativePaths.map {
-            home.appendingPathComponent($0, isDirectory: !$0.hasSuffix(".plist"))
+            let isFile = $0.hasSuffix(".plist") || $0.hasSuffix(".binarycookies")
+            return home.appendingPathComponent($0, isDirectory: !isFile)
         }
         let systemURLs = [
             URL(fileURLWithPath: "/Library/LaunchDaemons/com.hanazar.classgod.helper.plist"),
             URL(fileURLWithPath: "/Library/PrivilegedHelperTools/com.hanazar.classgod.helper"),
+            URL(fileURLWithPath: "/Library/Application Support/ClassGod", isDirectory: true),
+            URL(fileURLWithPath: "/Library/Application Support/com.hanazar.classgod", isDirectory: true),
+            URL(fileURLWithPath: "/Library/Caches/com.hanazar.classgod", isDirectory: true),
             URL(fileURLWithPath: "/tmp/com.hanazar.classgod.helper.sock"),
         ]
         let plan = UninstallPlan(
@@ -66,6 +83,9 @@ struct UninstallPlan: Equatable {
         let allowedSystemPaths: Set<String> = [
             "/Library/LaunchDaemons/com.hanazar.classgod.helper.plist",
             "/Library/PrivilegedHelperTools/com.hanazar.classgod.helper",
+            "/Library/Application Support/ClassGod",
+            "/Library/Application Support/com.hanazar.classgod",
+            "/Library/Caches/com.hanazar.classgod",
             "/tmp/com.hanazar.classgod.helper.sock",
         ]
         return Set(systemURLs.map { $0.standardizedFileURL.path }) == allowedSystemPaths
@@ -84,24 +104,36 @@ enum ShellArgument {
 }
 
 enum UninstallCommandBuilder {
-    static func command(plan: UninstallPlan, userName: String) -> String? {
+    static func commands(plan: UninstallPlan, userName: String) -> [String]? {
         guard plan.isSafe, !userName.isEmpty else { return nil }
         let user = ShellArgument.quoted(userName)
         let userData = plan.userDataURLs.map { ShellArgument.quoted($0.path) }.joined(separator: " ")
         let systemData = plan.systemURLs.map { ShellArgument.quoted($0.path) }.joined(separator: " ")
         let app = ShellArgument.quoted(plan.bundleURL.path)
-        let commands = [
+        let tccResets = UninstallPlan.permissionBundleIdentifiers.map { identifier in
+            "/usr/bin/sudo -H -u \(user) /usr/bin/tccutil reset All \(ShellArgument.quoted(identifier)) >/dev/null 2>&1 || true"
+        }
+        let defaultsResets = [
+            UninstallPlan.bundleIdentifier,
+            UninstallPlan.widgetBundleIdentifier,
+        ].map { identifier in
+            "/usr/bin/sudo -H -u \(user) /usr/bin/defaults delete \(ShellArgument.quoted(identifier)) >/dev/null 2>&1 || true"
+        }
+        return [
             "/bin/sleep 2",
             "/bin/launchctl bootout system/com.hanazar.classgod.helper >/dev/null 2>&1 || true",
             "/usr/bin/pkill -x ClassGodHelper >/dev/null 2>&1 || true",
+            "/usr/bin/pkill -x ClassGodWidget >/dev/null 2>&1 || true",
             "/usr/bin/pkill -x ClassGod >/dev/null 2>&1 || true",
             "/bin/sleep 1",
-            "/usr/bin/sudo -u \(user) /usr/bin/tccutil reset All \(ShellArgument.quoted(UninstallPlan.bundleIdentifier)) >/dev/null 2>&1 || true",
-            "/usr/bin/sudo -u \(user) /usr/bin/tccutil reset All \(ShellArgument.quoted(UninstallPlan.widgetBundleIdentifier)) >/dev/null 2>&1 || true",
-            "/usr/bin/sudo -u \(user) /usr/bin/defaults delete \(ShellArgument.quoted(UninstallPlan.bundleIdentifier)) >/dev/null 2>&1 || true",
+        ] + tccResets + defaultsResets + [
             "/usr/sbin/pkgutil --forget \(ShellArgument.quoted(plan.packageIdentifier)) >/dev/null 2>&1 || true",
             "/bin/rm -rf \(systemData) \(userData) \(app)",
         ]
+    }
+
+    static func command(plan: UninstallPlan, userName: String) -> String? {
+        guard let commands = commands(plan: plan, userName: userName) else { return nil }
         return "/bin/sh -c " + ShellArgument.quoted(
             "(" + commands.joined(separator: "; ") + ") >/dev/null 2>&1 &"
         )
@@ -133,13 +165,9 @@ final class UninstallService: ObservableObject {
 
         isUninstalling = true
         errorMessage = nil
-        do {
-            try PrivilegedHelperManager.shared.unregisterForUninstall()
-        } catch {
-            isUninstalling = false
-            errorMessage = String(format: String(localized: "uninstall.error.helper"), error.localizedDescription)
-            return
-        }
+        UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
+        UNUserNotificationCenter.current().removeAllDeliveredNotifications()
+        try? PrivilegedHelperManager.shared.unregisterForUninstall()
 
         Task {
             let result = await Self.runAuthorized(command)

@@ -4,6 +4,27 @@
 
 ---
 
+## v1.5.32 — 2026-08-10
+
+### 优化
+- **权限分级 UX**：权限门禁按核心必需、建议授权、可选权限分组；可选项固定到底部，仅两项核心权限参与自动解锁进度。
+- **会话级跳过**：新增“暂时跳过并使用”，不写入偏好；用户可先进入主界面，未授权功能继续按现有权限检查安全降级。
+- **本地隐私承诺**：权限门禁与 Permission Center 明确说明权限状态和用户数据在本机处理，不含遥测、后台上传或 ClassGod 后端。
+- **卸载范围可见**：设置页在二次确认前列明权限、用户数据、Helper/LaunchDaemon 与安装收据四类清理内容。
+
+### 修复
+- **Input Monitoring / Screen Recording 无法跳转**：原生请求未通过时立即打开对应系统设置，精确深链失败时回退“隐私与安全”根页。
+- **可选权限错误阻塞门禁**：门禁解锁不再要求 20 项全部完成；建议与可选权限不会阻止主功能启动。
+- **TCC 清理覆盖不足**：卸载时重置主 App、Widget 与 Helper 三个权限域，并清除应用产生的通知请求和已投递通知。
+- **卸载残留补全**：新增主 App 容器、Application Scripts、Cookies/HTTPStorages、系统级 Application Support/Cache 等精确 ClassGod 路径，并补充 Widget defaults 清理。
+- **Helper 注销中断卸载**：SMAppService 注销改为前置尽力清理；即使失败，管理员脚本仍会 bootout、终止并删除 Helper 与 LaunchDaemon。
+- **质量回归**：主应用 161 项、Helper 17 项测试全部通过，并完成 Debug / Release、Analyze、字符串目录、Helper 嵌入与签名校验。
+- 版本号更新为 v1.5.32 (Build 57)
+
+### 说明
+- `tccutil reset All <bundle_id>` 按 macOS 官方命令行为重置对应应用的隐私决定；通知授权等系统注册会随 App 删除由 macOS 管理。
+- 当前构建仍为本地 ad-hoc 签名，正式分发仍需要 Developer ID、Installer 签名与 Apple 公证。
+
 ## v1.5.31 — 2026-08-09
 
 ### 优化
