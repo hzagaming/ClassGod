@@ -47,6 +47,13 @@ enum ActivityPermissionPromptPolicy {
     }
 }
 
+nonisolated enum ActivitySearchQuery {
+    static func normalized(_ value: String) -> String? {
+        let query = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        return query.isEmpty ? nil : query
+    }
+}
+
 @MainActor
 final class ActivityMonitorViewModel: ObservableObject {
     @Published var selectedTab: ActivityMonitorTab = .cpu
@@ -71,8 +78,8 @@ final class ActivityMonitorViewModel: ObservableObject {
     var processes: [ProcessMonitorInfo] {
         var list = monitor.processes
         
-        if !searchText.isEmpty {
-            let lower = searchText.lowercased()
+        if let query = ActivitySearchQuery.normalized(searchText) {
+            let lower = query.lowercased()
             list = list.filter {
                 $0.name.lowercased().contains(lower) ||
                 String($0.pid).contains(lower)

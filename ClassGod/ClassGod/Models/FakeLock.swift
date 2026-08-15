@@ -58,6 +58,32 @@ enum FakeLockSessionPolicy {
     }
 }
 
+nonisolated struct FakeLockOperationSession: Sendable {
+    private(set) var generation: UInt = 0
+    private(set) var isActive = false
+
+    mutating func begin() -> UInt {
+        generation &+= 1
+        isActive = true
+        return generation
+    }
+
+    mutating func cancel() {
+        generation &+= 1
+        isActive = false
+    }
+
+    func isCurrent(_ request: UInt) -> Bool {
+        isActive && request == generation
+    }
+
+    mutating func complete(_ request: UInt) -> Bool {
+        guard isCurrent(request) else { return false }
+        isActive = false
+        return true
+    }
+}
+
 struct FakeLockConfiguration: Codable, Equatable {
     var mode: FakeLockMode
     var browser: BrowserType

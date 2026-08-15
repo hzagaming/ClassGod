@@ -194,14 +194,14 @@ struct ShortcutsSettingsView: View {
         }
 
         let char = event.charactersIgnoringModifiers ?? ""
-        let userModifiers = flags.subtracting([.function, .numericPad])
+        let userModifiers = ShortcutModifierPolicy.captured(flags.rawValue)
 
-        if userModifiers.isEmpty && char.rangeOfCharacter(from: .letters) != nil {
+        if userModifiers == 0 && char.rangeOfCharacter(from: .letters) != nil {
             return nil
         }
 
         prefs.preferences.showPopoverKeyCode = UInt32(event.keyCode)
-        prefs.preferences.showPopoverModifiers = UInt32(flags.rawValue)
+        prefs.preferences.showPopoverModifiers = UInt32(userModifiers)
         SoundEffectManager.shared.playShortcutRecorded()
         HapticManager.shared.success()
         stopRecording()

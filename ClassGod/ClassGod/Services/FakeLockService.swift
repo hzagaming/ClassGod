@@ -24,6 +24,7 @@ final class FakeLockService: ObservableObject {
 
     private let storageKey = "com.hanazar.classgod.fakeLock.configuration"
     private var hotKeyID: UInt32?
+    private var operationSession = FakeLockOperationSession()
 
     private init() {
         if let data = UserDefaults.standard.data(forKey: storageKey),
@@ -44,13 +45,15 @@ final class FakeLockService: ObservableObject {
         }
         hotKeyID = nil
         isShortcutRegistered = false
+        operationSession.cancel()
+        isWorking = false
         isSessionActive = false
         isGuardEnabled = false
     }
 
     func startSession() {
-        guard !isWorking,
-              let url = FakeLockURLPolicy.normalized(configuration.url) else {
+        guard !isWorking else { return }
+        guard let url = FakeLockURLPolicy.normalized(configuration.url) else {
             reportFailure(String(localized: "fake_lock.error.invalid_url"))
             return
         }
@@ -59,6 +62,7 @@ final class FakeLockService: ObservableObject {
             return
         }
 
+        let request = operationSession.begin()
         isWorking = true
         let browser = configuration.browser
         let fullScreen = FakeLockSessionPolicy.shouldOpenFullScreen(
@@ -69,8 +73,10 @@ final class FakeLockService: ObservableObject {
         let fullScreenSource = Self.fullScreenScript(browser: browser)
         Task {
             let result = await Self.executeInBackground(openSource)
+            guard operationSession.isCurrent(request) else { return }
             isWorking = false
             guard result.success else {
+                _ = operationSession.complete(request)
                 reportFailure(result.message)
                 return
             }
@@ -80,15 +86,22 @@ final class FakeLockService: ObservableObject {
             SoundEffectManager.shared.playFeatureSwitch()
             HapticManager.shared.success()
 
-            guard result.success, fullScreen else { return }
+            guard fullScreen else {
+                _ = operationSession.complete(request)
+                return
+            }
             try? await Task.sleep(for: .milliseconds(450))
+            guard operationSession.isCurrent(request) else { return }
             let fullScreenResult = await Self.executeInBackground(fullScreenSource)
+            guard operationSession.complete(request) else { return }
             guard !fullScreenResult.success else { return }
             setStatus(String(localized: "fake_lock.warning.fullscreen_permission"), isError: false)
         }
     }
 
     func stopSession() {
+        operationSession.cancel()
+        isWorking = false
         isSessionActive = false
         isGuardEnabled = false
         setStatus(String(localized: "fake_lock.status.stopped"), isError: false)

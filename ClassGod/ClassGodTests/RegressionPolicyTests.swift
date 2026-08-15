@@ -1,3 +1,5 @@
+import AppKit
+import Carbon
 import Foundation
 import Testing
 @testable import ClassGod
@@ -53,6 +55,23 @@ struct RegressionPolicyTests {
         #expect(!ShortcutCapturePolicy.shouldAccept(keyName: "1", keyCode: 0x12, modifiers: 1, isFunctionKey: false, isNumericPad: true))
         #expect(ShortcutCapturePolicy.shouldAccept(keyName: "1", keyCode: 0x12, modifiers: 1, isFunctionKey: false, isNumericPad: false))
         #expect(ShortcutCapturePolicy.shouldAccept(keyName: "F7", keyCode: 0x62, modifiers: 0, isFunctionKey: true, isNumericPad: false))
+    }
+
+    @Test("Shortcut modifiers discard unsupported event flags")
+    func normalizesCapturedShortcutModifiers() {
+        let supported = NSEvent.ModifierFlags([.command, .shift]).rawValue
+        let unsupported = NSEvent.ModifierFlags([.capsLock, .function, .numericPad]).rawValue
+        let legacyCarbon = UInt32(cmdKey) | UInt32(shiftKey)
+
+        #expect(ShortcutModifierPolicy.captured(supported | unsupported) == supported)
+        #expect(ShortcutModifierPolicy.normalizedStored(UInt32(supported | unsupported)) == UInt32(supported))
+        #expect(ShortcutModifierPolicy.normalizedStored(legacyCarbon) == UInt32(supported))
+    }
+
+    @Test("Activity search ignores surrounding and whitespace-only input")
+    func normalizesActivitySearchQueries() {
+        #expect(ActivitySearchQuery.normalized("  Safari  ") == "Safari")
+        #expect(ActivitySearchQuery.normalized(" \n\t ") == nil)
     }
 
     @Test("Battery fractions remain finite and bounded")
@@ -274,6 +293,24 @@ struct RegressionPolicyTests {
         #expect(FakeLockSessionPolicy.shouldOpenFullScreen(mode: .mapTestBypass, requested: false))
         #expect(FakeLockSessionPolicy.shouldOpenFullScreen(mode: .safeBrowser, requested: true))
         #expect(!FakeLockSessionPolicy.shouldOpenFullScreen(mode: .safeBrowser, requested: false))
+    }
+
+    @Test("Stopped Fake Lock operations reject stale async results")
+    func cancelsFakeLockOperations() {
+        var session = FakeLockOperationSession()
+        let first = session.begin()
+        #expect(session.isCurrent(first))
+
+        session.cancel()
+        #expect(!session.isCurrent(first))
+        let staleCompletion = session.complete(first)
+        #expect(!staleCompletion)
+
+        let second = session.begin()
+        #expect(session.isCurrent(second))
+        let currentCompletion = session.complete(second)
+        #expect(currentCompletion)
+        #expect(!session.isCurrent(second))
     }
 
     @Test("Fractional refresh intervals keep their precision")

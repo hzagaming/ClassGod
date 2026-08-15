@@ -4,6 +4,20 @@
 
 ---
 
+## v1.5.33 — 2026-08-15
+
+### 修复
+- **Fake Lock 过期任务回写**：为启动与全屏流程增加代际令牌；停止会话、关闭服务或再次启动后，旧 AppleScript 结果不能重新激活状态或覆盖最新提示。
+- **Fake Lock 错误误报**：重复启动处于 Working 状态时静默合并，不再错误提示 URL 无效；停止操作同步清除 Working 状态。
+- **快捷键修饰位污染**：录制和偏好解码统一过滤 Caps Lock、Fn、Numeric Pad 等 Carbon 不支持的标志，只保存 Command、Option、Control 与 Shift。
+- **快捷键事件穿透**：录制期间消费无效按键和 flagsChanged 事件，避免 Return、Tab、方向键或单键误触当前窗口控件。
+- **Activity Monitor 空白搜索**：搜索词统一裁剪首尾空白，纯空白查询不再隐藏全部进程。
+- **质量回归**：主应用 164 项、Helper 17 项测试全部通过，并完成 Debug / Release、Analyze、字符串目录、Helper 嵌入与签名校验。
+- 版本号更新为 v1.5.33 (Build 58)
+
+### 说明
+- 当前构建仍为 Apple Silicon arm64 本地 ad-hoc 签名；公开分发仍需要 Developer ID Application / Installer 签名与 Apple 公证。
+
 ## v1.5.32 — 2026-08-10
 
 ### 优化

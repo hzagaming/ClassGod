@@ -104,7 +104,7 @@ struct ShortcutPicker: View {
             guard self.isRecording else { return event }
 
             let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
-            let shortcutFlags = flags.intersection([.command, .option, .control, .shift])
+            let shortcutModifiers = ShortcutModifierPolicy.captured(flags.rawValue)
 
             if event.type == .keyDown {
                 if event.keyCode == 0x35 {
@@ -130,7 +130,7 @@ struct ShortcutPicker: View {
                 ]
 
                 if specialKeyCodes.contains(event.keyCode) {
-                    return event
+                    return nil
                 }
 
                 let isFunctionKey = functionKeyName(for: event.keyCode) != nil
@@ -138,22 +138,22 @@ struct ShortcutPicker: View {
                 guard ShortcutCapturePolicy.shouldAccept(
                     keyName: keyName,
                     keyCode: ShortcutManager.shared.keyCode(for: keyName),
-                    modifiers: shortcutFlags.rawValue,
+                    modifiers: shortcutModifiers,
                     isFunctionKey: isFunctionKey,
                     isNumericPad: flags.contains(.numericPad)
                 ) else {
-                    return event
+                    return nil
                 }
 
                 self.key = keyName
-                self.modifiers = shortcutFlags.rawValue
+                self.modifiers = shortcutModifiers
                 SoundEffectManager.shared.playShortcutRecorded()
                 HapticManager.shared.success()
                 self.stopRecording()
                 return nil
             }
 
-            return event
+            return nil
         }
     }
 

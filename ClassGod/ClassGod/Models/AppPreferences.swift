@@ -9,6 +9,30 @@ import Carbon
 
 // MARK: - Enums
 
+nonisolated enum ShortcutModifierPolicy {
+    private static let supportedCocoaMask = NSEvent.ModifierFlags.command.rawValue
+        | NSEvent.ModifierFlags.option.rawValue
+        | NSEvent.ModifierFlags.control.rawValue
+        | NSEvent.ModifierFlags.shift.rawValue
+
+    static func captured(_ modifiers: UInt) -> UInt {
+        modifiers & supportedCocoaMask
+    }
+
+    static func normalizedStored(_ modifiers: UInt32) -> UInt32 {
+        guard modifiers < 65_536 else {
+            return UInt32(captured(UInt(modifiers)))
+        }
+
+        var cocoa: UInt = 0
+        if modifiers & UInt32(cmdKey) != 0 { cocoa |= NSEvent.ModifierFlags.command.rawValue }
+        if modifiers & UInt32(optionKey) != 0 { cocoa |= NSEvent.ModifierFlags.option.rawValue }
+        if modifiers & UInt32(controlKey) != 0 { cocoa |= NSEvent.ModifierFlags.control.rawValue }
+        if modifiers & UInt32(shiftKey) != 0 { cocoa |= NSEvent.ModifierFlags.shift.rawValue }
+        return UInt32(cocoa)
+    }
+}
+
 enum FanRefreshPolicy {
     static let minimumInterval: TimeInterval = 0.5
     static let defaultInterval: TimeInterval = 0.5
@@ -627,7 +651,7 @@ extension AppPreferences {
 
         // Shortcuts
         preferences.showPopoverKeyCode = try container.decodeIfPresent(UInt32.self, forKey: .showPopoverKeyCode) ?? preferences.showPopoverKeyCode
-        preferences.showPopoverModifiers = AppPreferences.normalizedCocoaModifiers(
+        preferences.showPopoverModifiers = ShortcutModifierPolicy.normalizedStored(
             try container.decodeIfPresent(UInt32.self, forKey: .showPopoverModifiers) ?? preferences.showPopoverModifiers
         )
         preferences.suppressSystemShortcutConflict = try container.decodeIfPresent(Bool.self, forKey: .suppressSystemShortcutConflict) ?? preferences.suppressSystemShortcutConflict
@@ -694,16 +718,5 @@ extension AppPreferences {
         preferences.version = AppPreferences.default.version
 
         self = preferences
-    }
-
-    private static func normalizedCocoaModifiers(_ modifiers: UInt32) -> UInt32 {
-        guard modifiers < 65_536 else { return modifiers }
-
-        var cocoa: UInt = 0
-        if modifiers & UInt32(cmdKey) != 0 { cocoa |= NSEvent.ModifierFlags.command.rawValue }
-        if modifiers & UInt32(optionKey) != 0 { cocoa |= NSEvent.ModifierFlags.option.rawValue }
-        if modifiers & UInt32(controlKey) != 0 { cocoa |= NSEvent.ModifierFlags.control.rawValue }
-        if modifiers & UInt32(shiftKey) != 0 { cocoa |= NSEvent.ModifierFlags.shift.rawValue }
-        return UInt32(cocoa)
     }
 }
