@@ -13,6 +13,15 @@ struct LocalizationRegressionTests {
         #expect(String(localized: "destintab.export_tabs", bundle: .main, locale: locale) == "Export Tabs…")
         #expect(String(localized: "button.back", bundle: .main, locale: locale) == "Back")
         #expect(String(localized: "button.cancel", bundle: .main, locale: locale) == "Cancel")
+        #expect(ImportFeedback.failure(detail: "No permission", locale: locale) == "Import failed: No permission")
+    }
+
+    @Test("English is the app development language and every supported locale is bundled")
+    func validatesBundleLanguageConfiguration() {
+        #expect(Bundle.main.developmentLocalization == "en")
+        #expect(Set(Bundle.main.localizations).isSuperset(of: [
+            "en", "zh-Hans", "zh-Hant", "de", "es", "fr", "ja", "ko", "pt", "ru",
+        ]))
     }
 
     @Test("Wallpaper controls and widget states are localized")

@@ -4,7 +4,7 @@
 
 [English](../../README.md) · [简体中文](README.zh-Hans.md) · [繁體中文](README.zh-Hant.md) · **日本語** · [한국어](README.ko.md) · [Français](README.fr.md) · [Deutsch](README.de.md) · [Español](README.es.md) · [Português](README.pt.md) · [Русский](README.ru.md)
 
-> 現在のリリース：**v1.5.33 (Build 58)**。[GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest) から DMG または PKG をダウンロードできます。
+> 現在のリリース：**v1.5.34 (Build 59)**。[GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest) から DMG または PKG をダウンロードできます。
 
 ## ClassGod について
 
@@ -68,7 +68,7 @@ macOS のプライバシー権限はユーザー本人が許可する必要が�
 
 ## 言語
 
-英語が開発言語であり、未翻訳文字列のフォールバックです。アプリの文字列カタログには、英語、簡体字中国語、繁体字中国語、日本語、韓国語、フランス語、ドイツ語、スペイン語、ポルトガル語、ロシア語があります。
+英語が開発言語およびフォールバックです。英語と簡体字中国語はアプリの主要部分を広くカバーし、その他の言語は段階的に翻訳され、未翻訳部分では英語にフォールバックします。
 
 ## ソースからビルド
 

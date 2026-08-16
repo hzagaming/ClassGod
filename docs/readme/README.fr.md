@@ -4,7 +4,7 @@
 
 [English](../../README.md) · [简体中文](README.zh-Hans.md) · [繁體中文](README.zh-Hant.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · **Français** · [Deutsch](README.de.md) · [Español](README.es.md) · [Português](README.pt.md) · [Русский](README.ru.md)
 
-> Version actuelle : **v1.5.33 (Build 58)**. Téléchargez le DMG ou le PKG depuis [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest).
+> Version actuelle : **v1.5.34 (Build 59)**. Téléchargez le DMG ou le PKG depuis [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest).
 
 ## À propos de ClassGod
 
@@ -68,7 +68,7 @@ Les autorisations de confidentialité macOS doivent être accordées par l’uti
 
 ## Langues
 
-L’anglais est la langue de développement et la langue de repli des chaînes non traduites. Les catalogues de l’app déclarent l’anglais, le chinois simplifié et traditionnel, le japonais, le coréen, le français, l’allemand, l’espagnol, le portugais et le russe.
+L’anglais est la langue de développement et de repli. L’anglais et le chinois simplifié couvrent largement l’app ; les autres langues sont traduites progressivement et se replient sur l’anglais lorsqu’une traduction manque.
 
 ## Compiler depuis les sources
 

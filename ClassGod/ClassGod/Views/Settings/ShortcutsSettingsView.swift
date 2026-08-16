@@ -31,16 +31,16 @@ struct ShortcutsSettingsView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 10) {
+            VStack(spacing: 10 * zoomScale) {
                 StatefulCollapsibleSection(
                     title: "section.global_shortcut",
                     icon: "keyboard",
                     defaultExpanded: true,
                     accentColor: prefs.preferences.themeAccent.color
                 ) {
-                    HStack(spacing: 12) {
+                    HStack(spacing: 12 * zoomScale) {
                         Text(String(localized: "setting.show_panel"))
-                            .font(.system(size: 12, weight: .medium))
+                            .font(.system(size: 12 * zoomScale, weight: .medium))
                             .foregroundStyle(.white)
 
                         Spacer()
@@ -88,13 +88,13 @@ struct ShortcutsSettingsView: View {
                         )
                         .pressScale(0.9)
                     }
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 8)
+                    .padding(.horizontal, 10 * zoomScale)
+                    .padding(.vertical, 8 * zoomScale)
 
                     Text(String(localized: "shortcut.tip.caption"))
-                        .font(.caption)
+                        .font(.system(size: 11 * zoomScale))
                         .foregroundStyle(.secondary)
-                        .padding(.horizontal, 10)
+                        .padding(.horizontal, 10 * zoomScale)
                 }
 
                 StatefulCollapsibleSection(
@@ -103,17 +103,17 @@ struct ShortcutsSettingsView: View {
                     defaultExpanded: false,
                     accentColor: .yellow
                 ) {
-                    VStack(alignment: .leading, spacing: 8) {
+                    VStack(alignment: .leading, spacing: 8 * zoomScale) {
                         tipRow(icon: "exclamationmark.triangle", text: String(localized: "tip.avoid_conflict"))
                         tipRow(icon: "keyboard", text: String(localized: "tip.per_tab_shortcuts"))
                         tipRow(icon: "arrow.clockwise", text: String(localized: "tip.restart"))
                     }
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 4)
+                    .padding(.horizontal, 10 * zoomScale)
+                    .padding(.vertical, 4 * zoomScale)
                 }
             }
-            .padding(.horizontal, 8)
-            .padding(.vertical, 8)
+            .padding(.horizontal, 8 * zoomScale)
+            .padding(.vertical, 8 * zoomScale)
         }
         .onChange(of: isRecordingPopoverShortcut) { _, recording in
             if recording && Anim.enabled {
@@ -139,13 +139,13 @@ struct ShortcutsSettingsView: View {
     }
 
     private func tipRow(icon: String, text: String) -> some View {
-        HStack(spacing: 8) {
+        HStack(spacing: 8 * zoomScale) {
             Image(systemName: icon)
-                .font(.system(size: 11))
+                .font(.system(size: 11 * zoomScale))
                 .foregroundStyle(.white.opacity(0.4))
-                .frame(width: 18)
+                .frame(width: 18 * zoomScale)
             Text(text)
-                .font(.callout)
+                .font(.system(size: 12 * zoomScale))
                 .foregroundStyle(.secondary)
             Spacer()
         }

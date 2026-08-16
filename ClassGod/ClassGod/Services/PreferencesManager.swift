@@ -54,7 +54,7 @@ final class PreferencesManager: ObservableObject {
     
     private func save() {
         do {
-            let data = try encoder.encode(preferences)
+            let data = try encoder.encode(preferences.normalizedForStorage())
             UserDefaults.standard.set(data, forKey: key)
         } catch {
             print("[PreferencesManager] Failed to save preferences: \(error)")
@@ -74,7 +74,7 @@ final class PreferencesManager: ObservableObject {
 
     func export(to destination: URL) -> Bool {
         do {
-            let data = try encoder.encode(preferences)
+            let data = try encoder.encode(preferences.normalizedForStorage())
             try PreferencesExportWriter.write(data, to: destination)
             return true
         } catch {

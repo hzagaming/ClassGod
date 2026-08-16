@@ -4,7 +4,7 @@
 
 [English](../../README.md) · [简体中文](README.zh-Hans.md) · **繁體中文** · [日本語](README.ja.md) · [한국어](README.ko.md) · [Français](README.fr.md) · [Deutsch](README.de.md) · [Español](README.es.md) · [Português](README.pt.md) · [Русский](README.ru.md)
 
-> 目前版本：**v1.5.33 (Build 58)**。可從 [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest) 下載 DMG 或 PKG。
+> 目前版本：**v1.5.34 (Build 59)**。可從 [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest) 下載 DMG 或 PKG。
 
 ## ClassGod 是什麼
 
@@ -76,7 +76,7 @@ Permission Center 在顯示期間持續更新可檢測狀態，並連結至相�
 
 ## 語言
 
-英文是開發語言，也是缺少翻譯時的回退語言。App 字串目錄包含英文、簡體中文、繁體中文、日文、韓文、法文、德文、西班牙文、葡萄牙文與俄文。
+英文是開發與回退語言，英文和簡體中文廣泛覆蓋主要介面；其餘語言採漸進式翻譯，尚未覆蓋的內容會安全回退至英文。
 
 ## 從原始碼建置
 

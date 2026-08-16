@@ -202,14 +202,14 @@ struct AutoMaxRuleRow: View {
     private var zoomScale: CGFloat { CGFloat(prefs.preferences.windowZoomScale) }
 
     var body: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: 8 * zoomScale) {
             Toggle("", isOn: $rule.isEnabled)
                 .toggleStyle(.switch)
                 .controlSize(.small)
-                .frame(width: 36)
+                .frame(width: 36 * zoomScale)
 
-            VStack(alignment: .leading, spacing: 4) {
-                HStack(spacing: 4) {
+            VStack(alignment: .leading, spacing: 4 * zoomScale) {
+                HStack(spacing: 4 * zoomScale) {
                     Picker("", selection: $rule.fanTarget) {
                         ForEach(FanRuleTarget.allCases) { target in
                             Text(target.displayName).tag(target)
@@ -217,10 +217,10 @@ struct AutoMaxRuleRow: View {
                     }
                     .pickerStyle(.menu)
                     .labelsHidden()
-                    .frame(width: 100)
+                    .frame(width: 100 * zoomScale)
 
                     Text("rule.to")
-                        .font(.system(size: 10))
+                        .font(.system(size: 10 * zoomScale))
                         .foregroundStyle(.white.opacity(0.4))
 
                     Picker("", selection: $rule.targetMode) {
@@ -230,30 +230,30 @@ struct AutoMaxRuleRow: View {
                     }
                     .pickerStyle(.segmented)
                     .labelsHidden()
-                    .frame(width: 70)
+                    .frame(width: 70 * zoomScale)
 
                     if rule.targetMode == .percentage {
                         Text("\(Int(rule.targetPercentage))%")
-                            .font(.system(size: 10, weight: .semibold, design: .monospaced))
+                            .font(.system(size: 10 * zoomScale, weight: .semibold, design: .monospaced))
                             .foregroundStyle(.white)
-                            .frame(width: 32)
+                            .frame(width: 32 * zoomScale)
 
                         Slider(value: $rule.targetPercentage, in: 0...100, step: 5)
-                            .frame(width: 60)
+                            .frame(width: 60 * zoomScale)
                     } else {
                         TextField("", value: $rule.targetRPM, format: .number)
                             .textFieldStyle(.roundedBorder)
-                            .frame(width: 55)
+                            .frame(width: 55 * zoomScale)
 
                         Text("unit.rpm")
-                            .font(.system(size: 10))
+                            .font(.system(size: 10 * zoomScale))
                             .foregroundStyle(.white.opacity(0.4))
                     }
                 }
 
-                HStack(spacing: 4) {
+                HStack(spacing: 4 * zoomScale) {
                     Text("rule.when")
-                        .font(.system(size: 10))
+                        .font(.system(size: 10 * zoomScale))
                         .foregroundStyle(.white.opacity(0.4))
 
                     Picker("", selection: $rule.sensor) {
@@ -263,7 +263,7 @@ struct AutoMaxRuleRow: View {
                     }
                     .pickerStyle(.menu)
                     .labelsHidden()
-                    .frame(width: 90)
+                    .frame(width: 90 * zoomScale)
 
                     // Specific sensor override (only shown when sensors are available)
                     if !availableSensors.isEmpty {
@@ -280,7 +280,7 @@ struct AutoMaxRuleRow: View {
                         }
                         .pickerStyle(.menu)
                         .labelsHidden()
-                        .frame(width: 110)
+                        .frame(width: 110 * zoomScale)
                     }
 
                     Picker("", selection: $rule.comparison) {
@@ -290,41 +290,41 @@ struct AutoMaxRuleRow: View {
                     }
                     .pickerStyle(.menu)
                     .labelsHidden()
-                    .frame(width: 60)
+                    .frame(width: 60 * zoomScale)
 
                     TextField("", value: $rule.threshold, format: .number)
                         .textFieldStyle(.roundedBorder)
-                        .frame(minWidth: 40, maxWidth: 60)
+                        .frame(minWidth: 40 * zoomScale, maxWidth: 60 * zoomScale)
 
                     Text("°C")
-                        .font(.system(size: 10))
+                        .font(.system(size: 10 * zoomScale))
                         .foregroundStyle(.white.opacity(0.4))
                 }
 
-                HStack(spacing: 4) {
+                HStack(spacing: 4 * zoomScale) {
                     Text("rule.hysteresis")
-                        .font(.system(size: 9))
+                        .font(.system(size: 9 * zoomScale))
                         .foregroundStyle(.white.opacity(0.3))
 
                     TextField("", value: $rule.hysteresis, format: .number)
                         .textFieldStyle(.roundedBorder)
-                        .frame(minWidth: 32, maxWidth: 50)
+                        .frame(minWidth: 32 * zoomScale, maxWidth: 50 * zoomScale)
 
                     Text("°C")
-                        .font(.system(size: 9))
+                        .font(.system(size: 9 * zoomScale))
                         .foregroundStyle(.white.opacity(0.3))
 
                     Text("rule.hold")
-                        .font(.system(size: 9))
+                        .font(.system(size: 9 * zoomScale))
                         .foregroundStyle(.white.opacity(0.3))
-                        .padding(.leading, 6)
+                        .padding(.leading, 6 * zoomScale)
 
                     TextField("", value: $rule.durationSeconds, format: .number)
                         .textFieldStyle(.roundedBorder)
-                        .frame(minWidth: 32, maxWidth: 50)
+                        .frame(minWidth: 32 * zoomScale, maxWidth: 50 * zoomScale)
 
                     Text("s")
-                        .font(.system(size: 9))
+                        .font(.system(size: 9 * zoomScale))
                         .foregroundStyle(.white.opacity(0.3))
                 }
             }
@@ -339,14 +339,14 @@ struct AutoMaxRuleRow: View {
                 }
             }) {
                 Image(systemName: "xmark.circle.fill")
-                    .font(.system(size: 12))
+                    .font(.system(size: 12 * zoomScale))
                     .foregroundStyle(.white.opacity(0.3))
             }
             .buttonStyle(.plain)
             .accessibilityLabel(Text("button.delete"))
         }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 6)
+        .padding(.horizontal, 8 * zoomScale)
+        .padding(.vertical, 6 * zoomScale)
         .background(Color.white.opacity(0.02))
         .overlay(
             RoundedRectangle(cornerRadius: 6 * zoomScale)

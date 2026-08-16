@@ -6,6 +6,13 @@
 import SwiftUI
 import UniformTypeIdentifiers
 
+enum ImportFeedback {
+    static func failure(detail: String, locale: Locale = .current) -> String {
+        let format = String(localized: "toast.import_failed", bundle: .main, locale: locale)
+        return String(format: format, locale: locale, arguments: [detail])
+    }
+}
+
 struct DestinTabView: View {
     @StateObject private var viewModel = TabListViewModel()
     @ObservedObject private var prefs = PreferencesManager.shared
@@ -588,10 +595,10 @@ struct DestinTabView: View {
                     HapticManager.shared.success()
                 }
             } catch {
-                showToast(message: String(format: String(localized: "toast.import_failed"), error.localizedDescription))
+                showToast(message: ImportFeedback.failure(detail: error.localizedDescription))
             }
         case .failure(let error):
-            showToast(message: "Import failed: \(error.localizedDescription)")
+            showToast(message: ImportFeedback.failure(detail: error.localizedDescription))
         }
     }
 

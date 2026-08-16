@@ -4,7 +4,7 @@
 
 [English](../../README.md) · [简体中文](README.zh-Hans.md) · [繁體中文](README.zh-Hant.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Français](README.fr.md) · **Deutsch** · [Español](README.es.md) · [Português](README.pt.md) · [Русский](README.ru.md)
 
-> Aktuelle Version: **v1.5.33 (Build 58)**. DMG oder PKG stehen unter [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest) bereit.
+> Aktuelle Version: **v1.5.34 (Build 59)**. DMG oder PKG stehen unter [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest) bereit.
 
 ## Was ist ClassGod?
 
@@ -68,7 +68,7 @@ macOS-Datenschutzberechtigungen müssen vom Benutzer selbst erteilt werden. DMG,
 
 ## Sprachen
 
-Englisch ist Entwicklungs- und Rückfallsprache für nicht übersetzte Texte. Die App-Kataloge enthalten Englisch, vereinfachtes und traditionelles Chinesisch, Japanisch, Koreanisch, Französisch, Deutsch, Spanisch, Portugiesisch und Russisch.
+Englisch ist Entwicklungs- und Rückfallsprache. Englisch und vereinfachtes Chinesisch decken den Großteil der App ab; die übrigen Sprachen werden schrittweise übersetzt und fallen bei fehlenden Texten auf Englisch zurück.
 
 ## Aus dem Quellcode bauen
 

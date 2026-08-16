@@ -200,41 +200,6 @@ enum ListDividerStyle: String, Codable, CaseIterable, Identifiable {
     }
 }
 
-enum LanguageOverride: String, Codable, CaseIterable, Identifiable {
-    case system = "system"
-    case en = "en"
-    case zhHans = "zh-Hans"
-    case zhHant = "zh-Hant"
-    case ja = "ja"
-    case ko = "ko"
-    case de = "de"
-    case fr = "fr"
-    case es = "es"
-    case pt = "pt"
-    case ru = "ru"
-
-    var id: String { rawValue }
-    var displayName: String {
-        switch self {
-        case .system: return String(localized: "lang.system")
-        case .zhHans: return "简体中文"
-        case .en: return "English"
-        case .ja: return "日本語"
-        case .ko: return "한국어"
-        case .de: return "Deutsch"
-        case .fr: return "Français"
-        case .es: return "Español"
-        case .pt: return "Português"
-        case .ru: return "Русский"
-        case .zhHant: return "繁體中文"
-        }
-    }
-
-    var localeIdentifier: String? {
-        self == .system ? nil : rawValue
-    }
-}
-
 // MARK: - Preferences Struct
 
 struct AppPreferences: Codable, Equatable {
@@ -249,7 +214,6 @@ struct AppPreferences: Codable, Equatable {
     var switchDelayMs: Double
     var enableClipboardMonitoring: Bool
     var autoSaveIntervalMinutes: Int
-    var preferredLanguage: LanguageOverride
 
     // MARK: - Window Behavior
     var closeOnClickOutside: Bool
@@ -335,7 +299,6 @@ struct AppPreferences: Codable, Equatable {
         switchDelayMs: Double,
         enableClipboardMonitoring: Bool,
         autoSaveIntervalMinutes: Int,
-        preferredLanguage: LanguageOverride,
         closeOnClickOutside: Bool,
         keepWindowOnTop: Bool,
         rememberWindowPosition: Bool,
@@ -405,7 +368,6 @@ struct AppPreferences: Codable, Equatable {
         self.switchDelayMs = switchDelayMs
         self.enableClipboardMonitoring = enableClipboardMonitoring
         self.autoSaveIntervalMinutes = autoSaveIntervalMinutes
-        self.preferredLanguage = preferredLanguage
         self.closeOnClickOutside = closeOnClickOutside
         self.keepWindowOnTop = keepWindowOnTop
         self.rememberWindowPosition = rememberWindowPosition
@@ -478,7 +440,6 @@ struct AppPreferences: Codable, Equatable {
         switchDelayMs: 0,
         enableClipboardMonitoring: false,
         autoSaveIntervalMinutes: 5,
-        preferredLanguage: .en,
         closeOnClickOutside: true,
         keepWindowOnTop: false,
         rememberWindowPosition: true,
@@ -560,7 +521,6 @@ extension AppPreferences {
         case switchDelayMs
         case enableClipboardMonitoring
         case autoSaveIntervalMinutes
-        case preferredLanguage
         case closeOnClickOutside
         case keepWindowOnTop
         case rememberWindowPosition
@@ -637,7 +597,6 @@ extension AppPreferences {
         preferences.switchDelayMs = try container.decodeIfPresent(Double.self, forKey: .switchDelayMs) ?? preferences.switchDelayMs
         preferences.enableClipboardMonitoring = try container.decodeIfPresent(Bool.self, forKey: .enableClipboardMonitoring) ?? preferences.enableClipboardMonitoring
         preferences.autoSaveIntervalMinutes = try container.decodeIfPresent(Int.self, forKey: .autoSaveIntervalMinutes) ?? preferences.autoSaveIntervalMinutes
-        preferences.preferredLanguage = try container.decodeIfPresent(LanguageOverride.self, forKey: .preferredLanguage) ?? preferences.preferredLanguage
 
         // Window Behavior
         preferences.closeOnClickOutside = try container.decodeIfPresent(Bool.self, forKey: .closeOnClickOutside) ?? preferences.closeOnClickOutside
@@ -717,6 +676,32 @@ extension AppPreferences {
 
         preferences.version = AppPreferences.default.version
 
-        self = preferences
+        self = preferences.normalizedForStorage()
+    }
+}
+
+extension AppPreferences {
+    func normalizedForStorage() -> AppPreferences {
+        var result = self
+        let defaults = AppPreferences.default
+
+        result.windowOpacity = Self.normalized(windowOpacity, fallback: defaults.windowOpacity, within: 0.5...1)
+        result.windowZoomScale = Self.normalized(windowZoomScale, fallback: defaults.windowZoomScale, within: 0.5...2)
+        result.panelWidth = Self.normalized(panelWidth, fallback: defaults.panelWidth, within: 240...600)
+        result.panelMaxHeight = Self.normalized(panelMaxHeight, fallback: defaults.panelMaxHeight, within: 200...900)
+        result.panelCornerRadius = Self.normalized(panelCornerRadius, fallback: defaults.panelCornerRadius, within: 0...32)
+        result.rowHeight = Self.normalized(rowHeight, fallback: defaults.rowHeight, within: 32...72)
+        result.maxTabsInPopover = min(max(maxTabsInPopover, 5), 150)
+
+        return result
+    }
+
+    private static func normalized(
+        _ value: Double,
+        fallback: Double,
+        within range: ClosedRange<Double>
+    ) -> Double {
+        guard value.isFinite else { return fallback }
+        return min(max(value, range.lowerBound), range.upperBound)
     }
 }

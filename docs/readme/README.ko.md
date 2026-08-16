@@ -4,7 +4,7 @@
 
 [English](../../README.md) · [简体中文](README.zh-Hans.md) · [繁體中文](README.zh-Hant.md) · [日本語](README.ja.md) · **한국어** · [Français](README.fr.md) · [Deutsch](README.de.md) · [Español](README.es.md) · [Português](README.pt.md) · [Русский](README.ru.md)
 
-> 현재 릴리스: **v1.5.33 (Build 58)**. [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest)에서 DMG 또는 PKG를 다운로드할 수 있습니다.
+> 현재 릴리스: **v1.5.34 (Build 59)**. [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest)에서 DMG 또는 PKG를 다운로드할 수 있습니다.
 
 ## ClassGod 소개
 
@@ -68,7 +68,7 @@ macOS 개인정보 보호 권한은 사용자가 직접 허용해야 합니다. 
 
 ## 언어
 
-영어가 개발 언어이자 번역되지 않은 문자열의 기본 언어입니다. 앱 문자열 카탈로그는 영어, 중국어 간체/번체, 일본어, 한국어, 프랑스어, 독일어, 스페인어, 포르투갈어, 러시아어를 포함합니다.
+영어가 개발 언어이자 기본 언어입니다. 영어와 중국어 간체는 앱의 주요 부분을 폭넓게 지원하며, 나머지 언어는 단계적으로 번역되고 아직 번역되지 않은 부분은 영어로 표시됩니다.
 
 ## 소스에서 빌드
 

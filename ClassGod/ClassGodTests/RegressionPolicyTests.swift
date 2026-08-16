@@ -6,6 +6,44 @@ import Testing
 
 @Suite("Regression policies")
 struct RegressionPolicyTests {
+    @Test("Imported appearance geometry is finite and constrained to UI ranges")
+    func normalizesImportedAppearanceGeometry() throws {
+        let data = try #require(#"""
+        {
+          "version": 5,
+          "windowOpacity": 4,
+          "windowZoomScale": -2,
+          "panelWidth": 1200,
+          "panelMaxHeight": -50,
+          "panelCornerRadius": 100,
+          "rowHeight": 4
+        }
+        """#.data(using: .utf8))
+
+        let preferences = try JSONDecoder().decode(AppPreferences.self, from: data)
+
+        #expect(preferences.windowOpacity == 1)
+        #expect(preferences.windowZoomScale == 0.5)
+        #expect(preferences.panelWidth == 600)
+        #expect(preferences.panelMaxHeight == 200)
+        #expect(preferences.panelCornerRadius == 32)
+        #expect(preferences.rowHeight == 32)
+    }
+
+    @Test("Non-finite imported appearance values fall back to defaults")
+    func replacesNonFiniteImportedAppearanceGeometry() throws {
+        var preferences = AppPreferences.default
+        preferences.windowOpacity = .nan
+        preferences.windowZoomScale = .infinity
+        preferences.panelWidth = -.infinity
+
+        let normalized = preferences.normalizedForStorage()
+
+        #expect(normalized.windowOpacity == AppPreferences.default.windowOpacity)
+        #expect(normalized.windowZoomScale == AppPreferences.default.windowZoomScale)
+        #expect(normalized.panelWidth == AppPreferences.default.panelWidth)
+    }
+
     @Test("Browser responses split at the final delimiter and require a URL")
     func parsesBrowserDetectionResponses() {
         let delimiter = "\u{001E}"
@@ -240,14 +278,6 @@ struct RegressionPolicyTests {
             #expect(!page.iconName.isEmpty)
             #expect(!page.accessibilityTitle.isEmpty)
         }
-    }
-
-    @Test("New installations default to English while retaining every supported language")
-    func validatesDefaultLanguage() {
-        #expect(AppPreferences.default.preferredLanguage == .en)
-        #expect(Set(LanguageOverride.allCases.map(\.rawValue)) == [
-            "system", "en", "zh-Hans", "zh-Hant", "ja", "ko", "de", "fr", "es", "pt", "ru"
-        ])
     }
 
     @Test("Feature windows have independent defaults and minimum sizes")

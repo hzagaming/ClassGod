@@ -8,10 +8,11 @@ import SwiftUI
 
 struct AppearanceSettingsView: View {
     @ObservedObject var prefs = PreferencesManager.shared
+    private var zoomScale: CGFloat { CGFloat(prefs.preferences.windowZoomScale) }
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 10) {
+            VStack(spacing: 10 * zoomScale) {
                 StatefulCollapsibleSection(
                     title: "section.panel",
                     icon: "rectangle.split.3x3",
@@ -86,13 +87,13 @@ struct AppearanceSettingsView: View {
                         style: .segmented
                     )
 
-                    HStack(spacing: 12) {
-                        VStack(alignment: .leading, spacing: 2) {
+                    HStack(spacing: 12 * zoomScale) {
+                        VStack(alignment: .leading, spacing: 2 * zoomScale) {
                             Text("setting.accent_color")
-                                .font(.system(size: 12, weight: .medium))
+                                .font(.system(size: 12 * zoomScale, weight: .medium))
                                 .foregroundStyle(.white)
                             Text("setting.accent_color.subtitle")
-                                .font(.system(size: 10))
+                                .font(.system(size: 10 * zoomScale))
                                 .foregroundStyle(.white.opacity(0.35))
                         }
                         Spacer()
@@ -104,10 +105,10 @@ struct AppearanceSettingsView: View {
                         .labelsHidden()
                         .accessibilityLabel(Text("setting.accent_color"))
                     }
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 8)
+                    .padding(.horizontal, 10 * zoomScale)
+                    .padding(.vertical, 8 * zoomScale)
 
-                    HStack(spacing: 8) {
+                    HStack(spacing: 8 * zoomScale) {
                         ForEach(accentPresets, id: \.self) { accent in
                             Button {
                                 prefs.preferences.themeAccent = accent
@@ -116,11 +117,11 @@ struct AppearanceSettingsView: View {
                             } label: {
                                 Circle()
                                     .fill(accent.color)
-                                    .frame(width: 20, height: 20)
+                                    .frame(width: 20 * zoomScale, height: 20 * zoomScale)
                                     .overlay(
                                         Circle().stroke(
                                             prefs.preferences.themeAccent == accent ? Color.white : Color.white.opacity(0.18),
-                                            lineWidth: prefs.preferences.themeAccent == accent ? 2 : 1
+                                            lineWidth: (prefs.preferences.themeAccent == accent ? 2 : 1) * zoomScale
                                         )
                                     )
                             }
@@ -133,10 +134,10 @@ struct AppearanceSettingsView: View {
                             SoundEffectManager.shared.playButtonClick()
                         }
                         .buttonStyle(.plain)
-                        .font(.system(size: 10, weight: .medium, design: .monospaced))
+                        .font(.system(size: 10 * zoomScale, weight: .medium, design: .monospaced))
                         .foregroundStyle(prefs.preferences.themeAccent.color)
                     }
-                    .padding(.horizontal, 10)
+                    .padding(.horizontal, 10 * zoomScale)
 
                     SettingsSliderRow(
                         label: "setting.window_opacity",
@@ -224,13 +225,13 @@ struct AppearanceSettingsView: View {
                     }
 
                     Text("setting.app_icon.caption")
-                        .font(.system(size: 11, design: .monospaced))
+                        .font(.system(size: 11 * zoomScale, design: .monospaced))
                         .foregroundStyle(.secondary)
-                        .padding(.horizontal, 10)
+                        .padding(.horizontal, 10 * zoomScale)
                 }
             }
-            .padding(.horizontal, 8)
-            .padding(.vertical, 8)
+            .padding(.horizontal, 8 * zoomScale)
+            .padding(.vertical, 8 * zoomScale)
         }
     }
 

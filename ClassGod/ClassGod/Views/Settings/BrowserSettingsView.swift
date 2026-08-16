@@ -7,10 +7,11 @@ import SwiftUI
 
 struct BrowserSettingsView: View {
     @ObservedObject var prefs = PreferencesManager.shared
+    private var zoomScale: CGFloat { CGFloat(prefs.preferences.windowZoomScale) }
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 10) {
+            VStack(spacing: 10 * zoomScale) {
                 StatefulCollapsibleSection(
                     title: "section.default_browser",
                     icon: "globe",
@@ -31,9 +32,9 @@ struct BrowserSettingsView: View {
                     )
 
                     Text(String(localized: "browser.default_caption"))
-                        .font(.caption)
+                        .font(.system(size: 11 * zoomScale))
                         .foregroundStyle(.secondary)
-                        .padding(.horizontal, 10)
+                        .padding(.horizontal, 10 * zoomScale)
                 }
 
                 StatefulCollapsibleSection(
@@ -51,9 +52,9 @@ struct BrowserSettingsView: View {
                     )
 
                     Text(String(localized: "browser.not_running_caption"))
-                        .font(.caption)
+                        .font(.system(size: 11 * zoomScale))
                         .foregroundStyle(.secondary)
-                        .padding(.horizontal, 10)
+                        .padding(.horizontal, 10 * zoomScale)
                 }
 
                 StatefulCollapsibleSection(
@@ -62,12 +63,12 @@ struct BrowserSettingsView: View {
                     defaultExpanded: false,
                     accentColor: prefs.preferences.themeAccent.color
                 ) {
-                    VStack(alignment: .leading, spacing: 4) {
+                    VStack(alignment: .leading, spacing: 4 * zoomScale) {
                         browserRow(name: "browser.safari", icon: "safari", bundleID: BrowserType.safari.bundleIdentifier)
                         browserRow(name: "browser.chrome", icon: "globe", bundleID: BrowserType.chrome.bundleIdentifier)
                         browserRow(name: "browser.edge", icon: "wave.3.forward", bundleID: BrowserType.edge.bundleIdentifier)
                     }
-                    .padding(.horizontal, 10)
+                    .padding(.horizontal, 10 * zoomScale)
                 }
 
                 StatefulCollapsibleSection(
@@ -88,26 +89,26 @@ struct BrowserSettingsView: View {
                     )
                 }
             }
-            .padding(.horizontal, 8)
-            .padding(.vertical, 8)
+            .padding(.horizontal, 8 * zoomScale)
+            .padding(.vertical, 8 * zoomScale)
         }
     }
 
     private func browserRow(name: LocalizedStringKey, icon: String, bundleID: String) -> some View {
-        HStack(spacing: 10) {
+        HStack(spacing: 10 * zoomScale) {
             Image(systemName: icon)
-                .font(.system(size: 12))
+                .font(.system(size: 12 * zoomScale))
                 .foregroundStyle(.white.opacity(0.4))
-                .frame(width: 18)
+                .frame(width: 18 * zoomScale)
             Text(name)
-                .font(.system(size: 12, weight: .medium))
+                .font(.system(size: 12 * zoomScale, weight: .medium))
                 .foregroundStyle(.white)
             Spacer()
             Text(bundleID)
-                .font(.system(size: 10, design: .monospaced))
+                .font(.system(size: 10 * zoomScale, design: .monospaced))
                 .foregroundStyle(.white.opacity(0.35))
         }
-        .padding(.vertical, 5)
+        .padding(.vertical, 5 * zoomScale)
     }
 }
 
