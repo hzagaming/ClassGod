@@ -3,19 +3,19 @@
 <plist version="1.0">
 <dict>
     <key>NSAppleEventsUsageDescription</key>
-    <string>ClassGod 需要控制 Safari、Chrome 和 Edge 来探测和切换浏览器标签。</string>
+    <string>ClassGod needs to control Safari, Chrome, and Edge to detect and switch browser tabs.</string>
     <key>NSAccessibilityUsageDescription</key>
-    <string>ClassGod 需要 Accessibility 权限来探测最前面的浏览器并切换到指定标签。</string>
+    <string>ClassGod needs Accessibility permission to detect the frontmost browser and switch to specific tabs.</string>
     <key>NSCalendarsFullAccessUsageDescription</key>
-    <string>ClassGod 可按用户选择访问日历，用于课程表集成。</string>
+    <string>ClassGod may access calendars for class schedule integrations when you choose to enable them.</string>
     <key>NSLocalNetworkUsageDescription</key>
-    <string>ClassGod 可按用户选择发现本地网络设备，用于网络相关功能。</string>
+    <string>ClassGod may discover devices on your local network for network-aware features.</string>
     <key>NSPhotoLibraryUsageDescription</key>
-    <string>ClassGod 需要照片权限以选择壁纸和其他图像内容。</string>
+    <string>ClassGod uses Photos access to select wallpapers and other image content.</string>
     <key>NSRemindersFullAccessUsageDescription</key>
-    <string>ClassGod 可按用户选择访问提醒事项，用于任务集成。</string>
+    <string>ClassGod may access reminders for task integrations when you choose to enable them.</string>
     <key>NSSpeechRecognitionUsageDescription</key>
-    <string>ClassGod 可按用户选择使用语音识别，用于语音转文字功能。</string>
+    <string>ClassGod may use speech recognition for voice-to-text features.</string>
     <key>CFBundleIdentifier</key>
     <string>com.hanazar.classgod</string>
     <key>CFBundleName</key>

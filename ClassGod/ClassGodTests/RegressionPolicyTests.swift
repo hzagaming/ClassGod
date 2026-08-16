@@ -242,6 +242,14 @@ struct RegressionPolicyTests {
         }
     }
 
+    @Test("New installations default to English while retaining every supported language")
+    func validatesDefaultLanguage() {
+        #expect(AppPreferences.default.preferredLanguage == .en)
+        #expect(Set(LanguageOverride.allCases.map(\.rawValue)) == [
+            "system", "en", "zh-Hans", "zh-Hant", "ja", "ko", "de", "fr", "es", "pt", "ru"
+        ])
+    }
+
     @Test("Feature windows have independent defaults and minimum sizes")
     func validatesFeatureWindowLayouts() {
         let layouts = FeatureWindowKind.allCases.map(FeatureWindowLayoutPolicy.layout(for:))

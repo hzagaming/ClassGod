@@ -282,7 +282,7 @@
 				};
 			};
 			buildConfigurationList = F2BB6B4E2FC08AFC0059D551 /* Build configuration list for PBXProject "ClassGod" */;
-			developmentRegion = "zh-Hans";
+			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
@@ -295,8 +295,6 @@
 				es,
 				ru,
 				pt,
-				Base,
-				en,
 				Base,
 			);
 			mainGroup = F2BB6B4A2FC08AFC0059D551;

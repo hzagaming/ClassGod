@@ -202,8 +202,9 @@ enum ListDividerStyle: String, Codable, CaseIterable, Identifiable {
 
 enum LanguageOverride: String, Codable, CaseIterable, Identifiable {
     case system = "system"
-    case zhHans = "zh-Hans"
     case en = "en"
+    case zhHans = "zh-Hans"
+    case zhHant = "zh-Hant"
     case ja = "ja"
     case ko = "ko"
     case de = "de"
@@ -211,7 +212,6 @@ enum LanguageOverride: String, Codable, CaseIterable, Identifiable {
     case es = "es"
     case pt = "pt"
     case ru = "ru"
-    case zhHant = "zh-Hant"
 
     var id: String { rawValue }
     var displayName: String {
@@ -478,7 +478,7 @@ struct AppPreferences: Codable, Equatable {
         switchDelayMs: 0,
         enableClipboardMonitoring: false,
         autoSaveIntervalMinutes: 5,
-        preferredLanguage: .system,
+        preferredLanguage: .en,
         closeOnClickOutside: true,
         keepWindowOnTop: false,
         rememberWindowPosition: true,

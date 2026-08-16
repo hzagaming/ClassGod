@@ -1,13 +1,19 @@
 {
-  "sourceLanguage" : "zh-Hans",
+  "sourceLanguage" : "en",
   "strings" : {
     "CFBundleName" : {
       "comment" : "Bundle name",
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ClassGod"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "ClassGod"
           }
         }
@@ -62,6 +68,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "ClassGod требуется разрешение Специальных возможностей для обнаружения браузера на переднем плане и переключения на конкретные вкладки."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ClassGod 需要辅助功能权限来检测最前面的浏览器并切换到指定标签页。"
           }
         },
         "zh-Hant" : {
@@ -126,8 +138,8 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "ClassGod needs to control Safari, Chrome, and Edge to detect and switch browser tabs."
+            "state" : "translated",
+            "value" : "ClassGod 需要控制 Safari、Chrome 和 Edge，以检测并切换浏览器标签页。"
           }
         },
         "zh-Hant" : {
@@ -142,10 +154,16 @@
       "comment" : "Privacy - Bluetooth Always Usage Description",
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ClassGod may use Bluetooth for future peripheral detection features."
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "ClassGod may use Bluetooth for future peripheral detection features."
+            "state" : "translated",
+            "value" : "ClassGod 可能会使用蓝牙支持未来的外设检测功能。"
           }
         }
       }
@@ -171,10 +189,16 @@
       "comment" : "Privacy - Calendars Usage Description",
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ClassGod may access calendars for future class schedule integrations."
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "ClassGod may access calendars for future class schedule integrations."
+            "state" : "translated",
+            "value" : "ClassGod 可能会访问日历，以支持未来的课程表集成功能。"
           }
         }
       }
@@ -183,10 +207,16 @@
       "comment" : "Privacy - Camera Usage Description",
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ClassGod uses camera access for video-related features."
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "ClassGod uses camera access for video-related features."
+            "state" : "translated",
+            "value" : "ClassGod 使用摄像头权限提供视频相关功能。"
           }
         }
       }
@@ -195,10 +225,16 @@
       "comment" : "Privacy - Contacts Usage Description",
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ClassGod may access contacts for future integrations."
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "ClassGod may access contacts for future integrations."
+            "state" : "translated",
+            "value" : "ClassGod 可能会访问通讯录，以支持未来的集成功能。"
           }
         }
       }
@@ -207,6 +243,12 @@
       "comment" : "Copyright (human-readable)",
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "new",
@@ -236,10 +278,16 @@
       "comment" : "Privacy - Location When In Use Usage Description",
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ClassGod may use location for future geo-aware features."
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "ClassGod may use location for future geo-aware features."
+            "state" : "translated",
+            "value" : "ClassGod 可能会使用位置信息，以支持未来的位置感知功能。"
           }
         }
       }
@@ -248,10 +296,16 @@
       "comment" : "Privacy - Microphone Usage Description",
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ClassGod uses microphone access for audio-related features."
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "ClassGod uses microphone access for audio-related features."
+            "state" : "translated",
+            "value" : "ClassGod 使用麦克风权限提供音频相关功能。"
           }
         }
       }
@@ -294,10 +348,16 @@
       "comment" : "Privacy - Reminders Usage Description",
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ClassGod may access reminders for future task integrations."
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "ClassGod may access reminders for future task integrations."
+            "state" : "translated",
+            "value" : "ClassGod 可能会访问提醒事项，以支持未来的任务集成功能。"
           }
         }
       }

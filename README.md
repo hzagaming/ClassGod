@@ -1,579 +1,187 @@
-# ClassGod
+<div align="center">
+  <img src="ClassGod/ClassGod/Assets.xcassets/AppIcon.appiconset/icon_256x256.png" width="112" alt="ClassGod app icon">
+  <h1>ClassGod</h1>
+  <p><strong>A local-first emergency context switcher for macOS.</strong></p>
+  <p>Jump back to the right browser tab, app, or safe workspace in one shortcut.</p>
 
-> 上课摸鱼怕被逮？游戏打到一半老师突然靠近？—— ClassGod 就是你最靠谱的放风小弟。
+  <p>
+    <a href="docs/readme/README.zh-Hans.md">简体中文</a> ·
+    <a href="docs/readme/README.zh-Hant.md">繁體中文</a> ·
+    <a href="docs/readme/README.ja.md">日本語</a> ·
+    <a href="docs/readme/README.ko.md">한국어</a> ·
+    <a href="docs/readme/README.fr.md">Français</a> ·
+    <a href="docs/readme/README.de.md">Deutsch</a> ·
+    <a href="docs/readme/README.es.md">Español</a> ·
+    <a href="docs/readme/README.pt.md">Português</a> ·
+    <a href="docs/readme/README.ru.md">Русский</a>
+  </p>
 
-ClassGod 是一个 macOS 菜单栏上的**紧急避险工具**，专门帮你在关键时刻**秒切回学习页面**，让老师和家长以为你一直在认真学习。
+  <p>
+    <a href="https://github.com/hzagaming/ClassGod/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/hzagaming/ClassGod?style=flat-square"></a>
+    <img alt="macOS 14 or later" src="https://img.shields.io/badge/macOS-14.0%2B-111111?style=flat-square&logo=apple">
+    <img alt="Swift 5.9 or later" src="https://img.shields.io/badge/Swift-5.9%2B-F05138?style=flat-square&logo=swift&logoColor=white">
+    <a href="LICENSE"><img alt="MIT License" src="https://img.shields.io/badge/license-MIT-2ea44f?style=flat-square"></a>
+    <img alt="Local first" src="https://img.shields.io/badge/data-local--only-00bcd4?style=flat-square">
+  </p>
+</div>
 
-## 它能干嘛
+> Current release: **v1.5.33 (Build 58)**. Download the DMG or PKG from [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest).
 
-- **常驻菜单栏，无 Dock 图标**：偷偷摸摸藏在右上角，一般人发现不了
-- **一键保存当前网页**：正在刷的 B 站、微博、游戏页面，绑定个快捷键，老师来了秒切回课件
-- **全局快捷键切屏**：按一下快捷键，瞬间跳转到指定页面，连鼠标都不用动
-- **死了的页面也能复活**：就算你把那个标签关了，ClassGod 也会帮你重新打开
-- **本地存储，不上传云端**：你的摸鱼记录只有你自己知道
-- **完整设置面板**：20+ 参数随便调，动画、音效、外观全都能改
+## Why ClassGod
 
-## 系统要求
+ClassGod lives in the macOS menu bar and gives you a fast, predictable way to return to a prepared context. Save a browser destination, assign a global shortcut, and ClassGod activates the matching tab—or opens it again when the tab no longer exists.
 
-- macOS 14.0 或更高版本
-- 需要给 **Accessibility** 和 **Automation** 权限（不然怎么帮你切屏糊弄老师）
+It has grown into a focused desktop toolkit while keeping the same rule: user data stays on the Mac, features degrade safely without optional permissions, and every privileged action remains visible to the user.
 
-## 技术栈
+## Highlights
 
-- SwiftUI + AppKit
-- AppleScript（偷偷控制浏览器）
-- Carbon Event HotKeys（全局快捷键）
-- UserDefaults（本地存配置）
+| Area | What it does |
+| --- | --- |
+| **DestinTab** | Saves Safari, Chrome, and Edge destinations with search, sorting, pinning, batch actions, and per-tab shortcuts. |
+| **SuperSwitch** | Activates or launches selected apps and targets with independent global shortcuts. |
+| **Fake Lock** | Opens a chosen browser and URL in Safe Browser or MapTest Bypass mode, with configurable back/forward navigation locks. |
+| **Clipo** | Keeps local clipboard history, quick slots, search, pinning, import/export, and controlled retention. |
+| **Permission Center** | Shows every supported macOS permission, its live state, why it is used, and the exact system settings destination. |
+| **Fan Control** | Reads available temperature and fan data, supports System, Max, Manual, and Custom policies, and uses a privileged helper when approved. |
+| **Widgets** | Provides 19 native WidgetKit widgets, including system, weather, notes, tasks, files, terminal, and launcher views. |
+| **Desktop tools** | Includes Activity Monitor, dynamic wallpapers, Hacker Desktop, Error Hub, BrowserBypasser, and AssessPrep tools. |
+| **Personalization** | Uses a black visual base with a custom accent, scalable windows, animation controls, sound effects, and haptic feedback. |
 
-## 项目结构
+## Privacy by design
 
+- ClassGod has no analytics, telemetry, account system, ClassGod backend, or background upload path.
+- Preferences, tabs, clipboard history, widgets, and media configuration are stored locally.
+- Permission status is read from macOS and displayed locally.
+- Optional permissions remain optional; unavailable features show a safe fallback.
+- The complete uninstaller removes ClassGod data, helper files, launch services, receipts, and app-specific permission decisions after two confirmations.
+
+See [Permissions](#permissions) for the platform limits that no installer can bypass.
+
+## Requirements
+
+- macOS 14.0 or later
+- Apple Silicon (`arm64`) for the current downloadable builds
+- Safari, Google Chrome, or Microsoft Edge for browser switching
+- Accessibility and Automation approval for the core browser workflow
+- Administrator approval may be required for PKG installation, the optional fan-control helper, or a complete uninstall
+
+## Install
+
+### DMG
+
+1. Download the latest `.dmg` from [Releases](https://github.com/hzagaming/ClassGod/releases/latest).
+2. Open it and drag **ClassGod** to **Applications**.
+3. Launch `/Applications/ClassGod.app`.
+
+### PKG
+
+1. Download the latest `.pkg` from [Releases](https://github.com/hzagaming/ClassGod/releases/latest).
+2. Run the installer; ClassGod is installed in `/Applications`.
+3. Launch ClassGod and complete or temporarily skip the permission guide.
+
+Current public artifacts are ad-hoc signed and are not Apple-notarized. On first launch, macOS may require **System Settings → Privacy & Security → Open Anyway**. Never install a package whose source or checksum you cannot verify.
+
+## Quick start
+
+1. Launch ClassGod and wait for the brand animation to open the main panel.
+2. Approve Accessibility and browser Automation when you want the core switching workflow. Optional permissions can be skipped.
+3. Open **DestinTab**, capture the current browser tab, and assign a supported global shortcut.
+4. Press the shortcut from any app. ClassGod activates the matching tab or recreates it using the saved URL.
+
+Supported shortcut keys are letters, numbers, and F1–F12. Registerable modifiers are Command, Option, Control, and Shift.
+
+## Permissions
+
+macOS privacy permissions must be granted by the user. A DMG, PKG, app, script, or privileged helper cannot approve TCC prompts on the user's behalf.
+
+| Level | Examples | Behavior |
+| --- | --- | --- |
+| **Core** | Accessibility, Automation | Required for detecting and controlling supported browsers. |
+| **Recommended** | Input Monitoring, Screen Recording, Notifications, Full Disk Access | Enables related shortcuts, capture, alerts, and local file workflows. |
+| **Optional** | Camera, Microphone, Photos, Location, Contacts, Calendar, Reminders, Bluetooth, Speech Recognition, Local Network | Requested only for the feature that uses them and can be skipped. |
+
+Permission Center refreshes detectable state while visible and links to the appropriate system settings pane. Some macOS permissions require restarting the app before a changed decision takes effect.
+
+## Languages
+
+English is the development language and the fallback for untranslated strings. The app string catalogs declare the following locales:
+
+| Language | Locale | README |
+| --- | --- | --- |
+| English | `en` | This file |
+| Simplified Chinese | `zh-Hans` | [简体中文](docs/readme/README.zh-Hans.md) |
+| Traditional Chinese | `zh-Hant` | [繁體中文](docs/readme/README.zh-Hant.md) |
+| Japanese | `ja` | [日本語](docs/readme/README.ja.md) |
+| Korean | `ko` | [한국어](docs/readme/README.ko.md) |
+| French | `fr` | [Français](docs/readme/README.fr.md) |
+| German | `de` | [Deutsch](docs/readme/README.de.md) |
+| Spanish | `es` | [Español](docs/readme/README.es.md) |
+| Portuguese | `pt` | [Português](docs/readme/README.pt.md) |
+| Russian | `ru` | [Русский](docs/readme/README.ru.md) |
+
+## Build from source
+
+```bash
+git clone https://github.com/hzagaming/ClassGod.git
+cd ClassGod
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer \
+  xcodebuild -project ClassGod/ClassGod.xcodeproj \
+  -scheme ClassGod \
+  -destination 'platform=macOS' \
+  build
 ```
-ClassGod/
-├── ClassGodApp.swift              # 应用入口
-├── ClassGod.entitlements          # 权限配置
-├── Info.plist
-├── Assets.xcassets/
-├── Models/
-│   ├── AppPreferences.swift       # 设置数据
-│   ├── BrowserTab.swift           # 摸鱼页面数据
-│   └── BrowserType.swift          # 浏览器枚举
-├── Services/
-│   ├── BrowserDetector.swift      # 探测你在看啥
-│   ├── BrowserSwitcher.swift      # 帮你瞬间切走
-│   ├── PreferencesManager.swift   # 管理设置
-│   ├── ShortcutManager.swift      # 全局快捷键
-│   └── StorageManager.swift       # 本地存储
-├── Utilities/
-│   ├── AnimationHelper.swift      # 动画引擎
-│   └── SoundEffectManager.swift   # 音效反馈
-├── ViewModels/
-│   └── TabListViewModel.swift
-└── Views/
-    ├── MenuBarView.swift          # 主面板
-    ├── AddTabView.swift           # 添加摸鱼页面
-    ├── ShortcutPicker.swift       # 录快捷键
-    └── Settings/                  # 设置面板
+
+The project build phase compiles `ClassGodHelper` and embeds it in the app. App Sandbox is intentionally disabled because browser AppleEvents, Accessibility, the wallpaper controller, and the approved privileged helper require capabilities that a sandboxed build cannot provide.
+
+Run the app tests with:
+
+```bash
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer \
+  xcodebuild -project ClassGod/ClassGod.xcodeproj \
+  -scheme ClassGod \
+  -destination 'platform=macOS' \
+  test
 ```
 
-## 最新公告：v1.5.33
+Run the helper tests separately:
 
-### Fake Lock、快捷键与活动监视器回归修复
+```bash
+cd ClassGodHelper
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcrun swift test
+```
 
-- [x] **Fake Lock 竞态修复**：停止会话、关闭功能或重新启动后，旧 AppleScript 结果不再重新激活已经取消的会话
-- [x] **Fake Lock 状态准确**：重复点击启动不会再把“正在处理”误报成 URL 无效；停止时立即结束 Working 状态
-- [x] **快捷键修饰位清理**：录制与偏好迁移只保留 Command、Option、Control、Shift，Caps Lock、Fn、数字键盘等无效位不再污染配置
-- [x] **快捷键按键防穿透**：录制期间的无效按键和修饰键事件由录制器消费，不会触发窗口中的其他按钮或输入
-- [x] **Activity Monitor 搜索修复**：搜索自动裁剪首尾空白，纯空白输入恢复显示全部进程
-- [x] **质量门禁**：主应用 164 项、Helper 17 项测试全部通过，并完成 Debug / Release、Analyze、字符串目录、Helper 嵌入与签名验证
-- [x] **版本号更新**：实际构建产物更新为 v1.5.33 (Build 58)
+## Architecture
 
-## 历史公告：v1.5.32
+| Layer | Main responsibilities |
+| --- | --- |
+| SwiftUI + AppKit | Menu bar UI, independent feature windows, native widgets, visual and interaction feedback. |
+| Models + ViewModels | Preferences, tabs, bypass rules, widgets, fan policies, and feature state. |
+| Services | Browser detection/switching, shortcuts, permissions, storage, SMC access, wallpapers, and local clipboard processing. |
+| ClassGodHelper | Optional root helper communicating through a UID-checked Unix domain socket for supported SMC operations. |
 
-### 权限 UX、完整卸载与全功能质量审查
+Key paths:
 
-- [x] **设置跳转修复**：Input Monitoring 与 Screen Recording 拒绝或不再弹窗时自动打开精确系统设置页，深链失败时回退“隐私与安全”主页
-- [x] **权限分级重构**：权限门禁按核心必需 2 项、建议授权 4 项、可选 14 项排列；只有核心权限影响自动解锁，可选权限固定在底部
-- [x] **暂时跳过**：用户可不授权并继续使用，跳过仅当前运行会话有效，相关功能按权限状态安全降级
-- [x] **本地隐私承诺**：权限门禁与 Permission Center 明确显示本地处理、无遥测、无后台上传和无 ClassGod 后端
-- [x] **完全卸载增强**：重置主 App、Widget、Helper 的 TCC 决定，清除通知、defaults、Clipo、壁纸、缓存、容器、脚本、Helper、LaunchDaemon、收据与 App 本体
-- [x] **卸载容错**：SMAppService 注销失败不再阻断管理员清理脚本，root 阶段仍会停止并移除 Helper；卸载页面新增完整清理范围预览
-- [x] **UI / UX / SFX / BGM 深审**：修正“可选权限仍阻塞”语义冲突，复查窗口缩放、动画任务、声音声道、壁纸音频、计时器和事件监听清理
-- [x] **质量门禁**：主应用 161 项、Helper 17 项测试全部通过，并完成 Debug / Release、Analyze、字符串目录与签名验证
-- [x] **版本号更新**：实际构建产物更新为 v1.5.32 (Build 57)
+```text
+ClassGod/ClassGod/         Main macOS application
+ClassGod/ClassGodWidget/   WidgetKit extension
+ClassGod/ClassGodTests/    App tests
+ClassGodHelper/            Privileged helper Swift package and tests
+```
 
-## 历史公告：v1.5.31
+## Latest changes
 
-### 权限精确分级与自适应实时检测
+v1.5.33 fixes stale Fake Lock callbacks and status reporting, filters unsupported shortcut modifiers, prevents shortcut-recording event leakage, and normalizes whitespace-only Activity Monitor searches. That release was verified with 164 main-app tests and 17 helper tests.
 
-- [x] **部分授权不再误报完成**：Photos Limited、Calendar Write Only、Notifications Provisional / Ephemeral 统一显示“部分授权”，不会错误解锁权限门禁
-- [x] **自适应 100ms 检测**：未解决权限继续每 100ms 复核；已完整授权项目改为每秒全量复查，兼顾撤销识别与系统开销
-- [x] **授权请求即时结束**：实时检测发现完整授权后立即结束 Checking 状态，不再等待回调超时
-- [x] **实时状态可见**：权限门禁和 Permission Center 显示“实时 · 100ms”，部分授权使用独立黄色状态
-- [x] **刷新调度修复**：重叠请求合并完整/即时扫描范围；全部授权时跳过空刷新任务，其他功能页也不会留下无主权限轮询
-- [x] **检查时间准确**：底栏展示所有权限中的最新检测时间，不再读取无序字典中的随机项目
-- [x] **质量门禁**：主应用 158 项、Helper 17 项测试全部通过，并完成 Debug / Release 与 Analyze 验证
-- [x] **版本号更新**：实际构建产物更新为 v1.5.31 (Build 56)
+Read [CHANGELOG.md](CHANGELOG.md) for current releases and [CHANGELOG_HISTORY.md](CHANGELOG_HISTORY.md) for older history.
 
-## 历史公告：v1.5.30
+## Contributing
 
-### 权限状态毫秒级刷新
+Keep changes focused, preserve local-only data handling, localize every user-visible string, and add regression coverage for behavior changes. For security-sensitive changes, explain the permission boundary and failure mode in the pull request.
 
-- [x] **100ms 实时检测**：权限门禁和 Permission Center 可见期间持续复核权限，授权变化立即更新状态、按钮与总进度
-- [x] **刷新不再丢失**：检查过程中收到的返回前台、授权完成或手动刷新请求全部保留并合并执行
-- [x] **通知权限异步查询**：移除最坏 500ms 的同步等待，不再拖慢完整状态扫描
-- [x] **Automation 授权修复**：后台准备 System Events，避免目标未运行时一直显示 Allow 且无法真正请求权限
-- [x] **低开销 SwiftUI 更新**：实时扫描仅在授权结果变化时发布界面状态，用户主动刷新仍更新时间
-- [x] **授权对象明确**：测试时需要给 `/Applications/ClassGod.app` 授权，Xcode DerivedData 中的调试副本属于另一个系统授权对象
-- [x] **版本号更新**：实际构建产物更新为 v1.5.30 (Build 55)
+## Responsible use
 
-## 历史公告：v1.5.29
+ClassGod is a productivity and context-switching utility. Use it only on systems, browser sessions, assessments, and accounts you are authorized to control. It does not grant permission to bypass organizational policy, monitoring, access controls, or academic rules.
 
-### PKG / 强制权限门禁 / 完全卸载
+## License
 
-- [x] **PKG 首次启动权限门禁**：保留品牌启动和 Chaos 动画，20 项权限全部完成前不开放主 Panel 与功能服务
-- [x] **真实权限状态**：15 项由 macOS 自动检测，5 项不可可靠查询的权限必须打开对应系统设置后逐项人工确认
-- [x] **权限撤销重锁**：应用重新激活时复查授权，发现撤销会隐藏全部功能窗口、停止服务并返回门禁
-- [x] **门禁前零功能启动**：Clipo、Fake Lock、Panic、Tab/SuperSwitch 执行、Widget 同步、壁纸和风扇轮询均在解锁后启动
-- [x] **设置内完全卸载**：两次确认加管理员授权，清除 App、Helper、LaunchDaemon、偏好、缓存、Clipo、壁纸、Widget、TCC 与 PKG 收据
-- [x] **安全卸载范围**：只接受 `/Applications/ClassGod.app` 和明确的 ClassGod 路径，拒绝临时路径、其他 App 与宽泛目录
-- [x] **UI / UX / SFX / BGM 自查**：门禁、进度、状态、复核、等待和错误反馈统一黑底强调色；保留既有短音效和壁纸 BGM 策略
-- [x] **版本号更新**：实际构建产物更新为 v1.5.29 (Build 54)
-
-## 历史公告：v1.5.28
-
-### Fake Lock / 风扇 / 权限 / 独立窗口 / 自定义主题
-
-- [x] **Fake Lock**：支持 Safari、Chrome、Edge、URL 规范化、前进/后退独立锁定、全局快捷键和全屏启动
-- [x] **MapTest Bypass**：指定浏览器与网址后强制全屏，并按用户配置应用本地左右导航锁定
-- [x] **手动风扇速度**：Slider 即时保持用户目标并防抖写入 Helper，越界值自动裁剪；只读设备显示可用授权入口，嵌入 Helper 不再被误报为缺失
-- [x] **Permission Center 最大化权限**：20 项权限逐项引导，仅跳过已确认授权项，保持系统真实授权状态
-- [x] **独立功能窗口**：14 个功能分别使用内容适配尺寸与最小尺寸，可自由缩放且不会被无关设置重置
-- [x] **黑底自定义强调色**：设置中支持 Color Picker、预设与重置，主界面和功能窗口统一响应
-- [x] **官方 Widgets 主题同步**：19 个 Widget 保持黑底并同步用户强调色，修改后立即刷新
-- [x] **UI / UX / SFX / BGM 自查**：修复旧页面硬编码青色、DestinTab 高度耦合、Fake Lock 快捷键反馈与 MapTest 全屏一致性
-- [x] **质量门禁**：主应用 143 项与 Helper 17 项测试全部通过，并完成 Debug / Release、Analyze、资源、产物版本与签名校验
-- [x] **版本号更新**：实际构建产物更新为 v1.5.28 (Build 53)
-
-## 历史公告：v1.5.27
-
-### BrowserBypasser / 交互反馈 / 权限 / 壁纸深度修复
-
-- [x] **BrowserBypasser 行交互**：整行执行与启用开关完全拆分，禁用规则不能误执行但仍可重新启用，右键菜单同步禁用
-- [x] **规则输入安全**：名称和 URL Pattern 自动裁剪，纯空白规则不能保存；保存和删除保持单次反馈
-- [x] **设置 SFX / 触感**：Toggle、Slider、Picker 仅响应用户真实改值，导入、恢复和状态同步不再连播
-- [x] **SuperSwitch / Ghost Protocol**：编辑恢复 Picker、刷新应用目录与 Finder 自动回退不再误判为用户操作
-- [x] **Permission Center 刷新**：合并打开窗口和回前台产生的普通重叠检查，同时保留授权完成后的必要复查
-- [x] **壁纸 BGM 同步**：切换循环模式立即更新活动 GIF / 视频播放器，不再沿用旧播放策略
-- [x] **启动与全功能复查**：品牌页、Chaos 和主 Panel 不再依赖 AppKit 动画完成回调，未激活场景也能稳定进入主页；并复查 Clipo、风扇识别、官方 Widgets、天气与 Activity Monitor 生命周期
-- [x] **质量回归**：主应用 131 项与 Helper 17 项测试通过，并完成 Debug / Release、Analyze、字符串目录、plist、产物和签名校验
-- [x] **版本号更新**：实际构建产物更新为 v1.5.27 (Build 52)
-
-## 历史公告：v1.5.26
-
-### SuperSwitch / Permission Center / 设置 / UIUX 深度优化
-
-- [x] **SuperSwitch 高级搜索**：支持名称与 Bundle ID 多词匹配，补齐目标计数、运行状态、无结果反馈和显式操作菜单
-- [x] **SuperSwitch 表单重做**：运行应用选择、刷新、详情、图标和可选快捷键分区展示；自动裁剪输入并拒绝空目标
-- [x] **SuperSwitch 快捷键修复**：编辑或清除快捷键时注销旧 Carbon 注册，只保留当前有效组合
-- [x] **Permission Center 全参数**：20 项权限支持搜索、类别、状态、重要性与关注度排序，并展示授权方式、检测方式和检查时间
-- [x] **权限状态准确性**：自动可查状态与需要人工复核的系统面板分开统计，不伪报无法查询的权限结果
-- [x] **设置窗口 UI**：六页改为横向青色导航并统一 580×500 布局；`0.5s` 等小数刷新间隔保持正确精度
-- [x] **其他功能 UI**：BrowserBypasser 空态与列表撑满剩余窗口、页脚贴底，并增加清晰的添加规则入口
-- [x] **启动与本地化修复**：首次启动稳定进入主 Panel；设置、风扇、DestinTab、BrowserBypasser、SuperSwitch 英文文案完整一致
-- [x] **SFX 自查**：移除 SuperSwitch 删除菜单的重复点击音效，保持操作与反馈一一对应
-- [x] **质量回归**：完成隔离环境原生窗口复测；主应用 126 项与 Helper 17 项测试通过，并完成 Debug / Release、Analyze、plist、产物和签名校验
-- [x] **版本号更新**：实际构建产物更新为 v1.5.26 (Build 51)
-
-## 历史公告：v1.5.25
-
-### 启动主页 / 官方 Widgets / 天气 / UIUX 深度优化
-
-- [x] **ClassGod 启动界面**：即时动画与减少动态效果下仍至少展示 1 秒品牌页，启动完成后始终进入主 Panel
-- [x] **主页 Widget 入口**：Widget Center 只从主 Panel 进入，打开后默认显示官方 Widgets 合集，不再先进入添加或数据页
-- [x] **19 个官方 Widgets**：所有 kind、分类与刷新目标使用统一目录，System Info 归类与实际刷新路径保持一致
-- [x] **天气完整参数**：支持城市、当前/体感/最高/最低温、湿度、九种状态、摄氏/华氏换算和更新时间
-- [x] **Widget 常驻同步**：ClassGod 运行期间每 60 秒同步系统快照，配置编辑只刷新受影响的 Widget，避免 5 秒全量刷新
-- [x] **Widget 数据安全**：限制列表数量和文本长度，过滤重复 ID、空项、负数、`NaN`、无穷值及超过总量的分量
-- [x] **Widget 空状态 UI**：Todo、Notes、Files、App Launcher、Terminal 和 ASCII Art 不再显示空白卡片
-- [x] **数据保存修复**：待办纯文字编辑会可靠保存；清空终端日志后不再被示例内容覆盖；天气不再被固定 `24°` 回写
-- [x] **UI / UX / SFX / BGM 自查**：完成主面板、Widget Center、天气页、风扇、Clipo、短音效与壁纸音轨生命周期复查
-- [x] **质量回归**：主应用 117 项与 Helper 17 项测试通过，并完成 Debug / Release、Analyze、字符串目录、plist、产物内容与签名校验
-- [x] **版本号更新**：实际构建产物更新为 v1.5.25 (Build 50)
-
-## 历史公告：v1.5.24
-
-### UIUX / 浏览器 / 快捷键 / 壁纸 / SFX / 生命周期优化
-
-- [x] **主面板 UIUX**：功能卡片说明支持两行显示，Clipo 等较长描述在默认窗口宽度下保持完整可读
-- [x] **浏览器标签准确性**：标题按最后分隔边界解析，Host-only 匹配严格遵循 URL authority，不再误切相似域名或查询参数中的域名
-- [x] **AppleScript 安全转义**：URL 的引号与反斜杠按 AppleScript 字面量规则处理，避免特殊地址导致脚本失效
-- [x] **快捷键录制 UX**：只接受 Carbon 可注册组合，过滤未知键码以及仅含 Caps Lock、Fn、数字键盘状态的伪快捷键
-- [x] **Activity Monitor 数值安全**：电池最大容量为 0 或容量越界时仍输出有限、规范的百分比
-- [x] **SuperSwitch SFX**：成功音效与触感只在真实激活/启动后播放，应用缺失或激活失败走统一失败反馈
-- [x] **壁纸导入反馈**：批量导入部分或全部失败时显示完整本地化统计，用户取消选择器时不误报错误
-- [x] **错误百科 UX**：空白搜索恢复默认内容；错误 Toast 等待首次知识库索引完成后再关联百科入口
-- [x] **启动动画生命周期**：视图消失后取消过期阶段和计时器，旧序列不再回调完成；重新显示从干净状态开始
-- [x] **SFX / BGM / Clipo / Widgets / 风扇复查**：保留稳定音色、壁纸音轨协调、Clipo 归档与硬件安全降级规则
-- [x] **质量回归**：主应用 112 项与 Helper 17 项测试通过，并完成 Debug / Release、Analyze、字符串目录与 plist 校验
-- [x] **版本号更新**：实际构建产物更新为 v1.5.24 (Build 49)
-
-## 历史公告：v1.5.23
-
-### Permission Center / UIUX / 窗口 SFX / 生命周期优化
-
-- [x] **20 项权限全量引导**：全部权限逐项展示，支持搜索、类别/状态筛选、权限级别、五态反馈和授权统计
-- [x] **原生授权状态机**：首次 Accessibility、输入监控和屏幕录制会执行系统申请；拒绝、受限和人工检查项进入准确设置页面
-- [x] **权限请求互斥**：Location、Bluetooth、EventKit 等异步权限完成后即时刷新，快速双击不会并发触发多次系统请求
-- [x] **通知入口与风扇通知**：修正 ClassGod 应用级通知设置链接；风扇页只投递已授权通知，不再越过 Permission Center 主动弹窗
-- [x] **全窗口转场稳定性**：主面板、Clipo、风扇、权限中心等 14 个窗口支持淡出中立即反向，旧回调不会误隐藏新窗口
-- [x] **SFX 去重**：重复打开/关闭请求被合并，窗口音效不会因快速操作重叠播放
-- [x] **启动面板状态**：关闭启动显示后真正 `orderOut` 主窗口，首次菜单栏点击即可正常唤出
-- [x] **风扇通知实时性**：授权查询返回后重新核验当前温度与阈值，降温或设置变化不会按旧采样误报
-- [x] **多屏 BGM 生命周期**：桌面播放器按稳定 Display ID 复用，屏幕刷新不再叠加同一显示器窗口或音轨
-- [x] **Clipo / Widget 数据安全**：剪贴板指纹保留结构边界；Widget 时间线过滤负数、`NaN` 与无穷指标
-- [x] **SFX / BGM / Clipo / Widgets / 风扇复查**：保留稳定音色、壁纸播放、归档格式与硬件安全降级规则
-- [x] **质量回归**：新增权限、通知、窗口过渡和启动呈现测试，主应用 102 项与 Helper 17 项测试全部通过，并完成 Debug / Release、Analyze 与资源校验
-- [x] **版本号更新**：实际构建产物更新为 v1.5.23 (Build 48)
-
-## 历史公告：v1.5.22
-
-### UIUX / 异步脚本 / Clipo / 多屏 BGM 优化
-
-- [x] **多屏视频壁纸**：仅主协调屏输出 BGM 和推进播放列表，修复多屏音轨重叠及一次跳过多项
-- [x] **Clipo 捕获所有权**：连续保存不同快捷槽只执行最新选择任务，不再争用或误恢复系统剪贴板
-- [x] **浏览器延迟切换**：快速点击时取消旧请求和过期回调，避免连续切屏与错误 Toast
-- [x] **AppleScript 响应性**：AssessPrep 与 BrowserBypasser 周期脚本移出主线程，并阻止停止后的旧结果回写
-- [x] **UI 等待态**：权限引导和浏览器扫描等待期间禁用对应按钮，扫描失败会清理旧检测横幅
-- [x] **英文文案**：修正 AssessPrep 标题、空状态、操作、技术说明、Toast 和错误提示仍显示中文的问题
-- [x] **SFX / 风扇 / Widgets**：复查短音效通道、风扇识别、SystemMonitor 与官方 Widget 数据路径，保留现有安全规则
-- [x] **质量回归**：主应用 92 项与 Helper 17 项测试通过，并完成 Debug / Release、Analyze 与资源校验
-- [x] **版本号更新**：实际构建产物更新为 v1.5.22 (Build 47)
-
-## 历史公告：v1.5.21
-
-### UIUX / 系统监控 / 选择安全 / 生命周期优化
-
-- [x] **DestinTab 动态选择安全**：搜索、排序、置顶或显示上限变化后，只统计并删除当前仍可见的选择
-- [x] **多窗口监控协调**：Activity Monitor、风扇面板与 HackerDesktop 采用活跃客户端所需的最快刷新频率
-- [x] **网络与进程准确性**：消除网络首帧假峰值，速率按真实间隔计算，进程扫描不再重叠或乱序回写
-- [x] **交互生命周期**：权限引导和快捷键冲突提示取消过期任务，快速返回、跳过或关闭不会重复跳步
-- [x] **系统通知本地化**：高温通知补齐简体中文和英文标题、正文
-- [x] **SFX / BGM 稳定性**：复查短音效、Clipo 与视频/GIF 壁纸生命周期，保留现有安全播放规则
-- [x] **质量回归**：主应用 89 项与 Helper 17 项测试通过，并完成 Debug / Release、Analyze 与资源校验
-- [x] **版本号更新**：实际构建产物更新为 v1.5.21 (Build 46)
-
-## 历史公告：v1.5.20
-
-### UIUX / 批量操作 / Toast / 启动生命周期优化
-
-- [x] **DestinTab 可见全选**：批量全选严格遵循搜索、排序与面板显示上限，不再选中用户看不到的标签
-- [x] **批量删除准确性**：重新加载后清理失效选择，删除提示只统计实际存在并被删除的标签
-- [x] **Toast 生命周期**：全局错误 Toast 与风扇连续反馈取消旧自动关闭任务，不再提前隐藏或残留回调
-- [x] **启动动画清理**：Hacker Reveal 随窗口退出取消等待，并在完成后立即停止高频字符计时器
-- [x] **SFX / BGM 稳定性**：复查 Clipo、短音效与视频/GIF 壁纸生命周期，保留现有安全播放规则
-- [x] **质量回归**：主应用 84 项与 Helper 17 项测试通过，并完成 Debug / Release、Analyze 与资源校验
-- [x] **版本号更新**：实际构建产物更新为 v1.5.20 (Build 45)
-
-## 历史公告：v1.5.19
-
-### UIUX / 排序 / 数据导出 / 生命周期优化
-
-- [x] **DestinTab 排序稳定性**：置顶分组保持组内原顺序，手动与多种自动排序不再被非稳定二次排序打乱
-- [x] **设置导出覆盖**：保存时原子覆盖已有 JSON，并显示明确的成功/失败反馈，不再静默保存失败
-- [x] **UIUX / VoiceOver**：窗口缩放、批量操作、风扇筛选、应急动作和图标选择补齐准确的屏幕阅读器名称
-- [x] **状态生命周期**：弹跳动画、列表按压和错误百科搜索在视图退出时取消，避免过期回调残留
-- [x] **英文文案**：修正 DestinTab 批量选择与 AssessPrepHack 操作仍显示中文的问题
-- [x] **SFX / BGM 稳定性**：保留现有互斥短音效与壁纸播放规则，并完成交互路径复查
-- [x] **质量回归**：主应用 81 项与 Helper 17 项测试通过，并完成 Debug / Release、Analyze 与资源校验
-- [x] **版本号更新**：实际构建产物更新为 v1.5.19 (Build 44)
-
-## 历史公告：v1.5.18
-
-### UIUX / 壁纸导入 / 状态生命周期优化
-
-- [x] **全功能 VoiceOver**：AssessPrepHack、SuperSwitch、BrowserBypasser、DestinTab、Activity Monitor、Permission Center 和错误百科的关键图标按钮补齐可读名称
-- [x] **Toast / 复制反馈竞态**：SuperSwitch 连续 Toast 与错误百科逐项复制都只由最新回调关闭，不再串状态或提前消失
-- [x] **Activity Monitor 生命周期**：窗口隐藏会取消权限延迟检查，不再由过期回调重新显示提示
-- [x] **壁纸导入响应**：大图片/视频在后台复制，安全作用域及时释放，成功音效只在真实导入后播放
-- [x] **SFX / BGM 稳定性**：保留现有互斥短音效与壁纸播放规则，并完成生命周期回归检查
-- [x] **质量回归**：主应用 78 项与 Helper 17 项测试通过，并完成 Debug / Release、Analyze 与资源校验
-- [x] **版本号更新**：实际构建产物更新为 v1.5.18 (Build 43)
-
-## 历史公告：v1.5.17
-
-### UIUX / Clipo / 壁纸 BGM 生命周期修复
-
-- [x] **Clipo 粘贴安全**：连续快速操作只执行最新粘贴并保留最初剪贴板快照；内容发生变化时取消待执行回调，避免误贴、错误恢复或重复 `⌘V`
-- [x] **壁纸 BGM 生命周期**：视频异步载入使用请求代际校验，拒绝同路径重载产生的旧播放器、残留观察者与幽灵音频回调
-- [x] **Toast UIUX**：关闭后自动补位，避免新旧 Toast 重叠；百科入口完成简中/英文正式本地化
-- [x] **壁纸库 VoiceOver**：消除选择/删除嵌套按钮，关闭和删除入口补齐屏幕阅读器名称
-- [x] **标签批量选择文案**：选中数量使用独立本地化格式，不再在中文界面显示英文 `selected`
-- [x] **质量回归**：主应用 75 项与 Helper 17 项测试通过，并完成 Debug / Release、Analyze 与资源校验
-- [x] **版本号更新**：实际构建产物更新为 v1.5.17 (Build 42)
-
-## 历史公告：v1.5.16
-
-### UIUX / Clipo / 风扇 / SFX 发布级修复
-
-- [x] **Clipo 导入安全**：导入和本地恢复复用实时捕获预算，拒绝超限图片/二进制载荷，并在读取后复查归档大小
-- [x] **风扇识别稳定性**：具体名称可替换 `Detected` 通用名称；温度传感器使用稳定硬件 key，最终去重避免刷新闪动和重复 key 崩溃
-- [x] **UIUX / VoiceOver**：快捷键录制、待办勾选、进程选择和设置关闭均支持完整键盘与屏幕阅读器操作，缩放点击区域与视觉一致
-- [x] **SFX / BGM**：Chaos 短音效支持最多 4 路可复用并发，取消动画后不再播放排队 burst；壁纸音频状态路径通过回归检查
-- [x] **官方 Widget 性能**：单次时间线请求复用共享存储读取器，减少重复容器检查
-- [x] **统计与动画**：Clipo 今日统计按最后使用时间计算，快捷键录制脉冲遵循全局动画速度
-- [x] **质量回归**：主应用 69 项与 Helper 17 项测试通过，并完成 Debug / Release、Analyze 与资源校验
-- [x] **版本号更新**：实际构建产物更新为 v1.5.16 (Build 41)
-
-## 历史公告：v1.5.15
-
-### Clipo / 官方 WidgetKit / 风扇识别发布级修复
-
-- [x] **Clipo 剪贴板安全**：UTF-16 文本正确解析；延迟恢复不会覆盖用户新复制的内容；敏感应用列表完成去空、去重与长度限制
-- [x] **Clipo 目标与持久化**：关闭剪贴板监听后仍会记住最后一个外部应用；连续改动合并写入，退出时保存最新快照
-- [x] **官方 Widget 修复**：Uptime 时间线持续推进，应用启动深链加强 Bundle ID 边界校验，CPU 核心数补齐本地化
-- [x] **风扇识别修复**：`FNum` 严格按 `ui8` / `ui16` / `ui32` 大端格式读取，重复风扇逐字段补齐，Helper 遇到重复 SMC key 安全降级
-- [x] **UIUX / VoiceOver**：窗口转场、错误 Toast、最大化与启动页统一遵循动画速度、即时模式和“减少动态效果”；新功能关键按钮补齐可读名称
-- [x] **SFX / BGM**：Clipo 粘贴音效不再互相截断；视频壁纸音量异常值被安全限制，播放器状态保持稳定
-- [x] **质量回归**：新增 Clipo、风扇、动画、Widget、壁纸音频和本地化测试，并完成 Debug / Release、Helper、Analyze 与资源校验
-- [x] **版本号更新**：实际构建产物更新为 v1.5.15 (Build 40)
-
-## 历史公告：v1.5.14
-
-### Clipo / 官方 WidgetKit / 风扇识别深度更新
-
-- [x] **Clipo 剪贴板中心**：历史、搜索/筛选、置顶、9 个快捷槽、统计、敏感应用过滤、导入导出和全局快捷键完整接入 ClassGod 风格
-- [x] **Clipo 稳定性与数据安全**：修复重启栈溢出崩溃、来源应用误判和退出保存丢失；增加载荷/历史预算以及清空、重置、导入确认
-- [x] **19 个官方 WidgetKit 小组件**：移除旧桌面悬浮窗口路径，补齐 macOS 官方容器背景、独立本地化和分钟级时间线
-- [x] **文件/应用启动器**：HackerDesktop 支持选择与移除项目；应用 Widget 使用校验后的 `classgod://launch` 深链
-- [x] **风扇与温度识别**：多来源按字段补全，严格按 SMC 类型解码并兼容多字节风扇计数，修复错误 RPM/温度单位、重复风扇 ID 与部分传感器缺失
-- [x] **Widget 数据修复**：电池百分比、充电状态、时间线更新时间、地区化日历首日与重复星期 ID 全部修正
-- [x] **UIUX / SFX / BGM / 本地化**：优化窗口与壁纸音频反馈、禁用状态、VoiceOver，以及主应用/Widget 简中英文资源
-- [x] **质量回归**：主应用测试、Helper 测试、Debug / Release 构建、Xcode Analyze、字符串目录与 plist 校验纳入发布检查
-- [x] **版本号更新**：实际构建产物更新为 v1.5.14 (Build 39)
-
-## 历史公告：v1.5.13
-
-### UIUX / SFX / BGM 稳定性修复
-
-- [x] **GIF 播放状态修复**：暂停或关闭壁纸后停止 GIF 帧计时器，恢复时继续播放，并限制异常超短帧延迟
-- [x] **壁纸删除边界修复**：仅删除受管壁纸目录的直接文件，不再误判相似路径前缀
-- [x] **SFX 反馈整理**：顶层功能窗口打开、返回与关闭不再叠播通用点击音效和转场音效
-- [x] **VoiceOver 与文案修复**：壁纸开关补齐名称，壁纸与标签页导入导出文案按上下文区分，英文返回按钮恢复英文
-- [x] **自动化验证**：新增 GIF 状态、帧率保护、目录边界和本地化回归覆盖
-- [x] **版本号更新**：实际构建产物更新为 v1.5.13 (Build 38)
-
-## 历史公告：v1.5.12
-
-### UIUX / SFX / BGM 稳定性修复
-
-- [x] **主菜单 VoiceOver 修复**：功能入口、风扇入口和关闭按钮拥有明确可读名称
-- [x] **快捷键录制优化**：通用与全局录制均支持 Esc 取消，清除时可靠释放事件监听
-- [x] **视频壁纸 BGM 状态修复**：暂停或关闭后，视频结束事件不会重新播放声音；切换列表时不再短暂重播旧视频
-- [x] **错误 Toast 交互修复**：异步百科结果按原 Toast 回填，详情与关闭按钮不再互相误触
-- [x] **壁纸删除本地化**：删除确认消息补齐简中/英文文案
-- [x] **自动化验证**：新增 Toast identity、视频循环策略和本地化覆盖
-- [x] **版本号更新**：实际构建产物更新为 v1.5.12 (Build 37)
-
-## 历史公告：v1.5.11
-
-### 风扇实时监测 / Permission Center / UIUX 深度修复
-
-- [x] **风扇实时刷新统一为 0.5 秒**：风扇面板、主菜单摘要、菜单栏与 HackerDesktop Widget 使用同一刷新策略，旧设置自动迁移
-- [x] **刷新任务防堆积**：硬件读取较慢时会合并重叠刷新，避免 0.5 秒定时器持续创建等待任务
-- [x] **风扇恢复与窗口生命周期修复**：首次探测完成后再恢复保存模式；Boost 中关闭窗口会可靠交还系统控制，不再错误恢复旧模式
-- [x] **SMC / Helper 识别增强**：动态解析温度格式、识别十六进制风扇编号、按温度与风扇分别合并 SMC / `powermetrics` / HID 数据
-- [x] **硬件重扫无阻塞**：重新扫描会清理 App 与 Helper 缓存并在后台完成，不再卡住主线程
-- [x] **Permission Center 扩充为 20 项**：补齐输入监控、文件与文件夹、开发者工具、应用管理、照片、媒体、语音识别、本地网络等权限
-- [x] **权限状态检查无副作用**：Automation 改用 `AEDeterminePermissionToAutomateTarget(..., false)` 被动查询，打开权限中心不会执行 AppleScript 或触发授权弹窗
-- [x] **权限 UX 修复**：窗口每次显示都会刷新状态；首次设置只引导核心切屏权限；已授权项目的“重新检查”不再重复请求权限
-- [x] **中英文本地化修复**：Permission Center、风扇面板、Widget 与硬件诊断文案补齐简中和英文，不再显示硬编码英文或中文英文回退
-- [x] **Wallpaper 音频与动画修复**：播放/暂停与播放模式会持久化，视频播放器关闭后立即释放，GIF 切换不再复用旧画面
-- [x] **UIUX / SFX 辅助功能修复**：设置控件补齐 VoiceOver 标签，禁用入口不再响应交互，动画尊重系统“减少动态效果”，SFX 回到 AppKit 主线程
-- [x] **版本显示与构建警告清理**：移除多个过时版本回退值，并修复 Widget 的无效可选值警告
-- [x] **自动化验证**：新增 App 12 项、Helper 6 项测试，覆盖刷新策略、权限目录、被动权限状态、壁纸播放状态、风扇键解析、数据合并与采样策略
-- [x] **版本号更新**：实际构建产物更新为 v1.5.11 (Build 36)
-
-## 历史公告：v1.5.10
-
-### 全局稳定性 / UIUX / SFX 深度修复
-
-- [x] **窗口生命周期修复**：主菜单、HackerDesktop、Activity Monitor、AssessPrepHack 在 AppKit 窗口隐藏后会可靠停止定时器、监控与临时任务，再次显示时恢复
-- [x] **Activity Monitor 引用泄漏修复**：停止监控时正确归还 `SystemMonitor` 引用，避免多次打开后后台采集无法停止
-- [x] **桌面小组件交互修复**：锁定状态图标即时刷新；重置布局遵循“清空前确认”设置，防止误删自定义布局
-- [x] **文件选择 SFX 修复**：用户主动取消 Finder 文件选择时不再播放失败音效或警告触感
-- [x] **系统音效兼容修复**：改为内存合成并缓存短 PCM/WAV 音色，避免未文档化 Sound ID 和系统音效文件路径依赖
-- [x] **状态栏唤起修复**：打开主面板时显式激活应用，避免面板被当前窗口遮挡
-- [x] **启动动画峰值修复**：Chaos 故障窗口数限制到安全的 12–48，防止默认 200 个窗口导致 AppKit 超额告警和布局卡顿
-- [x] **图标签名安全修复**：伪装图标不再改写应用 bundle，避免修改已签名的应用内容
-- [x] **窗口缩放边界修复**：所有功能窗口在 200% 缩放和小屏幕下都会限制在可见区域，缩放后自动修正窗口位置
-- [x] **Widget 本地化修复**：桌面小组件类型补齐英文回退文案，非中文环境不再显示 `widget.*` 原始键名
-- [x] **英文环境键名修复**：补齐缺失的语义键回退，主菜单不再显示 `menu.*` / `button.*` 内部标识符
-- [x] **简中环境键名修复**：从现有繁中译文补齐 175 个简中语义键，设置与操作按钮不再显示内部标识符
-- [x] **版本号更新**：实际构建产物更新为 v1.5.10 (Build 35)
-
-## 历史公告：v1.5.9
-
-### HackerDesktop UI / SFX / 动画体验修复
-
-- [x] **配置中心本地化补齐**：标题、字段占位符、About 区域和可用小组件说明接入 `hackerdesktop.*` 字符串键
-- [x] **SFX 语义修正**：添加、文件选择、重置布局、编辑模式、删除、拖拽开始使用对应 widget/layout/drag 音效
-- [x] **动画设置补漏**：CPU / 内存桌面小组件数值动画遵循全局动画速度和极速模式
-- [x] **文件小组件选择修复**：Finder 文件小组件允许选择通用 Finder 项目，不再被 `.data` 类型过度限制
-- [x] **版本号更新**：实际构建产物更新为 v1.5.9 (Build 34)
-
-## 历史公告：v1.5.8
-
-### HackerDesktop / Widget 编辑器体验修复
-
-- [x] **Widget 配置保存防抖**：文本输入不会每个字符都刷新 Widget timeline，关闭窗口时仍会强制保存
-- [x] **桌面小组件编辑器本地化**：启用、编辑布局、重置、空状态、添加小组件/桌面标签、数量标题等文案接入字符串目录
-- [x] **SFX / 触感补齐**：启用开关、编辑模式、重置、添加、文件导入成功/失败都有一致反馈
-- [x] **缩放细节修复**：编辑器描边线宽和空状态间距跟随 `zoomScale`
-- [x] **版本号更新**：实际构建产物更新为 v1.5.8 (Build 33)
-
-## 历史公告：v1.5.7
-
-### SFX / Wallpaper / Widget 状态修复
-
-- [x] **设置 Slider 音效节流**：拖动 Slider 时不再每个数值变化都触发音效和触感，设置页不会再出现高频反馈噪声
-- [x] **Wallpaper 动画速度补漏**：壁纸切换淡入淡出、Quick Access Bar hover 显隐统一遵循“动画速度”与“极速模式”
-- [x] **HackerDesktop Widget 状态提示**：系统监控区会显示当前是共享 App Group 还是本地回退存储
-- [x] **Widget 文案修正**：同步提示明确说明 WidgetKit 同步依赖 App Group，本地构建使用应用内回退存储
-- [x] **版本号更新**：实际构建产物更新为 v1.5.7 (Build 32)
-
-## 历史公告：v1.5.6
-
-### 设置 UI / Widget 稳定性深度修复
-
-- [x] **设置页缩放一致性**：设置页折叠分组、Toggle、Slider、Picker、Action Row、Reset 按钮的字体、间距、图标和固定宽度完整跟随 `windowZoomScale`
-- [x] **动画速度补漏**：设置页 hover / 折叠动画与主菜单功能按钮按压动画统一遵循“动画速度”与“极速模式”
-- [x] **交互反馈补齐**：设置分组折叠补齐触感反馈，Reset 按钮改用本地化文案
-- [x] **Widget 本地构建回退**：App Group 容器不可用时，主 App 与 Widget 读取端回退到本地存储，避免 HackerDesktop / Widget 数据读写静默失效
-- [x] **HackerDesktop 提示修正**：同步提示明确区分共享 App Group 与本地未签名构建回退行为
-- [x] **版本号更新**：实际构建产物更新为 v1.5.6 (Build 31)
-
-## 历史公告：v1.5.5
-
-### UI/UX/SFX 一致性修复
-
-- [x] **删除操作反馈时序修复**：BrowserBypasser / AssessPrepHack / SuperSwitch 的删除确认弹窗此前在打开确认框时就误播放"已删除"音效，取消也会触发；现在只在确认删除时才播放
-- [x] **桌面小组件音效接入**：桌面悬浮小组件关闭 / 锁定切换 / 编辑器删除按钮补齐了此前定义却从未使用的音效与触感反馈
-- [x] **进程管理器终止反馈**：Activity Monitor 的 Quit / Force Quit 操作补充成功/失败音效与触感
-- [x] **动画速度设置生效范围修复**：Fan Control、Wallpaper Browser、BrowserBypasser、SuperSwitch 中若干写死时长的动画现在正确遵循"动画速度"/"极速模式"设置
-- [x] **SuperSwitch 面板本地化补齐**：此前唯一完全未本地化的功能面板，现已接入字符串目录
-- [x] **圆角缩放遗漏修复**：多处 `cornerRadius` 未随窗口缩放比例联动的问题
-- [x] **SMC / Widget 稳定性补丁**：温度传感器读取去掉潜在崩溃的强制转换；HackerDesktop Widget 配置编辑后立即保存；源码 plist 同步到 v1.5.5 (Build 30)
-
-## 历史公告：v1.5.4
-
-### 深度修复：工程配置、Widget、UI/UX/SFX 清理
-
-- [x] **版本统一**：实际构建产物更新为 v1.5.4 (Build 29)，Bundle ID 统一为 `com.hanazar.classgod`
-- [x] **Widget Extension 修复**：主 App 正式依赖并嵌入 `ClassGodWidget.appex`
-- [x] **Widget 权限修复**：Widget target 启用 Sandbox 并使用 `ClassGodWidget.entitlements`
-- [x] **共享容器说明**：`WidgetDataStore` 保留 `group.com.hanazar.classgod` 入口；App Group 需要开发证书/Team 签名，本地构建不强制启用
-- [x] **退出清理修复**：退出时补齐 Activity Monitor / Permission Center 窗口清理，取消状态栏后台刷新任务并断开 SMC Helper socket
-- [x] **Helper 测试接入**：修复 `ClassGodHelper` 下 `swift test` 报 `no tests found`
-- [x] **UI/UX/SFX 修复**：补齐主菜单、设置、AssessPrep 面板的本地化遗漏、窗口缩放和触感反馈
-
-## 历史公告：v0.4.4
-
-### 全新体验：开机混乱弹窗动画 v5
-启动 ClassGod 后，你会看到+听到：
-1. **全屏黑色开屏**（2秒，Hanazar Products 渐显）
-2. **白色屏幕闪烁** + 系统错误音效 burst
-3. **突然弹出 50 个小窗口**密密麻麻覆盖整个屏幕——10 种风格：终端乱码、系统错误、黄色警告、紫色日志、崩溃报告、矩阵字符、Windows 蓝屏、十六进制 dump、JSON 错误、编译错误
-4. **红色屏幕闪烁**（第 15/30 个弹窗时）
-5. **主窗口混在第 3-4 个弹窗中一起诞生**，从底层慢慢显现
-6. **弹窗逐个关闭**，主窗口逐渐清晰，最终完全显现
-
-### 架构升级
-- [x] 主 UI 从 NSPopover 改为**独立浮动窗口**，无边框、可拖动、有圆角阴影
-- [x] 菜单栏图标和 Dock 图标全部保留，点击图标显示/隐藏独立窗口
-
-### 修复 & 优化
-- [x] 弹窗数量 **50**，10 种风格，网格分布全覆盖
-- [x] **屏幕闪烁效果**（白色 + 红色），配合音效更有冲击力
-- [x] 弹窗全部无边框，纯静态渲染，零卡顿
-- [x] **主窗口混入弹窗一起显现**
-- [x] **超级黑客 SFX**：系统错误音效连环播放
-- [x] 主窗口默认尺寸调大（380×500）
-- [x] 主 UI 扫描线覆盖层，增强 CRT 显示器感
-- [x] Header 添加版本号 + 渐变分隔线
-- [x] TabRow hover/focus 白色边框高亮
-- [x] Footer 按钮添加图标 + 渐变背景
-- [x] 修复全局呼出快捷键注册/录制问题
-- [x] 修复 F1-F12 标签快捷键、快捷键冲突检测等问题
-- [x] 修复浏览器无窗口时无法打开目标 URL 等问题
-- [x] 修复空状态页图标颜色、自动探测 Toast、动画速度值等问题
-- [x] 补齐面板圆角、主题、徽章、切换延迟等设置项的真实联动
-- [x] 菜单栏图标标签数量徽章真正生效
-- [x] TabRow 键盘导航焦点高亮
-- [x] 版本号更新为 v0.4.4 (Build 10)
-
-## 历史公告：v0.3.2
-
-- [x] 修复启动后主 UI 不自动出现的问题：Run 之后会先显示开屏，再自动弹出主面板
-- [x] 菜单栏图标改为 macOS template 图标，深色/浅色菜单栏都能看清
-- [x] 标签数量徽章改为菜单栏文字徽章，避免自绘图标隐身
-- [x] 版本号更新为 v0.3.2 (Build 5)
-
-## 历史公告：v0.3.1
-
-- [x] 修复全局呼出快捷键注册/录制问题，设置窗口里录快捷键也能稳定生效
-- [x] 修复 F1-F12 标签快捷键、快捷键冲突检测、Carbon handler 清理等快捷键边界问题
-- [x] 修复浏览器无窗口时无法打开目标 URL、清空全部后主面板不同步、打开面板音效重复播放等问题
-- [x] 修复空状态页图标使用系统强调色（蓝色）的问题，统一为黑白主题白色
-- [x] 修复自动探测当前标签时误弹 Toast 的问题（静默探测不应打扰用户）
-- [x] 修复 Toast 在主面板关闭后残留、下次打开仍显示的问题
-- [x] 修复动画速度实际值与设定不符的问题（Fast 0.08s → 0.03s，Normal 0.2s → 0.1s）
-- [x] 补齐面板圆角、主题、徽章、切换延迟、默认浏览器、清空确认等设置项的真实联动
-- [x] 菜单栏图标标签数量徽章真正生效：启用后在图标右上角显示红色数字徽章
-- [x] TabRow 键盘导航焦点高亮：启用键盘导航后，Tab 键聚焦的标签有明显白色高亮背景
-- [x] 增加手动添加标签入口，并对自动探测保存做去重
-- [x] 版本号更新为 v0.3.1 (Build 4)，部署目标统一为 macOS 14.0+
-
-## 历史公告：v0.3 新特性
-
-- [x] **10 语言本地化**：简体中文（源）、繁体中文、英语、日语、韩语、法语、德语、西班牙语、俄语、葡萄牙语
-- [x] **黑客风格黑白 UI**：纯黑背景 + 白色线条 + 等宽字体，帅就完事了
-- [x] **2 秒启动动画**：每次打开都有 Hanazar Products 开屏，仪式感拉满
-- [x] **设置面板增强**：新增 6 个可调参数
-  - 面板圆角半径
-  - 菜单栏标签数量徽章
-  - 显示面板时自动探测当前标签
-  - 键盘上下箭头导航
-  - 切换前延迟（毫秒）
-  - 极速模式（一键关闭所有动画）
-- [x] **关于页面**：Release Notes、GitHub 仓库、开发者 Profile 一键直达
-- [x] **权限实时检测**：主面板打开时自动检查权限状态，图标变红提醒
-- [x] **极致速度优化**：Fast 动画从 80ms 降到 30ms，新增极速模式 0ms
-
-## v0.2 功能清单
-
-- [x] 菜单栏常驻，无 Dock 图标（低调摸鱼）
-- [x] 保存浏览器标签（Safari / Chrome / Edge）
-- [x] 本地持久化存储
-- [x] 为每个页面绑定全局快捷键
-- [x] 按下快捷键瞬间切回页面
-- [x] 标签关了也能自动重新打开
-- [x] 编辑/删除已保存的页面
-- [x] 权限提示（第一次用会弹窗，记得点允许）
-- [x] 5-Tab 设置面板（20+ 参数随便调）
-- [x] 动画速度控制（嫌动画墨迹可以直接关掉）
-- [x] 全局呼出快捷键自定义
-- [x] 音效反馈（切屏有声音提醒）
-- [x] 震动反馈（有手感）
-- [x] 快捷键冲突检测
-- [x] URL 匹配精度可调
-- [x] 浏览器未运行时的行为控制
-- [x] 外观自定义（图标/尺寸/主题）
-- [x] 数据导入/导出
-- [x] Toast 通知
-- [x] 删除确认（防手滑）
-
-## 权限说明
-
-ClassGod 需要两个权限才能帮你糊弄老师：
-
-1. **Accessibility（辅助功能）**：探测当前前台是不是浏览器
-2. **Automation（AppleEvents）**：远程控制浏览器切标签
-
-第一次用的时候系统会弹窗问你要不要允许，**一定要点允许**，不然没法帮你放风。
-
-## 更新日志
-
-见 [CHANGELOG.md](CHANGELOG.md)
-
-## 免责声明
-
-ClassGod 只是为了**应付检查**和**提高效率**，**不包含**以下功能：
-- 隐藏窗口或假装在干活
-- 绕过学校网络封锁
-- 偷偷切屏玩游戏
-
-**摸鱼有风险，使用需谨慎。被逮了别赖我。**
-
-## 许可证
-
-MIT License — 随便用，随便改，但被抓了别找我。
+ClassGod is available under the [MIT License](LICENSE).
