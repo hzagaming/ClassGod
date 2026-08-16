@@ -7,10 +7,11 @@ import SwiftUI
 
 struct FanControlSettingsView: View {
     @ObservedObject var prefs = PreferencesManager.shared
+    private var zoomScale: CGFloat { CGFloat(prefs.preferences.windowZoomScale) }
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 10) {
+            VStack(spacing: 10 * zoomScale) {
                 StatefulCollapsibleSection(
                     title: "section.fan_general",
                     icon: "fanblades",
@@ -80,9 +81,9 @@ struct FanControlSettingsView: View {
                     }
 
                     Text("setting.temp_alert_limit")
-                        .font(.system(size: 10))
+                        .font(.system(size: 10 * zoomScale))
                         .foregroundStyle(.white.opacity(0.3))
-                        .padding(.horizontal, 10)
+                        .padding(.horizontal, 10 * zoomScale)
                 }
 
                 StatefulCollapsibleSection(
@@ -106,11 +107,11 @@ struct FanControlSettingsView: View {
                     defaultExpanded: false,
                     accentColor: .yellow
                 ) {
-                    VStack(alignment: .leading, spacing: 8) {
+                    VStack(alignment: .leading, spacing: 8 * zoomScale) {
                         Text("section.auto_max_rules.caption")
-                            .font(.system(size: 11))
+                            .font(.system(size: 11 * zoomScale))
                             .foregroundStyle(.white.opacity(0.5))
-                            .padding(.horizontal, 10)
+                            .padding(.horizontal, 10 * zoomScale)
 
                         ForEach($prefs.preferences.fanControlAutoMaxRules) { $rule in
                             AutoMaxRuleRow(rule: $rule)
@@ -123,22 +124,22 @@ struct FanControlSettingsView: View {
                             step: 1,
                             suffix: "s"
                         )
-                        .padding(.horizontal, 8)
+                        .padding(.horizontal, 8 * zoomScale)
 
                         Button(action: {
                             SoundEffectManager.shared.playButtonClick()
                             HapticManager.shared.generic()
                             prefs.preferences.fanControlAutoMaxRules.append(AutoMaxRule())
                         }) {
-                            HStack(spacing: 4) {
+                            HStack(spacing: 4 * zoomScale) {
                                 Image(systemName: "plus.circle.fill")
-                                    .font(.system(size: 10))
+                                    .font(.system(size: 10 * zoomScale))
                                 Text("button.add_rule")
-                                    .font(.system(size: 11, weight: .medium, design: .monospaced))
+                                    .font(.system(size: 11 * zoomScale, weight: .medium, design: .monospaced))
                             }
                             .foregroundStyle(prefs.preferences.themeAccent.color)
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 6)
+                            .padding(.horizontal, 10 * zoomScale)
+                            .padding(.vertical, 6 * zoomScale)
                         }
                         .buttonStyle(.plain)
                     }
@@ -158,36 +159,36 @@ struct FanControlSettingsView: View {
                     )
 
                     Text("setting.disable_on_sleep.note")
-                        .font(.system(size: 10))
+                        .font(.system(size: 10 * zoomScale))
                         .foregroundStyle(.white.opacity(0.3))
-                        .padding(.horizontal, 10)
+                        .padding(.horizontal, 10 * zoomScale)
                 }
 
                 StatefulCollapsibleSection(
-                    title: "About",
+                    title: "section.about",
                     icon: "info.circle",
                     defaultExpanded: false,
                     accentColor: .gray
                 ) {
-                    VStack(alignment: .leading, spacing: 6) {
+                    VStack(alignment: .leading, spacing: 6 * zoomScale) {
                         Text("fan.about.smc")
-                            .font(.system(size: 11))
+                            .font(.system(size: 11 * zoomScale))
                             .foregroundStyle(.white.opacity(0.6))
 
                         Text("fan.about.elevated")
-                            .font(.system(size: 11))
+                            .font(.system(size: 11 * zoomScale))
                             .foregroundStyle(.white.opacity(0.4))
 
                         Text("fan.about.restricted")
-                            .font(.system(size: 11))
+                            .font(.system(size: 11 * zoomScale))
                             .foregroundStyle(.white.opacity(0.4))
                     }
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 4)
+                    .padding(.horizontal, 10 * zoomScale)
+                    .padding(.vertical, 4 * zoomScale)
                 }
             }
-            .padding(.horizontal, 8)
-            .padding(.vertical, 8)
+            .padding(.horizontal, 8 * zoomScale)
+            .padding(.vertical, 8 * zoomScale)
         }
     }
 }
@@ -207,6 +208,7 @@ struct AutoMaxRuleRow: View {
                 .toggleStyle(.switch)
                 .controlSize(.small)
                 .frame(width: 36 * zoomScale)
+                .accessibilityLabel(Text("rule.enabled"))
 
             VStack(alignment: .leading, spacing: 4 * zoomScale) {
                 HStack(spacing: 4 * zoomScale) {
@@ -218,6 +220,7 @@ struct AutoMaxRuleRow: View {
                     .pickerStyle(.menu)
                     .labelsHidden()
                     .frame(width: 100 * zoomScale)
+                    .accessibilityLabel(Text("rule.fan_target"))
 
                     Text("rule.to")
                         .font(.system(size: 10 * zoomScale))
@@ -231,6 +234,7 @@ struct AutoMaxRuleRow: View {
                     .pickerStyle(.segmented)
                     .labelsHidden()
                     .frame(width: 70 * zoomScale)
+                    .accessibilityLabel(Text("rule.target_mode"))
 
                     if rule.targetMode == .percentage {
                         Text("\(Int(rule.targetPercentage))%")
@@ -240,10 +244,12 @@ struct AutoMaxRuleRow: View {
 
                         Slider(value: $rule.targetPercentage, in: 0...100, step: 5)
                             .frame(width: 60 * zoomScale)
+                            .accessibilityLabel(Text("rule.target_percentage"))
                     } else {
                         TextField("", value: $rule.targetRPM, format: .number)
                             .textFieldStyle(.roundedBorder)
                             .frame(width: 55 * zoomScale)
+                            .accessibilityLabel(Text("rule.target_rpm"))
 
                         Text("unit.rpm")
                             .font(.system(size: 10 * zoomScale))
@@ -264,6 +270,7 @@ struct AutoMaxRuleRow: View {
                     .pickerStyle(.menu)
                     .labelsHidden()
                     .frame(width: 90 * zoomScale)
+                    .accessibilityLabel(Text("rule.sensor"))
 
                     // Specific sensor override (only shown when sensors are available)
                     if !availableSensors.isEmpty {
@@ -281,6 +288,7 @@ struct AutoMaxRuleRow: View {
                         .pickerStyle(.menu)
                         .labelsHidden()
                         .frame(width: 110 * zoomScale)
+                        .accessibilityLabel(Text("rule.specific_sensor"))
                     }
 
                     Picker("", selection: $rule.comparison) {
@@ -291,10 +299,12 @@ struct AutoMaxRuleRow: View {
                     .pickerStyle(.menu)
                     .labelsHidden()
                     .frame(width: 60 * zoomScale)
+                    .accessibilityLabel(Text("rule.comparison"))
 
                     TextField("", value: $rule.threshold, format: .number)
                         .textFieldStyle(.roundedBorder)
                         .frame(minWidth: 40 * zoomScale, maxWidth: 60 * zoomScale)
+                        .accessibilityLabel(Text("rule.threshold"))
 
                     Text("°C")
                         .font(.system(size: 10 * zoomScale))
@@ -309,6 +319,7 @@ struct AutoMaxRuleRow: View {
                     TextField("", value: $rule.hysteresis, format: .number)
                         .textFieldStyle(.roundedBorder)
                         .frame(minWidth: 32 * zoomScale, maxWidth: 50 * zoomScale)
+                        .accessibilityLabel(Text("rule.hysteresis"))
 
                     Text("°C")
                         .font(.system(size: 9 * zoomScale))
@@ -322,6 +333,7 @@ struct AutoMaxRuleRow: View {
                     TextField("", value: $rule.durationSeconds, format: .number)
                         .textFieldStyle(.roundedBorder)
                         .frame(minWidth: 32 * zoomScale, maxWidth: 50 * zoomScale)
+                        .accessibilityLabel(Text("rule.hold"))
 
                     Text("s")
                         .font(.system(size: 9 * zoomScale))

@@ -148,7 +148,7 @@ struct AssessPrepHackView: View {
             .buttonStyle(.plain)
             .accessibilityLabel(Text("button.add"))
         }
-        .padding()
+        .padding(16 * zoomScale)
         .background(Color(white: 0.03))
     }
     
@@ -160,7 +160,7 @@ struct AssessPrepHackView: View {
                 .foregroundStyle(.yellow)
                 .font(.system(size: 14 * zoomScale))
             
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 2 * zoomScale) {
                 Text("panic.detected")
                     .font(.system(size: 11 * zoomScale, weight: .bold, design: .monospaced))
                     .foregroundStyle(.yellow)
@@ -201,7 +201,7 @@ struct AssessPrepHackView: View {
                 .foregroundStyle(.green)
                 .font(.system(size: 14 * zoomScale))
             
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 2 * zoomScale) {
                 Text("panic.active")
                     .font(.system(size: 11 * zoomScale, weight: .bold, design: .monospaced))
                     .foregroundStyle(.green)
@@ -307,7 +307,7 @@ struct AssessPrepHackView: View {
             Spacer()
         }
         .frame(maxWidth: .infinity)
-        .padding()
+        .padding(16 * zoomScale)
     }
     
     // MARK: - Footer
@@ -352,7 +352,7 @@ struct AssessPrepHackView: View {
             .buttonStyle(.plain)
             .foregroundStyle(.white.opacity(0.5))
         }
-        .padding(.horizontal)
+        .padding(.horizontal, 16 * zoomScale)
         .padding(.vertical, 10 * zoomScale)
     }
     
@@ -412,7 +412,7 @@ struct PanicAppRow: View {
             .help(String(format: String(localized: "panic.execute_help"), app.bypassTechnique.displayName))
             .accessibilityLabel(Text(String(format: String(localized: "panic.execute_help"), app.bypassTechnique.displayName)))
             
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 2 * zoomScale) {
                 Text(app.name)
                     .font(.system(size: 12 * zoomScale, weight: .medium, design: .monospaced))
                     .foregroundStyle(app.isEnabled ? .white : .white.opacity(0.3))

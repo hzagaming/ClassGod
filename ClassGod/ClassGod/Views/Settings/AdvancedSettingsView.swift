@@ -14,6 +14,7 @@ struct AdvancedSettingsView: View {
     @State private var showUninstallConfirmation = false
     @State private var showFinalUninstallConfirmation = false
     @State private var dataOperationResult: DataOperationResult?
+    private var zoomScale: CGFloat { CGFloat(prefs.preferences.windowZoomScale) }
 
     enum DataOperationResult {
         case importSuccess, importFailure, exportSuccess, exportFailure
@@ -38,14 +39,14 @@ struct AdvancedSettingsView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 10) {
+            VStack(spacing: 10 * zoomScale) {
                 StatefulCollapsibleSection(
                     title: "section.data_management",
                     icon: "externaldrive",
                     defaultExpanded: true,
                     accentColor: .blue
                 ) {
-                    HStack(spacing: 10) {
+                    HStack(spacing: 10 * zoomScale) {
                         SettingsActionRow(
                             icon: "square.and.arrow.up",
                             title: "button.export",
@@ -95,32 +96,32 @@ struct AdvancedSettingsView: View {
                     )
                     .disabled(uninstallService.isUninstalling)
 
-                    VStack(alignment: .leading, spacing: 7) {
+                    VStack(alignment: .leading, spacing: 7 * zoomScale) {
                         Label("uninstall.cleanup.permissions", systemImage: "hand.raised.slash.fill")
                         Label("uninstall.cleanup.data", systemImage: "externaldrive.badge.xmark")
                         Label("uninstall.cleanup.helper", systemImage: "gearshape.2.fill")
                         Label("uninstall.cleanup.receipt", systemImage: "shippingbox.fill")
                     }
-                    .font(.system(size: 10, weight: .medium, design: .monospaced))
+                    .font(.system(size: 10 * zoomScale, weight: .medium, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.52))
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal, 11)
-                    .padding(.vertical, 9)
+                    .padding(.horizontal, 11 * zoomScale)
+                    .padding(.vertical, 9 * zoomScale)
                     .background(Color.red.opacity(0.045))
                     .overlay {
-                        RoundedRectangle(cornerRadius: 7)
-                            .stroke(Color.red.opacity(0.14), lineWidth: 1)
+                        RoundedRectangle(cornerRadius: 7 * zoomScale)
+                            .stroke(Color.red.opacity(0.14), lineWidth: zoomScale)
                     }
-                    .clipShape(RoundedRectangle(cornerRadius: 7))
+                    .clipShape(RoundedRectangle(cornerRadius: 7 * zoomScale))
 
                     if uninstallService.isUninstalling {
-                        HStack(spacing: 8) {
+                        HStack(spacing: 8 * zoomScale) {
                             ProgressView().controlSize(.small)
                             Text("uninstall.in_progress")
-                                .font(.caption)
+                                .font(.system(size: 11 * zoomScale))
                                 .foregroundStyle(.secondary)
                         }
-                        .padding(.horizontal, 10)
+                        .padding(.horizontal, 10 * zoomScale)
                     }
                 }
 
@@ -142,9 +143,9 @@ struct AdvancedSettingsView: View {
                     )
 
                     Text("setting.particle_count.caption")
-                        .font(.caption)
+                        .font(.system(size: 11 * zoomScale))
                         .foregroundStyle(.secondary)
-                        .padding(.horizontal, 10)
+                        .padding(.horizontal, 10 * zoomScale)
                 }
 
                 StatefulCollapsibleSection(
@@ -175,11 +176,12 @@ struct AdvancedSettingsView: View {
                     HStack {
                         Text(String(localized: "about.version"))
                         Spacer()
-                        Text("\(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "—") (Build \(Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "—"))")
+                        Text(versionDescription)
                             .foregroundStyle(.secondary)
                     }
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 4)
+                    .font(.system(size: 11 * zoomScale))
+                    .padding(.horizontal, 10 * zoomScale)
+                    .padding(.vertical, 4 * zoomScale)
 
                     HStack {
                         Text(String(localized: "about.developer"))
@@ -187,8 +189,9 @@ struct AdvancedSettingsView: View {
                         Text(String(localized: "about.developer_name"))
                             .foregroundStyle(.secondary)
                     }
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 4)
+                    .font(.system(size: 11 * zoomScale))
+                    .padding(.horizontal, 10 * zoomScale)
+                    .padding(.vertical, 4 * zoomScale)
 
                     safeLinkButton(
                         label: "about.release_notes",
@@ -209,8 +212,8 @@ struct AdvancedSettingsView: View {
                     )
                 }
             }
-            .padding(.horizontal, 8)
-            .padding(.vertical, 8)
+            .padding(.horizontal, 8 * zoomScale)
+            .padding(.vertical, 8 * zoomScale)
         }
         .alert(String(localized: "reset.confirm.title"), isPresented: $showResetConfirmation) {
             Button(String(localized: "button.cancel"), role: .cancel) {}
@@ -295,6 +298,14 @@ struct AdvancedSettingsView: View {
         NotificationCenter.default.post(name: .classGodTabsDidChange, object: nil)
     }
 
+    private var versionDescription: String {
+        String(
+            format: String(localized: "about.version_value"),
+            Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "—",
+            Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "—"
+        )
+    }
+
     private func safeLinkButton(label: LocalizedStringKey, icon: String, urlString: String) -> some View {
         Button(action: {
             SoundEffectManager.shared.playButtonClick()
@@ -302,26 +313,26 @@ struct AdvancedSettingsView: View {
             guard let url = URL(string: urlString) else { return }
             NSWorkspace.shared.open(url)
         }) {
-            HStack(spacing: 8) {
+            HStack(spacing: 8 * zoomScale) {
                 Image(systemName: icon)
-                    .font(.system(size: 11))
+                    .font(.system(size: 11 * zoomScale))
                     .foregroundStyle(prefs.preferences.themeAccent.color.opacity(0.8))
                 Text(label)
-                    .font(.system(size: 11, weight: .medium, design: .monospaced))
+                    .font(.system(size: 11 * zoomScale, weight: .medium, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.7))
                 Spacer()
                 Image(systemName: "arrow.up.right")
-                    .font(.system(size: 9))
+                    .font(.system(size: 9 * zoomScale))
                     .foregroundStyle(.white.opacity(0.3))
             }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 8)
+            .padding(.horizontal, 10 * zoomScale)
+            .padding(.vertical, 8 * zoomScale)
             .background(
-                RoundedRectangle(cornerRadius: 6)
+                RoundedRectangle(cornerRadius: 6 * zoomScale)
                     .fill(Color.white.opacity(0.02))
                     .overlay(
-                        RoundedRectangle(cornerRadius: 6)
-                            .stroke(Color.white.opacity(0.06), lineWidth: 1)
+                        RoundedRectangle(cornerRadius: 6 * zoomScale)
+                            .stroke(Color.white.opacity(0.06), lineWidth: zoomScale)
                     )
             )
         }

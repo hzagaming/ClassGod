@@ -25,7 +25,7 @@
   </p>
 </div>
 
-> Current release: **v1.5.34 (Build 59)**. Download the DMG or PKG from [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest).
+> Current release: **v1.5.35 (Build 60)**. Download the DMG or PKG from [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest).
 
 ## Why ClassGod
 
@@ -168,13 +168,13 @@ ClassGod/ClassGodTests/    App tests
 ClassGodHelper/            Privileged helper Swift package and tests
 ```
 
-## Latest announcement: v1.5.34
+## Latest announcement: v1.5.35
 
-This release activates every reviewed English main-app and Widget catalog entry, localizes both DestinTab import-failure paths, removes an unused language preference that never affected runtime localization, constrains imported window geometry to safe UI ranges, and makes the identified settings rows scale consistently from 50% to 200%. SFX and wallpaper BGM lifecycle paths were re-audited without changing their established behavior. Verification covers 167 main-app tests and 17 helper tests, Debug and Release builds, static analysis, localization output, embedded helper contents, and signatures.
+This release prevents stale Fake Lock navigation callbacks from overwriting a stopped or restarted session, keeps active-session browser and mode settings consistent with the running workflow, and removes redundant interaction feedback. It also completes 50%–200% adaptive spacing and border scaling across the main panel, recent feature windows, and General, Advanced, and Fan Control settings, while adding missing VoiceOver labels and a localized build description. SFX and wallpaper BGM lifecycle paths were re-audited without changing their established behavior. Verification covers 168 main-app tests and 17 helper tests, Debug and Release builds, static analysis, localization output, embedded helper contents, and signatures.
 
-## Previous announcement: v1.5.33
+## Previous announcement: v1.5.34
 
-v1.5.33 fixed stale Fake Lock callbacks and status reporting, filtered unsupported shortcut modifiers, prevented shortcut-recording event leakage, and normalized whitespace-only Activity Monitor searches. That release was verified with 164 main-app tests and 17 helper tests.
+v1.5.34 activated every reviewed English main-app and Widget catalog entry, localized DestinTab import failures, removed an unused language preference, constrained imported window geometry, and completed the previously identified adaptive settings work. That release was verified with 167 main-app tests and 17 helper tests.
 
 Read [CHANGELOG.md](CHANGELOG.md) for current releases and [CHANGELOG_HISTORY.md](CHANGELOG_HISTORY.md) for older history.
 

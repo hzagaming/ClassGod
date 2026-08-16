@@ -144,7 +144,7 @@ struct BrowserBypasserView: View {
             .buttonStyle(.plain)
             .accessibilityLabel(Text("button.add"))
         }
-        .padding(.horizontal)
+        .padding(.horizontal, 16 * zoomScale)
         .padding(.vertical, 10 * zoomScale)
     }
     
@@ -189,7 +189,7 @@ struct BrowserBypasserView: View {
                 .font(.system(size: 11 * zoomScale))
                 .foregroundStyle(.yellow)
             
-            VStack(alignment: .leading, spacing: 1) {
+            VStack(alignment: .leading, spacing: 1 * zoomScale) {
                 Text(String(format: String(localized: "bypass.detected"), viewModel.detectedBrowser))
                     .font(.system(size: 10 * zoomScale, weight: .medium, design: .monospaced))
                     .foregroundStyle(.yellow.opacity(0.9))
@@ -279,7 +279,7 @@ struct BrowserBypasserView: View {
             .buttonStyle(.plain)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding()
+        .padding(16 * zoomScale)
     }
     
     // MARK: - Footer
@@ -319,7 +319,7 @@ struct BrowserBypasserView: View {
                 .disabled(viewModel.isDetecting)
                 .opacity(viewModel.isDetecting ? 0.55 : 1)
             }
-            .padding(.horizontal)
+            .padding(.horizontal, 16 * zoomScale)
             .padding(.vertical, 8 * zoomScale)
         }
     }
@@ -382,7 +382,7 @@ struct RuleRow: View {
                         .frame(width: 24 * zoomScale)
                         .symbolRenderingMode(.monochrome)
                     
-                    VStack(alignment: .leading, spacing: 2) {
+                    VStack(alignment: .leading, spacing: 2 * zoomScale) {
                         Text(rule.name)
                             .font(.system(size: 13 * zoomScale, weight: .medium, design: .monospaced))
                             .foregroundStyle(rule.isEnabled ? .white : .white.opacity(0.4))
@@ -416,7 +416,7 @@ struct RuleRow: View {
             .scaleEffect(0.7 * zoomScale)
             .accessibilityLabel(Text("bypass.enable_immediately"))
         }
-        .padding(.horizontal)
+        .padding(.horizontal, 16 * zoomScale)
         .padding(.vertical, 8 * zoomScale)
         .frame(minHeight: 44 * zoomScale)
         .contentShape(Rectangle())
@@ -550,7 +550,7 @@ struct AddBypassRuleView: View {
                 .foregroundStyle(.white)
             
             // Name
-            VStack(alignment: .leading, spacing: 6) {
+            VStack(alignment: .leading, spacing: 6 * zoomScale) {
                 Text("field.name")
                     .font(.system(size: 11 * zoomScale, weight: .semibold, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.7))
@@ -559,7 +559,7 @@ struct AddBypassRuleView: View {
             }
             
             // URL Pattern
-            VStack(alignment: .leading, spacing: 6) {
+            VStack(alignment: .leading, spacing: 6 * zoomScale) {
                 Text("field.url_pattern")
                     .font(.system(size: 11 * zoomScale, weight: .semibold, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.7))
@@ -596,7 +596,7 @@ struct AddBypassRuleView: View {
             }
 
             // Bypass Type
-            VStack(alignment: .leading, spacing: 6) {
+            VStack(alignment: .leading, spacing: 6 * zoomScale) {
                 Text("bypass.method")
                     .font(.system(size: 11 * zoomScale, weight: .semibold, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.7))
@@ -605,7 +605,7 @@ struct AddBypassRuleView: View {
                     ForEach(BypassType.allCases, id: \.self) { type in
                         HStack(spacing: 6 * zoomScale) {
                             Image(systemName: type.iconName)
-                            VStack(alignment: .leading, spacing: 1) {
+                            VStack(alignment: .leading, spacing: 1 * zoomScale) {
                                 Text(type.displayName)
                                     .font(.system(size: 12 * zoomScale, weight: .medium))
                                 Text(type.description)
@@ -646,7 +646,7 @@ struct AddBypassRuleView: View {
                 .disabled(!draft.canSave)
             }
         }
-        .padding()
+        .padding(16 * zoomScale)
         .frame(width: 380 * zoomScale, height: 480 * zoomScale)
         .background(Color.black)
         .onAppear {

@@ -427,6 +427,22 @@
         }
       }
     },
+    "about.version_value" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ (Build %2$@)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@（构建 %2$@）"
+          }
+        }
+      }
+    },
     "accessibility.check_permission" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -15911,6 +15927,22 @@
         }
       }
     },
+    "rule.comparison" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comparison"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "比较条件"
+          }
+        }
+      }
+    },
     "rule.comparison.above" : {
       "localizations" : {
         "en" : {
@@ -15943,6 +15975,38 @@
         }
       }
     },
+    "rule.enabled" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enable rule"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "启用规则"
+          }
+        }
+      }
+    },
+    "rule.fan_target" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fan target"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "风扇目标"
+          }
+        }
+      }
+    },
     "rule.hold" : {
       "localizations" : {
         "en" : {
@@ -15971,6 +16035,22 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "滞后"
+          }
+        }
+      }
+    },
+    "rule.sensor" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Temperature sensor"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "温度传感器"
           }
         }
       }
@@ -16051,6 +16131,86 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "最高 GPU"
+          }
+        }
+      }
+    },
+    "rule.specific_sensor" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Specific sensor"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "具体传感器"
+          }
+        }
+      }
+    },
+    "rule.target_mode" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Target mode"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "目标模式"
+          }
+        }
+      }
+    },
+    "rule.target_percentage" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Target speed percentage"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "目标转速百分比"
+          }
+        }
+      }
+    },
+    "rule.target_rpm" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Target fan speed"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "目标风扇转速"
+          }
+        }
+      }
+    },
+    "rule.threshold" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Temperature threshold"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "温度阈值"
           }
         }
       }

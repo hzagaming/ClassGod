@@ -111,6 +111,7 @@ struct AppearanceSettingsView: View {
                     HStack(spacing: 8 * zoomScale) {
                         ForEach(accentPresets, id: \.self) { accent in
                             Button {
+                                guard prefs.preferences.themeAccent != accent else { return }
                                 prefs.preferences.themeAccent = accent
                                 SoundEffectManager.shared.playButtonClick()
                                 HapticManager.shared.generic()
@@ -127,11 +128,14 @@ struct AppearanceSettingsView: View {
                             }
                             .buttonStyle(.plain)
                             .accessibilityLabel(Text("setting.accent_preset"))
+                            .accessibilityAddTraits(prefs.preferences.themeAccent == accent ? .isSelected : [])
                         }
                         Spacer()
                         Button("button.reset") {
+                            guard prefs.preferences.themeAccent != .default else { return }
                             prefs.preferences.themeAccent = .default
                             SoundEffectManager.shared.playButtonClick()
+                            HapticManager.shared.generic()
                         }
                         .buttonStyle(.plain)
                         .font(.system(size: 10 * zoomScale, weight: .medium, design: .monospaced))

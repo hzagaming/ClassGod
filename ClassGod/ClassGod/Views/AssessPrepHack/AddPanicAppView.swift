@@ -69,7 +69,7 @@ struct AddPanicAppView: View {
                 .buttonStyle(.plain)
                 .disabled(!isValid)
             }
-            .padding()
+            .padding(16 * zoomScale)
             .background(Color(white: 0.03))
             
             Divider().background(Color.white.opacity(0.1))
@@ -199,7 +199,7 @@ struct AddPanicAppView: View {
                             .toggleStyle(SwitchToggleStyle(tint: .green))
                     }
                 }
-                .padding()
+                .padding(16 * zoomScale)
             }
         }
         .frame(width: 340 * zoomScale, height: 500 * zoomScale)

@@ -228,19 +228,19 @@ struct FanControlView: View {
                     )
                     .overlay(
                         RoundedRectangle(cornerRadius: 4 * zoomScale)
-                            .stroke(Color.yellow.opacity(viewModel.isBoostActive ? 1 : 0.3), lineWidth: 1)
+                            .stroke(Color.yellow.opacity(viewModel.isBoostActive ? 1 : 0.3), lineWidth: zoomScale)
                             .allowsHitTesting(false)
                     )
                 }
                 .buttonStyle(.plain)
                 .disabled(!hasControllableFans)
             }
-            .padding(.horizontal)
+            .padding(.horizontal, 16 * zoomScale)
             .padding(.vertical, 10 * zoomScale)
 
             // Status bar
-            HStack(spacing: 8) {
-                HStack(spacing: 4) {
+            HStack(spacing: 8 * zoomScale) {
+                HStack(spacing: 4 * zoomScale) {
                     let statusColor: Color = {
                         if viewModel.helperAvailable || viewModel.smcConnected && !viewModel.usingIORegistry {
                             return Color.green
@@ -282,7 +282,7 @@ struct FanControlView: View {
                     .font(.system(size: 9 * zoomScale, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.3))
             }
-            .padding(.horizontal)
+            .padding(.horizontal, 16 * zoomScale)
             .padding(.vertical, 4 * zoomScale)
 
             Divider()
@@ -301,7 +301,7 @@ struct FanControlView: View {
 
                 Spacer()
 
-                HStack(spacing: 8) {
+                HStack(spacing: 8 * zoomScale) {
                     Text(String(
                         format: String(localized: "fan.highest_temp"),
                         hasRealTemperatures ? unit.formatted(viewModel.highestTemperature) : "--"
@@ -332,7 +332,7 @@ struct FanControlView: View {
                     .buttonStyle(.plain)
                 }
             }
-            .padding(.horizontal)
+            .padding(.horizontal, 16 * zoomScale)
 
             // Sensor filter + search
             HStack(spacing: 6 * zoomScale) {
@@ -390,11 +390,11 @@ struct FanControlView: View {
                 .background(Color.white.opacity(0.03))
                 .overlay(
                     RoundedRectangle(cornerRadius: 4 * zoomScale)
-                        .stroke(Color.white.opacity(0.08), lineWidth: 1)
+                        .stroke(Color.white.opacity(0.08), lineWidth: zoomScale)
                         .allowsHitTesting(false)
                 )
             }
-            .padding(.horizontal)
+            .padding(.horizontal, 16 * zoomScale)
 
             VStack(spacing: 4 * zoomScale) {
                 if viewModel.filteredSensors.isEmpty {
@@ -421,7 +421,7 @@ struct FanControlView: View {
                     }
                 }
             }
-            .padding(.horizontal)
+            .padding(.horizontal, 16 * zoomScale)
         }
     }
 
@@ -465,7 +465,7 @@ struct FanControlView: View {
                         .foregroundStyle(.white.opacity(0.4))
                 }
             }
-            .padding(.horizontal)
+            .padding(.horizontal, 16 * zoomScale)
 
             // Fan access reason / permission hint
             if let reason = viewModel.fanAccessReason {
@@ -484,7 +484,7 @@ struct FanControlView: View {
                     }
 
                 }
-                .padding(.horizontal)
+                .padding(.horizontal, 16 * zoomScale)
                 .padding(.vertical, 6 * zoomScale)
                 .background(Color.yellow.opacity(0.05))
                 .overlay(
@@ -492,7 +492,7 @@ struct FanControlView: View {
                         .stroke(Color.yellow.opacity(0.15), lineWidth: 1 * zoomScale)
                         .allowsHitTesting(false)
                 )
-                .padding(.horizontal)
+                .padding(.horizontal, 16 * zoomScale)
             }
 
             if !hasControllableFans {
@@ -518,7 +518,7 @@ struct FanControlView: View {
                     RoundedRectangle(cornerRadius: 7 * zoomScale)
                         .stroke(prefs.preferences.themeAccent.color.opacity(0.18), lineWidth: zoomScale)
                 )
-                .padding(.horizontal)
+                .padding(.horizontal, 16 * zoomScale)
             }
 
             // Active rules indicator (autoMax + custom)
@@ -538,15 +538,15 @@ struct FanControlView: View {
                         .foregroundStyle(.yellow.opacity(0.8))
                         .lineLimit(1)
                 }
-                .padding(.horizontal)
+                .padding(.horizontal, 16 * zoomScale)
                 .padding(.vertical, 3 * zoomScale)
                 .background(Color.yellow.opacity(0.05))
                 .overlay(
                     RoundedRectangle(cornerRadius: 4 * zoomScale)
-                        .stroke(Color.yellow.opacity(0.15), lineWidth: 1)
+                        .stroke(Color.yellow.opacity(0.15), lineWidth: zoomScale)
                         .allowsHitTesting(false)
                 )
-                .padding(.horizontal)
+                .padding(.horizontal, 16 * zoomScale)
             }
 
             VStack(spacing: 10 * zoomScale) {
@@ -563,7 +563,7 @@ struct FanControlView: View {
                     )
                 }
             }
-            .padding(.horizontal)
+            .padding(.horizontal, 16 * zoomScale)
         }
     }
 
@@ -578,7 +578,7 @@ struct FanControlView: View {
 
                 Spacer()
             }
-            .padding(.horizontal)
+            .padding(.horizontal, 16 * zoomScale)
 
             VStack(spacing: 4 * zoomScale) {
                 DiagnosticRow(
@@ -631,7 +631,7 @@ struct FanControlView: View {
                     .buttonStyle(.plain)
                 }
             }
-            .padding(.horizontal)
+            .padding(.horizontal, 16 * zoomScale)
         }
     }
 
@@ -1002,7 +1002,7 @@ struct DiagnosticRow: View {
                 .font(.system(size: 10 * zoomScale))
                 .foregroundStyle(isGood ? .green : .yellow)
 
-            VStack(alignment: .leading, spacing: 1) {
+            VStack(alignment: .leading, spacing: 1 * zoomScale) {
                 Text(title)
                     .font(.system(size: 10 * zoomScale, weight: .semibold, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.8))

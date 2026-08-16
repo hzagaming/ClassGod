@@ -163,7 +163,7 @@ struct HackerDesktopView: View {
             
             ConfigSection(title: "Clock & Weather", icon: "clock") {
                 HStack(spacing: 12 * zoomScale) {
-                    VStack(alignment: .leading, spacing: 4) {
+                    VStack(alignment: .leading, spacing: 4 * zoomScale) {
                         Text("hackerdesktop.clock_city")
                             .font(.system(size: 10 * zoomScale, design: .monospaced))
                             .foregroundStyle(.white.opacity(0.4))
@@ -179,7 +179,7 @@ struct HackerDesktopView: View {
                             }
                     }
                     
-                    VStack(alignment: .leading, spacing: 4) {
+                    VStack(alignment: .leading, spacing: 4 * zoomScale) {
                         Text("hackerdesktop.weather_city")
                             .font(.system(size: 10 * zoomScale, design: .monospaced))
                             .foregroundStyle(.white.opacity(0.4))
@@ -365,7 +365,7 @@ struct HackerDesktopView: View {
         VStack(spacing: 14 * zoomScale) {
             ConfigSection(title: "Crypto Prices", icon: "bitcoinsign.circle") {
                 HStack(spacing: 12 * zoomScale) {
-                    VStack(alignment: .leading, spacing: 4) {
+                    VStack(alignment: .leading, spacing: 4 * zoomScale) {
                         Text("BTC")
                             .font(.system(size: 10 * zoomScale, design: .monospaced))
                             .foregroundStyle(.white.opacity(0.4))
@@ -379,7 +379,7 @@ struct HackerDesktopView: View {
                             .onChange(of: cryptoBTC) { _, _ in saveData(for: [.crypto]) }
                     }
                     
-                    VStack(alignment: .leading, spacing: 4) {
+                    VStack(alignment: .leading, spacing: 4 * zoomScale) {
                         Text("ETH")
                             .font(.system(size: 10 * zoomScale, design: .monospaced))
                             .foregroundStyle(.white.opacity(0.4))
@@ -396,7 +396,7 @@ struct HackerDesktopView: View {
             }
             
             ConfigSection(title: "Hacker Quote", icon: "quote.bubble") {
-                VStack(alignment: .leading, spacing: 6) {
+                VStack(alignment: .leading, spacing: 6 * zoomScale) {
                     TextField("hackerdesktop.quote_placeholder", text: $quoteText)
                         .textFieldStyle(.plain)
                         .font(.system(size: 11 * zoomScale, design: .monospaced))

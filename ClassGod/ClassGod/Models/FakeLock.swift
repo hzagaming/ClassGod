@@ -25,6 +25,12 @@ enum FakeLockNavigationDecision: Equatable {
     case blocked
 }
 
+enum FakeLockNavigationCompletionPolicy {
+    static func shouldApply(isSessionActive: Bool, operationIsCurrent: Bool) -> Bool {
+        isSessionActive && operationIsCurrent
+    }
+}
+
 enum FakeLockNavigationPolicy {
     static func decision(
         for direction: FakeLockDirection,

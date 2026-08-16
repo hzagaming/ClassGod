@@ -349,7 +349,7 @@ struct DestinTabView: View {
 
             // Bulk action bar
             if viewModel.isBulkMode {
-                HStack(spacing: 8) {
+                HStack(spacing: 8 * zoomScale) {
                     Text(String(format: String(localized: "destintab.selected_count"), visibleSelectedIDs.count))
                         .font(.system(size: 10 * zoomScale, design: .monospaced))
                         .foregroundStyle(accent)
@@ -518,7 +518,7 @@ struct DestinTabView: View {
                 SoundEffectManager.shared.playButtonClick()
                 Anim.with { viewModel.detectAndAddCurrentTab() }
             }) {
-                HStack(spacing: 8) {
+                HStack(spacing: 8 * zoomScale) {
                     Image(systemName: "plus.circle.fill")
                         .font(.system(size: 14 * zoomScale))
                         .symbolRenderingMode(.monochrome)
@@ -570,7 +570,7 @@ struct DestinTabView: View {
 
     private func footerButton(title: LocalizedStringKey, icon: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            HStack(spacing: 4) {
+            HStack(spacing: 4 * zoomScale) {
                 Image(systemName: icon)
                     .font(.system(size: 10 * zoomScale))
                     .symbolRenderingMode(.monochrome)
@@ -606,8 +606,8 @@ struct DestinTabView: View {
 
     private var scanlineOverlay: some View {
         GeometryReader { geo in
-            VStack(spacing: 2) {
-                ForEach(0..<Int(geo.size.height / 4), id: \.self) { _ in
+            VStack(spacing: 0) {
+                ForEach(0..<Int(geo.size.height / max(1, 4 * zoomScale)), id: \.self) { _ in
                     Rectangle().fill(Color.white.opacity(0.015)).frame(height: 1 * zoomScale)
                     Spacer().frame(height: 3 * zoomScale)
                 }

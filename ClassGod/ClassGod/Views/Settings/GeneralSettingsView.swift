@@ -7,10 +7,11 @@ import SwiftUI
 
 struct GeneralSettingsView: View {
     @ObservedObject var prefs = PreferencesManager.shared
+    private var zoomScale: CGFloat { CGFloat(prefs.preferences.windowZoomScale) }
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 10) {
+            VStack(spacing: 10 * zoomScale) {
                 StatefulCollapsibleSection(
                     title: "section.behavior",
                     icon: "switch.2",
@@ -155,9 +156,9 @@ struct GeneralSettingsView: View {
                     .disabled(prefs.preferences.useInstantAnimations)
 
                     Text(String(localized: "animation.off_caption"))
-                        .font(.caption)
+                        .font(.system(size: 11 * zoomScale))
                         .foregroundStyle(.secondary)
-                        .padding(.horizontal, 10)
+                        .padding(.horizontal, 10 * zoomScale)
                 }
 
                 StatefulCollapsibleSection(
@@ -218,8 +219,8 @@ struct GeneralSettingsView: View {
                     )
                 }
             }
-            .padding(.horizontal, 8)
-            .padding(.vertical, 8)
+            .padding(.horizontal, 8 * zoomScale)
+            .padding(.vertical, 8 * zoomScale)
         }
     }
 }

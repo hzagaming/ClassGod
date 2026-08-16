@@ -9,6 +9,7 @@ struct FakeLockView: View {
 
     private var zoomScale: CGFloat { CGFloat(prefs.preferences.windowZoomScale) }
     private var accent: Color { prefs.preferences.themeAccent.color }
+    private var sessionConfigurationLocked: Bool { service.isSessionActive || service.isWorking }
 
     var body: some View {
         ZStack {
@@ -122,6 +123,7 @@ struct FakeLockView: View {
             }
             .pickerStyle(.segmented)
             .labelsHidden()
+            .accessibilityLabel(Text("fake_lock.section.mode"))
             .onChange(of: service.configuration.mode) { oldValue, newValue in
                 guard oldValue != newValue else { return }
                 SoundEffectManager.shared.playFeatureSwitch()
@@ -135,6 +137,8 @@ struct FakeLockView: View {
                 .foregroundStyle(.white.opacity(0.45))
                 .fixedSize(horizontal: false, vertical: true)
         }
+        .disabled(sessionConfigurationLocked)
+        .opacity(sessionConfigurationLocked ? 0.65 : 1)
     }
 
     private var browserCard: some View {
@@ -142,6 +146,7 @@ struct FakeLockView: View {
             HStack(spacing: 8 * zoomScale) {
                 ForEach(BrowserType.allCases) { browser in
                     Button {
+                        guard service.configuration.browser != browser else { return }
                         service.configuration.browser = browser
                         SoundEffectManager.shared.playFeatureSwitch()
                         HapticManager.shared.generic()
@@ -159,6 +164,7 @@ struct FakeLockView: View {
                     }
                     .buttonStyle(.plain)
                     .disabled(!browser.isInstalled)
+                    .accessibilityAddTraits(service.configuration.browser == browser ? .isSelected : [])
                 }
             }
 
@@ -177,6 +183,7 @@ struct FakeLockView: View {
                         RoundedRectangle(cornerRadius: 6 * zoomScale)
                             .stroke(FakeLockURLPolicy.normalized(service.configuration.url) == nil ? Color.orange.opacity(0.7) : Color.white.opacity(0.1))
                     )
+                    .accessibilityLabel(Text("fake_lock.url"))
             }
 
             SettingsToggleRow(
@@ -187,6 +194,8 @@ struct FakeLockView: View {
             )
             .disabled(service.configuration.mode == .mapTestBypass)
         }
+        .disabled(sessionConfigurationLocked)
+        .opacity(sessionConfigurationLocked ? 0.65 : 1)
     }
 
     private var navigationCard: some View {
@@ -260,21 +269,23 @@ struct FakeLockView: View {
                     .background(Color.red.opacity(0.1))
                     .clipShape(RoundedRectangle(cornerRadius: 7 * zoomScale))
             }
-            Button(action: service.startSession) {
-                HStack(spacing: 6 * zoomScale) {
-                    if service.isWorking { ProgressView().controlSize(.small) }
-                    Image(systemName: "play.fill")
-                    Text("fake_lock.start")
+            if !service.isSessionActive {
+                Button(action: service.startSession) {
+                    HStack(spacing: 6 * zoomScale) {
+                        if service.isWorking { ProgressView().controlSize(.small) }
+                        Image(systemName: "play.fill")
+                        Text("fake_lock.start")
+                    }
+                    .font(.system(size: 10 * zoomScale, weight: .bold, design: .monospaced))
+                    .foregroundStyle(.black)
+                    .padding(.horizontal, 16 * zoomScale)
+                    .frame(height: 32 * zoomScale)
+                    .background(accent)
+                    .clipShape(RoundedRectangle(cornerRadius: 7 * zoomScale))
                 }
-                .font(.system(size: 10 * zoomScale, weight: .bold, design: .monospaced))
-                .foregroundStyle(.black)
-                .padding(.horizontal, 16 * zoomScale)
-                .frame(height: 32 * zoomScale)
-                .background(accent)
-                .clipShape(RoundedRectangle(cornerRadius: 7 * zoomScale))
+                .buttonStyle(.plain)
+                .disabled(service.isWorking || FakeLockURLPolicy.normalized(service.configuration.url) == nil)
             }
-            .buttonStyle(.plain)
-            .disabled(service.isWorking || FakeLockURLPolicy.normalized(service.configuration.url) == nil)
         }
         .padding(.horizontal, 14 * zoomScale)
         .padding(.vertical, 10 * zoomScale)
@@ -312,7 +323,21 @@ struct FakeLockView: View {
         icon: String,
         isOn: Binding<Bool>
     ) -> some View {
-        Toggle(isOn: isOn) {
+        let feedbackBinding = Binding(
+            get: { isOn.wrappedValue },
+            set: { newValue in
+                guard UserInteractionFeedbackPolicy.shouldEmit(
+                    currentValue: isOn.wrappedValue,
+                    newValue: newValue,
+                    isUserInitiated: true
+                ) else { return }
+                isOn.wrappedValue = newValue
+                SoundEffectManager.shared.playButtonClick()
+                HapticManager.shared.generic()
+            }
+        )
+
+        return Toggle(isOn: feedbackBinding) {
             Label(title, systemImage: icon)
                 .font(.system(size: 9 * zoomScale, weight: .medium, design: .monospaced))
                 .foregroundStyle(.white.opacity(0.72))

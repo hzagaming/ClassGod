@@ -144,7 +144,7 @@ struct SuperSwitchView: View {
             .buttonStyle(.plain)
             .accessibilityLabel(Text("button.add"))
         }
-        .padding(.horizontal)
+        .padding(.horizontal, 16 * zoomScale)
         .padding(.vertical, 10 * zoomScale)
     }
     
@@ -242,7 +242,7 @@ struct SuperSwitchView: View {
             .buttonStyle(.plain)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding()
+        .padding(16 * zoomScale)
     }
 
     private var noResultsState: some View {
@@ -277,7 +277,7 @@ struct SuperSwitchView: View {
                 .font(.system(size: 8 * zoomScale, design: .monospaced))
                 .foregroundStyle(.white.opacity(0.35))
         }
-        .padding(.horizontal)
+        .padding(.horizontal, 16 * zoomScale)
         .padding(.vertical, 8 * zoomScale)
     }
     

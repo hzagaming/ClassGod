@@ -68,7 +68,7 @@ struct AddTabView: View {
                 .offset(y: formOffset)
                 .opacity(formOpacity)
         }
-        .padding()
+        .padding(16 * zoomScale)
         .frame(width: 420 * zoomScale, height: 400 * zoomScale)
         .background(Color.black)
         .overlay(
@@ -226,7 +226,7 @@ struct AddTabView: View {
             .disabled(title.isEmpty || url.isEmpty)
             .foregroundStyle(title.isEmpty || url.isEmpty ? .white.opacity(0.3) : .white)
         }
-        .padding(.horizontal)
+        .padding(.horizontal, 16 * zoomScale)
     }
 
     private func performSave() {

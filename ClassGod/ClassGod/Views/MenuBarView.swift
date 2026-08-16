@@ -140,7 +140,7 @@ struct MenuBarView: View {
                             action: onOpenPermissionCenter
                         )
                     }
-                    .padding()
+                    .padding(16 * zoomScale)
                 }
                 
                 Spacer(minLength: 0)
@@ -174,7 +174,7 @@ struct MenuBarView: View {
                         }
                         .buttonStyle(.plain)
                     }
-                    .padding(.horizontal)
+                    .padding(.horizontal, 16 * zoomScale)
                     .padding(.vertical, 10 * zoomScale)
                 }
             }
@@ -256,7 +256,7 @@ struct MenuBarView: View {
             .buttonStyle(.plain)
             .accessibilityLabel(Text("fan.title"))
         }
-        .padding()
+        .padding(16 * zoomScale)
         .background(Color.white.opacity(0.02))
         .overlay(
             RoundedRectangle(cornerRadius: 8 * zoomScale)
@@ -409,7 +409,7 @@ struct FeatureButton: View {
                         .foregroundStyle(isEnabled ? .white : .white.opacity(0.3))
                 }
                 
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: 2 * zoomScale) {
                     Text(title)
                         .font(.system(size: 13 * zoomScale, weight: .bold, design: .monospaced))
                         .foregroundStyle(isEnabled ? .white : .white.opacity(0.3))
@@ -426,7 +426,7 @@ struct FeatureButton: View {
                     .font(.system(size: 10 * zoomScale, weight: .medium))
                     .foregroundStyle(isEnabled ? .white.opacity(0.4) : .white.opacity(0.1))
             }
-            .padding()
+            .padding(16 * zoomScale)
             .background(
                 RoundedRectangle(cornerRadius: 8 * zoomScale)
                     .fill(isHovered && isEnabled ? Color(white: 0.06) : Color(white: 0.03))

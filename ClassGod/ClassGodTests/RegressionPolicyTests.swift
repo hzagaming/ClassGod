@@ -351,6 +351,22 @@ struct RegressionPolicyTests {
         #expect(!session.isCurrent(second))
     }
 
+    @Test("Fake Lock navigation completions require the current active session")
+    func rejectsStaleFakeLockNavigationCompletions() {
+        #expect(FakeLockNavigationCompletionPolicy.shouldApply(
+            isSessionActive: true,
+            operationIsCurrent: true
+        ))
+        #expect(!FakeLockNavigationCompletionPolicy.shouldApply(
+            isSessionActive: false,
+            operationIsCurrent: true
+        ))
+        #expect(!FakeLockNavigationCompletionPolicy.shouldApply(
+            isSessionActive: true,
+            operationIsCurrent: false
+        ))
+    }
+
     @Test("Fractional refresh intervals keep their precision")
     func formatsSettingsIntervals() {
         #expect(SettingsValueFormatter.seconds(0.5) == "0.5s")

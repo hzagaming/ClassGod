@@ -25,6 +25,7 @@ final class FakeLockService: ObservableObject {
     private let storageKey = "com.hanazar.classgod.fakeLock.configuration"
     private var hotKeyID: UInt32?
     private var operationSession = FakeLockOperationSession()
+    private var navigationSession = FakeLockOperationSession()
 
     private init() {
         if let data = UserDefaults.standard.data(forKey: storageKey),
@@ -46,13 +47,16 @@ final class FakeLockService: ObservableObject {
         hotKeyID = nil
         isShortcutRegistered = false
         operationSession.cancel()
+        navigationSession.cancel()
         isWorking = false
         isSessionActive = false
         isGuardEnabled = false
+        setStatus(String(localized: "fake_lock.status.ready"), isError: false)
     }
 
     func startSession() {
         guard !isWorking else { return }
+        navigationSession.cancel()
         guard let url = FakeLockURLPolicy.normalized(configuration.url) else {
             reportFailure(String(localized: "fake_lock.error.invalid_url"))
             return
@@ -101,11 +105,13 @@ final class FakeLockService: ObservableObject {
 
     func stopSession() {
         operationSession.cancel()
+        navigationSession.cancel()
         isWorking = false
         isSessionActive = false
         isGuardEnabled = false
         setStatus(String(localized: "fake_lock.status.stopped"), isError: false)
         SoundEffectManager.shared.playFeatureSwitch()
+        HapticManager.shared.generic()
     }
 
     func toggleGuard() {
@@ -141,8 +147,14 @@ final class FakeLockService: ObservableObject {
 
         let browser = configuration.browser
         let source = Self.navigationScript(browser: browser, direction: direction)
+        let request = navigationSession.begin()
         Task {
             let result = await Self.executeInBackground(source)
+            let operationIsCurrent = navigationSession.complete(request)
+            guard FakeLockNavigationCompletionPolicy.shouldApply(
+                isSessionActive: isSessionActive,
+                operationIsCurrent: operationIsCurrent
+            ) else { return }
             if result.success {
                 setStatus(String(localized: "fake_lock.status.navigation_sent"), isError: false)
                 SoundEffectManager.shared.playFeatureSwitch()

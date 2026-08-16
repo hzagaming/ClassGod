@@ -11,7 +11,7 @@ struct WindowZoomControlBar: View {
     private var zoomScale: CGFloat { CGFloat(prefs.preferences.windowZoomScale) }
 
     var body: some View {
-        HStack(spacing: 4) {
+        HStack(spacing: 4 * zoomScale) {
             Button(action: {
                 SoundEffectManager.shared.playButtonClick()
                 HapticManager.shared.generic()
@@ -65,8 +65,8 @@ struct WindowZoomControlBar: View {
             .disabled(prefs.preferences.windowZoomScale == 1.0)
             .accessibilityLabel(Text("accessibility.reset_zoom"))
         }
-        .padding(.horizontal, 4)
-        .padding(.vertical, 2)
+        .padding(.horizontal, 4 * zoomScale)
+        .padding(.vertical, 2 * zoomScale)
         .background(
             RoundedRectangle(cornerRadius: 6 * zoomScale)
                 .fill(Color(white: 0.05))
