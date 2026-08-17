@@ -5,7 +5,6 @@
 
 import SwiftUI
 import AppKit
-import Combine
 
 enum WallpaperDisplayPolicy {
     static func identifier(for screen: NSScreen) -> UInt32? {
@@ -18,6 +17,43 @@ enum WallpaperDisplayPolicy {
     ) -> Set<UInt32> {
         existing.subtracting(connected)
     }
+
+    nonisolated static func shouldRefreshContent(
+        previousCoordinatesPlayback: Bool,
+        currentCoordinatesPlayback: Bool
+    ) -> Bool {
+        previousCoordinatesPlayback != currentCoordinatesPlayback
+    }
+}
+
+nonisolated struct WallpaperPresentationState: Equatable {
+    let isEnabled: Bool
+    let showOnDesktop: Bool
+    let wallpaperID: UUID?
+
+    var isVisible: Bool {
+        isEnabled && showOnDesktop && wallpaperID != nil
+    }
+}
+
+nonisolated enum WallpaperPresentationAction: Equatable {
+    case none
+    case show
+    case hide
+    case refreshContent
+}
+
+nonisolated enum WallpaperPresentationPolicy {
+    static func action(
+        previous: WallpaperPresentationState,
+        current: WallpaperPresentationState
+    ) -> WallpaperPresentationAction {
+        if previous.isVisible != current.isVisible {
+            return current.isVisible ? .show : .hide
+        }
+        guard current.isVisible, previous.wallpaperID != current.wallpaperID else { return .none }
+        return .refreshContent
+    }
 }
 
 /// Manages borderless wallpaper windows at the desktop level (behind Finder icons).
@@ -28,14 +64,21 @@ final class DesktopWallpaperController {
     static let shared = DesktopWallpaperController()
     
     private var windows: [UInt32: DesktopWallpaperWindow] = [:]
-    private var cancellables = Set<AnyCancellable>()
     private var screenObserver: NSObjectProtocol?
+    private var stateObserver: NSObjectProtocol?
+    private var presentationState = WallpaperPresentationState(
+        isEnabled: false,
+        showOnDesktop: false,
+        wallpaperID: nil
+    )
     
     deinit {
         if let observer = screenObserver {
             NotificationCenter.default.removeObserver(observer)
         }
-        cancellables.removeAll()
+        if let observer = stateObserver {
+            NotificationCenter.default.removeObserver(observer)
+        }
     }
     
     private init() {
@@ -50,38 +93,15 @@ final class DesktopWallpaperController {
             }
         }
         
-        // React to engine state changes
-        let engine = WallpaperEngine.shared
-        
-        engine.$showOnDesktop
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] show in
-                if show && engine.isEnabled {
-                    self?.showWallpapers()
-                } else {
-                    self?.hideWallpapers()
-                }
+        stateObserver = NotificationCenter.default.addObserver(
+            forName: .wallpaperStateDidChange,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                self?.reconcilePresentation()
             }
-            .store(in: &cancellables)
-        
-        engine.$isEnabled
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] enabled in
-                if enabled && engine.showOnDesktop {
-                    self?.showWallpapers()
-                } else {
-                    self?.hideWallpapers()
-                }
-            }
-            .store(in: &cancellables)
-        
-        engine.$currentWallpaper
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] _ in
-                guard engine.showOnDesktop, engine.isEnabled else { return }
-                self?.refreshContent()
-            }
-            .store(in: &cancellables)
+        }
     }
     
     // MARK: - Window Management
@@ -134,9 +154,12 @@ final class DesktopWallpaperController {
     }
     
     func refreshWindows() {
-        let engine = WallpaperEngine.shared
-        if engine.showOnDesktop {
+        let current = currentPresentationState()
+        presentationState = current
+        if current.isVisible {
             showWallpapers()
+        } else {
+            hideWallpapers()
         }
     }
     
@@ -144,6 +167,35 @@ final class DesktopWallpaperController {
         for (_, window) in windows {
             window.refreshContent()
         }
+    }
+
+    private func reconcilePresentation() {
+        let current = currentPresentationState()
+        let action = WallpaperPresentationPolicy.action(
+            previous: presentationState,
+            current: current
+        )
+        presentationState = current
+
+        switch action {
+        case .none:
+            break
+        case .show:
+            showWallpapers()
+        case .hide:
+            hideWallpapers()
+        case .refreshContent:
+            refreshContent()
+        }
+    }
+
+    private func currentPresentationState() -> WallpaperPresentationState {
+        let engine = WallpaperEngine.shared
+        return WallpaperPresentationState(
+            isEnabled: engine.isEnabled,
+            showOnDesktop: engine.showOnDesktop,
+            wallpaperID: engine.currentWallpaper?.id
+        )
     }
 }
 
@@ -209,6 +261,10 @@ private final class DesktopWallpaperWindow: NSWindow {
     
     func refreshContent(coordinatesPlayback: Bool? = nil) {
         if let coordinatesPlayback {
+            guard WallpaperDisplayPolicy.shouldRefreshContent(
+                previousCoordinatesPlayback: self.coordinatesPlayback,
+                currentCoordinatesPlayback: coordinatesPlayback
+            ) else { return }
             self.coordinatesPlayback = coordinatesPlayback
         }
         // Remove old hosting view

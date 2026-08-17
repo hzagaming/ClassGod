@@ -208,5 +208,57 @@ struct WallpaperSettingsTests {
             existing: [1],
             connected: [1]
         ).isEmpty)
+        #expect(!WallpaperDisplayPolicy.shouldRefreshContent(
+            previousCoordinatesPlayback: true,
+            currentCoordinatesPlayback: true
+        ))
+        #expect(WallpaperDisplayPolicy.shouldRefreshContent(
+            previousCoordinatesPlayback: false,
+            currentCoordinatesPlayback: true
+        ))
+    }
+
+    @Test("Desktop wallpaper presentation refreshes only for visible content changes")
+    func reconcilesDesktopPresentation() {
+        let firstID = UUID()
+        let secondID = UUID()
+        let hidden = WallpaperPresentationState(
+            isEnabled: false,
+            showOnDesktop: false,
+            wallpaperID: nil
+        )
+        let first = WallpaperPresentationState(
+            isEnabled: true,
+            showOnDesktop: true,
+            wallpaperID: firstID
+        )
+        let second = WallpaperPresentationState(
+            isEnabled: true,
+            showOnDesktop: true,
+            wallpaperID: secondID
+        )
+
+        #expect(WallpaperPresentationPolicy.action(previous: hidden, current: first) == .show)
+        #expect(WallpaperPresentationPolicy.action(previous: first, current: first) == .none)
+        #expect(WallpaperPresentationPolicy.action(previous: first, current: second) == .refreshContent)
+        #expect(WallpaperPresentationPolicy.action(previous: second, current: hidden) == .hide)
+    }
+
+    @Test("Animated wallpapers preserve aspect ratio while filling the desktop")
+    func resolvesAnimatedWallpaperLayout() {
+        let bounds = CGRect(x: 0, y: 0, width: 100, height: 100)
+
+        #expect(WallpaperImageLayoutPolicy.aspectFillRect(
+            imageSize: CGSize(width: 200, height: 100),
+            in: bounds
+        ) == CGRect(x: -50, y: 0, width: 200, height: 100))
+        #expect(WallpaperImageLayoutPolicy.aspectFillRect(
+            imageSize: CGSize(width: 100, height: 200),
+            in: bounds
+        ) == CGRect(x: 0, y: -50, width: 100, height: 200))
+        #expect(WallpaperImageLayoutPolicy.aspectFillRect(
+            imageSize: .zero,
+            in: bounds
+        ) == nil)
     }
 }

@@ -260,7 +260,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         guard !gatedFeaturesActive else { return }
         gatedFeaturesActive = true
         installMainWindowContentIfNeeded()
-        _ = DesktopWallpaperController.shared
+        DesktopWallpaperController.shared.refreshWindows()
 
         if statusItem == nil {
             setupStatusItem()

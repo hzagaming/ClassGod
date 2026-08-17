@@ -4,7 +4,7 @@
 
 [English](../../README.md) · [简体中文](README.zh-Hans.md) · [繁體中文](README.zh-Hant.md) · [日本語](README.ja.md) · **한국어** · [Français](README.fr.md) · [Deutsch](README.de.md) · [Español](README.es.md) · [Português](README.pt.md) · [Русский](README.ru.md)
 
-> 현재 릴리스: **v1.5.37 (Build 62)**. [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest)에서 DMG 또는 PKG를 다운로드할 수 있습니다.
+> 현재 릴리스: **v1.5.38 (Build 63)**. [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest)에서 DMG 또는 PKG를 다운로드할 수 있습니다.
 
 ## ClassGod 소개
 

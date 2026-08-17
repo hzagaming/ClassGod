@@ -72,6 +72,28 @@ enum AnimatedImagePlaybackPolicy {
     }
 }
 
+nonisolated enum WallpaperImageLayoutPolicy {
+    static func aspectFillRect(imageSize: CGSize, in bounds: CGRect) -> CGRect? {
+        guard imageSize.width.isFinite,
+              imageSize.height.isFinite,
+              bounds.width.isFinite,
+              bounds.height.isFinite,
+              imageSize.width > 0,
+              imageSize.height > 0,
+              bounds.width > 0,
+              bounds.height > 0 else { return nil }
+        let scale = max(bounds.width / imageSize.width, bounds.height / imageSize.height)
+        let width = imageSize.width * scale
+        let height = imageSize.height * scale
+        return CGRect(
+            x: bounds.midX - width / 2,
+            y: bounds.midY - height / 2,
+            width: width,
+            height: height
+        )
+    }
+}
+
 enum WallpaperAudioPolicy {
     static func isAvailable(for type: WallpaperType?) -> Bool {
         type == .video
@@ -117,7 +139,7 @@ final class AnimatedImageNSView: NSView {
     private var images: [NSImage] = []
     private var delays: [Double] = []
     private var currentFrame = 0
-    private var imageView: NSImageView?
+    private var imageView: WallpaperAspectFillImageView?
     private var currentIdentifier: URL?
     private var stateObserverToken: NSObjectProtocol?
     
@@ -164,8 +186,7 @@ final class AnimatedImageNSView: NSView {
         
         guard !images.isEmpty else { return }
         
-        let iv = NSImageView()
-        iv.imageScaling = .scaleAxesIndependently
+        let iv = WallpaperAspectFillImageView()
         iv.frame = bounds
         addSubview(iv)
         imageView = iv
@@ -228,6 +249,34 @@ final class AnimatedImageNSView: NSView {
 
     deinit {
         stopAnimation()
+    }
+}
+
+private final class WallpaperAspectFillImageView: NSView {
+    var image: NSImage? {
+        didSet { needsDisplay = true }
+    }
+
+    override func draw(_ dirtyRect: NSRect) {
+        NSColor.black.setFill()
+        bounds.fill()
+        guard let image,
+              let target = WallpaperImageLayoutPolicy.aspectFillRect(
+                  imageSize: image.size,
+                  in: bounds
+              ) else { return }
+
+        NSGraphicsContext.saveGraphicsState()
+        defer { NSGraphicsContext.restoreGraphicsState() }
+        NSBezierPath(rect: bounds).addClip()
+        image.draw(
+            in: target,
+            from: .zero,
+            operation: .sourceOver,
+            fraction: 1,
+            respectFlipped: true,
+            hints: [.interpolation: NSImageInterpolation.high]
+        )
     }
 }
 

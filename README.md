@@ -25,7 +25,7 @@
   </p>
 </div>
 
-> Current release: **v1.5.37 (Build 62)**. Download the DMG or PKG from [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest).
+> Current release: **v1.5.38 (Build 63)**. Download the DMG or PKG from [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest).
 
 ## Why ClassGod
 
@@ -168,13 +168,13 @@ ClassGod/ClassGodTests/    App tests
 ClassGodHelper/            Privileged helper Swift package and tests
 ```
 
-## Latest announcement: v1.5.37
+## Latest announcement: v1.5.38
 
-This release adds an emergency-switching preflight center for permissions, destinations, installed apps, URL validity, and Carbon shortcut readiness, with direct repair routes and accessible status summaries. DestinTab and SuperSwitch shortcuts now share one cold-start-safe catalog, failed Carbon registrations are reported accurately, and target bundle identifiers are normalized consistently. UI accessibility, live window corner masking, diagnostic SFX, and wallpaper audio synchronization receive focused improvements. Verification covers 179 main-app tests and 17 helper tests, Debug and Release builds, static analysis, localization output, embedded helper contents, and signatures.
+This release makes dynamic wallpaper playback visually and audibly stable. Animated images now preserve aspect ratio while filling the display, desktop media reconciliation runs only after state mutations complete, and a wallpaper switch refreshes the final content once instead of restarting old and new players in sequence. Routine display geometry changes no longer restart media, while coordinator changes still move the single active audio track safely. Wallpaper windows also return automatically after permission-gated features are reactivated. Permission Center now avoids high-frequency polling for callback-driven permissions, eliminating repeated ReminderKit XPC reconnects. Verification covers 181 main-app tests and 17 helper tests, Debug and Release builds, static analysis, localization output, embedded helper contents, and signatures.
 
-## Previous announcement: v1.5.36
+## Previous announcement: v1.5.37
 
-v1.5.36 fixed stale Carbon shortcuts and false recent-access updates, tightened tab draft validation, normalized browser-ready URLs, and made wallpaper navigation and interaction feedback deterministic. That release was verified with 172 main-app tests and 17 helper tests.
+v1.5.37 added the emergency-switching preflight center and a cold-start-safe shortcut readiness catalog, corrected Carbon registration reporting, normalized target bundle identifiers, and improved window masking, accessibility, diagnostic SFX, and wallpaper audio synchronization. That release was verified with 179 main-app tests and 17 helper tests.
 
 Read [CHANGELOG.md](CHANGELOG.md) for current releases and [CHANGELOG_HISTORY.md](CHANGELOG_HISTORY.md) for older history.
 

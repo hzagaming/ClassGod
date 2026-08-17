@@ -16,12 +16,12 @@ struct PermissionCenterTests {
     @Test("Live permission checks run at a millisecond-scale interval")
     func livePermissionRefreshInterval() {
         #expect(PermissionLiveRefreshPolicy.intervalNanoseconds == 100_000_000)
-        #expect(PermissionLiveRefreshPolicy.fullScanStride == 10)
+        #expect(PermissionLiveRefreshPolicy.fullScanStride == 50)
         #expect(!PermissionLiveRefreshPolicy.requiresFullScan(tick: 1))
-        #expect(PermissionLiveRefreshPolicy.requiresFullScan(tick: 10))
+        #expect(PermissionLiveRefreshPolicy.requiresFullScan(tick: 50))
     }
 
-    @Test("Live checks poll unresolved access immediately and granted access periodically")
+    @Test("Live checks poll only unresolved permissions without completion callbacks")
     func livePermissionProbePlan() {
         let states = Dictionary(uniqueKeysWithValues: PermissionType.allCases.map { type in
             (type, type.requiresManualReview
@@ -35,8 +35,25 @@ struct PermissionCenterTests {
             lastChecked: .distantPast,
             detail: nil
         )
+        statuses[.reminders] = PermissionStatus(
+            type: .reminders,
+            state: .notDetermined,
+            lastChecked: .distantPast,
+            detail: nil
+        )
+        statuses[.accessibility] = PermissionStatus(
+            type: .accessibility,
+            state: .denied,
+            lastChecked: .distantPast,
+            detail: nil
+        )
 
-        #expect(PermissionLiveRefreshPolicy.immediateTypes(statuses: statuses) == [.camera])
+        #expect(PermissionLiveRefreshPolicy.immediateTypes(statuses: statuses) == [.accessibility])
+        let periodic = PermissionLiveRefreshPolicy.periodicTypes(statuses: statuses)
+        #expect(periodic.contains(.accessibility))
+        #expect(periodic.contains(.contacts))
+        #expect(!periodic.contains(.camera))
+        #expect(!periodic.contains(.reminders))
     }
 
     @Test("Live checks publish UI updates only when authorization changes")

@@ -805,7 +805,7 @@ nonisolated enum PermissionRefreshQueuePolicy {
 
 nonisolated enum PermissionLiveRefreshPolicy {
     static let intervalNanoseconds: UInt64 = 100_000_000
-    static let fullScanStride = 10
+    static let fullScanStride = 50
 
     static func requiresFullScan(tick: Int) -> Bool {
         tick.isMultiple(of: fullScanStride)
@@ -815,7 +815,19 @@ nonisolated enum PermissionLiveRefreshPolicy {
         statuses: [PermissionType: PermissionStatus]
     ) -> [PermissionType] {
         PermissionType.allCases.filter {
-            !$0.requiresManualReview && statuses[$0]?.state != .granted
+            !$0.requiresManualReview
+                && !PermissionRequestRefreshPolicy.shouldRefreshOnCompletion($0)
+                && statuses[$0]?.state != .granted
+        }
+    }
+
+    static func periodicTypes(
+        statuses: [PermissionType: PermissionStatus]
+    ) -> [PermissionType] {
+        PermissionType.allCases.filter {
+            !$0.requiresManualReview
+                && (statuses[$0]?.state.isGranted == true
+                    || !PermissionRequestRefreshPolicy.shouldRefreshOnCompletion($0))
         }
     }
 }
@@ -844,10 +856,13 @@ nonisolated enum PermissionRequestResolutionPolicy {
 
 private enum PermissionRefreshScope: Equatable {
     case all
+    case periodic
     case immediate
 
     func merged(with other: PermissionRefreshScope) -> PermissionRefreshScope {
-        self == .all || other == .all ? .all : .immediate
+        if self == .all || other == .all { return .all }
+        if self == .periodic || other == .periodic { return .periodic }
+        return .immediate
     }
 }
 
@@ -942,7 +957,7 @@ final class PermissionCenterService: ObservableObject {
                 self.liveRefreshTick += 1
                 let scope: PermissionRefreshScope = PermissionLiveRefreshPolicy.requiresFullScan(
                     tick: self.liveRefreshTick
-                ) ? .all : .immediate
+                ) ? .periodic : .immediate
                 self.requestRefresh(showsProgress: false, scope: scope)
             }
         }
@@ -963,9 +978,11 @@ final class PermissionCenterService: ObservableObject {
             }
             return
         }
-        let types = scope == .all
-            ? PermissionType.allCases
-            : PermissionLiveRefreshPolicy.immediateTypes(statuses: statuses)
+        let types = switch scope {
+        case .all: PermissionType.allCases
+        case .periodic: PermissionLiveRefreshPolicy.periodicTypes(statuses: statuses)
+        case .immediate: PermissionLiveRefreshPolicy.immediateTypes(statuses: statuses)
+        }
         guard !types.isEmpty else { return }
         refreshInProgress = true
         if showsProgress { isChecking = true }
