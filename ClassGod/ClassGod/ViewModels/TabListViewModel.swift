@@ -57,21 +57,6 @@ enum TabSelectionPolicy {
     }
 }
 
-struct TabShortcutRefreshPlan: Equatable {
-    let unregisterIDs: Set<UUID>
-    let tabIDsToRegister: [UUID]
-
-    static func make(
-        previouslyRegistered: Set<UUID>,
-        tabs: [BrowserTab]
-    ) -> TabShortcutRefreshPlan {
-        TabShortcutRefreshPlan(
-            unregisterIDs: previouslyRegistered,
-            tabIDsToRegister: tabs.filter(\.isValidShortcut).map(\.id)
-        )
-    }
-}
-
 enum TabSwitchCompletionPolicy {
     static func shouldRecordAccess(success: Bool) -> Bool { success }
 }
@@ -139,22 +124,11 @@ final class TabListViewModel: ObservableObject {
     
     var onShowToast: ((String) -> Void)?
     private var cancellables = Set<AnyCancellable>()
-    private var registeredTabIDs: Set<UUID> = []
 
     init() {
         let initialTabs = TabOrderingPolicy.pinnedFirstPreservingOrder(StorageManager.shared.loadTabs())
         _tabs = Published(initialValue: initialTabs)
-        refreshShortcuts()
         setupStorageChangeObserver()
-    }
-    
-    deinit {
-        let ids = registeredTabIDs
-        Task { @MainActor in
-            for id in ids {
-                ShortcutManager.shared.unregisterShortcut(for: id)
-            }
-        }
     }
     
     // MARK: - Tabs CRUD
@@ -163,13 +137,12 @@ final class TabListViewModel: ObservableObject {
         tabs = StorageManager.shared.loadTabs()
         applySort()
         selectedTabIDs = TabSelectionPolicy.reconciled(selectedIDs: selectedTabIDs, tabs: tabs)
-        refreshShortcuts()
     }
     
     func saveTabs() {
         GhostProtocolController.shared.prepareForShortcutChanges()
         StorageManager.shared.saveTabs(tabs)
-        refreshShortcuts()
+        ShortcutCatalogCoordinator.shared.reload()
         GhostProtocolController.shared.reconcileShortcutAfterChanges()
         NotificationCenter.default.post(name: .classGodTabsDidChange, object: nil)
     }
@@ -193,8 +166,6 @@ final class TabListViewModel: ObservableObject {
     func deleteTab(_ tab: BrowserTab) {
         tabs.removeAll { $0.id == tab.id }
         selectedTabIDs.remove(tab.id)
-        ShortcutManager.shared.unregisterShortcut(for: tab.id)
-        registeredTabIDs.remove(tab.id)
         applySort()
         saveTabs()
     }
@@ -202,8 +173,6 @@ final class TabListViewModel: ObservableObject {
     func deleteTab(at offsets: IndexSet) {
         for index in offsets {
             let tab = tabs[index]
-            ShortcutManager.shared.unregisterShortcut(for: tab.id)
-            registeredTabIDs.remove(tab.id)
             selectedTabIDs.remove(tab.id)
         }
         tabs.remove(atOffsets: offsets)
@@ -214,10 +183,6 @@ final class TabListViewModel: ObservableObject {
     func bulkDeleteSelected(limit: Int) {
         let visibleSelection = selectedVisibleIDs(limit: limit)
         let toDelete = tabs.filter { visibleSelection.contains($0.id) }
-        for tab in toDelete {
-            ShortcutManager.shared.unregisterShortcut(for: tab.id)
-            registeredTabIDs.remove(tab.id)
-        }
         let deletedIDs = Set(toDelete.map(\.id))
         tabs.removeAll { deletedIDs.contains($0.id) }
         let count = toDelete.count
@@ -436,23 +401,6 @@ final class TabListViewModel: ObservableObject {
             return list.sorted { $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending }
         case .byBrowser:
             return list.sorted { $0.browser.displayName < $1.browser.displayName }
-        }
-    }
-    
-    private func refreshShortcuts() {
-        let plan = TabShortcutRefreshPlan.make(
-            previouslyRegistered: registeredTabIDs,
-            tabs: tabs
-        )
-        for id in plan.unregisterIDs {
-            ShortcutManager.shared.unregisterShortcut(for: id)
-        }
-        registeredTabIDs.removeAll()
-        for id in plan.tabIDsToRegister {
-            guard let tab = tabs.first(where: { $0.id == id }) else { continue }
-            if ShortcutManager.shared.registerShortcut(for: tab) {
-                registeredTabIDs.insert(id)
-            }
         }
     }
     

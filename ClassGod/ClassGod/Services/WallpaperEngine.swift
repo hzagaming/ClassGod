@@ -91,6 +91,10 @@ enum WallpaperVolumePolicy {
         guard value.isFinite else { return 0 }
         return max(0, min(1, value))
     }
+
+    static func shouldUpdate(current: Double, newValue: Double) -> Bool {
+        current != normalized(newValue)
+    }
 }
 
 @MainActor
@@ -293,6 +297,7 @@ final class WallpaperEngine: ObservableObject {
     }
     
     func setVolume(_ value: Double) {
+        guard WallpaperVolumePolicy.shouldUpdate(current: volume, newValue: value) else { return }
         volume = WallpaperVolumePolicy.normalized(value)
         saveSettings()
         NotificationCenter.default.post(name: .wallpaperStateDidChange, object: nil)

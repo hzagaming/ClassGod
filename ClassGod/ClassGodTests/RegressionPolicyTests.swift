@@ -146,43 +146,264 @@ struct RegressionPolicyTests {
         #expect(SuperSwitchCatalogPolicy.filteredTargets([safari, notes], query: "missing").isEmpty)
     }
 
-    @Test("SuperSwitch refresh removes stale shortcuts and registers only valid targets")
-    func plansSuperSwitchShortcutRefresh() {
+    @Test("Shortcut catalog refresh removes stale shortcuts and registers every unique gesture")
+    func plansShortcutCatalogRefresh() {
         let staleID = UUID()
-        let invalid = SwitchTarget(name: "No Shortcut", bundleIdentifier: "com.example.none")
-        let valid = SwitchTarget(name: "Finder", bundleIdentifier: "com.apple.finder", shortcutKey: "F7")
-
-        let plan = SuperSwitchShortcutRefreshPlan.make(
-            previouslyRegistered: [staleID, invalid.id],
-            targets: [invalid, valid]
-        )
-
-        #expect(plan.unregisterIDs == [staleID, invalid.id])
-        #expect(plan.targetIDsToRegister == [valid.id])
-    }
-
-    @Test("Tab refresh removes every previous shortcut and registers only valid tabs")
-    func plansTabShortcutRefresh() {
-        let staleID = UUID()
-        let invalid = BrowserTab(
-            title: "No Shortcut",
-            url: "https://example.com",
-            browser: .safari
-        )
-        let valid = BrowserTab(
+        let tab = BrowserTab(
             title: "Study",
             url: "https://study.example",
+            browser: .safari,
+            shortcutKey: "F7"
+        )
+        let duplicate = SwitchTarget(
+            name: "Finder",
+            bundleIdentifier: "com.apple.finder",
+            shortcutKey: "f7"
+        )
+        let unique = SwitchTarget(
+            name: "Notes",
+            bundleIdentifier: "com.apple.Notes",
+            shortcutKey: "F8"
+        )
+
+        let plan = ShortcutCatalogRefreshPlan.make(
+            previouslyRegistered: [staleID],
+            tabs: [tab],
+            targets: [duplicate, unique]
+        )
+
+        #expect(plan.unregisterIDs == [staleID])
+        #expect(plan.registrationIDs == [tab.id, unique.id])
+        #expect(plan.conflictingIDs == [duplicate.id])
+        #expect(plan.configuredShortcutIDs == [tab.id, duplicate.id, unique.id])
+    }
+
+    @Test("DestinTab gestures win deterministic conflicts with SuperSwitch")
+    func prioritizesTabShortcuts() {
+        let firstTab = BrowserTab(
+            title: "First",
+            url: "https://first.example",
+            browser: .safari,
+            shortcutKey: "F9"
+        )
+        let secondTab = BrowserTab(
+            title: "Second",
+            url: "https://second.example",
+            browser: .chrome,
+            shortcutKey: "F9"
+        )
+        let target = SwitchTarget(
+            name: "Notes",
+            bundleIdentifier: "com.apple.Notes",
+            shortcutKey: "F9"
+        )
+
+        let plan = ShortcutCatalogRefreshPlan.make(
+            previouslyRegistered: [],
+            tabs: [firstTab, secondTab],
+            targets: [target]
+        )
+
+        #expect(plan.registrationIDs == [firstTab.id])
+        #expect(plan.conflictingIDs == [secondTab.id, target.id])
+    }
+
+    @Test("Shortcut catalog rejects duplicate identifiers instead of replacing registrations")
+    func rejectsDuplicateShortcutIdentifiers() {
+        let id = UUID()
+        let first = BrowserTab(
+            id: id,
+            title: "First",
+            url: "https://first.example",
+            browser: .safari,
+            shortcutKey: "F7"
+        )
+        let second = BrowserTab(
+            id: id,
+            title: "Second",
+            url: "https://second.example",
             browser: .chrome,
             shortcutKey: "F8"
         )
 
-        let plan = TabShortcutRefreshPlan.make(
-            previouslyRegistered: [staleID, invalid.id],
-            tabs: [invalid, valid]
+        let plan = ShortcutCatalogRefreshPlan.make(
+            previouslyRegistered: [],
+            tabs: [first, second],
+            targets: []
         )
 
-        #expect(plan.unregisterIDs == [staleID, invalid.id])
-        #expect(plan.tabIDsToRegister == [valid.id])
+        #expect(plan.registrationIDs.isEmpty)
+        #expect(plan.configuredShortcutIDs == [id])
+        #expect(plan.conflictingIDs == [id])
+    }
+
+    @Test("Shortcut catalog state records every failed Carbon registration")
+    func recordsFailedShortcutRegistrations() {
+        let tab = BrowserTab(
+            title: "Study",
+            url: "https://study.example",
+            browser: .safari,
+            shortcutKey: "F7"
+        )
+        let target = SwitchTarget(
+            name: "Notes",
+            bundleIdentifier: "com.apple.Notes",
+            shortcutKey: "F8"
+        )
+        let plan = ShortcutCatalogRefreshPlan.make(
+            previouslyRegistered: [],
+            tabs: [tab],
+            targets: [target]
+        )
+
+        let state = ShortcutCatalogState.make(plan: plan, registeredIDs: [tab.id])
+
+        #expect(state.registeredIDs == [tab.id])
+        #expect(state.failedIDs == [target.id])
+        #expect(state.configuredShortcutIDs == [tab.id, target.id])
+    }
+
+    @Test("Preflight reports a completely armed configuration as ready")
+    func reportsReadyPreflight() {
+        let tab = BrowserTab(
+            title: "Study",
+            url: "https://study.example/path",
+            browser: .safari,
+            shortcutKey: "F8"
+        )
+        let shortcutState = ShortcutCatalogState(
+            configuredShortcutIDs: [tab.id],
+            registeredIDs: [tab.id],
+            failedIDs: [],
+            conflictingIDs: []
+        )
+
+        let report = PreflightReportPolicy.make(
+            accessibilityGranted: true,
+            appleEventsGranted: true,
+            tabs: [tab],
+            targets: [],
+            installedBundleIdentifiers: [BrowserType.safari.bundleIdentifier],
+            shortcutState: shortcutState
+        )
+
+        #expect(report.status == .ready)
+        #expect(PreflightCheckKind.allCases.allSatisfy { report[$0] == .ready })
+    }
+
+    @Test("Preflight normalizes target application identifiers before lookup")
+    func normalizesPreflightApplicationIdentifiers() {
+        let tab = BrowserTab(
+            title: "Study",
+            url: "https://study.example",
+            browser: .safari
+        )
+        let target = SwitchTarget(
+            name: "Notes",
+            bundleIdentifier: "  com.apple.Notes\n"
+        )
+
+        #expect(PreflightApplicationPolicy.requiredBundleIdentifiers(
+            tabs: [tab],
+            targets: [target]
+        ) == [BrowserType.safari.bundleIdentifier, "com.apple.Notes"])
+    }
+
+    @Test("Preflight blocks missing permissions, destinations, apps, and failed registrations")
+    func reportsBlockedPreflight() {
+        let tab = BrowserTab(
+            title: "Broken",
+            url: "not a web URL",
+            browser: .chrome,
+            shortcutKey: "F10"
+        )
+        let shortcutState = ShortcutCatalogState(
+            configuredShortcutIDs: [tab.id],
+            registeredIDs: [],
+            failedIDs: [tab.id],
+            conflictingIDs: []
+        )
+        let report = PreflightReportPolicy.make(
+            accessibilityGranted: false,
+            appleEventsGranted: false,
+            tabs: [tab],
+            targets: [],
+            installedBundleIdentifiers: [],
+            shortcutState: shortcutState
+        )
+        let empty = PreflightReportPolicy.make(
+            accessibilityGranted: true,
+            appleEventsGranted: true,
+            tabs: [],
+            targets: [],
+            installedBundleIdentifiers: [],
+            shortcutState: .empty
+        )
+        let invalidTarget = SwitchTarget(name: "Broken", bundleIdentifier: "   ")
+        let invalidApplication = PreflightReportPolicy.make(
+            accessibilityGranted: true,
+            appleEventsGranted: true,
+            tabs: [],
+            targets: [invalidTarget],
+            installedBundleIdentifiers: [],
+            shortcutState: .empty
+        )
+
+        #expect(report[.accessibility] == .blocked)
+        #expect(report[.appleEvents] == .blocked)
+        #expect(report[.applications] == .blocked)
+        #expect(report[.urls] == .blocked)
+        #expect(report[.shortcuts] == .blocked)
+        #expect(report.status == .blocked)
+        #expect(empty[.destinations] == .blocked)
+        #expect(empty[.applications] == .ready)
+        #expect(invalidApplication[.destinations] == .ready)
+        #expect(invalidApplication[.applications] == .blocked)
+        #expect(invalidApplication.metrics.unavailableApplicationCount == 1)
+    }
+
+    @Test("Preflight flags partial availability, invalid URLs, conflicts, and absent shortcuts")
+    func reportsPreflightAttention() {
+        let valid = BrowserTab(
+            title: "Study",
+            url: "https://study.example",
+            browser: .safari,
+            shortcutKey: "F11"
+        )
+        let invalid = BrowserTab(
+            title: "Broken",
+            url: "file:///tmp/unsafe",
+            browser: .chrome,
+            shortcutKey: "F11"
+        )
+        let shortcutState = ShortcutCatalogState(
+            configuredShortcutIDs: [valid.id, invalid.id],
+            registeredIDs: [valid.id],
+            failedIDs: [],
+            conflictingIDs: [invalid.id]
+        )
+        let report = PreflightReportPolicy.make(
+            accessibilityGranted: true,
+            appleEventsGranted: true,
+            tabs: [valid, invalid],
+            targets: [],
+            installedBundleIdentifiers: [BrowserType.safari.bundleIdentifier],
+            shortcutState: shortcutState
+        )
+        let noShortcut = PreflightReportPolicy.make(
+            accessibilityGranted: true,
+            appleEventsGranted: true,
+            tabs: [BrowserTab(title: "Study", url: "https://study.example", browser: .safari)],
+            targets: [],
+            installedBundleIdentifiers: [BrowserType.safari.bundleIdentifier],
+            shortcutState: .empty
+        )
+
+        #expect(report[.applications] == .attention)
+        #expect(report[.urls] == .attention)
+        #expect(report[.shortcuts] == .attention)
+        #expect(report.status == .attention)
+        #expect(noShortcut[.shortcuts] == .attention)
     }
 
     @Test("Tab access is recorded only after a successful switch")
@@ -340,12 +561,16 @@ struct RegressionPolicyTests {
         #expect(FeatureWindowLayoutPolicy.layout(for: .wallpaper).defaultWidth == 860)
         #expect(FeatureWindowLayoutPolicy.layout(for: .fanControl).defaultWidth == 680)
         #expect(FeatureWindowLayoutPolicy.layout(for: .permissionCenter).defaultWidth == 900)
+        #expect(FeatureWindowLayoutPolicy.layout(for: .preflight).defaultWidth == 760)
     }
 
     @Test("Unrelated preference changes never reset manually resized feature windows")
     func preservesManualFeatureWindowSizes() {
         #expect(!FeatureWindowResizePolicy.shouldApplyScale(previousZoom: 1, currentZoom: 1))
         #expect(FeatureWindowResizePolicy.shouldApplyScale(previousZoom: 1, currentZoom: 1.2))
+        #expect(WindowChromePolicy.cornerRadius(base: 12, zoom: 1.25) == 15)
+        #expect(WindowChromePolicy.cornerRadius(base: -4, zoom: 1) == 0)
+        #expect(WindowChromePolicy.cornerRadius(base: 12, zoom: .nan) == 0)
     }
 
     @Test("Fake Lock normalizes safe browser URLs")

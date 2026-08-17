@@ -35,21 +35,6 @@ enum SuperSwitchCatalogPolicy {
     }
 }
 
-struct SuperSwitchShortcutRefreshPlan: Equatable {
-    let unregisterIDs: Set<UUID>
-    let targetIDsToRegister: [UUID]
-
-    static func make(
-        previouslyRegistered: Set<UUID>,
-        targets: [SwitchTarget]
-    ) -> SuperSwitchShortcutRefreshPlan {
-        SuperSwitchShortcutRefreshPlan(
-            unregisterIDs: previouslyRegistered,
-            targetIDsToRegister: targets.filter(\.isValidShortcut).map(\.id)
-        )
-    }
-}
-
 struct SuperSwitchTargetDraft: Equatable {
     let name: String
     let bundleIdentifier: String
@@ -73,14 +58,12 @@ final class SuperSwitchViewModel: ObservableObject {
     @Published var showToast = false
     @Published private(set) var runningBundleIdentifiers: Set<String> = []
     
-    private var registeredTargetIDs: Set<UUID> = []
     private var toastWorkItem: DispatchWorkItem?
     private var toastState = TransientFeedbackState<String>()
     private var workspaceCancellables: Set<AnyCancellable> = []
     
     init() {
         _targets = Published(initialValue: StorageManager.shared.loadSwitchTargets())
-        refreshShortcuts()
         refreshRunningApplications()
         let workspaceCenter = NSWorkspace.shared.notificationCenter
         [NSWorkspace.didLaunchApplicationNotification, NSWorkspace.didTerminateApplicationNotification]
@@ -94,23 +77,16 @@ final class SuperSwitchViewModel: ObservableObject {
     
     deinit {
         toastWorkItem?.cancel()
-        let ids = registeredTargetIDs
-        Task { @MainActor in
-            for id in ids {
-                ShortcutManager.shared.unregisterShortcut(for: id)
-            }
-        }
     }
     
     func loadTargets() {
         targets = StorageManager.shared.loadSwitchTargets()
-        refreshShortcuts()
     }
     
     func saveTargets() {
         GhostProtocolController.shared.prepareForShortcutChanges()
         StorageManager.shared.saveSwitchTargets(targets)
-        refreshShortcuts()
+        ShortcutCatalogCoordinator.shared.reload()
         GhostProtocolController.shared.reconcileShortcutAfterChanges()
     }
     
@@ -130,8 +106,6 @@ final class SuperSwitchViewModel: ObservableObject {
     
     func deleteTarget(_ target: SwitchTarget) {
         targets.removeAll { $0.id == target.id }
-        ShortcutManager.shared.unregisterShortcut(for: target.id)
-        registeredTargetIDs.remove(target.id)
         saveTargets()
         SoundEffectManager.shared.playTabDeleted()
         HapticManager.shared.warning()
@@ -205,22 +179,6 @@ final class SuperSwitchViewModel: ObservableObject {
         runningBundleIdentifiers = Set(NSWorkspace.shared.runningApplications.compactMap(\.bundleIdentifier))
     }
     
-    private func refreshShortcuts() {
-        let plan = SuperSwitchShortcutRefreshPlan.make(
-            previouslyRegistered: registeredTargetIDs,
-            targets: targets
-        )
-        for id in plan.unregisterIDs {
-            ShortcutManager.shared.unregisterShortcut(for: id)
-        }
-        registeredTargetIDs.removeAll()
-        for target in targets where target.isValidShortcut {
-            if ShortcutManager.shared.registerShortcut(for: target) {
-                registeredTargetIDs.insert(target.id)
-            }
-        }
-    }
-
     private func presentSwitchFailure(target: SwitchTarget, detail: String) {
         errorMessage = String(format: String(localized: "error.launch_failed"), target.name, detail)
         showError = true

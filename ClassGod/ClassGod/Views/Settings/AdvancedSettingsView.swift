@@ -294,7 +294,10 @@ struct AdvancedSettingsView: View {
     }
 
     private func clearAllTabs() {
+        GhostProtocolController.shared.prepareForShortcutChanges()
         StorageManager.shared.saveTabs([])
+        ShortcutCatalogCoordinator.shared.reload()
+        GhostProtocolController.shared.reconcileShortcutAfterChanges()
         NotificationCenter.default.post(name: .classGodTabsDidChange, object: nil)
     }
 

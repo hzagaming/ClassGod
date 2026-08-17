@@ -25,7 +25,7 @@
   </p>
 </div>
 
-> Current release: **v1.5.36 (Build 61)**. Download the DMG or PKG from [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest).
+> Current release: **v1.5.37 (Build 62)**. Download the DMG or PKG from [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest).
 
 ## Why ClassGod
 
@@ -168,13 +168,13 @@ ClassGod/ClassGodTests/    App tests
 ClassGodHelper/            Privileged helper Swift package and tests
 ```
 
-## Latest announcement: v1.5.36
+## Latest announcement: v1.5.37
 
-This release fixes stale Carbon shortcuts after a tab shortcut is cleared, records recent access only after a browser switch succeeds, and rejects blank or invalid tab drafts while normalizing browser-ready URLs. Wallpaper controls now navigate predictably in every playback mode, avoid immediate random repeats, use explicit Toggle target states, and emit SFX only for real changes. Relative access times follow the system locale. Verification covers 172 main-app tests and 17 helper tests, Debug and Release builds, static analysis, localization output, embedded helper contents, and signatures.
+This release adds an emergency-switching preflight center for permissions, destinations, installed apps, URL validity, and Carbon shortcut readiness, with direct repair routes and accessible status summaries. DestinTab and SuperSwitch shortcuts now share one cold-start-safe catalog, failed Carbon registrations are reported accurately, and target bundle identifiers are normalized consistently. UI accessibility, live window corner masking, diagnostic SFX, and wallpaper audio synchronization receive focused improvements. Verification covers 179 main-app tests and 17 helper tests, Debug and Release builds, static analysis, localization output, embedded helper contents, and signatures.
 
-## Previous announcement: v1.5.35
+## Previous announcement: v1.5.36
 
-v1.5.35 prevented stale Fake Lock navigation callbacks from overwriting active state, locked live session configuration, removed redundant feedback, completed adaptive spacing and border scaling, and added missing VoiceOver labels. That release was verified with 168 main-app tests and 17 helper tests.
+v1.5.36 fixed stale Carbon shortcuts and false recent-access updates, tightened tab draft validation, normalized browser-ready URLs, and made wallpaper navigation and interaction feedback deterministic. That release was verified with 172 main-app tests and 17 helper tests.
 
 Read [CHANGELOG.md](CHANGELOG.md) for current releases and [CHANGELOG_HISTORY.md](CHANGELOG_HISTORY.md) for older history.
 

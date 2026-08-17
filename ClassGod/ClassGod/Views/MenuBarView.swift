@@ -19,6 +19,7 @@ struct MenuBarView: View {
     @State private var refreshGate = FanRefreshGate()
 
     var onClose: () -> Void
+    var onOpenPreflight: () -> Void
     var onOpenDestinTab: () -> Void
     var onOpenSuperSwitch: () -> Void
     var onOpenGhostProtocol: () -> Void
@@ -47,6 +48,13 @@ struct MenuBarView: View {
                         if prefs.preferences.enableFanControl {
                             fanSummaryCard
                         }
+
+                        FeatureButton(
+                            icon: "waveform.path.ecg.rectangle.fill",
+                            title: "preflight.title",
+                            description: "menu.preflight.description",
+                            action: onOpenPreflight
+                        )
 
                         FeatureButton(
                             icon: "link",
@@ -476,5 +484,5 @@ struct FeatureButton: View {
 }
 
 #Preview {
-    MenuBarView(onClose: {}, onOpenDestinTab: {}, onOpenSuperSwitch: {}, onOpenGhostProtocol: {}, onOpenBrowserBypasser: {}, onOpenAssessPrepHack: {}, onOpenSettings: {}, onOpenWallpaper: {}, onOpenHackerDesktop: {}, onOpenClipo: {}, onOpenFanControl: {}, onOpenErrorHub: {}, onOpenActivityMonitor: {}, onOpenPermissionCenter: {}, onOpenFakeLock: {})
+    MenuBarView(onClose: {}, onOpenPreflight: {}, onOpenDestinTab: {}, onOpenSuperSwitch: {}, onOpenGhostProtocol: {}, onOpenBrowserBypasser: {}, onOpenAssessPrepHack: {}, onOpenSettings: {}, onOpenWallpaper: {}, onOpenHackerDesktop: {}, onOpenClipo: {}, onOpenFanControl: {}, onOpenErrorHub: {}, onOpenActivityMonitor: {}, onOpenPermissionCenter: {}, onOpenFakeLock: {})
 }

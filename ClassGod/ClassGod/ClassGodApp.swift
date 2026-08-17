@@ -35,7 +35,7 @@ nonisolated enum SettingsWindowLayoutPolicy {
 }
 
 nonisolated enum FeatureWindowKind: CaseIterable {
-    case destinTab, superSwitch, ghostProtocol, browserBypasser, assessPrepHack
+    case preflight, destinTab, superSwitch, ghostProtocol, browserBypasser, assessPrepHack
     case settings, wallpaper, hackerDesktop, clipo, errorHub, fanControl
     case activityMonitor, permissionCenter, fakeLock
 }
@@ -50,6 +50,7 @@ nonisolated struct FeatureWindowLayout: Equatable {
 nonisolated enum FeatureWindowLayoutPolicy {
     static func layout(for kind: FeatureWindowKind) -> FeatureWindowLayout {
         switch kind {
+        case .preflight: return .init(defaultWidth: 760, defaultHeight: 680, minimumWidth: 520, minimumHeight: 460)
         case .destinTab: return .init(defaultWidth: 520, defaultHeight: 620, minimumWidth: 360, minimumHeight: 360)
         case .superSwitch: return .init(defaultWidth: 620, defaultHeight: 660, minimumWidth: 420, minimumHeight: 400)
         case .ghostProtocol: return .init(defaultWidth: 640, defaultHeight: 620, minimumWidth: 420, minimumHeight: 380)
@@ -71,6 +72,13 @@ nonisolated enum FeatureWindowLayoutPolicy {
 nonisolated enum FeatureWindowResizePolicy {
     static func shouldApplyScale(previousZoom: Double, currentZoom: Double) -> Bool {
         previousZoom.isFinite && currentZoom.isFinite && abs(previousZoom - currentZoom) > 0.000_1
+    }
+}
+
+nonisolated enum WindowChromePolicy {
+    static func cornerRadius(base: Double, zoom: Double) -> CGFloat {
+        guard base.isFinite, zoom.isFinite, base > 0, zoom > 0 else { return 0 }
+        return CGFloat(base * zoom)
     }
 }
 
@@ -141,6 +149,7 @@ struct ClassGodApp: App {
 class AppDelegate: NSObject, NSApplicationDelegate {
     var statusItem: NSStatusItem!
     var mainWindow: NSWindow?
+    var preflightWindow: NSWindow?
     var destinTabWindow: NSWindow?
     var superSwitchWindow: NSWindow?
     var ghostProtocolWindow: NSWindow?
@@ -271,6 +280,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         clipoHotKeyIDs = ClipoService.shared.registerDefaultHotKeys { [weak self] in
             self?.toggleClipoWindow()
         }
+        ShortcutCatalogCoordinator.shared.start()
         PreferencesManager.shared.onPreferencesChanged = { [weak self] preferences in
             self?.preferencesDidChange(preferences)
         }
@@ -297,6 +307,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         FakeLockService.shared.stop()
         ClipoService.shared.stop()
         GhostProtocolController.shared.shutdown()
+        ShortcutCatalogCoordinator.shared.stop()
         AssessPrepHackViewModel.shared.stopAllBypasses()
         DesktopWallpaperController.shared.hideWallpapers()
         SMCService.shared.restoreSystemFanControl()
@@ -432,9 +443,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         window.contentView = NSHostingView(rootView: Color.black)
-        window.contentView?.wantsLayer = true
-        window.contentView?.layer?.cornerRadius = prefs.panelCornerRadius * zoom
-        window.contentView?.layer?.masksToBounds = true
+        updateWindowCornerMask(window)
         mainWindow = window
     }
 
@@ -442,6 +451,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         guard !mainWindowContentInstalled, let window = mainWindow else { return }
         let rootView = MenuBarWindowView(onClose: { [weak self] in
             self?.hideMainWindow()
+        }, onOpenPreflight: { [weak self] in
+            self?.showPreflightWindow()
         }, onOpenDestinTab: { [weak self] in
             self?.showDestinTabWindow()
         }, onOpenSuperSwitch: { [weak self] in
@@ -476,11 +487,103 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             .overlay(WindowResizeHandles())
 
         window.contentView = NSHostingView(rootView: rootView)
-        let prefs = PreferencesManager.shared.preferences
-        window.contentView?.wantsLayer = true
-        window.contentView?.layer?.cornerRadius = prefs.panelCornerRadius * CGFloat(prefs.windowZoomScale)
-        window.contentView?.layer?.masksToBounds = true
+        updateWindowCornerMask(window)
         mainWindowContentInstalled = true
+    }
+
+    // MARK: - Preflight Window
+
+    private func setupPreflightWindow() {
+        let prefs = PreferencesManager.shared.preferences
+        let zoom = CGFloat(prefs.windowZoomScale)
+        let size = featureWindowSize(.preflight, zoom: zoom)
+        let window = DraggableWindow(
+            contentRect: NSRect(origin: .zero, size: size),
+            styleMask: [.borderless],
+            backing: .buffered,
+            defer: false
+        )
+        configureFeatureWindow(window, kind: .preflight, zoom: zoom)
+        window.level = windowLevel
+        window.backgroundColor = .clear
+        window.hasShadow = true
+        window.isMovableByWindowBackground = false
+        window.isReleasedWhenClosed = false
+        window.isOpaque = false
+
+        if let main = mainWindow {
+            window.setFrameOrigin(NSPoint(x: main.frame.midX - size.width / 2, y: main.frame.midY - size.height / 2))
+        } else {
+            centerWindowOnScreen(window)
+        }
+        constrainWindowToVisibleScreen(window)
+
+        let rootView = PreflightWindowView(
+            onClose: { [weak self] in self?.hidePreflightWindow() },
+            onOpenDestinTab: { [weak self] in self?.showDestinTabWindow() },
+            onOpenSuperSwitch: { [weak self] in self?.showSuperSwitchWindow() },
+            onOpenPermissionCenter: { [weak self] in self?.showPermissionCenterWindow() }
+        )
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.clear)
+        .overlay(WindowResizeHandles())
+        window.contentView = NSHostingView(rootView: rootView)
+        updateWindowCornerMask(window)
+        preflightWindow = window
+    }
+
+    func showPreflightWindow(animated: Bool = true) {
+        guard let window = preflightWindow else {
+            setupPreflightWindow()
+            showPreflightWindow(animated: animated)
+            return
+        }
+        guard beginWindowTransition(window, targetVisible: true) != nil else { return }
+        ShortcutCatalogCoordinator.shared.reload()
+        PermissionCenterService.shared.refreshAll()
+        SoundEffectManager.shared.playWindowOpen(feature: "preflight")
+
+        if animated && Anim.enabled {
+            window.alphaValue = 0
+            window.makeKeyAndOrderFront(nil)
+            NSAnimationContext.runAnimationGroup { context in
+                context.duration = Anim.duration
+                context.timingFunction = .init(name: .easeOut)
+                window.animator().alphaValue = targetWindowAlpha
+            }
+        } else {
+            window.alphaValue = targetWindowAlpha
+            window.makeKeyAndOrderFront(nil)
+        }
+    }
+
+    func hidePreflightWindow() {
+        guard let window = preflightWindow,
+              let transition = beginWindowTransition(window, targetVisible: false) else { return }
+        SoundEffectManager.shared.playWindowClose(feature: "preflight")
+        guard Anim.enabled else {
+            window.alphaValue = 0
+            window.orderOut(nil)
+            return
+        }
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = Anim.duration
+            context.timingFunction = .init(name: .easeIn)
+            window.animator().alphaValue = 0
+        } completionHandler: { [weak self, weak window] in
+            guard let self, let window,
+                  self.isCurrentWindowTransition(transition, for: window, targetVisible: false) else { return }
+            window.orderOut(nil)
+        }
+    }
+
+    @objc func togglePreflightWindow() {
+        guard let window = preflightWindow else {
+            setupPreflightWindow()
+            showPreflightWindow(animated: true)
+            return
+        }
+        windowTargetIsVisible(window) ? hidePreflightWindow() : showPreflightWindow(animated: true)
     }
     
     // MARK: - DestinTab Window
@@ -505,10 +608,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         window.isReleasedWhenClosed = false
         window.isOpaque = false
         
-        window.contentView?.wantsLayer = true
-        window.contentView?.layer?.cornerRadius = prefs.panelCornerRadius * zoom
-        window.contentView?.layer?.masksToBounds = true
-
         // Position slightly offset from main window
         if let main = mainWindow {
             let mainFrame = main.frame
@@ -529,6 +628,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             .overlay(WindowResizeHandles())
 
         window.contentView = NSHostingView(rootView: rootView)
+        updateWindowCornerMask(window)
 
         destinTabWindow = window
     }
@@ -609,10 +709,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         window.isReleasedWhenClosed = false
         window.isOpaque = false
         
-        window.contentView?.wantsLayer = true
-        window.contentView?.layer?.cornerRadius = prefs.panelCornerRadius * zoom
-        window.contentView?.layer?.masksToBounds = true
-
         if let main = mainWindow {
             let mainFrame = main.frame
             let offset: CGFloat = 20
@@ -632,6 +728,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             .overlay(WindowResizeHandles())
 
         window.contentView = NSHostingView(rootView: rootView)
+        updateWindowCornerMask(window)
 
         superSwitchWindow = window
     }
@@ -710,10 +807,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         window.isMovableByWindowBackground = false
         window.isReleasedWhenClosed = false
         window.isOpaque = false
-        window.contentView?.wantsLayer = true
-        window.contentView?.layer?.cornerRadius = prefs.panelCornerRadius * zoom
-        window.contentView?.layer?.masksToBounds = true
-
         if let main = mainWindow {
             window.setFrameOrigin(NSPoint(x: main.frame.minX + 24, y: main.frame.minY + 24))
         } else if let screen = NSScreen.main {
@@ -729,6 +822,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             .background(Color.clear)
             .overlay(WindowResizeHandles())
         window.contentView = NSHostingView(rootView: rootView)
+        updateWindowCornerMask(window)
         ghostProtocolWindow = window
     }
 
@@ -812,10 +906,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         window.isReleasedWhenClosed = false
         window.isOpaque = false
         
-        window.contentView?.wantsLayer = true
-        window.contentView?.layer?.cornerRadius = prefs.panelCornerRadius * zoom
-        window.contentView?.layer?.masksToBounds = true
-
         if let main = mainWindow {
             let mainFrame = main.frame
             let offset: CGFloat = 20
@@ -835,6 +925,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             .overlay(WindowResizeHandles())
 
         window.contentView = NSHostingView(rootView: rootView)
+        updateWindowCornerMask(window)
 
         browserBypasserWindow = window
     }
@@ -915,10 +1006,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         window.isReleasedWhenClosed = false
         window.isOpaque = false
         
-        window.contentView?.wantsLayer = true
-        window.contentView?.layer?.cornerRadius = prefs.panelCornerRadius * zoom
-        window.contentView?.layer?.masksToBounds = true
-
         if let main = mainWindow {
             let mainFrame = main.frame
             let offset: CGFloat = 20
@@ -938,6 +1025,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             .overlay(WindowResizeHandles())
 
         window.contentView = NSHostingView(rootView: rootView)
+        updateWindowCornerMask(window)
 
         assessPrepHackWindow = window
     }
@@ -1020,10 +1108,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         window.isReleasedWhenClosed = false
         window.isOpaque = false
         
-        window.contentView?.wantsLayer = true
-        window.contentView?.layer?.cornerRadius = prefs.panelCornerRadius * zoom
-        window.contentView?.layer?.masksToBounds = true
-
         if let main = mainWindow {
             let mainFrame = main.frame
             window.setFrameOrigin(NSPoint(x: mainFrame.midX - size.width / 2, y: mainFrame.midY - size.height / 2))
@@ -1042,6 +1126,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             .overlay(WindowResizeHandles())
 
         window.contentView = NSHostingView(rootView: rootView)
+        updateWindowCornerMask(window)
 
         settingsWindow = window
     }
@@ -1122,10 +1207,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         window.isReleasedWhenClosed = false
         window.isOpaque = false
 
-        window.contentView?.wantsLayer = true
-        window.contentView?.layer?.cornerRadius = prefs.panelCornerRadius * zoom
-        window.contentView?.layer?.masksToBounds = true
-
         if let main = mainWindow {
             let mainFrame = main.frame
             window.setFrameOrigin(NSPoint(x: mainFrame.midX - size.width / 2, y: mainFrame.midY - size.height / 2))
@@ -1144,6 +1225,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             .overlay(WindowResizeHandles())
 
         window.contentView = NSHostingView(rootView: rootView)
+        updateWindowCornerMask(window)
 
         wallpaperBrowserWindow = window
     }
@@ -1226,10 +1308,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         window.isReleasedWhenClosed = false
         window.isOpaque = false
 
-        window.contentView?.wantsLayer = true
-        window.contentView?.layer?.cornerRadius = prefs.panelCornerRadius * zoom
-        window.contentView?.layer?.masksToBounds = true
-
         let x = screenFrame.midX - size.width / 2
         let y = screenFrame.midY - size.height / 2
         window.setFrameOrigin(NSPoint(x: x, y: y))
@@ -1242,6 +1320,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             .overlay(WindowResizeHandles())
 
         window.contentView = NSHostingView(rootView: rootView)
+        updateWindowCornerMask(window)
 
         hackerDesktopWindow = window
     }
@@ -1324,9 +1403,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         window.isMovableByWindowBackground = false
         window.isReleasedWhenClosed = false
         window.isOpaque = false
-        window.contentView?.wantsLayer = true
-        window.contentView?.layer?.cornerRadius = prefs.panelCornerRadius * zoom
-        window.contentView?.layer?.masksToBounds = true
 
         if let screen = NSScreen.main {
             let frame = screen.visibleFrame
@@ -1341,6 +1417,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             .background(Color.clear)
             .overlay(WindowResizeHandles())
         )
+        updateWindowCornerMask(window)
         clipoWindow = window
     }
 
@@ -1421,10 +1498,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         window.isReleasedWhenClosed = false
         window.isOpaque = false
 
-        window.contentView?.wantsLayer = true
-        window.contentView?.layer?.cornerRadius = prefs.panelCornerRadius * zoom
-        window.contentView?.layer?.masksToBounds = true
-
         if let main = mainWindow {
             let mainFrame = main.frame
             window.setFrameOrigin(NSPoint(x: mainFrame.midX - size.width / 2, y: mainFrame.midY - size.height / 2))
@@ -1443,6 +1516,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             .overlay(WindowResizeHandles())
 
         window.contentView = NSHostingView(rootView: rootView)
+        updateWindowCornerMask(window)
 
         errorHubWindow = window
     }
@@ -1531,10 +1605,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         window.isReleasedWhenClosed = false
         window.isOpaque = false
 
-        window.contentView?.wantsLayer = true
-        window.contentView?.layer?.cornerRadius = prefs.panelCornerRadius * zoom
-        window.contentView?.layer?.masksToBounds = true
-
         if let main = mainWindow {
             let mainFrame = main.frame
             let offset: CGFloat = 30
@@ -1554,6 +1624,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             .overlay(WindowResizeHandles())
 
         window.contentView = NSHostingView(rootView: rootView)
+        updateWindowCornerMask(window)
 
         fanControlWindow = window
     }
@@ -1637,10 +1708,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         window.isReleasedWhenClosed = false
         window.isOpaque = false
 
-        window.contentView?.wantsLayer = true
-        window.contentView?.layer?.cornerRadius = prefs.panelCornerRadius * zoom
-        window.contentView?.layer?.masksToBounds = true
-
         let x = screenFrame.midX - size.width / 2
         let y = screenFrame.midY - size.height / 2
         window.setFrameOrigin(NSPoint(x: x, y: y))
@@ -1653,6 +1720,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             .overlay(WindowResizeHandles())
 
         window.contentView = NSHostingView(rootView: rootView)
+        updateWindowCornerMask(window)
 
         activityMonitorWindow = window
     }
@@ -1764,7 +1832,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func hideGatedWindows() {
         let windows = [
-            mainWindow, destinTabWindow, superSwitchWindow, ghostProtocolWindow,
+            mainWindow, preflightWindow, destinTabWindow, superSwitchWindow, ghostProtocolWindow,
             browserBypasserWindow, assessPrepHackWindow, settingsWindow,
             wallpaperBrowserWindow, hackerDesktopWindow, clipoWindow, errorHubWindow,
             fanControlWindow, activityMonitorWindow, permissionCenterWindow, fakeLockWindow,
@@ -1803,10 +1871,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         window.isReleasedWhenClosed = false
         window.isOpaque = false
 
-        window.contentView?.wantsLayer = true
-        window.contentView?.layer?.cornerRadius = prefs.panelCornerRadius * zoom
-        window.contentView?.layer?.masksToBounds = true
-
         let x = screenFrame.midX - size.width / 2
         let y = screenFrame.midY - size.height / 2
         window.setFrameOrigin(NSPoint(x: x, y: y))
@@ -1819,6 +1883,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             .overlay(WindowResizeHandles())
 
         window.contentView = NSHostingView(rootView: rootView)
+        updateWindowCornerMask(window)
 
         permissionCenterWindow = window
     }
@@ -1900,9 +1965,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         window.isMovableByWindowBackground = false
         window.isReleasedWhenClosed = false
         window.isOpaque = false
-        window.contentView?.wantsLayer = true
-        window.contentView?.layer?.cornerRadius = prefs.panelCornerRadius * zoom
-        window.contentView?.layer?.masksToBounds = true
 
         if let mainWindow {
             window.setFrameOrigin(NSPoint(
@@ -1924,6 +1986,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         .background(Color.clear)
         .overlay(WindowResizeHandles())
         window.contentView = NSHostingView(rootView: rootView)
+        updateWindowCornerMask(window)
         fakeLockWindow = window
     }
 
@@ -2160,6 +2223,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         )
     }
 
+    private func updateWindowCornerMask(_ window: NSWindow) {
+        let preferences = PreferencesManager.shared.preferences
+        window.contentView?.wantsLayer = true
+        window.contentView?.layer?.cornerRadius = WindowChromePolicy.cornerRadius(
+            base: preferences.panelCornerRadius,
+            zoom: preferences.windowZoomScale
+        )
+        window.contentView?.layer?.masksToBounds = true
+    }
+
     private func preferencesDidChange(_ preferences: AppPreferences) {
         let previous = lastObservedPreferences
         lastObservedPreferences = preferences
@@ -2207,6 +2280,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 currentZoom: preferences.windowZoomScale
             )
         }
+        if zoomChanged || previous.panelCornerRadius != preferences.panelCornerRadius {
+            updateAllWindowCornerMasks()
+        }
         if previous.themeAccent != preferences.themeAccent {
             WidgetDataStore.shared.saveAccent(preferences.themeAccent)
             widgetAccentReloadWorkItem?.cancel()
@@ -2221,6 +2297,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func updateAllWindowLevels() {
         let level = windowLevel
         mainWindow?.level = level
+        preflightWindow?.level = level
         destinTabWindow?.level = level
         superSwitchWindow?.level = level
         ghostProtocolWindow?.level = level
@@ -2239,7 +2316,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func updateVisibleWindowOpacity() {
         let windows = [
-            mainWindow, destinTabWindow, superSwitchWindow, ghostProtocolWindow,
+            mainWindow, preflightWindow, destinTabWindow, superSwitchWindow, ghostProtocolWindow,
             browserBypasserWindow, assessPrepHackWindow, settingsWindow,
             wallpaperBrowserWindow, hackerDesktopWindow, clipoWindow, errorHubWindow,
             fanControlWindow, activityMonitorWindow, permissionCenterWindow, fakeLockWindow,
@@ -2249,10 +2326,21 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
+    private func updateAllWindowCornerMasks() {
+        let windows = [
+            mainWindow, preflightWindow, destinTabWindow, superSwitchWindow, ghostProtocolWindow,
+            browserBypasserWindow, assessPrepHackWindow, settingsWindow,
+            wallpaperBrowserWindow, hackerDesktopWindow, clipoWindow, errorHubWindow,
+            fanControlWindow, activityMonitorWindow, permissionCenterWindow, fakeLockWindow,
+        ]
+        windows.compactMap { $0 }.forEach(updateWindowCornerMask)
+    }
+
     private func updateAllWindowSizes(previousZoom: Double, currentZoom: Double) {
         guard previousZoom > 0, currentZoom > 0 else { return }
         let ratio = CGFloat(currentZoom / previousZoom)
         let windows: [(DraggableWindow?, FeatureWindowKind)] = [
+            (preflightWindow as? DraggableWindow, .preflight),
             (destinTabWindow as? DraggableWindow, .destinTab),
             (superSwitchWindow as? DraggableWindow, .superSwitch),
             (ghostProtocolWindow as? DraggableWindow, .ghostProtocol),
@@ -2308,6 +2396,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
         let windows: [(NSWindow?, () -> Void)] = [
             (mainWindow, { [weak self] in self?.hideMainWindow() }),
+            (preflightWindow, { [weak self] in self?.hidePreflightWindow() }),
             (destinTabWindow, { [weak self] in self?.hideDestinTabWindow() }),
             (superSwitchWindow, { [weak self] in self?.hideSuperSwitchWindow() }),
             (ghostProtocolWindow, { [weak self] in self?.hideGhostProtocolWindow() }),
@@ -2407,6 +2496,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // system is not left in a broken state.
         AssessPrepHackViewModel.shared.stopAllBypasses()
         GhostProtocolController.shared.shutdown()
+        ShortcutCatalogCoordinator.shared.stop()
         ClipoService.shared.stop()
         FakeLockService.shared.stop()
         
@@ -2435,6 +2525,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             window.orderOut(nil)
         }
         if let window = splashWindow {
+            window.orderOut(nil)
+        }
+        if let window = preflightWindow {
             window.orderOut(nil)
         }
         if let window = destinTabWindow {
@@ -2707,6 +2800,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
 struct MenuBarWindowView: View {
     var onClose: () -> Void
+    var onOpenPreflight: () -> Void
     var onOpenDestinTab: () -> Void
     var onOpenSuperSwitch: () -> Void
     var onOpenGhostProtocol: () -> Void
@@ -2723,7 +2817,23 @@ struct MenuBarWindowView: View {
     var onOpenFakeLock: () -> Void = {}
 
     var body: some View {
-        MenuBarView(onClose: onClose, onOpenDestinTab: onOpenDestinTab, onOpenSuperSwitch: onOpenSuperSwitch, onOpenGhostProtocol: onOpenGhostProtocol, onOpenBrowserBypasser: onOpenBrowserBypasser, onOpenAssessPrepHack: onOpenAssessPrepHack, onOpenSettings: onOpenSettings, onOpenWallpaper: onOpenWallpaper, onOpenHackerDesktop: onOpenHackerDesktop, onOpenClipo: onOpenClipo, onOpenFanControl: onOpenFanControl, onOpenErrorHub: onOpenErrorHub, onOpenActivityMonitor: onOpenActivityMonitor, onOpenPermissionCenter: onOpenPermissionCenter, onOpenFakeLock: onOpenFakeLock)
+        MenuBarView(onClose: onClose, onOpenPreflight: onOpenPreflight, onOpenDestinTab: onOpenDestinTab, onOpenSuperSwitch: onOpenSuperSwitch, onOpenGhostProtocol: onOpenGhostProtocol, onOpenBrowserBypasser: onOpenBrowserBypasser, onOpenAssessPrepHack: onOpenAssessPrepHack, onOpenSettings: onOpenSettings, onOpenWallpaper: onOpenWallpaper, onOpenHackerDesktop: onOpenHackerDesktop, onOpenClipo: onOpenClipo, onOpenFanControl: onOpenFanControl, onOpenErrorHub: onOpenErrorHub, onOpenActivityMonitor: onOpenActivityMonitor, onOpenPermissionCenter: onOpenPermissionCenter, onOpenFakeLock: onOpenFakeLock)
+    }
+}
+
+struct PreflightWindowView: View {
+    var onClose: () -> Void
+    var onOpenDestinTab: () -> Void
+    var onOpenSuperSwitch: () -> Void
+    var onOpenPermissionCenter: () -> Void
+
+    var body: some View {
+        PreflightView(
+            onClose: onClose,
+            onOpenDestinTab: onOpenDestinTab,
+            onOpenSuperSwitch: onOpenSuperSwitch,
+            onOpenPermissionCenter: onOpenPermissionCenter
+        )
     }
 }
 

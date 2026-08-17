@@ -67,7 +67,10 @@ final class ShortcutManager {
         registeredHotKeys[tab.id] = ref
         callbackMap[hotKeyID.id] = tab.id
         
-        installHotKeyHandlerIfNeeded()
+        guard installHotKeyHandlerIfNeeded() else {
+            unregisterShortcut(for: tab.id)
+            return false
+        }
         
         return true
     }
@@ -105,7 +108,10 @@ final class ShortcutManager {
         registeredHotKeys[target.id] = ref
         callbackMap[hotKeyID.id] = target.id
         
-        installHotKeyHandlerIfNeeded()
+        guard installHotKeyHandlerIfNeeded() else {
+            unregisterShortcut(for: target.id)
+            return false
+        }
         
         return true
     }
@@ -174,7 +180,10 @@ final class ShortcutManager {
         customHotKeys[hotKeyID.id] = ref
         customCallbacks[hotKeyID.id] = handler
         
-        installHotKeyHandlerIfNeeded()
+        guard installHotKeyHandlerIfNeeded() else {
+            unregisterCustomHotKey(id: hotKeyID.id)
+            return nil
+        }
         
         return hotKeyID.id
     }
@@ -191,8 +200,8 @@ final class ShortcutManager {
     
     // MARK: - Hot Key Handler
     
-    private func installHotKeyHandlerIfNeeded() {
-        guard eventHandlerRef == nil else { return }
+    private func installHotKeyHandlerIfNeeded() -> Bool {
+        guard eventHandlerRef == nil else { return true }
         
         let callback: EventHandlerUPP = { _, eventRef, _ -> OSStatus in
             guard let event = eventRef else { return OSStatus(eventNotHandledErr) }
@@ -244,8 +253,10 @@ final class ShortcutManager {
         
         if installStatus == noErr {
             eventHandlerRef = handler
+            return true
         } else {
             print("[ShortcutManager] Warning: Failed to install event handler (status: \(installStatus))")
+            return false
         }
     }
     

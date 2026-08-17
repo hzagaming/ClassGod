@@ -53,6 +53,7 @@ enum SoundEffect: String, CaseIterable {
     case temperatureWarning = "TemperatureWarning"
     case ghostDeploy = "GhostDeploy"
     case ghostRestore = "GhostRestore"
+    case preflightScan = "PreflightScan"
     
     var systemSoundName: String {
         switch self {
@@ -82,6 +83,7 @@ enum SoundEffect: String, CaseIterable {
         case .temperatureWarning: return "Basso"
         case .ghostDeploy:        return "Submarine"
         case .ghostRestore:       return "Glass"
+        case .preflightScan:      return "Morse"
         }
     }
 }
@@ -296,6 +298,8 @@ final class SoundEffectManager {
     func playWindowOpen(feature: String = "") {
         guard isEnabled else { return }
         switch feature {
+        case "preflight":
+            play(.preflightScan)
         case "destintab":
             playSound(named: "Basso")
         case "superswitch":
@@ -328,7 +332,7 @@ final class SoundEffectManager {
     func playWindowClose(feature: String = "") {
         guard isEnabled else { return }
         switch feature {
-        case "destintab", "superswitch", "browserbypasser", "assessprephack", "hackerdesktop",
+        case "preflight", "destintab", "superswitch", "browserbypasser", "assessprephack", "hackerdesktop",
              "fancontrol", "activitymonitor", "permissioncenter", "errorhub", "ghostprotocol",
              "clipo", "fakelock":
             playSound(named: "Tink")

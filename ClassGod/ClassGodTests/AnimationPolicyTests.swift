@@ -48,6 +48,11 @@ struct AnimationPolicyTests {
         #expect(SoundPlaybackPolicy.channelIndex(isPlaying: [false], limit: 0) == nil)
     }
 
+    @Test("Preflight uses a distinct diagnostic sound")
+    func resolvesPreflightSound() {
+        #expect(SoundEffect.preflightScan.systemSoundName == "Morse")
+    }
+
     @Test("Window transitions ignore duplicates and stale completions")
     func tracksLatestWindowTransition() {
         var tracker = WindowTransitionTracker<String>()

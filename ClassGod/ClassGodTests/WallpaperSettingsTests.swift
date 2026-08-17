@@ -144,6 +144,9 @@ struct WallpaperSettingsTests {
         #expect(WallpaperVolumePolicy.normalized(2) == 1)
         #expect(WallpaperVolumePolicy.normalized(.nan) == 0)
         #expect(WallpaperVolumePolicy.normalized(.infinity) == 0)
+        #expect(!WallpaperVolumePolicy.shouldUpdate(current: 0.4, newValue: 0.4))
+        #expect(!WallpaperVolumePolicy.shouldUpdate(current: 0, newValue: -1))
+        #expect(WallpaperVolumePolicy.shouldUpdate(current: 0.4, newValue: 0.5))
     }
 
     @Test("Managed wallpaper deletion stays inside its exact directory")
