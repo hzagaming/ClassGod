@@ -219,8 +219,8 @@ struct BrowserBypasserView: View {
                 ForEach(viewModel.rules) { rule in
                     RuleRow(
                         rule: rule,
-                        onToggle: {
-                            viewModel.toggleRule(rule)
+                        onToggle: { enabled in
+                            viewModel.setRuleEnabled(rule, enabled: enabled)
                         },
                         onRun: {
                             viewModel.runBypass(for: rule.bypassType)
@@ -363,7 +363,7 @@ struct RuleRow: View {
     @ObservedObject private var prefs = PreferencesManager.shared
     private var zoomScale: CGFloat { CGFloat(prefs.preferences.windowZoomScale) }
     let rule: BypassRule
-    let onToggle: () -> Void
+    let onToggle: (Bool) -> Bool
     let onRun: () -> Void
     let onEdit: () -> Void
     let onDelete: () -> Void
@@ -405,10 +405,16 @@ struct RuleRow: View {
 
             Toggle("", isOn: .init(
                 get: { rule.isEnabled },
-                set: { _ in
-                    SoundEffectManager.shared.playButtonClick()
-                    HapticManager.shared.generic()
-                    onToggle()
+                set: { newValue in
+                    guard UserInteractionFeedbackPolicy.shouldEmit(
+                        currentValue: rule.isEnabled,
+                        newValue: newValue,
+                        isUserInitiated: true
+                    ) else { return }
+                    if onToggle(newValue) {
+                        SoundEffectManager.shared.playButtonClick()
+                        HapticManager.shared.generic()
+                    }
                 }
             ))
             .labelsHidden()

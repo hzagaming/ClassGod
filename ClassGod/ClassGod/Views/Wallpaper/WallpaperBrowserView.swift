@@ -180,10 +180,11 @@ struct WallpaperBrowserView: View {
             // Transport controls pill
             HStack(spacing: 16 * zoomScale) {
                 ControlButton(icon: "backward.fill", size: 14, accessibilityLabel: "wallpaper.previous") {
-                    engine.previousWallpaper()
-                    SoundEffectManager.shared.playWallpaperSwitched()
+                    if engine.previousWallpaper() {
+                        SoundEffectManager.shared.playWallpaperSwitched()
+                    }
                 }
-                .disabled(engine.playlist.isEmpty)
+                .disabled(engine.playlist.count < 2)
                 
                 Button(action: {
                     SoundEffectManager.shared.playWallpaperPlayPause()
@@ -199,10 +200,11 @@ struct WallpaperBrowserView: View {
                 .accessibilityLabel(engine.isPlaying ? Text("wallpaper.pause") : Text("wallpaper.play"))
                 
                 ControlButton(icon: "forward.fill", size: 14, accessibilityLabel: "wallpaper.next") {
-                    engine.nextWallpaper()
-                    SoundEffectManager.shared.playWallpaperSwitched()
+                    if engine.nextWallpaper() {
+                        SoundEffectManager.shared.playWallpaperSwitched()
+                    }
                 }
-                .disabled(engine.playlist.isEmpty)
+                .disabled(engine.playlist.count < 2)
             }
             .padding(.horizontal, 18 * zoomScale)
             .padding(.vertical, 8 * zoomScale)
@@ -274,9 +276,10 @@ struct WallpaperBrowserView: View {
                             .foregroundStyle(engine.showOnDesktop ? prefs.preferences.themeAccent.color : .white.opacity(0.3))
                         Toggle("", isOn: .init(
                             get: { engine.showOnDesktop },
-                            set: { _ in
-                                SoundEffectManager.shared.playButtonClick()
-                                engine.toggleShowOnDesktop()
+                            set: { newValue in
+                                if engine.setShowOnDesktop(newValue) {
+                                    SoundEffectManager.shared.playButtonClick()
+                                }
                             }
                         ))
                         .toggleStyle(.switch)
@@ -292,13 +295,15 @@ struct WallpaperBrowserView: View {
                             .foregroundStyle(engine.isEnabled ? .green : .white.opacity(0.25))
                         Toggle("", isOn: .init(
                             get: { engine.isEnabled },
-                            set: { _ in
-                                SoundEffectManager.shared.playButtonClick()
-                                engine.toggleEnabled()
+                            set: { newValue in
+                                if engine.setEnabled(newValue) {
+                                    SoundEffectManager.shared.playButtonClick()
+                                }
                             }
                         ))
                         .toggleStyle(.switch)
                         .controlSize(.small)
+                        .disabled(engine.playlist.isEmpty)
                         .accessibilityLabel(Text("wallpaper.power"))
                     }
                 }
@@ -402,8 +407,9 @@ struct WallpaperBrowserView: View {
         let sizeText = fileSizeString(item.fileURL)
         
         return Button(action: {
-            SoundEffectManager.shared.playWallpaperSwitched()
-            engine.selectWallpaper(item)
+            if engine.selectWallpaper(item) {
+                SoundEffectManager.shared.playWallpaperSwitched()
+            }
         }) {
             VStack(spacing: 6 * zoomScale) {
                 ZStack(alignment: .topTrailing) {
@@ -445,7 +451,7 @@ struct WallpaperBrowserView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 8 * zoomScale))
                 .overlay(
                     RoundedRectangle(cornerRadius: 8 * zoomScale)
-                        .stroke(isSelected ? prefs.preferences.themeAccent.color.opacity(0.6) : (isHovered ? Color.white.opacity(0.12) : Color.clear), lineWidth: isSelected ? 2 : 1)
+                        .stroke(isSelected ? prefs.preferences.themeAccent.color.opacity(0.6) : (isHovered ? Color.white.opacity(0.12) : Color.clear), lineWidth: (isSelected ? 2 : 1) * zoomScale)
                         .shadow(color: isSelected ? prefs.preferences.themeAccent.color.opacity(0.25) : Color.clear, radius: 4 * zoomScale)
                         .allowsHitTesting(false)
                 )

@@ -161,6 +161,56 @@ struct RegressionPolicyTests {
         #expect(plan.targetIDsToRegister == [valid.id])
     }
 
+    @Test("Tab refresh removes every previous shortcut and registers only valid tabs")
+    func plansTabShortcutRefresh() {
+        let staleID = UUID()
+        let invalid = BrowserTab(
+            title: "No Shortcut",
+            url: "https://example.com",
+            browser: .safari
+        )
+        let valid = BrowserTab(
+            title: "Study",
+            url: "https://study.example",
+            browser: .chrome,
+            shortcutKey: "F8"
+        )
+
+        let plan = TabShortcutRefreshPlan.make(
+            previouslyRegistered: [staleID, invalid.id],
+            tabs: [invalid, valid]
+        )
+
+        #expect(plan.unregisterIDs == [staleID, invalid.id])
+        #expect(plan.tabIDsToRegister == [valid.id])
+    }
+
+    @Test("Tab access is recorded only after a successful switch")
+    func recordsOnlySuccessfulTabSwitches() {
+        #expect(TabSwitchCompletionPolicy.shouldRecordAccess(success: true))
+        #expect(!TabSwitchCompletionPolicy.shouldRecordAccess(success: false))
+    }
+
+    @Test("Browser tab drafts trim fields and require a valid web URL")
+    func normalizesBrowserTabDrafts() {
+        let valid = BrowserTabDraft(
+            title: "  Study Notes  ",
+            url: " example.com/notes and tasks \n",
+            tag: " school "
+        )
+        let blank = BrowserTabDraft(title: " \t", url: "example.com", tag: "")
+        let missingHost = BrowserTabDraft(title: "Study", url: "https://", tag: "")
+        let unsupportedScheme = BrowserTabDraft(title: "Study", url: "file:///tmp/test", tag: "")
+
+        #expect(valid.title == "Study Notes")
+        #expect(valid.url == "https://example.com/notes%20and%20tasks")
+        #expect(valid.tag == "school")
+        #expect(valid.canSave)
+        #expect(!blank.canSave)
+        #expect(!missingHost.canSave)
+        #expect(!unsupportedScheme.canSave)
+    }
+
     @Test("SuperSwitch target drafts trim input and reject blank values")
     func normalizesSuperSwitchTargetDrafts() {
         let valid = SuperSwitchTargetDraft(name: "  Study  ", bundleIdentifier: " com.example.study\n")

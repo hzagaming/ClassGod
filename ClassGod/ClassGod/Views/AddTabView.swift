@@ -45,6 +45,10 @@ struct AddTabView: View {
 
     var isEditing: Bool { tab != nil }
 
+    private var draft: BrowserTabDraft {
+        BrowserTabDraft(title: title, url: url, tag: tag)
+    }
+
     var hasConflict: Bool {
         guard !shortcutKey.isEmpty && (shortcutModifiers != 0 || shortcutKey.uppercased().hasPrefix("F")) else {
             return false
@@ -223,24 +227,24 @@ struct AddTabView: View {
                 }
             }
             .keyboardShortcut(.return, modifiers: [])
-            .disabled(title.isEmpty || url.isEmpty)
-            .foregroundStyle(title.isEmpty || url.isEmpty ? .white.opacity(0.3) : .white)
+            .disabled(!draft.canSave)
+            .foregroundStyle(draft.canSave ? .white : .white.opacity(0.3))
         }
         .padding(.horizontal, 16 * zoomScale)
     }
 
     private func performSave() {
-        let normalizedURL = normalizeURL(url)
+        guard draft.canSave else { return }
         var newTab = BrowserTab(
             id: tab?.id ?? UUID(),
-            title: title,
-            url: normalizedURL,
+            title: draft.title,
+            url: draft.url,
             browser: browser,
             shortcutKey: shortcutKey,
             shortcutModifiers: shortcutModifiers,
             createdAt: tab?.createdAt ?? Date()
         )
-        newTab.tag = tag
+        newTab.tag = draft.tag
         newTab.isPinned = isPinned
 
         if isEditing {
@@ -252,15 +256,6 @@ struct AddTabView: View {
         SoundEffectManager.shared.playTabSaved()
         HapticManager.shared.success()
         dismiss()
-    }
-
-    private func normalizeURL(_ input: String) -> String {
-        let trimmed = input.trimmingCharacters(in: .whitespacesAndNewlines)
-        if trimmed.isEmpty { return trimmed }
-        if trimmed.lowercased().hasPrefix("http://") || trimmed.lowercased().hasPrefix("https://") {
-            return trimmed
-        }
-        return "https://" + trimmed
     }
 
     private static func defaultBrowserForNewTab() -> BrowserType {

@@ -6,6 +6,34 @@
 import Foundation
 import AppKit
 
+nonisolated struct BrowserTabDraft: Equatable {
+    let title: String
+    let url: String
+    let tag: String
+
+    init(title: String, url: String, tag: String) {
+        self.title = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        self.tag = tag.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedURL = url.trimmingCharacters(in: .whitespacesAndNewlines)
+        let candidate: String
+        if trimmedURL.range(of: "://") != nil {
+            candidate = trimmedURL
+        } else {
+            candidate = trimmedURL.isEmpty ? "" : "https://\(trimmedURL)"
+        }
+        self.url = URLComponents(string: candidate)?.url?.absoluteString ?? candidate
+    }
+
+    var canSave: Bool {
+        guard !title.isEmpty,
+              let components = URLComponents(string: url),
+              let scheme = components.scheme?.lowercased(),
+              scheme == "http" || scheme == "https",
+              components.host?.isEmpty == false else { return false }
+        return true
+    }
+}
+
 struct BrowserTab: Codable, Identifiable, Equatable {
     let id: UUID
     var title: String
@@ -106,11 +134,9 @@ struct BrowserTab: Codable, Identifiable, Equatable {
     }
     
     var lastAccessedDisplay: String {
-        let interval = Date().timeIntervalSince(lastAccessedAt)
-        if interval < 60 { return "just now" }
-        if interval < 3600 { return "\(Int(interval/60))m ago" }
-        if interval < 86400 { return "\(Int(interval/3600))h ago" }
-        return "\(Int(interval/86400))d ago"
+        let formatter = RelativeDateTimeFormatter()
+        formatter.unitsStyle = .abbreviated
+        return formatter.localizedString(for: lastAccessedAt, relativeTo: Date())
     }
     
     var displayTag: String {

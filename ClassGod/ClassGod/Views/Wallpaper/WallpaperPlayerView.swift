@@ -339,7 +339,8 @@ final class VideoWallpaperNSView: NSView {
                     mode: engine.playbackMode,
                     isEnabled: engine.isEnabled,
                     isPlaying: engine.isPlaying,
-                    coordinatesPlayback: self.coordinatesPlayback
+                    coordinatesPlayback: self.coordinatesPlayback,
+                    hasAlternative: engine.playlist.count > 1
                 ) {
                 case .restart:
                     player.seek(to: .zero)
@@ -437,15 +438,16 @@ struct WallpaperQuickAccessBar: View {
     var body: some View {
         HStack(spacing: 10 * zoomScale) {
             Button(action: {
-                SoundEffectManager.shared.playWallpaperSwitched()
-                engine.previousWallpaper()
+                if engine.previousWallpaper() {
+                    SoundEffectManager.shared.playWallpaperSwitched()
+                }
             }) {
                 Image(systemName: "backward.fill")
                     .font(.system(size: 10 * zoomScale))
             }
             .buttonStyle(.plain)
             .foregroundStyle(.white.opacity(0.7))
-            .disabled(engine.playlist.isEmpty)
+            .disabled(engine.playlist.count < 2)
             .accessibilityLabel(Text("wallpaper.previous"))
             
             Button(action: {
@@ -461,15 +463,16 @@ struct WallpaperQuickAccessBar: View {
             .accessibilityLabel(engine.isPlaying ? Text("wallpaper.pause") : Text("wallpaper.play"))
             
             Button(action: {
-                SoundEffectManager.shared.playWallpaperSwitched()
-                engine.nextWallpaper()
+                if engine.nextWallpaper() {
+                    SoundEffectManager.shared.playWallpaperSwitched()
+                }
             }) {
                 Image(systemName: "forward.fill")
                     .font(.system(size: 10 * zoomScale))
             }
             .buttonStyle(.plain)
             .foregroundStyle(.white.opacity(0.7))
-            .disabled(engine.playlist.isEmpty)
+            .disabled(engine.playlist.count < 2)
             .accessibilityLabel(Text("wallpaper.next"))
             
             Divider()

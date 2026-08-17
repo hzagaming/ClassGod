@@ -52,6 +52,46 @@ struct WallpaperSettingsTests {
         ) == .stop)
         #expect(WallpaperLoopPolicy.action(mode: .random, isEnabled: false, isPlaying: true) == .stop)
         #expect(WallpaperLoopPolicy.action(mode: .singleLoop, isEnabled: true, isPlaying: false) == .stop)
+        #expect(WallpaperLoopPolicy.action(
+            mode: .listLoop,
+            isEnabled: true,
+            isPlaying: true,
+            hasAlternative: false
+        ) == .restart)
+    }
+
+    @Test("Manual wallpaper navigation advances in every loop mode")
+    func resolvesManualWallpaperNavigation() {
+        #expect(WallpaperSelectionPolicy.candidateIndices(
+            count: 3,
+            currentIndex: 1,
+            direction: .next,
+            mode: .singleLoop
+        ) == [2])
+        #expect(WallpaperSelectionPolicy.candidateIndices(
+            count: 3,
+            currentIndex: 0,
+            direction: .previous,
+            mode: .listLoop
+        ) == [2])
+        #expect(WallpaperSelectionPolicy.candidateIndices(
+            count: 3,
+            currentIndex: 1,
+            direction: .next,
+            mode: .random
+        ) == [0, 2])
+        #expect(WallpaperSelectionPolicy.candidateIndices(
+            count: 1,
+            currentIndex: 0,
+            direction: .next,
+            mode: .random
+        ) == [0])
+        #expect(WallpaperSelectionPolicy.candidateIndices(
+            count: 0,
+            currentIndex: nil,
+            direction: .next,
+            mode: .listLoop
+        ).isEmpty)
     }
 
     @MainActor

@@ -23,11 +23,37 @@ enum WallpaperLoopPolicy {
         mode: WallpaperPlaybackMode,
         isEnabled: Bool,
         isPlaying: Bool,
-        coordinatesPlayback: Bool = true
+        coordinatesPlayback: Bool = true,
+        hasAlternative: Bool = true
     ) -> WallpaperLoopAction {
         guard isEnabled, isPlaying else { return .stop }
-        if mode == .singleLoop { return .restart }
+        if mode == .singleLoop || !hasAlternative { return .restart }
         return coordinatesPlayback ? .advance : .stop
+    }
+}
+
+enum WallpaperNavigationDirection {
+    case next
+    case previous
+}
+
+enum WallpaperSelectionPolicy {
+    static func candidateIndices(
+        count: Int,
+        currentIndex: Int?,
+        direction: WallpaperNavigationDirection,
+        mode: WallpaperPlaybackMode
+    ) -> [Int] {
+        guard count > 0 else { return [] }
+        guard mode != .random else {
+            if count == 1 { return [0] }
+            return Array(0..<count).filter { $0 != currentIndex }
+        }
+        guard let currentIndex, (0..<count).contains(currentIndex) else { return [0] }
+        switch direction {
+        case .next: return [(currentIndex + 1) % count]
+        case .previous: return [(currentIndex - 1 + count) % count]
+        }
     }
 }
 
@@ -189,7 +215,9 @@ final class WallpaperEngine: ObservableObject {
         try? FileManager.default.removeItem(at: fileURL)
     }
     
-    func selectWallpaper(_ item: WallpaperItem) {
+    @discardableResult
+    func selectWallpaper(_ item: WallpaperItem) -> Bool {
+        let previousID = currentWallpaper?.id
         guard item.fileExists else {
             playlist.removeAll { $0.id == item.id }
             savePlaylist()
@@ -201,17 +229,23 @@ final class WallpaperEngine: ObservableObject {
                 saveSettings()
                 NotificationCenter.default.post(name: .wallpaperStateDidChange, object: nil)
             }
-            return
+            return currentWallpaper?.id != previousID
         }
+
+        guard previousID != item.id else { return false }
         
         currentWallpaper = item
         isEnabled = true
         saveSettings()
         NotificationCenter.default.post(name: .wallpaperStateDidChange, object: nil)
+        return true
     }
     
-    func toggleEnabled() {
-        isEnabled.toggle()
+    @discardableResult
+    func setEnabled(_ enabled: Bool) -> Bool {
+        let previousValue = isEnabled
+        guard previousValue != enabled else { return false }
+        isEnabled = enabled
         if isEnabled {
             if let current = currentWallpaper {
                 selectWallpaper(current)
@@ -223,10 +257,14 @@ final class WallpaperEngine: ObservableObject {
         }
         saveSettings()
         NotificationCenter.default.post(name: .wallpaperStateDidChange, object: nil)
+        return isEnabled != previousValue
     }
     
-    func toggleShowOnDesktop() {
-        showOnDesktop.toggle()
+    @discardableResult
+    func setShowOnDesktop(_ show: Bool) -> Bool {
+        let previousValue = showOnDesktop
+        guard previousValue != show else { return false }
+        showOnDesktop = show
         if showOnDesktop && !isEnabled {
             isEnabled = true
             if let current = currentWallpaper {
@@ -239,6 +277,7 @@ final class WallpaperEngine: ObservableObject {
         }
         saveSettings()
         NotificationCenter.default.post(name: .wallpaperStateDidChange, object: nil)
+        return showOnDesktop != previousValue
     }
     
     func togglePlayPause() {
@@ -267,54 +306,29 @@ final class WallpaperEngine: ObservableObject {
         NotificationCenter.default.post(name: .wallpaperStateDidChange, object: nil)
     }
     
-    func nextWallpaper() {
-        guard !playlist.isEmpty else { return }
-        
-        let next: WallpaperItem
-        switch playbackMode {
-        case .singleLoop:
-            if let current = currentWallpaper {
-                selectWallpaper(current)
-                return
-            }
-            next = playlist[0]
-        case .listLoop:
-            if let current = currentWallpaper,
-               let idx = playlist.firstIndex(where: { $0.id == current.id }) {
-                let nextIdx = (idx + 1) % playlist.count
-                next = playlist[nextIdx]
-            } else {
-                next = playlist[0]
-            }
-        case .random:
-            next = playlist.randomElement() ?? playlist[0]
-        }
-        selectWallpaper(next)
+    @discardableResult
+    func nextWallpaper() -> Bool {
+        navigateWallpaper(.next)
     }
     
-    func previousWallpaper() {
-        guard !playlist.isEmpty else { return }
-        
-        let prev: WallpaperItem
-        switch playbackMode {
-        case .singleLoop:
-            if let current = currentWallpaper {
-                selectWallpaper(current)
-                return
-            }
-            prev = playlist[0]
-        case .listLoop:
-            if let current = currentWallpaper,
-               let idx = playlist.firstIndex(where: { $0.id == current.id }) {
-                let prevIdx = (idx - 1 + playlist.count) % playlist.count
-                prev = playlist[prevIdx]
-            } else {
-                prev = playlist[0]
-            }
-        case .random:
-            prev = playlist.randomElement() ?? playlist[0]
+    @discardableResult
+    func previousWallpaper() -> Bool {
+        navigateWallpaper(.previous)
+    }
+
+    private func navigateWallpaper(_ direction: WallpaperNavigationDirection) -> Bool {
+        let currentIndex = currentWallpaper.flatMap { current in
+            playlist.firstIndex { $0.id == current.id }
         }
-        selectWallpaper(prev)
+        let candidates = WallpaperSelectionPolicy.candidateIndices(
+            count: playlist.count,
+            currentIndex: currentIndex,
+            direction: direction,
+            mode: playbackMode
+        )
+        guard let index = playbackMode == .random ? candidates.randomElement() : candidates.first,
+              playlist.indices.contains(index) else { return false }
+        return selectWallpaper(playlist[index])
     }
     
     private func handleVideoLoop() {

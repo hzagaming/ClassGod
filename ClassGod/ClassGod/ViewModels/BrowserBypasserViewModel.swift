@@ -80,11 +80,13 @@ final class BrowserBypasserViewModel: ObservableObject {
         SoundEffectManager.shared.playTabDeleted()
     }
     
-    func toggleRule(_ rule: BypassRule) {
-        if let index = rules.firstIndex(where: { $0.id == rule.id }) {
-            rules[index].isEnabled.toggle()
-            saveRules()
-        }
+    @discardableResult
+    func setRuleEnabled(_ rule: BypassRule, enabled: Bool) -> Bool {
+        guard let index = rules.firstIndex(where: { $0.id == rule.id }),
+              rules[index].isEnabled != enabled else { return false }
+        rules[index].isEnabled = enabled
+        saveRules()
+        return true
     }
     
     // MARK: - Bypass Actions

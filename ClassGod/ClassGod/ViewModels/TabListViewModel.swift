@@ -57,6 +57,25 @@ enum TabSelectionPolicy {
     }
 }
 
+struct TabShortcutRefreshPlan: Equatable {
+    let unregisterIDs: Set<UUID>
+    let tabIDsToRegister: [UUID]
+
+    static func make(
+        previouslyRegistered: Set<UUID>,
+        tabs: [BrowserTab]
+    ) -> TabShortcutRefreshPlan {
+        TabShortcutRefreshPlan(
+            unregisterIDs: previouslyRegistered,
+            tabIDsToRegister: tabs.filter(\.isValidShortcut).map(\.id)
+        )
+    }
+}
+
+enum TabSwitchCompletionPolicy {
+    static func shouldRecordAccess(success: Bool) -> Bool { success }
+}
+
 @MainActor
 final class TabListViewModel: ObservableObject {
     @Published var tabs: [BrowserTab] = []
@@ -283,10 +302,10 @@ final class TabListViewModel: ObservableObject {
     }
     
     func switchToTab(_ tab: BrowserTab) {
-        updateLastAccessed(tab)
         BrowserSwitcher.shared.switchToTab(tab) { [weak self] success, message in
             guard let self = self else { return }
-            if success {
+            if TabSwitchCompletionPolicy.shouldRecordAccess(success: success) {
+                self.updateLastAccessed(tab)
                 self.onShowToast?(String(format: String(localized: "toast.switched"), tab.browser.displayName))
                 SoundEffectManager.shared.playSwitchSuccess()
                 HapticManager.shared.success()
@@ -421,16 +440,20 @@ final class TabListViewModel: ObservableObject {
     }
     
     private func refreshShortcuts() {
-        let currentIDs = Set(tabs.map { $0.id })
-        let toRemove = registeredTabIDs.subtracting(currentIDs)
-        for id in toRemove {
+        let plan = TabShortcutRefreshPlan.make(
+            previouslyRegistered: registeredTabIDs,
+            tabs: tabs
+        )
+        for id in plan.unregisterIDs {
             ShortcutManager.shared.unregisterShortcut(for: id)
         }
-        for tab in tabs where tab.isValidShortcut {
-            ShortcutManager.shared.unregisterShortcut(for: tab.id)
-            _ = ShortcutManager.shared.registerShortcut(for: tab)
+        registeredTabIDs.removeAll()
+        for id in plan.tabIDsToRegister {
+            guard let tab = tabs.first(where: { $0.id == id }) else { continue }
+            if ShortcutManager.shared.registerShortcut(for: tab) {
+                registeredTabIDs.insert(id)
+            }
         }
-        registeredTabIDs = currentIDs
     }
     
     private func containsTab(browser: BrowserType, url: String) -> Bool {

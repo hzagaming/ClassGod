@@ -4,7 +4,7 @@
 
 [English](../../README.md) · [简体中文](README.zh-Hans.md) · [繁體中文](README.zh-Hant.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · **Français** · [Deutsch](README.de.md) · [Español](README.es.md) · [Português](README.pt.md) · [Русский](README.ru.md)
 
-> Version actuelle : **v1.5.35 (Build 60)**. Téléchargez le DMG ou le PKG depuis [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest).
+> Version actuelle : **v1.5.36 (Build 61)**. Téléchargez le DMG ou le PKG depuis [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest).
 
 ## À propos de ClassGod
 
