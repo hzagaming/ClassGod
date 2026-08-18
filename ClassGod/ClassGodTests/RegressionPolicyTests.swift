@@ -92,6 +92,7 @@ struct RegressionPolicyTests {
         #expect(!ShortcutCapturePolicy.shouldAccept(keyName: "1", keyCode: 0x12, modifiers: 0, isFunctionKey: false, isNumericPad: false))
         #expect(!ShortcutCapturePolicy.shouldAccept(keyName: "1", keyCode: 0x12, modifiers: 1, isFunctionKey: false, isNumericPad: true))
         #expect(ShortcutCapturePolicy.shouldAccept(keyName: "1", keyCode: 0x12, modifiers: 1, isFunctionKey: false, isNumericPad: false))
+        #expect(ShortcutCapturePolicy.shouldAccept(keyName: "Space", keyCode: 0x31, modifiers: 1, isFunctionKey: false, isNumericPad: false))
         #expect(ShortcutCapturePolicy.shouldAccept(keyName: "F7", keyCode: 0x62, modifiers: 0, isFunctionKey: true, isNumericPad: false))
     }
 

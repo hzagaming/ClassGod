@@ -5,6 +5,50 @@ import Testing
 
 @Suite("Clipo clipboard policies")
 struct ClipoTests {
+    @Test("Legacy settings decode with configurable shortcut defaults")
+    func decodesLegacyShortcutDefaults() throws {
+        let settings = try JSONDecoder().decode(ClipoSettings.self, from: Data("{}".utf8))
+
+        #expect(settings.openShortcut == .openDefault)
+        #expect(settings.slotSaveShortcuts.count == 9)
+        #expect(settings.slotCopyShortcuts.count == 9)
+        #expect(settings.slotSaveShortcuts[0] == .saveDefault(slot: 1))
+        #expect(settings.slotCopyShortcuts[8] == .copyDefault(slot: 9))
+    }
+
+    @Test("Clipo shortcuts normalize, display, disable, and round-trip")
+    func normalizesAndPersistsShortcuts() throws {
+        let modifiers = NSEvent.ModifierFlags([.command, .option, .capsLock]).rawValue
+        var settings = ClipoSettings()
+        settings.openShortcut = ClipoShortcut(key: " space ", modifiers: modifiers)
+        settings.slotSaveShortcuts = [ClipoShortcut(key: "a", modifiers: NSEvent.ModifierFlags.command.rawValue)]
+        settings.slotCopyShortcuts = [ClipoShortcut(key: "unknown", modifiers: modifiers)]
+
+        let normalized = settings.normalized
+
+        #expect(normalized.openShortcut.key == "Space")
+        #expect(normalized.openShortcut.modifiers == NSEvent.ModifierFlags([.command, .option]).rawValue)
+        #expect(normalized.openShortcut.displayString == "⌘⌥Space")
+        #expect(normalized.slotSaveShortcuts.count == 9)
+        #expect(normalized.slotSaveShortcuts[0].key == "A")
+        #expect(!normalized.slotCopyShortcuts[0].isEnabled)
+        #expect(normalized.slotCopyShortcuts[1] == .copyDefault(slot: 2))
+
+        let decoded = try JSONDecoder().decode(ClipoSettings.self, from: JSONEncoder().encode(normalized))
+        #expect(decoded == normalized)
+    }
+
+    @Test("Cleared Clipo shortcuts remain disabled")
+    func disablesClearedShortcuts() {
+        var settings = ClipoSettings()
+        settings.openShortcut = ClipoShortcut(key: "", modifiers: NSEvent.ModifierFlags.command.rawValue)
+
+        #expect(!settings.normalized.openShortcut.isEnabled)
+        #expect(settings.normalized.openShortcut.modifiers == 0)
+        #expect(!ClipoShortcut(key: "F", modifiers: 0).isEnabled)
+        #expect(ClipoShortcut(key: "F12", modifiers: 0).isEnabled)
+    }
+
     @Test("Settings normalization is stable and clamps persisted values")
     func settingsNormalization() {
         var settings = ClipoSettings()
@@ -125,9 +169,10 @@ struct ClipoTests {
     @Test("Clipo panel shortcut does not conflict with the main panel shortcut")
     func usesDedicatedPanelShortcut() {
         let optionOnly = UInt32(NSEvent.ModifierFlags.option.rawValue)
-        #expect(ClipoShortcutDefaults.openKeyCode == 49)
-        #expect(ClipoShortcutDefaults.openModifiers != optionOnly)
-        #expect(ClipoShortcutDefaults.openModifiers == UInt32(NSEvent.ModifierFlags.command.union(.option).rawValue))
+        let shortcut = ClipoShortcut.openDefault
+        #expect(ShortcutManager.shared.keyCode(for: shortcut.key) == 49)
+        #expect(UInt32(shortcut.modifiers) != optionOnly)
+        #expect(UInt32(shortcut.modifiers) == UInt32(NSEvent.ModifierFlags.command.union(.option).rawValue))
     }
 
     @Test("Clipo keeps the last external app as the source while its panel is frontmost")

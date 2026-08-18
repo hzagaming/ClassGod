@@ -1,4 +1,5 @@
 import Foundation
+import AppKit
 
 enum ClipoType: String, Codable, CaseIterable, Identifiable, Sendable {
     case text
@@ -259,6 +260,58 @@ enum ClipoAutoDeletePolicy: Int, Codable, CaseIterable, Identifiable, Sendable {
     }
 }
 
+struct ClipoShortcut: Codable, Equatable, Sendable {
+    var key: String
+    var modifiers: UInt
+
+    static let openDefault = Self(
+        key: "Space",
+        modifiers: NSEvent.ModifierFlags([.command, .option]).rawValue
+    )
+
+    static func saveDefault(slot: Int) -> Self {
+        guard (1...9).contains(slot) else { return .disabled }
+        return Self(
+            key: String(slot),
+            modifiers: NSEvent.ModifierFlags([.command, .option]).rawValue
+        )
+    }
+
+    static func copyDefault(slot: Int) -> Self {
+        guard (1...9).contains(slot) else { return .disabled }
+        return Self(key: String(slot), modifiers: NSEvent.ModifierFlags.option.rawValue)
+    }
+
+    static let disabled = Self(key: "", modifiers: 0)
+
+    var normalized: Self {
+        guard !key.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return .disabled }
+        guard let key = ShortcutKeyCatalog.normalizedName(key) else { return .disabled }
+        return Self(key: key, modifiers: ShortcutModifierPolicy.captured(modifiers))
+    }
+
+    var isEnabled: Bool {
+        let value = normalized
+        guard !value.key.isEmpty else { return false }
+        let functionKey = value.key.first == "F"
+            && Int(value.key.dropFirst()).map { (1...12).contains($0) } == true
+        return functionKey || value.modifiers != 0
+    }
+
+    var displayString: String {
+        guard isEnabled else { return "—" }
+        let value = normalized
+        let flags = NSEvent.ModifierFlags(rawValue: value.modifiers)
+        var parts: [String] = []
+        if flags.contains(.command) { parts.append("⌘") }
+        if flags.contains(.option) { parts.append("⌥") }
+        if flags.contains(.control) { parts.append("⌃") }
+        if flags.contains(.shift) { parts.append("⇧") }
+        parts.append(value.key)
+        return parts.joined()
+    }
+}
+
 struct ClipoSettings: Codable, Equatable, Sendable {
     var monitorClipboard = true
     var maxHistoryItems = 200
@@ -280,11 +333,56 @@ struct ClipoSettings: Codable, Equatable, Sendable {
     var showSourceApp = true
     var showTimestamp = true
     var compactRows = false
+    var openShortcut = ClipoShortcut.openDefault
+    var slotSaveShortcuts = (1...9).map { ClipoShortcut.saveDefault(slot: $0) }
+    var slotCopyShortcuts = (1...9).map { ClipoShortcut.copyDefault(slot: $0) }
+
+    init() {}
+
+    private enum CodingKeys: String, CodingKey {
+        case monitorClipboard, maxHistoryItems, ignoreDuplicates, ignoreSensitiveApps
+        case sensitiveBundleIdentifiers, autoDeletePolicy, restoreClipboardAfterPaste
+        case restoreClipboardAfterSave, pasteDelay, searchCaseSensitive, fuzzySearch
+        case showSourceApp, showTimestamp, compactRows, openShortcut
+        case slotSaveShortcuts, slotCopyShortcuts
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let defaults = Self()
+        monitorClipboard = try container.decodeIfPresent(Bool.self, forKey: .monitorClipboard) ?? defaults.monitorClipboard
+        maxHistoryItems = try container.decodeIfPresent(Int.self, forKey: .maxHistoryItems) ?? defaults.maxHistoryItems
+        ignoreDuplicates = try container.decodeIfPresent(Bool.self, forKey: .ignoreDuplicates) ?? defaults.ignoreDuplicates
+        ignoreSensitiveApps = try container.decodeIfPresent(Bool.self, forKey: .ignoreSensitiveApps) ?? defaults.ignoreSensitiveApps
+        sensitiveBundleIdentifiers = try container.decodeIfPresent([String].self, forKey: .sensitiveBundleIdentifiers) ?? defaults.sensitiveBundleIdentifiers
+        autoDeletePolicy = try container.decodeIfPresent(ClipoAutoDeletePolicy.self, forKey: .autoDeletePolicy) ?? defaults.autoDeletePolicy
+        restoreClipboardAfterPaste = try container.decodeIfPresent(Bool.self, forKey: .restoreClipboardAfterPaste) ?? defaults.restoreClipboardAfterPaste
+        restoreClipboardAfterSave = try container.decodeIfPresent(Bool.self, forKey: .restoreClipboardAfterSave) ?? defaults.restoreClipboardAfterSave
+        pasteDelay = try container.decodeIfPresent(Double.self, forKey: .pasteDelay) ?? defaults.pasteDelay
+        searchCaseSensitive = try container.decodeIfPresent(Bool.self, forKey: .searchCaseSensitive) ?? defaults.searchCaseSensitive
+        fuzzySearch = try container.decodeIfPresent(Bool.self, forKey: .fuzzySearch) ?? defaults.fuzzySearch
+        showSourceApp = try container.decodeIfPresent(Bool.self, forKey: .showSourceApp) ?? defaults.showSourceApp
+        showTimestamp = try container.decodeIfPresent(Bool.self, forKey: .showTimestamp) ?? defaults.showTimestamp
+        compactRows = try container.decodeIfPresent(Bool.self, forKey: .compactRows) ?? defaults.compactRows
+        openShortcut = try container.decodeIfPresent(ClipoShortcut.self, forKey: .openShortcut) ?? defaults.openShortcut
+        slotSaveShortcuts = try container.decodeIfPresent([ClipoShortcut].self, forKey: .slotSaveShortcuts) ?? defaults.slotSaveShortcuts
+        slotCopyShortcuts = try container.decodeIfPresent([ClipoShortcut].self, forKey: .slotCopyShortcuts) ?? defaults.slotCopyShortcuts
+        self = normalized
+    }
 
     var normalized: Self {
         var value = self
         value.maxHistoryItems = max(0, min(value.maxHistoryItems, 2_000))
         value.pasteDelay = max(0, min(value.pasteDelay, 1))
+        value.openShortcut = value.openShortcut.normalized
+        value.slotSaveShortcuts = Self.normalizedShortcuts(
+            value.slotSaveShortcuts,
+            defaults: (1...9).map { ClipoShortcut.saveDefault(slot: $0) }
+        )
+        value.slotCopyShortcuts = Self.normalizedShortcuts(
+            value.slotCopyShortcuts,
+            defaults: (1...9).map { ClipoShortcut.copyDefault(slot: $0) }
+        )
         var seenBundleIdentifiers = Set<String>()
         value.sensitiveBundleIdentifiers = value.sensitiveBundleIdentifiers.compactMap { identifier in
             let trimmed = identifier.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -292,6 +390,21 @@ struct ClipoSettings: Codable, Equatable, Sendable {
             return seenBundleIdentifiers.insert(trimmed.lowercased()).inserted ? trimmed : nil
         }
         return value
+    }
+
+    mutating func resetShortcuts() {
+        openShortcut = .openDefault
+        slotSaveShortcuts = (1...9).map { ClipoShortcut.saveDefault(slot: $0) }
+        slotCopyShortcuts = (1...9).map { ClipoShortcut.copyDefault(slot: $0) }
+    }
+
+    private static func normalizedShortcuts(
+        _ shortcuts: [ClipoShortcut],
+        defaults: [ClipoShortcut]
+    ) -> [ClipoShortcut] {
+        defaults.indices.map { index in
+            index < shortcuts.count ? shortcuts[index].normalized : defaults[index]
+        }
     }
 }
 

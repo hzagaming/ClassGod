@@ -39,6 +39,7 @@ struct ClipoView: View {
     @State private var confirmClearHistory = false
     @State private var confirmReset = false
     @State private var pendingImportURL: URL?
+    @State private var recordingShortcut: ClipoShortcutAction?
     let onClose: () -> Void
 
     private var zoomScale: CGFloat { CGFloat(prefs.preferences.windowZoomScale) }
@@ -77,7 +78,6 @@ struct ClipoView: View {
         .confirmationDialog("clipo.confirm.clear_title", isPresented: $confirmClearHistory) {
             Button("clipo.clear_history", role: .destructive) {
                 service.clearHistory()
-                SoundEffectManager.shared.playTabDeleted()
             }
             Button("button.cancel", role: .cancel) {}
         } message: {
@@ -86,7 +86,6 @@ struct ClipoView: View {
         .confirmationDialog("clipo.confirm.reset_title", isPresented: $confirmReset) {
             Button("clipo.reset", role: .destructive) {
                 service.resetAll()
-                SoundEffectManager.shared.playTabDeleted()
             }
             Button("button.cancel", role: .cancel) {}
         } message: {
@@ -139,7 +138,7 @@ struct ClipoView: View {
             .font(.system(size: 9 * zoomScale, weight: .bold, design: .monospaced))
             .foregroundStyle(service.settings.monitorClipboard ? .green : .orange)
 
-            Text("⌥⌘Space")
+            Text(service.settings.openShortcut.displayString)
                 .font(.system(size: 9 * zoomScale, design: .monospaced))
                 .foregroundStyle(.white.opacity(0.35))
                 .padding(.horizontal, 7 * zoomScale)
@@ -156,6 +155,7 @@ struct ClipoView: View {
         HStack(spacing: 6 * zoomScale) {
             ForEach(Section.allCases) { item in
                 Button {
+                    guard section != item else { return }
                     SoundEffectManager.shared.playButtonClick()
                     section = item
                 } label: {
@@ -337,6 +337,59 @@ struct ClipoView: View {
     private var settingsSection: some View {
         ScrollView {
             VStack(spacing: 12 * zoomScale) {
+                clipoPanel(title: "clipo.settings.shortcuts", icon: "command") {
+                    Text("clipo.shortcuts.hint")
+                        .font(.system(size: 9 * zoomScale, design: .monospaced))
+                        .foregroundStyle(.white.opacity(0.4))
+
+                    shortcutEditor(
+                        title: "clipo.shortcuts.open",
+                        action: .openPanel,
+                        shortcut: $service.settings.openShortcut
+                    )
+
+                    Divider().overlay(Color.white.opacity(0.08))
+
+                    ForEach(1...9, id: \.self) { number in
+                        VStack(alignment: .leading, spacing: 6 * zoomScale) {
+                            Text(String(
+                                format: String(localized: "clipo.shortcuts.slot_format"),
+                                number
+                            ))
+                                .font(.system(size: 9 * zoomScale, weight: .bold, design: .monospaced))
+                                .foregroundStyle(accent)
+                            shortcutEditor(
+                                title: "clipo.shortcuts.save",
+                                action: .saveSlot(number),
+                                shortcut: $service.settings.slotSaveShortcuts[number - 1]
+                            )
+                            shortcutEditor(
+                                title: "clipo.shortcuts.copy",
+                                action: .copySlot(number),
+                                shortcut: $service.settings.slotCopyShortcuts[number - 1]
+                            )
+                        }
+                        if number < 9 {
+                            Divider().overlay(Color.white.opacity(0.05))
+                        }
+                    }
+
+                    HStack {
+                        if !service.shortcutRegistrationFailures.isEmpty {
+                            Label("clipo.shortcuts.conflict", systemImage: "exclamationmark.triangle.fill")
+                                .foregroundStyle(.orange)
+                        }
+                        Spacer()
+                        Button("clipo.shortcuts.restore_defaults") {
+                            recordingShortcut = nil
+                            service.resetShortcuts()
+                            SoundEffectManager.shared.playButtonClick()
+                        }
+                        .clipoButtonStyle(zoomScale: zoomScale, color: accent)
+                    }
+                    .font(.system(size: 9 * zoomScale, design: .monospaced))
+                }
+
                 clipoPanel(title: "clipo.settings.history", icon: "clock") {
                     clipoToggle("clipo.settings.monitor", isOn: $service.settings.monitorClipboard)
                     clipoToggle("clipo.settings.ignore_duplicates", isOn: $service.settings.ignoreDuplicates)
@@ -462,6 +515,51 @@ struct ClipoView: View {
         .controlSize(.small)
     }
 
+    private func shortcutEditor(
+        title: LocalizedStringKey,
+        action: ClipoShortcutAction,
+        shortcut: Binding<ClipoShortcut>
+    ) -> some View {
+        HStack(spacing: 8 * zoomScale) {
+            Text(title)
+                .font(.system(size: 9 * zoomScale, design: .monospaced))
+                .frame(maxWidth: .infinity, alignment: .leading)
+            ShortcutPicker(
+                key: shortcut.key,
+                modifiers: shortcut.modifiers,
+                isRecording: Binding(
+                    get: { recordingShortcut == action },
+                    set: { recordingShortcut = $0 ? action : nil }
+                )
+            )
+            .frame(width: 190 * zoomScale)
+
+            Image(systemName: shortcutStatusIcon(action: action, shortcut: shortcut.wrappedValue))
+                .foregroundStyle(shortcutStatusColor(action: action, shortcut: shortcut.wrappedValue))
+                .frame(width: 14 * zoomScale)
+                .help(shortcutStatusHelp(action: action, shortcut: shortcut.wrappedValue))
+        }
+    }
+
+    private func shortcutStatusIcon(action: ClipoShortcutAction, shortcut: ClipoShortcut) -> String {
+        if service.shortcutRegistrationFailures.contains(action) { return "exclamationmark.triangle.fill" }
+        return shortcut.isEnabled ? "checkmark.circle.fill" : "minus.circle"
+    }
+
+    private func shortcutStatusColor(action: ClipoShortcutAction, shortcut: ClipoShortcut) -> Color {
+        if service.shortcutRegistrationFailures.contains(action) { return .orange }
+        return shortcut.isEnabled ? .green.opacity(0.75) : .white.opacity(0.25)
+    }
+
+    private func shortcutStatusHelp(action: ClipoShortcutAction, shortcut: ClipoShortcut) -> String {
+        if service.shortcutRegistrationFailures.contains(action) {
+            return String(localized: "clipo.shortcuts.status_unavailable")
+        }
+        return String(localized: shortcut.isEnabled
+            ? "clipo.shortcuts.status_registered"
+            : "clipo.shortcuts.status_disabled")
+    }
+
     private func clipoPanel<Content: View>(title: LocalizedStringKey, icon: String, @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 10 * zoomScale) {
             Label(title, systemImage: icon)
@@ -522,7 +620,12 @@ struct ClipoView: View {
         panel.nameFieldStringValue = "ClassGod-Clipo.json"
         panel.allowedContentTypes = [.json]
         guard panel.runModal() == .OK, let url = panel.url else { return }
-        do { try service.export(to: url) } catch { ErrorToastManager.shared.show(error: error) }
+        do {
+            try service.export(to: url)
+            SoundEffectManager.shared.playButtonClick()
+        } catch {
+            ErrorToastManager.shared.show(error: error)
+        }
     }
 
     private func selectImportStore() {
@@ -534,7 +637,12 @@ struct ClipoView: View {
     }
 
     private func importStore(from url: URL) {
-        do { try service.importStore(from: url) } catch { ErrorToastManager.shared.show(error: error) }
+        do {
+            try service.importStore(from: url)
+            SoundEffectManager.shared.playTabSaved()
+        } catch {
+            ErrorToastManager.shared.show(error: error)
+        }
     }
 }
 
@@ -651,7 +759,7 @@ private struct ClipoSlotCard: View {
                     .font(.system(size: 12 * zoomScale, weight: .bold, design: .monospaced))
                     .foregroundStyle(accent)
                 Spacer()
-                Text("⌥⌘\(number) / ⌥\(number)")
+                Text(shortcutSummary)
                     .font(.system(size: 7 * zoomScale, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.25))
             }
@@ -686,6 +794,11 @@ private struct ClipoSlotCard: View {
         .frame(maxWidth: .infinity, minHeight: 132 * zoomScale, alignment: .top)
         .background(Color.white.opacity(0.025))
         .overlay(RoundedRectangle(cornerRadius: 9 * zoomScale).stroke(item == nil ? Color.white.opacity(0.06) : accent.opacity(0.18)))
+    }
+
+    private var shortcutSummary: String {
+        let settings = service.settings
+        return "\(settings.slotSaveShortcuts[number - 1].displayString) / \(settings.slotCopyShortcuts[number - 1].displayString)"
     }
 
     private func slotButton(

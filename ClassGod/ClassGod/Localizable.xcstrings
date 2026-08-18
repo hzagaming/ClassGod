@@ -5103,6 +5103,182 @@
         }
       }
     },
+    "clipo.settings.shortcuts" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keyboard Shortcuts"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "键盘快捷键"
+          }
+        }
+      }
+    },
+    "clipo.shortcuts.conflict" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Some shortcuts are used by macOS or another app."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "部分快捷键已被 macOS 或其他应用占用。"
+          }
+        }
+      }
+    },
+    "clipo.shortcuts.copy" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy Slot"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "复制槽位"
+          }
+        }
+      }
+    },
+    "clipo.shortcuts.hint" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Click a field, then press a shortcut. Clear a field to disable that action."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "点击输入框后按下快捷键；清空输入框可停用对应操作。"
+          }
+        }
+      }
+    },
+    "clipo.shortcuts.open" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Clipo"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开 Clipo"
+          }
+        }
+      }
+    },
+    "clipo.shortcuts.restore_defaults" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restore Defaults"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "恢复默认值"
+          }
+        }
+      }
+    },
+    "clipo.shortcuts.save" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Save Selection"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保存所选内容"
+          }
+        }
+      }
+    },
+    "clipo.shortcuts.slot_format" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Slot %lld"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "槽位 %lld"
+          }
+        }
+      }
+    },
+    "clipo.shortcuts.status_disabled" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shortcut disabled"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "快捷键已停用"
+          }
+        }
+      }
+    },
+    "clipo.shortcuts.status_registered" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shortcut active"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "快捷键已生效"
+          }
+        }
+      }
+    },
+    "clipo.shortcuts.status_unavailable" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shortcut unavailable because it is already in use"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "快捷键已被占用，无法注册"
+          }
+        }
+      }
+    },
     "clipo.slots_hint" : {
       "localizations" : {
         "en" : {
@@ -25075,6 +25251,7 @@
     "notes.unpin" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Unpin Note"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"取消置顶"}}}},
     "notes.untitled" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Untitled Note"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"无标题笔记"}}}},
     "tab.updates" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Updates"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"软件更新"}}}},
+    "update.cancel_download" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Cancel"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"取消下载"}}}},
     "update.check_now" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Check Now"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"立即检查"}}}},
     "update.detail.available" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"A newer stable release is ready to download."}},"zh-Hans":{"stringUnit":{"state":"translated","value":"已有新的正式版本可供下载。"}}}},
     "update.detail.checking" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Contacting GitHub Releases…"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"正在连接 GitHub Releases…"}}}},
@@ -25083,6 +25260,7 @@
     "update.detail.failed" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"The update check or download could not be completed."}},"zh-Hans":{"stringUnit":{"state":"translated","value":"无法完成更新检查或下载。"}}}},
     "update.detail.idle" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"No update check has run yet."}},"zh-Hans":{"stringUnit":{"state":"translated","value":"尚未执行更新检查。"}}}},
     "update.detail.installer_opened" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Follow the macOS Installer to finish updating."}},"zh-Hans":{"stringUnit":{"state":"translated","value":"请按照 macOS 安装器提示完成更新。"}}}},
+    "update.detail.installer_unavailable" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"A newer release exists, but it has no trusted PKG or DMG installer yet."}},"zh-Hans":{"stringUnit":{"state":"translated","value":"已有新版本，但暂未提供可信的 PKG 或 DMG 安装包。"}}}},
     "update.download_install" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Download and Install"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"下载并安装"}}}},
     "update.downloading" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Downloading installer…"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"正在下载安装包…"}}}},
     "update.error.digest_mismatch" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"The installer checksum does not match the GitHub release."}},"zh-Hans":{"stringUnit":{"state":"translated","value":"安装包校验值与 GitHub Release 不一致。"}}}},
@@ -25099,6 +25277,7 @@
     "update.status.failed" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Update failed"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"更新失败"}}}},
     "update.status.idle" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Ready to check"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"可以检查更新"}}}},
     "update.status.installer_opened" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Installer opened"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"安装器已打开"}}}},
+    "update.status.installer_unavailable" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Update found — installer unavailable"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"发现更新，但安装包不可用"}}}},
     "update.subtitle" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Check GitHub Releases and install the latest stable version"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"检查 GitHub Release 并安装最新正式版本"}}}},
     "update.title" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Software Update"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"软件更新"}}}},
     "update.view_release" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"View Release"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"查看 Release"}}}},

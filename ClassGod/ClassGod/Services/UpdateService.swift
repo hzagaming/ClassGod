@@ -7,6 +7,7 @@ nonisolated enum UpdatePhase: Equatable, Sendable {
     case checking
     case upToDate
     case updateAvailable
+    case installerUnavailable
     case downloading
     case installerOpened
     case failed
@@ -49,7 +50,10 @@ final class UpdateService: ObservableObject {
     private var checkTask: Task<Void, Never>?
     private var downloadTask: URLSessionDownloadTask?
     private var progressTask: Task<Void, Never>?
+    private var validationTask: Task<Void, Never>?
     private var automaticCheckTimer: Timer?
+    private var checkSession = UpdateOperationSession()
+    private var downloadSession = UpdateOperationSession()
     private var isStarted = false
 
     var currentVersion: String {
@@ -74,8 +78,8 @@ final class UpdateService: ObservableObject {
             fire: Date().addingTimeInterval(Self.automaticCheckInterval),
             interval: Self.automaticCheckInterval,
             repeats: true
-        ) { [weak self] _ in
-            Task { @MainActor in self?.checkForUpdates() }
+        ) { _ in
+            Task { @MainActor in UpdateService.shared.checkForUpdates() }
         }
         automaticCheckTimer = timer
         RunLoop.main.add(timer, forMode: .common)
@@ -84,18 +88,24 @@ final class UpdateService: ObservableObject {
     func stop() {
         automaticCheckTimer?.invalidate()
         automaticCheckTimer = nil
+        checkSession.cancel()
+        downloadSession.cancel()
         checkTask?.cancel()
         checkTask = nil
         progressTask?.cancel()
         progressTask = nil
+        validationTask?.cancel()
+        validationTask = nil
         downloadTask?.cancel()
         downloadTask = nil
+        if phase == .checking || phase == .downloading { phase = .idle }
         isStarted = false
     }
 
     func checkForUpdates() {
         guard phase != .checking, phase != .downloading else { return }
         checkTask?.cancel()
+        let requestID = checkSession.begin()
         phase = .checking
         errorMessage = nil
         checkTask = Task { [weak self] in
@@ -107,24 +117,34 @@ final class UpdateService: ObservableObject {
                 request.setValue("2022-11-28", forHTTPHeaderField: "X-GitHub-Api-Version")
                 request.setValue("ClassGod-Updater/\(currentVersion)", forHTTPHeaderField: "User-Agent")
                 let (data, response) = try await URLSession.shared.data(for: request)
-                guard !Task.isCancelled else { return }
+                try Task.checkCancellation()
+                guard checkSession.isCurrent(requestID) else { return }
                 guard let response = response as? HTTPURLResponse,
                       (200..<300).contains(response.statusCode) else { throw UpdateError.invalidResponse }
                 guard data.count <= UpdateReleasePolicy.maximumResponseSize else {
                     throw UpdateError.responseTooLarge
                 }
                 let release = try UpdateReleasePolicy.decode(data)
-                latestRelease = release
-                lastCheckedAt = Date()
-                phase = UpdateReleasePolicy.isUpdateAvailable(
+                guard let assessment = UpdateReleasePolicy.assessment(
                     release: release,
                     currentVersion: currentVersion
-                ) ? .updateAvailable : .upToDate
+                ) else { throw UpdateError.invalidResponse }
+                guard checkSession.complete(requestID) else { return }
+                latestRelease = release
+                lastCheckedAt = Date()
+                phase = switch assessment {
+                case .upToDate: .upToDate
+                case .updateAvailable: .updateAvailable
+                case .installerUnavailable: .installerUnavailable
+                }
                 checkTask = nil
             } catch is CancellationError {
-                checkTask = nil
+                if checkSession.complete(requestID) {
+                    checkTask = nil
+                    if phase == .checking { phase = .idle }
+                }
             } catch {
-                guard !Task.isCancelled else { return }
+                guard !Task.isCancelled, checkSession.complete(requestID) else { return }
                 errorMessage = error.localizedDescription
                 lastCheckedAt = Date()
                 phase = .failed
@@ -151,20 +171,38 @@ final class UpdateService: ObservableObject {
         phase = .downloading
         downloadProgress = 0
         errorMessage = nil
+        let requestID = downloadSession.begin()
 
-        let task = URLSession.shared.downloadTask(with: request) { [weak self] temporaryURL, response, error in
+        let task = URLSession.shared.downloadTask(with: request) { temporaryURL, response, error in
             if let error {
-                Task { @MainActor in self?.finishDownload(errorMessage: error.localizedDescription) }
+                Task { @MainActor in
+                    UpdateService.shared.finishDownload(
+                        errorMessage: error.localizedDescription,
+                        requestID: requestID
+                    )
+                }
                 return
             }
             do {
                 guard let response = response as? HTTPURLResponse,
                       (200..<300).contains(response.statusCode),
+                      response.url?.scheme?.lowercased() == "https",
                       let temporaryURL else { throw UpdateError.invalidDownload }
-                let destination = try Self.persistDownloadedFile(from: temporaryURL, asset: asset)
-                Task { @MainActor in self?.finishDownload(fileURL: destination) }
+                let stagedURL = try Self.stageDownloadedFile(from: temporaryURL, asset: asset)
+                Task { @MainActor in
+                    UpdateService.shared.beginValidation(
+                        stagedURL: stagedURL,
+                        asset: asset,
+                        requestID: requestID
+                    )
+                }
             } catch {
-                Task { @MainActor in self?.finishDownload(errorMessage: error.localizedDescription) }
+                Task { @MainActor in
+                    UpdateService.shared.finishDownload(
+                        errorMessage: error.localizedDescription,
+                        requestID: requestID
+                    )
+                }
             }
         }
         downloadTask = task
@@ -172,9 +210,54 @@ final class UpdateService: ObservableObject {
         task.resume()
     }
 
+    func cancelDownload() {
+        guard phase == .downloading else { return }
+        downloadSession.cancel()
+        progressTask?.cancel()
+        progressTask = nil
+        validationTask?.cancel()
+        validationTask = nil
+        downloadTask?.cancel()
+        downloadTask = nil
+        downloadProgress = 0
+        errorMessage = nil
+        phase = .updateAvailable
+    }
+
     func openReleasePage() {
         guard let url = latestRelease?.htmlURL else { return }
         NSWorkspace.shared.open(url)
+    }
+
+    private func beginValidation(
+        stagedURL: URL,
+        asset: GitHubReleaseAsset,
+        requestID: UInt
+    ) {
+        guard downloadSession.isCurrent(requestID) else {
+            try? FileManager.default.removeItem(at: stagedURL)
+            return
+        }
+        validationTask?.cancel()
+        validationTask = Task.detached(priority: .utility) {
+            do {
+                try Self.validateDownloadedFile(at: stagedURL, asset: asset)
+                try Task.checkCancellation()
+                await UpdateService.shared.finishDownload(
+                    stagedURL: stagedURL,
+                    asset: asset,
+                    requestID: requestID
+                )
+            } catch is CancellationError {
+                try? FileManager.default.removeItem(at: stagedURL)
+            } catch {
+                try? FileManager.default.removeItem(at: stagedURL)
+                await UpdateService.shared.finishDownload(
+                    errorMessage: error.localizedDescription,
+                    requestID: requestID
+                )
+            }
+        }
     }
 
     private func trackProgress(of task: URLSessionDownloadTask) {
@@ -190,9 +273,29 @@ final class UpdateService: ObservableObject {
         }
     }
 
-    private func finishDownload(fileURL: URL) {
+    private func finishDownload(
+        stagedURL: URL,
+        asset: GitHubReleaseAsset,
+        requestID: UInt
+    ) {
+        guard downloadSession.isCurrent(requestID) else {
+            try? FileManager.default.removeItem(at: stagedURL)
+            return
+        }
+        do {
+            let fileURL = try Self.promoteDownloadedFile(at: stagedURL, asset: asset)
+            finishDownload(fileURL: fileURL, requestID: requestID)
+        } catch {
+            try? FileManager.default.removeItem(at: stagedURL)
+            finishDownload(errorMessage: error.localizedDescription, requestID: requestID)
+        }
+    }
+
+    private func finishDownload(fileURL: URL, requestID: UInt) {
+        guard downloadSession.complete(requestID) else { return }
         progressTask?.cancel()
         progressTask = nil
+        validationTask = nil
         downloadTask = nil
         downloadProgress = 1
         if NSWorkspace.shared.open(fileURL) {
@@ -202,9 +305,11 @@ final class UpdateService: ObservableObject {
         }
     }
 
-    private func finishDownload(errorMessage: String) {
+    private func finishDownload(errorMessage: String, requestID: UInt) {
+        guard downloadSession.complete(requestID) else { return }
         progressTask?.cancel()
         progressTask = nil
+        validationTask = nil
         downloadTask = nil
         fail(errorMessage)
     }
@@ -214,38 +319,68 @@ final class UpdateService: ObservableObject {
         phase = .failed
     }
 
-    nonisolated private static func persistDownloadedFile(
+    nonisolated private static func stageDownloadedFile(
         from temporaryURL: URL,
         asset: GitHubReleaseAsset
     ) throws -> URL {
-        let safeName = URL(fileURLWithPath: asset.name).lastPathComponent
-        guard safeName == asset.name,
-              safeName.lowercased().hasSuffix(".pkg") || safeName.lowercased().hasSuffix(".dmg") else {
+        let safeName = try safeInstallerName(asset.name)
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("ClassGod/Updates", isDirectory: true)
+        let stagedURL = directory.appendingPathComponent("\(UUID().uuidString)-\(safeName)")
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        try FileManager.default.moveItem(at: temporaryURL, to: stagedURL)
+        return stagedURL
+    }
+
+    nonisolated private static func validateDownloadedFile(
+        at stagedURL: URL,
+        asset: GitHubReleaseAsset
+    ) throws {
+        let size = try stagedURL.resourceValues(forKeys: [.fileSizeKey]).fileSize.map(Int64.init) ?? 0
+        guard size == asset.size, size > 0, size <= UpdateReleasePolicy.maximumAssetSize else {
             throw UpdateError.invalidDownload
         }
+        guard let expected = UpdateDigestPolicy.expectedSHA256(from: asset.digest) else {
+            throw UpdateError.digestMismatch
+        }
+        let actual = try UpdateDigestPolicy.sha256Hex(fileURL: stagedURL) {
+            Task<Never, Never>.isCancelled
+        }
+        guard actual == expected else { throw UpdateError.digestMismatch }
+    }
+
+    nonisolated private static func promoteDownloadedFile(
+        at stagedURL: URL,
+        asset: GitHubReleaseAsset
+    ) throws -> URL {
+        let safeName = try safeInstallerName(asset.name)
         let root = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
             ?? FileManager.default.temporaryDirectory
         let directory = root.appendingPathComponent("ClassGod/Updates", isDirectory: true)
         let destination = directory.appendingPathComponent(safeName)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         if FileManager.default.fileExists(atPath: destination.path) {
-            try FileManager.default.removeItem(at: destination)
+            _ = try FileManager.default.replaceItemAt(destination, withItemAt: stagedURL)
+        } else {
+            try FileManager.default.moveItem(at: stagedURL, to: destination)
         }
-        try FileManager.default.moveItem(at: temporaryURL, to: destination)
-
-        let size = try destination.resourceValues(forKeys: [.fileSizeKey]).fileSize.map(Int64.init) ?? 0
-        guard size == asset.size, size > 0, size <= UpdateReleasePolicy.maximumAssetSize else {
-            try? FileManager.default.removeItem(at: destination)
-            throw UpdateError.invalidDownload
-        }
-        guard let expected = UpdateDigestPolicy.expectedSHA256(from: asset.digest) else {
-            try? FileManager.default.removeItem(at: destination)
-            throw UpdateError.digestMismatch
-        }
-        if try UpdateDigestPolicy.sha256Hex(fileURL: destination) != expected {
-            try? FileManager.default.removeItem(at: destination)
-            throw UpdateError.digestMismatch
+        if let contents = try? FileManager.default.contentsOfDirectory(
+            at: directory,
+            includingPropertiesForKeys: nil
+        ) {
+            for staleURL in UpdateCachePolicy.staleInstallers(in: contents, keeping: destination) {
+                try? FileManager.default.removeItem(at: staleURL)
+            }
         }
         return destination
+    }
+
+    nonisolated private static func safeInstallerName(_ name: String) throws -> String {
+        let safeName = URL(fileURLWithPath: name).lastPathComponent
+        guard safeName == name,
+              safeName.lowercased().hasSuffix(".pkg") || safeName.lowercased().hasSuffix(".dmg") else {
+            throw UpdateError.invalidDownload
+        }
+        return safeName
     }
 }

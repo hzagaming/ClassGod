@@ -27,7 +27,10 @@ struct UpdateSettingsView: View {
                 statusCard
 
                 if let release = service.latestRelease,
-                   service.phase == .updateAvailable || service.phase == .downloading || service.phase == .installerOpened {
+                   service.phase == .updateAvailable
+                    || service.phase == .installerUnavailable
+                    || service.phase == .downloading
+                    || service.phase == .installerOpened {
                     releaseCard(release)
                 }
 
@@ -56,6 +59,7 @@ struct UpdateSettingsView: View {
                 }
                 Spacer()
                 Button {
+                    SoundEffectManager.shared.playButtonClick()
                     service.checkForUpdates()
                 } label: {
                     Label("update.check_now", systemImage: "arrow.clockwise")
@@ -70,9 +74,16 @@ struct UpdateSettingsView: View {
             }
 
             if service.phase == .downloading {
-                ProgressView(value: service.downloadProgress) {
-                    Text("update.downloading")
-                        .font(.system(size: 9 * zoomScale, design: .monospaced))
+                HStack(spacing: 10 * zoomScale) {
+                    ProgressView(value: service.downloadProgress) {
+                        Text("update.downloading")
+                            .font(.system(size: 9 * zoomScale, design: .monospaced))
+                    }
+                    Button("update.cancel_download") {
+                        SoundEffectManager.shared.playButtonClick()
+                        service.cancelDownload()
+                    }
+                    .buttonStyle(.bordered)
                 }
             }
 
@@ -126,6 +137,7 @@ struct UpdateSettingsView: View {
             HStack(spacing: 8 * zoomScale) {
                 if service.phase == .updateAvailable {
                     Button {
+                        SoundEffectManager.shared.playButtonClick()
                         service.downloadAndInstall()
                     } label: {
                         Label("update.download_install", systemImage: "arrow.down.circle.fill")
@@ -133,6 +145,7 @@ struct UpdateSettingsView: View {
                     .buttonStyle(.borderedProminent)
                 }
                 Button {
+                    SoundEffectManager.shared.playButtonClick()
                     service.openReleasePage()
                 } label: {
                     Label("update.view_release", systemImage: "safari")
@@ -163,6 +176,7 @@ struct UpdateSettingsView: View {
         case .idle, .checking: "arrow.triangle.2.circlepath"
         case .upToDate: "checkmark.seal.fill"
         case .updateAvailable: "sparkles"
+        case .installerUnavailable: "shippingbox.and.arrow.backward"
         case .downloading: "arrow.down.circle"
         case .installerOpened: "shippingbox.fill"
         case .failed: "exclamationmark.triangle.fill"
@@ -173,6 +187,7 @@ struct UpdateSettingsView: View {
         switch service.phase {
         case .upToDate: .green
         case .updateAvailable, .downloading: accent
+        case .installerUnavailable: .orange
         case .installerOpened: .orange
         case .failed: .red
         case .idle, .checking: .white.opacity(0.65)
@@ -185,6 +200,7 @@ struct UpdateSettingsView: View {
         case .checking: "update.status.checking"
         case .upToDate: "update.status.current"
         case .updateAvailable: "update.status.available"
+        case .installerUnavailable: "update.status.installer_unavailable"
         case .downloading: "update.status.downloading"
         case .installerOpened: "update.status.installer_opened"
         case .failed: "update.status.failed"
@@ -197,6 +213,7 @@ struct UpdateSettingsView: View {
         case .checking: "update.detail.checking"
         case .upToDate: "update.detail.current"
         case .updateAvailable: "update.detail.available"
+        case .installerUnavailable: "update.detail.installer_unavailable"
         case .downloading: "update.detail.downloading"
         case .installerOpened: "update.detail.installer_opened"
         case .failed: "update.detail.failed"

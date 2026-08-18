@@ -99,6 +99,7 @@ struct GhostProtocolTests {
     func mapsShortcutKeys() {
         #expect(ShortcutManager.shared.keyCode(for: "F7") == 0x62)
         #expect(ShortcutManager.shared.keyCode(for: "a") == 0x00)
+        #expect(ShortcutManager.shared.keyCode(for: "Space") == 0x31)
         #expect(ShortcutManager.shared.keyCode(for: "unknown") == nil)
     }
 

@@ -8,6 +8,38 @@
 import Cocoa
 import Carbon
 
+nonisolated enum ShortcutKeyCatalog {
+    private static let keyCodes: [String: UInt32] = [
+        "A": 0x00, "S": 0x01, "D": 0x02, "F": 0x03,
+        "H": 0x04, "G": 0x05, "Z": 0x06, "X": 0x07,
+        "C": 0x08, "V": 0x09, "B": 0x0B, "Q": 0x0C,
+        "W": 0x0D, "E": 0x0E, "R": 0x0F, "Y": 0x10,
+        "T": 0x11, "1": 0x12, "2": 0x13, "3": 0x14,
+        "4": 0x15, "6": 0x16, "5": 0x17, "=": 0x18,
+        "9": 0x19, "7": 0x1A, "-": 0x1B, "8": 0x1C,
+        "0": 0x1D, "]": 0x1E, "O": 0x1F, "U": 0x20,
+        "[": 0x21, "I": 0x22, "P": 0x23, "L": 0x25,
+        "J": 0x26, "'": 0x27, "K": 0x28, ";": 0x29,
+        "\\": 0x2A, ",": 0x2B, "/": 0x2C, "N": 0x2D,
+        "M": 0x2E, ".": 0x2F, "SPACE": 0x31, "`": 0x32,
+        "F1": 0x7A, "F2": 0x78, "F3": 0x63,
+        "F4": 0x76, "F5": 0x60, "F6": 0x61,
+        "F7": 0x62, "F8": 0x64, "F9": 0x65,
+        "F10": 0x6D, "F11": 0x67, "F12": 0x6F,
+    ]
+
+    static func normalizedName(_ key: String) -> String? {
+        let normalized = key.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
+        guard keyCodes[normalized] != nil else { return nil }
+        return normalized == "SPACE" ? "Space" : normalized
+    }
+
+    static func keyCode(for key: String) -> UInt32? {
+        guard let normalized = normalizedName(key) else { return nil }
+        return keyCodes[normalized.uppercased()]
+    }
+}
+
 final class ShortcutManager {
     static let shared = ShortcutManager()
     private static let hotKeySignature = FourCharCode(bitPattern: 0x434C4744) // 'CLGD'
@@ -282,27 +314,6 @@ final class ShortcutManager {
     // MARK: - Key Code Mapping
     
     func keyCode(for character: String) -> UInt32? {
-        let upper = character.uppercased()
-        
-        let map: [String: UInt32] = [
-            "A": 0x00, "S": 0x01, "D": 0x02, "F": 0x03,
-            "H": 0x04, "G": 0x05, "Z": 0x06, "X": 0x07,
-            "C": 0x08, "V": 0x09, "B": 0x0B, "Q": 0x0C,
-            "W": 0x0D, "E": 0x0E, "R": 0x0F, "Y": 0x10,
-            "T": 0x11, "1": 0x12, "2": 0x13, "3": 0x14,
-            "4": 0x15, "6": 0x16, "5": 0x17, "=": 0x18,
-            "9": 0x19, "7": 0x1A, "-": 0x1B, "8": 0x1C,
-            "0": 0x1D, "]": 0x1E, "O": 0x1F, "U": 0x20,
-            "[": 0x21, "I": 0x22, "P": 0x23, "L": 0x25,
-            "J": 0x26, "'": 0x27, "K": 0x28, ";": 0x29,
-            "\\": 0x2A, ",": 0x2B, "/": 0x2C, "N": 0x2D,
-            "M": 0x2E, ".": 0x2F, "`": 0x32,
-            "F1": 0x7A, "F2": 0x78, "F3": 0x63,
-            "F4": 0x76, "F5": 0x60, "F6": 0x61,
-            "F7": 0x62, "F8": 0x64, "F9": 0x65,
-            "F10": 0x6D, "F11": 0x67, "F12": 0x6F
-        ]
-        
-        return map[upper]
+        ShortcutKeyCatalog.keyCode(for: character)
     }
 }

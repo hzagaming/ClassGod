@@ -115,7 +115,6 @@ struct ShortcutPicker: View {
                 let specialKeyCodes: Set<UInt16> = [
                     0x24, // Return
                     0x30, // Tab
-                    0x31, // Space
                     0x33, // Delete
                     0x37, // Command
                     0x38, // Shift
@@ -166,6 +165,7 @@ struct ShortcutPicker: View {
     }
 
     private func keyName(for event: NSEvent) -> String {
+        if event.keyCode == 0x31 { return "Space" }
         if let functionKey = functionKeyName(for: event.keyCode) {
             return functionKey
         }

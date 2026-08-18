@@ -25,7 +25,7 @@
   </p>
 </div>
 
-> Current release: **v1.5.39 (Build 64)**. Download the DMG or PKG from [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest).
+> Current release: **v1.5.40 (Build 65)**. Download the DMG or PKG from [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest).
 
 ## Why ClassGod
 
@@ -170,13 +170,13 @@ ClassGod/ClassGodTests/    App tests
 ClassGodHelper/            Privileged helper Swift package and tests
 ```
 
-## Latest announcement: v1.5.39
+## Latest announcement: v1.5.40
 
-This release adds a local Notes workspace with multiple notes, search, pinning, autosave, corruption backup, and a floating window that remains visible across apps, Spaces, and full-screen workspaces. A new Software Update page checks stable GitHub releases on launch and every six hours, prefers PKG over DMG, requires HTTPS and a valid GitHub SHA-256 digest, validates exact file size, and opens the macOS Installer after verification. Verification covers 190 main-app tests and 17 helper tests, Debug and Release builds, static analysis, localization output, embedded helper contents, and signatures.
+This release adds fully configurable Clipo shortcuts for opening the panel and saving or copying all nine quick slots, with persistence, import/export, conflict status, and live Carbon hot-key re-registration. The updater now distinguishes missing trusted installers, supports cancellation, rejects stale callbacks, validates downloads in cancellable background work, and promotes only the current verified package. Clipo interaction feedback now avoids sounds for no-op actions and shows the active shortcut throughout the UI. Verification covers 197 main-app tests and 17 helper tests, Debug and Release builds, static analysis, localization output, embedded helper contents, and signatures.
 
-## Previous announcement: v1.5.38
+## Previous announcement: v1.5.39
 
-v1.5.38 stabilized dynamic wallpaper rendering and audio lifecycle, restored wallpaper windows after permission-gate reactivation, and eliminated high-frequency ReminderKit reconnects. That release was verified with 181 main-app tests and 17 helper tests.
+v1.5.39 added the local Notes workspace and its cross-Space floating window, plus the GitHub Release update center with HTTPS, installer metadata, exact-size, and SHA-256 validation. That release was verified with 190 main-app tests and 17 helper tests.
 
 Read [CHANGELOG.md](CHANGELOG.md) for current releases and [CHANGELOG_HISTORY.md](CHANGELOG_HISTORY.md) for older history.
 

@@ -169,7 +169,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var fakeLockWindow: NSWindow?
     var showPopoverCustomHotKeyID: UInt32?
     var panicHotKeyID: UInt32?
-    var clipoHotKeyIDs: [UInt32] = []
 
     var splashWindow: NSWindow?
     private var clickOutsideMonitor: Any?
@@ -280,7 +279,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
         FakeLockService.shared.start()
         ClipoService.shared.start()
-        clipoHotKeyIDs = ClipoService.shared.registerDefaultHotKeys { [weak self] in
+        ClipoService.shared.registerHotKeys { [weak self] in
             self?.toggleClipoWindow()
         }
         ShortcutCatalogCoordinator.shared.start()
@@ -323,10 +322,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             ShortcutManager.shared.unregisterCustomHotKey(id: id)
             panicHotKeyID = nil
         }
-        for id in clipoHotKeyIDs {
-            ShortcutManager.shared.unregisterCustomHotKey(id: id)
-        }
-        clipoHotKeyIDs.removeAll()
         if let monitor = clickOutsideMonitor {
             NSEvent.removeMonitor(monitor)
             clickOutsideMonitor = nil
@@ -2606,10 +2601,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         if let id = panicHotKeyID {
             ShortcutManager.shared.unregisterCustomHotKey(id: id)
         }
-        for id in clipoHotKeyIDs {
-            ShortcutManager.shared.unregisterCustomHotKey(id: id)
-        }
-        clipoHotKeyIDs.removeAll()
         if let item = statusItem {
             NSStatusBar.system.removeStatusItem(item)
         }

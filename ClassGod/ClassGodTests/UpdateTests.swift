@@ -87,6 +87,57 @@ struct UpdateTests {
         #expect(!UpdateReleasePolicy.isUpdateAvailable(release: unsupported, currentVersion: "1.5.39"))
     }
 
+    @Test("New releases without a trusted installer are not reported as current")
+    func distinguishesUnavailableInstallers() {
+        let release = GitHubRelease(
+            tagName: "v1.5.40",
+            name: "ClassGod",
+            body: "",
+            htmlURL: URL(string: "https://example.com/release")!,
+            publishedAt: Date(),
+            isDraft: false,
+            isPrerelease: false,
+            assets: []
+        )
+
+        #expect(UpdateReleasePolicy.assessment(release: release, currentVersion: "1.5.39") == .installerUnavailable)
+        #expect(UpdateReleasePolicy.assessment(release: release, currentVersion: "1.5.40") == .upToDate)
+
+        var invalid = release
+        invalid.tagName = "release"
+        #expect(UpdateReleasePolicy.assessment(release: invalid, currentVersion: "1.5.39") == nil)
+    }
+
+    @Test("Cancelled update operations reject stale callbacks")
+    func rejectsStaleUpdateCallbacks() {
+        var session = UpdateOperationSession()
+        let first = session.begin()
+        session.cancel()
+        let second = session.begin()
+
+        #expect(!session.isCurrent(first))
+        #expect(session.isCurrent(second))
+        let staleCompletion = session.complete(first)
+        let currentCompletion = session.complete(second)
+        #expect(!staleCompletion)
+        #expect(currentCompletion)
+        #expect(!session.isCurrent(second))
+    }
+
+    @Test("Update cache cleanup targets only stale installer artifacts")
+    func identifiesStaleInstallerArtifacts() {
+        let directory = URL(fileURLWithPath: "/tmp/ClassGod/Updates", isDirectory: true)
+        let current = directory.appendingPathComponent("ClassGod-v1.5.40.pkg")
+        let stalePKG = directory.appendingPathComponent("ClassGod-v1.5.39.pkg")
+        let staleDMG = directory.appendingPathComponent("ClassGod-v1.5.39.dmg")
+        let unrelated = directory.appendingPathComponent("notes.txt")
+
+        #expect(Set(UpdateCachePolicy.staleInstallers(
+            in: [current, stalePKG, staleDMG, unrelated],
+            keeping: current
+        )) == [stalePKG, staleDMG])
+    }
+
     @Test("GitHub SHA-256 digests are parsed and verified")
     func verifiesDigests() {
         let data = Data("ClassGod".utf8)
@@ -97,5 +148,17 @@ struct UpdateTests {
         #expect(!UpdateDigestPolicy.matches(data: data, digest: "sha256:deadbeef"))
         #expect(!UpdateDigestPolicy.matches(data: data, digest: nil))
         #expect(UpdateDigestPolicy.expectedSHA256(from: "md5:abc") == nil)
+    }
+
+    @Test("Installer hashing stops when its update session is cancelled")
+    func cancelsInstallerHashing() throws {
+        let fileURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("ClassGod-update-test-\(UUID().uuidString)")
+        try Data("installer".utf8).write(to: fileURL)
+        defer { try? FileManager.default.removeItem(at: fileURL) }
+
+        #expect(throws: CancellationError.self) {
+            try UpdateDigestPolicy.sha256Hex(fileURL: fileURL, shouldCancel: { true })
+        }
     }
 }

@@ -12,9 +12,10 @@ nonisolated private struct ClipoStorageContainer: Codable, Sendable {
     let settings: ClipoSettings
 }
 
-nonisolated enum ClipoShortcutDefaults {
-    static let openKeyCode: UInt32 = 49
-    static let openModifiers = UInt32(NSEvent.ModifierFlags.command.union(.option).rawValue)
+nonisolated enum ClipoShortcutAction: Hashable, Sendable {
+    case openPanel
+    case saveSlot(Int)
+    case copySlot(Int)
 }
 
 nonisolated struct ClipoPasteSession: Sendable {
@@ -75,6 +76,7 @@ final class ClipoService: ObservableObject {
 
     @Published private(set) var history: [ClipoItem] = []
     @Published private(set) var slots: [Int: ClipoItem] = [:]
+    @Published private(set) var shortcutRegistrationFailures = Set<ClipoShortcutAction>()
     @Published var settings = ClipoSettings() {
         didSet {
             let normalized = settings.normalized
@@ -83,6 +85,11 @@ final class ClipoService: ObservableObject {
                 return
             }
             guard !isLoading else { return }
+            if oldValue.openShortcut != settings.openShortcut
+                || oldValue.slotSaveShortcuts != settings.slotSaveShortcuts
+                || oldValue.slotCopyShortcuts != settings.slotCopyShortcuts {
+                refreshHotKeys()
+            }
             history = ClipoHistoryPolicy.pruned(history, settings: settings, now: Date())
             save()
             settings.monitorClipboard ? startMonitoring() : stopMonitoring()
@@ -100,6 +107,8 @@ final class ClipoService: ObservableObject {
     private var pasteSession = ClipoPasteSession()
     private var pendingPasteSnapshot: ClipoPayload?
     private var saveTask: Task<Void, Never>?
+    private var hotKeyIDs: [UInt32] = []
+    private var openPanelHandler: (() -> Void)?
     private let persistenceQueue = DispatchQueue(label: "com.hanazar.classgod.clipo.persistence", qos: .utility)
 
     private var storageDirectory: URL {
@@ -131,6 +140,8 @@ final class ClipoService: ObservableObject {
         selectionTask = nil
         saveTask?.cancel()
         saveTask = nil
+        unregisterHotKeys()
+        openPanelHandler = nil
         enqueueSave()
         persistenceQueue.sync {}
     }
@@ -146,7 +157,9 @@ final class ClipoService: ObservableObject {
     }
 
     func captureCurrentClipboard() {
-        recordCurrentPasteboard(sourceApp: effectiveSourceApplication())
+        if recordCurrentPasteboard(sourceApp: effectiveSourceApplication()) {
+            SoundEffectManager.shared.playTabSaved()
+        }
     }
 
     func saveCurrentClipboard(to slotNumber: Int) {
@@ -320,8 +333,9 @@ final class ClipoService: ObservableObject {
     }
 
     func deleteSlot(_ number: Int) {
-        slots.removeValue(forKey: number)
+        guard slots.removeValue(forKey: number) != nil else { return }
         save()
+        SoundEffectManager.shared.playTabDeleted()
     }
 
     func togglePin(_ id: UUID) {
@@ -330,23 +344,31 @@ final class ClipoService: ObservableObject {
         history[index].lastUsedAt = Date()
         history = ClipoHistoryPolicy.trimmed(history, limit: settings.maxHistoryItems)
         save()
+        SoundEffectManager.shared.playButtonClick()
     }
 
     func delete(_ id: UUID) {
-        history.removeAll { $0.id == id }
+        guard let index = history.firstIndex(where: { $0.id == id }) else { return }
+        history.remove(at: index)
         save()
+        SoundEffectManager.shared.playTabDeleted()
     }
 
     func clearHistory(keepingPinned: Bool = true) {
-        history = keepingPinned ? history.filter(\.isPinned) : []
+        let updated = keepingPinned ? history.filter(\.isPinned) : []
+        guard updated != history else { return }
+        history = updated
         save()
+        SoundEffectManager.shared.playTabDeleted()
     }
 
     func resetAll() {
+        guard !history.isEmpty || !slots.isEmpty || settings != ClipoSettings() else { return }
         history = []
         slots = [:]
         settings = ClipoSettings()
         save()
+        SoundEffectManager.shared.playTabDeleted()
     }
 
     func export(to url: URL) throws {
@@ -371,48 +393,68 @@ final class ClipoService: ObservableObject {
         history = ClipoHistoryPolicy.pruned(container.history, settings: settings, now: Date())
         slots = normalizedSlots(container.slots)
         isLoading = false
+        refreshHotKeys()
         settings.monitorClipboard ? startMonitoring() : stopMonitoring()
         save()
     }
 
-    func registerDefaultHotKeys(openPanel: @escaping () -> Void) -> [UInt32] {
-        var ids: [UInt32] = []
-        let option = UInt32(NSEvent.ModifierFlags.option.rawValue)
-        let commandOption = ClipoShortcutDefaults.openModifiers
+    func registerHotKeys(openPanel: @escaping () -> Void) {
+        openPanelHandler = openPanel
+        refreshHotKeys()
+    }
 
-        if let id = ShortcutManager.shared.registerCustomHotKey(
-            keyCode: ClipoShortcutDefaults.openKeyCode,
-            cocoaModifiers: ClipoShortcutDefaults.openModifiers,
-            handler: openPanel
-        ) {
-            ids.append(id)
-        }
+    func resetShortcuts() {
+        var updated = settings
+        updated.resetShortcuts()
+        settings = updated
+    }
+
+    private func refreshHotKeys() {
+        unregisterHotKeys()
+        guard let openPanelHandler else { return }
+        shortcutRegistrationFailures.removeAll()
+
+        registerHotKey(action: .openPanel, shortcut: settings.openShortcut, handler: openPanelHandler)
         for number in 1...9 {
-            let keyCode = Self.numberKeyCodes[number] ?? 0
-            if let id = ShortcutManager.shared.registerCustomHotKey(
-                keyCode: keyCode,
-                cocoaModifiers: commandOption,
+            registerHotKey(
+                action: .saveSlot(number),
+                shortcut: settings.slotSaveShortcuts[number - 1],
                 handler: { [weak self] in self?.saveSelection(to: number) }
-            ) {
-                ids.append(id)
-            }
-            if let id = ShortcutManager.shared.registerCustomHotKey(
-                keyCode: keyCode,
-                cocoaModifiers: option,
+            )
+            registerHotKey(
+                action: .copySlot(number),
+                shortcut: settings.slotCopyShortcuts[number - 1],
                 handler: { [weak self] in
                     guard let item = self?.slots[number] else { return }
                     self?.copy(item)
                 }
-            ) {
-                ids.append(id)
-            }
+            )
         }
-        return ids
     }
 
-    private static let numberKeyCodes: [Int: UInt32] = [
-        1: 18, 2: 19, 3: 20, 4: 21, 5: 23, 6: 22, 7: 26, 8: 28, 9: 25,
-    ]
+    private func registerHotKey(
+        action: ClipoShortcutAction,
+        shortcut: ClipoShortcut,
+        handler: @escaping () -> Void
+    ) {
+        guard shortcut.isEnabled else { return }
+        guard let keyCode = ShortcutManager.shared.keyCode(for: shortcut.key),
+              let id = ShortcutManager.shared.registerCustomHotKey(
+                keyCode: keyCode,
+                cocoaModifiers: UInt32(shortcut.modifiers),
+                handler: handler
+              ) else {
+            shortcutRegistrationFailures.insert(action)
+            return
+        }
+        hotKeyIDs.append(id)
+    }
+
+    private func unregisterHotKeys() {
+        hotKeyIDs.forEach(ShortcutManager.shared.unregisterCustomHotKey)
+        hotKeyIDs.removeAll()
+        shortcutRegistrationFailures.removeAll()
+    }
 
     private func startMonitoring() {
         guard monitorTimer == nil else { return }
@@ -440,14 +482,16 @@ final class ClipoService: ObservableObject {
         recordCurrentPasteboard(sourceApp: effectiveSourceApplication())
     }
 
-    private func recordCurrentPasteboard(sourceApp: NSRunningApplication?) {
+    @discardableResult
+    private func recordCurrentPasteboard(sourceApp: NSRunningApplication?) -> Bool {
         if settings.ignoreSensitiveApps,
            let bundleID = sourceApp?.bundleIdentifier,
            settings.sensitiveBundleIdentifiers.contains(where: { $0.caseInsensitiveCompare(bundleID) == .orderedSame }) {
-            return
+            return false
         }
-        guard let item = makeItem(sourceApp: sourceApp) else { return }
+        guard let item = makeItem(sourceApp: sourceApp) else { return false }
         record(item)
+        return true
     }
 
     private func effectiveSourceApplication() -> NSRunningApplication? {

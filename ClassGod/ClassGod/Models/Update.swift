@@ -126,6 +126,38 @@ nonisolated struct GitHubRelease: Codable, Equatable, Sendable {
     }
 }
 
+nonisolated enum UpdateReleaseAssessment: Equatable, Sendable {
+    case upToDate
+    case updateAvailable
+    case installerUnavailable
+}
+
+nonisolated struct UpdateOperationSession: Sendable {
+    private var generation: UInt = 0
+    private var activeGeneration: UInt?
+
+    mutating func begin() -> UInt {
+        generation &+= 1
+        activeGeneration = generation
+        return generation
+    }
+
+    mutating func cancel() {
+        generation &+= 1
+        activeGeneration = nil
+    }
+
+    func isCurrent(_ request: UInt) -> Bool {
+        activeGeneration == request
+    }
+
+    mutating func complete(_ request: UInt) -> Bool {
+        guard isCurrent(request) else { return false }
+        activeGeneration = nil
+        return true
+    }
+}
+
 nonisolated enum UpdateReleasePolicy {
     static let maximumResponseSize = 2 * 1_024 * 1_024
     static let maximumAssetSize: Int64 = 1_024 * 1_024 * 1_024
@@ -148,12 +180,31 @@ nonisolated enum UpdateReleasePolicy {
     }
 
     static func isUpdateAvailable(release: GitHubRelease, currentVersion: String) -> Bool {
+        assessment(release: release, currentVersion: currentVersion) == .updateAvailable
+    }
+
+    static func assessment(
+        release: GitHubRelease,
+        currentVersion: String
+    ) -> UpdateReleaseAssessment? {
         guard !release.isDraft,
               !release.isPrerelease,
-              preferredAsset(in: release) != nil,
               let latest = AppVersion(release.tagName),
-              let current = AppVersion(currentVersion) else { return false }
-        return latest > current
+              let current = AppVersion(currentVersion) else { return nil }
+        guard latest > current else { return .upToDate }
+        return preferredAsset(in: release) == nil ? .installerUnavailable : .updateAvailable
+    }
+}
+
+nonisolated enum UpdateCachePolicy {
+    static func staleInstallers(in urls: [URL], keeping currentURL: URL) -> [URL] {
+        let current = currentURL.standardizedFileURL
+        return urls.filter { url in
+            let candidate = url.standardizedFileURL
+            guard candidate != current else { return false }
+            let extensionName = candidate.pathExtension.lowercased()
+            return extensionName == "pkg" || extensionName == "dmg"
+        }
     }
 }
 
@@ -177,11 +228,15 @@ nonisolated enum UpdateDigestPolicy {
         return sha256Hex(data) == expected
     }
 
-    static func sha256Hex(fileURL: URL) throws -> String {
+    static func sha256Hex(
+        fileURL: URL,
+        shouldCancel: () -> Bool = { false }
+    ) throws -> String {
         let handle = try FileHandle(forReadingFrom: fileURL)
         defer { try? handle.close() }
         var hasher = SHA256()
         while true {
+            if shouldCancel() { throw CancellationError() }
             let data = try handle.read(upToCount: 1_048_576) ?? Data()
             if data.isEmpty { break }
             hasher.update(data: data)
