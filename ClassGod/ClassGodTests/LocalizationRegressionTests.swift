@@ -114,6 +114,20 @@ struct LocalizationRegressionTests {
         #expect(String(format: String(localized: "fan.notification.high_temperature.body", bundle: .main, locale: english), "90°C", "85°C") == "Highest temperature reached 90°C (threshold: 85°C)")
     }
 
+    @Test("Update settings are localized")
+    func validatesUpdateLabels() throws {
+        let english = Locale(identifier: "en")
+        let chineseURL = try #require(Bundle.main.url(forResource: "zh-Hans", withExtension: "lproj"))
+        let chinese = try #require(Bundle(url: chineseURL))
+
+        #expect(String(localized: "tab.updates", bundle: .main, locale: english) == "Updates")
+        #expect(String(localized: "update.status.current", bundle: .main, locale: english) == "ClassGod is up to date")
+        #expect(String(localized: "update.download_install", bundle: .main, locale: english) == "Download and Install")
+        #expect(chinese.localizedString(forKey: "update.title", value: nil, table: nil) == "软件更新")
+        #expect(chinese.localizedString(forKey: "update.status.installer_opened", value: nil, table: nil) == "安装器已打开")
+        #expect(chinese.localizedString(forKey: "update.security_notice", value: nil, table: nil).contains("管理员授权"))
+    }
+
     @Test("Settings never expose localization keys in English")
     func validatesSettingsLabels() {
         let english = Locale(identifier: "en")

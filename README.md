@@ -25,7 +25,7 @@
   </p>
 </div>
 
-> Current release: **v1.5.38 (Build 63)**. Download the DMG or PKG from [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest).
+> Current release: **v1.5.39 (Build 64)**. Download the DMG or PKG from [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest).
 
 ## Why ClassGod
 
@@ -41,6 +41,8 @@ It has grown into a focused desktop toolkit while keeping the same rule: user da
 | **SuperSwitch** | Activates or launches selected apps and targets with independent global shortcuts. |
 | **Fake Lock** | Opens a chosen browser and URL in Safe Browser or MapTest Bypass mode, with configurable back/forward navigation locks. |
 | **Clipo** | Keeps local clipboard history, quick slots, search, pinning, import/export, and controlled retention. |
+| **Notes** | Keeps searchable local notes in an optional floating window that follows every app, Space, and full-screen workspace. |
+| **Software Update** | Checks stable GitHub releases automatically, verifies installer metadata and SHA-256, then opens the macOS Installer. |
 | **Permission Center** | Shows every supported macOS permission, its live state, why it is used, and the exact system settings destination. |
 | **Fan Control** | Reads available temperature and fan data, supports System, Max, Manual, and Custom policies, and uses a privileged helper when approved. |
 | **Widgets** | Provides 19 native WidgetKit widgets, including system, weather, notes, tasks, files, terminal, and launcher views. |
@@ -168,13 +170,13 @@ ClassGod/ClassGodTests/    App tests
 ClassGodHelper/            Privileged helper Swift package and tests
 ```
 
-## Latest announcement: v1.5.38
+## Latest announcement: v1.5.39
 
-This release makes dynamic wallpaper playback visually and audibly stable. Animated images now preserve aspect ratio while filling the display, desktop media reconciliation runs only after state mutations complete, and a wallpaper switch refreshes the final content once instead of restarting old and new players in sequence. Routine display geometry changes no longer restart media, while coordinator changes still move the single active audio track safely. Wallpaper windows also return automatically after permission-gated features are reactivated. Permission Center now avoids high-frequency polling for callback-driven permissions, eliminating repeated ReminderKit XPC reconnects. Verification covers 181 main-app tests and 17 helper tests, Debug and Release builds, static analysis, localization output, embedded helper contents, and signatures.
+This release adds a local Notes workspace with multiple notes, search, pinning, autosave, corruption backup, and a floating window that remains visible across apps, Spaces, and full-screen workspaces. A new Software Update page checks stable GitHub releases on launch and every six hours, prefers PKG over DMG, requires HTTPS and a valid GitHub SHA-256 digest, validates exact file size, and opens the macOS Installer after verification. Verification covers 190 main-app tests and 17 helper tests, Debug and Release builds, static analysis, localization output, embedded helper contents, and signatures.
 
-## Previous announcement: v1.5.37
+## Previous announcement: v1.5.38
 
-v1.5.37 added the emergency-switching preflight center and a cold-start-safe shortcut readiness catalog, corrected Carbon registration reporting, normalized target bundle identifiers, and improved window masking, accessibility, diagnostic SFX, and wallpaper audio synchronization. That release was verified with 179 main-app tests and 17 helper tests.
+v1.5.38 stabilized dynamic wallpaper rendering and audio lifecycle, restored wallpaper windows after permission-gate reactivation, and eliminated high-frequency ReminderKit reconnects. That release was verified with 181 main-app tests and 17 helper tests.
 
 Read [CHANGELOG.md](CHANGELOG.md) for current releases and [CHANGELOG_HISTORY.md](CHANGELOG_HISTORY.md) for older history.
 

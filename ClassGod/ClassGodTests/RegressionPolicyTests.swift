@@ -541,7 +541,9 @@ struct RegressionPolicyTests {
 
     @Test("Settings navigation exposes every page with stable metadata")
     func validatesSettingsNavigation() {
-        #expect(SettingsPage.allCases == [.general, .shortcuts, .appearance, .browser, .advanced, .fan])
+        #expect(SettingsPage.allCases == [
+            .general, .shortcuts, .appearance, .browser, .advanced, .fan, .updates,
+        ])
         #expect(Set(SettingsPage.allCases.map(\.id)).count == SettingsPage.allCases.count)
         #expect(SettingsWindowLayoutPolicy.baseWidth == 720)
         #expect(SettingsWindowLayoutPolicy.baseHeight == 620)

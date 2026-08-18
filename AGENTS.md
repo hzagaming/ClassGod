@@ -2,7 +2,7 @@
 
 ## 项目定位
 
-ClassGod 本质上是一个**紧急切屏工具**——帮用户在关键时刻（比如老师来了、老板路过）瞬间切回指定页面。当前版本 v1.5.38 (Build 63)，核心逻辑是 AppleScript + Carbon HotKey + SwiftUI。
+ClassGod 本质上是一个**紧急切屏工具**——帮用户在关键时刻（比如老师来了、老板路过）瞬间切回指定页面。当前版本 v1.5.39 (Build 64)，核心逻辑是 AppleScript + Carbon HotKey + SwiftUI。
 
 ## 技术约束
 
@@ -22,6 +22,8 @@ ClassGod 本质上是一个**紧急切屏工具**——帮用户在关键时刻�
 - `BypassRule` / `BypassType`：浏览器绕过规则模型
 - `AssessPrepHack` / `AssessPrepBypassTechnique`：应急绕过技术模型
 - `SwitchTarget` / `AppIconStyle` / `WallpaperPlaybackMode` / `ClipoItem`：SuperSwitch、图标伪装、壁纸与剪贴板中心相关模型
+- `ClassGodNote` / `NotesSnapshot`：本地笔记与持久化快照模型
+- `GitHubRelease` / `GitHubReleaseAsset` / `AppVersion`：更新元数据、安装资产与版本比较模型
 
 ### Services
 - `BrowserDetector`：异步 AppleScript 获取当前最前端浏览器窗口的活动标签页
@@ -34,6 +36,8 @@ ClassGod 本质上是一个**紧急切屏工具**——帮用户在关键时刻�
 - `SMCService`：通过 IOKit 读取 SMC 温度传感器和风扇转速，支持 Intel / Apple Silicon；支持风扇模式切换（System / Max / Manual / Custom）；Apple Silicon 上会通过 IORegistry 发现 `AppleARMPMUTempSensor`、`AppleSmartBattery`、`IOPMPowerSource` 等传感器，并标记不可读传感器为 estimated；提供 `rescan()` 与 `fanAccessReason` 用于硬件重新扫描和权限提示
 - `SMCHelperClient` / `ClassGodHelper`：特权辅助工具。`ClassGodHelper` 是以 root 运行的独立 Swift Package 可执行文件，通过 Unix domain socket (`/tmp/com.hanazar.classgod.helper.sock`) 与主应用通信，使用 `getpeereid` 进行 UID 校验；`SMCHelperClient` 在主应用中同步调用 Helper 以读取真实风扇 RPM / 温度、写入风扇目标转速。Helper 通过 Xcode Run Script 阶段自动构建到 `ClassGod.app/Contents/Resources/ClassGodHelper`，LaunchDaemon plist 位于 `Contents/Library/LaunchDaemons`，由 `SMAppService` 请求玩家批准。
 - `PermissionCenterService`：集中管理所有 macOS 权限（Accessibility / AppleEvents / Screen Recording / Full Disk / Mic / Camera / Location / Notifications / Contacts / Reminders / Calendar / Bluetooth）。支持实时状态检测、按 feature 分类展示、一键请求 / 跳转系统设置、First-Time Setup 引导流程。
+- `NotesService`：管理多笔记、搜索、置顶、自动保存与损坏文件备份；数据保存在 Application Support，不写入仓库
+- `UpdateService`：启动时及每 6 小时检查 GitHub 最新正式 Release，验证 HTTPS、大小与 SHA-256 后打开 macOS 安装器
 
 ### Utilities
 - `SoundEffectManager`：系统音效播放，可开关
@@ -57,6 +61,8 @@ ClassGod 本质上是一个**紧急切屏工具**——帮用户在关键时刻�
 - `ActivityMonitorView` / `ActivityMonitorViewModel`：系统活动监视器（进程 / 内存 / 磁盘 / 网络 / 电池 / 能耗）。
 - `ErrorHubView` / `ErrorDetailView`：Swift/macOS 错误百科中心。
 - `WallpaperBrowserView`：视频/动态壁纸选择器。
+- `NotesView`：Notes 风格双栏编辑器，通过跨应用、Spaces 与全屏的悬浮窗口持续显示。
+- `UpdateSettingsView`：软件更新状态、Release 说明、下载进度与安装入口。
 
 ## 开发规范
 
