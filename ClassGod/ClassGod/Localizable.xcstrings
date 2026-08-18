@@ -14471,13 +14471,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "LIVE · 100ms"
+            "value" : "LIVE · ADAPTIVE"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "实时 · 100ms"
+            "value" : "实时 · 自适应"
           }
         }
       }

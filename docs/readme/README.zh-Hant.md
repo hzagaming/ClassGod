@@ -4,7 +4,7 @@
 
 [English](../../README.md) · [简体中文](README.zh-Hans.md) · **繁體中文** · [日本語](README.ja.md) · [한국어](README.ko.md) · [Français](README.fr.md) · [Deutsch](README.de.md) · [Español](README.es.md) · [Português](README.pt.md) · [Русский](README.ru.md)
 
-> 目前版本：**v1.5.40 (Build 65)**。可從 [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest) 下載 DMG 或 PKG。
+> 目前版本：**v1.5.41 (Build 66)**。可從 [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest) 下載 DMG 或 PKG。
 
 ## ClassGod 是什麼
 

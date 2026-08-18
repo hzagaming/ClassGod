@@ -159,7 +159,7 @@ final class UpdateService: ObservableObject {
             fail(UpdateError.missingInstaller.localizedDescription)
             return
         }
-        guard asset.downloadURL.scheme?.lowercased() == "https" else {
+        guard UpdateReleasePolicy.isTrustedDownloadURL(asset.downloadURL) else {
             fail(UpdateError.invalidDownload.localizedDescription)
             return
         }
@@ -186,7 +186,7 @@ final class UpdateService: ObservableObject {
             do {
                 guard let response = response as? HTTPURLResponse,
                       (200..<300).contains(response.statusCode),
-                      response.url?.scheme?.lowercased() == "https",
+                      response.url.map(UpdateReleasePolicy.isTrustedDownloadResponseURL) == true,
                       let temporaryURL else { throw UpdateError.invalidDownload }
                 let stagedURL = try Self.stageDownloadedFile(from: temporaryURL, asset: asset)
                 Task { @MainActor in

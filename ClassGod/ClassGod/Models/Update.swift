@@ -172,11 +172,38 @@ nonisolated enum UpdateReleasePolicy {
         let valid = release.assets.filter {
             $0.size > 0
                 && $0.size <= maximumAssetSize
-                && $0.downloadURL.scheme?.lowercased() == "https"
+                && isTrustedDownloadURL($0.downloadURL)
                 && UpdateDigestPolicy.expectedSHA256(from: $0.digest) != nil
         }
         return valid.first { $0.name.lowercased().hasSuffix(".pkg") }
             ?? valid.first { $0.name.lowercased().hasSuffix(".dmg") }
+    }
+
+    static func isTrustedDownloadURL(_ url: URL) -> Bool {
+        guard hasTrustedTransport(url),
+              url.host?.lowercased() == "github.com",
+              url.query == nil,
+              url.fragment == nil else { return false }
+        let components = url.pathComponents.filter { $0 != "/" }
+        guard components.count == 6 else { return false }
+        return components[0].caseInsensitiveCompare("hzagaming") == .orderedSame
+            && components[1].caseInsensitiveCompare("ClassGod") == .orderedSame
+            && components[2] == "releases"
+            && components[3] == "download"
+            && !components[4].isEmpty
+            && !components[5].isEmpty
+    }
+
+    static func isTrustedDownloadResponseURL(_ url: URL) -> Bool {
+        guard hasTrustedTransport(url), let host = url.host?.lowercased() else { return false }
+        return host == "github.com" || host.hasSuffix(".githubusercontent.com")
+    }
+
+    private static func hasTrustedTransport(_ url: URL) -> Bool {
+        url.scheme?.lowercased() == "https"
+            && url.user == nil
+            && url.password == nil
+            && url.port == nil
     }
 
     static func isUpdateAvailable(release: GitHubRelease, currentVersion: String) -> Bool {

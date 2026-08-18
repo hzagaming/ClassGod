@@ -27,14 +27,14 @@ struct UpdateTests {
           "assets": [
             {
               "name": "ClassGod-v1.5.40.dmg",
-              "browser_download_url": "https://example.com/ClassGod.dmg",
+              "browser_download_url": "https://github.com/hzagaming/ClassGod/releases/download/v1.5.40/ClassGod.dmg",
               "size": 600,
               "content_type": "application/x-apple-diskimage",
               "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
             },
             {
               "name": "ClassGod-v1.5.40.pkg",
-              "browser_download_url": "https://example.com/ClassGod.pkg",
+              "browser_download_url": "https://github.com/hzagaming/ClassGod/releases/download/v1.5.40/ClassGod.pkg",
               "size": 500,
               "content_type": "application/octet-stream",
               "digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
@@ -50,11 +50,32 @@ struct UpdateTests {
         #expect(UpdateReleasePolicy.isUpdateAvailable(release: release, currentVersion: "1.5.39"))
     }
 
+    @Test("Release installers must come from this repository's GitHub download path")
+    func validatesTrustedInstallerURLs() {
+        let trusted = URL(
+            string: "https://github.com/hzagaming/ClassGod/releases/download/v1.5.40/ClassGod.pkg"
+        )!
+
+        #expect(UpdateReleasePolicy.isTrustedDownloadURL(trusted))
+        #expect(!UpdateReleasePolicy.isTrustedDownloadURL(URL(string: "http://github.com/hzagaming/ClassGod/releases/download/v1.5.40/ClassGod.pkg")!))
+        #expect(!UpdateReleasePolicy.isTrustedDownloadURL(URL(string: "https://github.com.evil.example/hzagaming/ClassGod/releases/download/v1.5.40/ClassGod.pkg")!))
+        #expect(!UpdateReleasePolicy.isTrustedDownloadURL(URL(string: "https://github.com/another/ClassGod/releases/download/v1.5.40/ClassGod.pkg")!))
+        #expect(!UpdateReleasePolicy.isTrustedDownloadURL(URL(string: "https://example.com/ClassGod.pkg")!))
+        #expect(!UpdateReleasePolicy.isTrustedDownloadURL(URL(string: "https://user@github.com/hzagaming/ClassGod/releases/download/v1.5.40/ClassGod.pkg")!))
+        #expect(!UpdateReleasePolicy.isTrustedDownloadURL(URL(string: "https://github.com:443/hzagaming/ClassGod/releases/download/v1.5.40/ClassGod.pkg")!))
+        #expect(!UpdateReleasePolicy.isTrustedDownloadURL(URL(string: "https://github.com/hzagaming/ClassGod/releases/download/v1.5.40/ClassGod.pkg?token=1")!))
+        #expect(!UpdateReleasePolicy.isTrustedDownloadURL(URL(string: "https://github.com/hzagaming/ClassGod/releases/download/v1.5.40/ClassGod.pkg#fragment")!))
+        #expect(UpdateReleasePolicy.isTrustedDownloadResponseURL(URL(string: "https://release-assets.githubusercontent.com/file.pkg")!))
+        #expect(!UpdateReleasePolicy.isTrustedDownloadResponseURL(URL(string: "https://user@release-assets.githubusercontent.com/file.pkg")!))
+        #expect(!UpdateReleasePolicy.isTrustedDownloadResponseURL(URL(string: "https://release-assets.githubusercontent.com:443/file.pkg")!))
+        #expect(!UpdateReleasePolicy.isTrustedDownloadResponseURL(URL(string: "https://release-assets.githubusercontent.com.evil.example/file.pkg")!))
+    }
+
     @Test("Drafts, prereleases, old versions, and assetless releases are rejected")
     func rejectsUnsupportedReleases() {
         let asset = GitHubReleaseAsset(
             name: "ClassGod.pkg",
-            downloadURL: URL(string: "https://example.com/ClassGod.pkg")!,
+            downloadURL: URL(string: "https://github.com/hzagaming/ClassGod/releases/download/v1.5.40/ClassGod.pkg")!,
             size: 100,
             contentType: "application/octet-stream",
             digest: "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"

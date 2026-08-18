@@ -60,7 +60,8 @@ struct LocalizationRegressionTests {
         #expect(chinese.localizedString(forKey: "permission.gate.requirement", value: nil, table: nil) == "可选权限已置于最底部，可随时补充")
         #expect(chinese.localizedString(forKey: "permission.privacy.detail", value: nil, table: nil).contains("不会上传"))
         #expect(chinese.localizedString(forKey: "permission.gate.skip", value: nil, table: nil) == "暂时跳过并使用")
-        #expect(chinese.localizedString(forKey: "permission.live_status", value: nil, table: nil) == "实时 · 100ms")
+        #expect(String(localized: "permission.live_status", bundle: .main, locale: english) == "LIVE · ADAPTIVE")
+        #expect(chinese.localizedString(forKey: "permission.live_status", value: nil, table: nil) == "实时 · 自适应")
         #expect(chinese.localizedString(forKey: "uninstall.final.title", value: nil, table: nil) == "再次确认，确定要彻底卸载？")
         #expect(chinese.localizedString(forKey: "uninstall.cleanup.data", value: nil, table: nil) == "删除偏好、缓存、历史记录、壁纸与 Widget 数据")
     }
