@@ -11,7 +11,7 @@ nonisolated struct AppVersion: Comparable, Sendable {
             case let (.number(lhs), .number(rhs)): lhs < rhs
             case (.number, .text): true
             case (.text, .number): false
-            case let (.text(lhs), .text(rhs)): lhs.localizedStandardCompare(rhs) == .orderedAscending
+            case let (.text(lhs), .text(rhs)): lhs < rhs
             }
         }
     }
@@ -31,8 +31,11 @@ nonisolated struct AppVersion: Comparable, Sendable {
         while parsed.count > 1, parsed.last == 0 { parsed.removeLast() }
         components = parsed
 
-        if sections.count == 2, !sections[1].isEmpty {
-            prerelease = sections[1].split(separator: ".").map { value in
+        if sections.count == 2 {
+            let identifiers = sections[1].split(separator: ".", omittingEmptySubsequences: false)
+            guard !identifiers.isEmpty,
+                  identifiers.allSatisfy({ !$0.isEmpty }) else { return nil }
+            prerelease = identifiers.map { value in
                 Int(value).map(Identifier.number) ?? .text(String(value))
             }
         } else {
@@ -199,6 +202,34 @@ nonisolated enum UpdateReleasePolicy {
         return host == "github.com" || host.hasSuffix(".githubusercontent.com")
     }
 
+    static func isTrustedReleaseAPIURL(_ url: URL) -> Bool {
+        guard hasTrustedTransport(url),
+              url.host?.lowercased() == "api.github.com",
+              url.query == nil,
+              url.fragment == nil else { return false }
+        let components = url.pathComponents.filter { $0 != "/" }
+        return components.count == 5
+            && components[0] == "repos"
+            && components[1].caseInsensitiveCompare("hzagaming") == .orderedSame
+            && components[2].caseInsensitiveCompare("ClassGod") == .orderedSame
+            && components[3] == "releases"
+            && components[4] == "latest"
+    }
+
+    static func isTrustedReleasePageURL(_ url: URL) -> Bool {
+        guard hasTrustedTransport(url),
+              url.host?.lowercased() == "github.com",
+              url.query == nil,
+              url.fragment == nil else { return false }
+        let components = url.pathComponents.filter { $0 != "/" }
+        return components.count == 5
+            && components[0].caseInsensitiveCompare("hzagaming") == .orderedSame
+            && components[1].caseInsensitiveCompare("ClassGod") == .orderedSame
+            && components[2] == "releases"
+            && components[3] == "tag"
+            && !components[4].isEmpty
+    }
+
     private static func hasTrustedTransport(_ url: URL) -> Bool {
         url.scheme?.lowercased() == "https"
             && url.user == nil
@@ -216,6 +247,7 @@ nonisolated enum UpdateReleasePolicy {
     ) -> UpdateReleaseAssessment? {
         guard !release.isDraft,
               !release.isPrerelease,
+              isTrustedReleasePageURL(release.htmlURL),
               let latest = AppVersion(release.tagName),
               let current = AppVersion(currentVersion) else { return nil }
         guard latest > current else { return .upToDate }

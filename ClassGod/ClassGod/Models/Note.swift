@@ -28,6 +28,7 @@ nonisolated struct ClassGodNote: Identifiable, Codable, Equatable, Sendable {
         let explicit = title.trimmingCharacters(in: .whitespacesAndNewlines)
         if !explicit.isEmpty { return explicit }
         return body
+            .prefix(NotesContentPolicy.maximumTitleInferenceScanLength)
             .split(whereSeparator: \.isNewline)
             .lazy
             .map { $0.trimmingCharacters(in: .whitespaces) }
@@ -36,9 +37,7 @@ nonisolated struct ClassGodNote: Identifiable, Codable, Equatable, Sendable {
     }
 
     var preview: String {
-        body
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-            .replacingOccurrences(of: "\n", with: " ")
+        NotesContentPolicy.preview(body)
     }
 }
 
@@ -84,6 +83,17 @@ nonisolated enum NotesContentPolicy {
     static let maximumTitleLength = 200
     static let maximumBodyLength = 2_000_000
     static let maximumNoteCount = 500
+    static let maximumPreviewLength = 180
+    static let maximumPreviewScanLength = 720
+    static let maximumTitleInferenceScanLength = 4_096
+
+    static func preview(_ body: String) -> String {
+        let sample = body.prefix(maximumPreviewScanLength)
+        let normalized = sample.split(whereSeparator: \.isWhitespace).joined(separator: " ")
+        let isTruncated = sample.endIndex != body.endIndex || normalized.count > maximumPreviewLength
+        let preview = String(normalized.prefix(maximumPreviewLength))
+        return isTruncated ? preview + "…" : preview
+    }
 
     static func normalized(_ snapshot: NotesSnapshot) -> NotesSnapshot {
         var seen = Set<UUID>()

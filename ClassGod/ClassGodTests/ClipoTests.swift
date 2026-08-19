@@ -69,6 +69,24 @@ struct ClipoTests {
         #expect(normalized.normalized == normalized)
     }
 
+    @Test("Normalized settings still produce their required side effects")
+    func plansNormalizedSettingsChanges() {
+        let previous = ClipoSettings()
+        var requested = previous
+        requested.maxHistoryItems = 9_999
+        requested.openShortcut = ClipoShortcut(
+            key: " a ",
+            modifiers: NSEvent.ModifierFlags.command.rawValue
+        )
+
+        let plan = ClipoSettingsChangePlan(previous: previous, requested: requested)
+
+        #expect(plan.settings.maxHistoryItems == 2_000)
+        #expect(plan.settings.openShortcut.key == "A")
+        #expect(plan.hasChanges)
+        #expect(plan.requiresShortcutRefresh)
+    }
+
     @Test("UTF-16 clipboard text decodes without data loss")
     func decodesUTF16ClipboardText() throws {
         let text = "ClassGod 剪贴板"
@@ -307,5 +325,6 @@ struct ClipoTests {
         #expect(ClipoSearch.filtered(items, query: "CGfc", type: nil, caseSensitive: false, fuzzy: true).map(\.content) == ["ClassGod fan control"])
         #expect(ClipoSearch.filtered(items, query: "github", type: .url, caseSensitive: false, fuzzy: false).count == 1)
         #expect(ClipoSearch.filtered(items, query: "widgetkit", type: .code, caseSensitive: true, fuzzy: false).isEmpty)
+        #expect(ClipoSearch.filtered(items, query: "   ", type: nil, caseSensitive: false, fuzzy: false) == items)
     }
 }

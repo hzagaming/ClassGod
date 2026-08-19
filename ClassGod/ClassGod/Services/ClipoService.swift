@@ -79,15 +79,10 @@ final class ClipoService: ObservableObject {
     @Published private(set) var shortcutRegistrationFailures = Set<ClipoShortcutAction>()
     @Published var settings = ClipoSettings() {
         didSet {
-            let normalized = settings.normalized
-            guard normalized == settings else {
-                settings = normalized
-                return
-            }
-            guard !isLoading else { return }
-            if oldValue.openShortcut != settings.openShortcut
-                || oldValue.slotSaveShortcuts != settings.slotSaveShortcuts
-                || oldValue.slotCopyShortcuts != settings.slotCopyShortcuts {
+            let plan = ClipoSettingsChangePlan(previous: oldValue, requested: settings)
+            if plan.settings != settings { settings = plan.settings }
+            guard !isLoading, plan.hasChanges else { return }
+            if plan.requiresShortcutRefresh {
                 refreshHotKeys()
             }
             history = ClipoHistoryPolicy.pruned(history, settings: settings, now: Date())
@@ -403,10 +398,13 @@ final class ClipoService: ObservableObject {
         refreshHotKeys()
     }
 
-    func resetShortcuts() {
+    @discardableResult
+    func resetShortcuts() -> Bool {
         var updated = settings
         updated.resetShortcuts()
+        guard updated != settings else { return false }
         settings = updated
+        return true
     }
 
     private func refreshHotKeys() {

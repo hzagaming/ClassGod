@@ -11,6 +11,8 @@ struct UpdateTests {
         #expect(AppVersion("1.5.39-beta.1")! < AppVersion("1.5.39")!)
         #expect(AppVersion("1.5.39")! == AppVersion("v1.5.39")!)
         #expect(AppVersion("release") == nil)
+        #expect(AppVersion("1.5.39-") == nil)
+        #expect(AppVersion("1.5.39-beta..1") == nil)
     }
 
     @Test("Release decoding selects PKG before DMG")
@@ -71,6 +73,29 @@ struct UpdateTests {
         #expect(!UpdateReleasePolicy.isTrustedDownloadResponseURL(URL(string: "https://release-assets.githubusercontent.com.evil.example/file.pkg")!))
     }
 
+    @Test("Release metadata and pages stay on this repository's trusted endpoints")
+    func validatesTrustedReleaseURLs() {
+        #expect(UpdateReleasePolicy.isTrustedReleaseAPIURL(URL(
+            string: "https://api.github.com/repos/hzagaming/ClassGod/releases/latest"
+        )!))
+        #expect(!UpdateReleasePolicy.isTrustedReleaseAPIURL(URL(
+            string: "https://api.github.com/repos/another/ClassGod/releases/latest"
+        )!))
+        #expect(!UpdateReleasePolicy.isTrustedReleaseAPIURL(URL(
+            string: "https://api.github.com/repos/hzagaming/ClassGod/releases/latest?redirect=1"
+        )!))
+
+        #expect(UpdateReleasePolicy.isTrustedReleasePageURL(URL(
+            string: "https://github.com/hzagaming/ClassGod/releases/tag/v1.5.42"
+        )!))
+        #expect(!UpdateReleasePolicy.isTrustedReleasePageURL(URL(
+            string: "https://example.com/hzagaming/ClassGod/releases/tag/v1.5.42"
+        )!))
+        #expect(!UpdateReleasePolicy.isTrustedReleasePageURL(URL(
+            string: "https://github.com/hzagaming/ClassGod/releases/tag/v1.5.42?next=evil"
+        )!))
+    }
+
     @Test("Drafts, prereleases, old versions, and assetless releases are rejected")
     func rejectsUnsupportedReleases() {
         let asset = GitHubReleaseAsset(
@@ -84,7 +109,7 @@ struct UpdateTests {
             tagName: "v1.5.40",
             name: "ClassGod",
             body: "",
-            htmlURL: URL(string: "https://example.com/release")!,
+            htmlURL: URL(string: "https://github.com/hzagaming/ClassGod/releases/tag/v1.5.40")!,
             publishedAt: Date(),
             isDraft: false,
             isPrerelease: false,
@@ -114,7 +139,7 @@ struct UpdateTests {
             tagName: "v1.5.40",
             name: "ClassGod",
             body: "",
-            htmlURL: URL(string: "https://example.com/release")!,
+            htmlURL: URL(string: "https://github.com/hzagaming/ClassGod/releases/tag/v1.5.40")!,
             publishedAt: Date(),
             isDraft: false,
             isPrerelease: false,

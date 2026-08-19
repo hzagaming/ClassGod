@@ -58,6 +58,14 @@ struct NotesTests {
         #expect(normalized.selectedNoteID == normalized.notes.first?.id)
     }
 
+    @Test("Sidebar previews remain bounded for very large notes")
+    func boundsSidebarPreviews() {
+        let note = ClassGodNote(body: String(repeating: "A", count: 10_000))
+
+        #expect(note.preview.count <= NotesContentPolicy.maximumPreviewLength + 1)
+        #expect(note.preview.hasSuffix("…"))
+    }
+
     @Test("Notes use Application Support and snapshots round-trip")
     func persistsSnapshots() throws {
         let root = URL(fileURLWithPath: "/tmp/ClassGodNotesTests", isDirectory: true)

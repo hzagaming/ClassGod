@@ -98,6 +98,8 @@ final class UpdateService: ObservableObject {
         validationTask = nil
         downloadTask?.cancel()
         downloadTask = nil
+        downloadProgress = 0
+        errorMessage = nil
         if phase == .checking || phase == .downloading { phase = .idle }
         isStarted = false
     }
@@ -120,7 +122,10 @@ final class UpdateService: ObservableObject {
                 try Task.checkCancellation()
                 guard checkSession.isCurrent(requestID) else { return }
                 guard let response = response as? HTTPURLResponse,
-                      (200..<300).contains(response.statusCode) else { throw UpdateError.invalidResponse }
+                      (200..<300).contains(response.statusCode),
+                      response.url.map(UpdateReleasePolicy.isTrustedReleaseAPIURL) == true else {
+                    throw UpdateError.invalidResponse
+                }
                 guard data.count <= UpdateReleasePolicy.maximumResponseSize else {
                     throw UpdateError.responseTooLarge
                 }
@@ -225,7 +230,8 @@ final class UpdateService: ObservableObject {
     }
 
     func openReleasePage() {
-        guard let url = latestRelease?.htmlURL else { return }
+        guard let url = latestRelease?.htmlURL,
+              UpdateReleasePolicy.isTrustedReleasePageURL(url) else { return }
         NSWorkspace.shared.open(url)
     }
 
@@ -315,6 +321,7 @@ final class UpdateService: ObservableObject {
     }
 
     private func fail(_ message: String) {
+        downloadProgress = 0
         errorMessage = message
         phase = .failed
     }

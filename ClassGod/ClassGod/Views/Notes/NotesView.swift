@@ -33,8 +33,10 @@ struct NotesView: View {
         .confirmationDialog("notes.delete_title", isPresented: $confirmDelete) {
             Button("notes.delete", role: .destructive) {
                 guard let id = service.selectedNoteID else { return }
-                service.delete(id)
-                SoundEffectManager.shared.playTabDeleted()
+                if service.delete(id, visibleNotes: visibleNotes) {
+                    SoundEffectManager.shared.playTabDeleted()
+                    HapticManager.shared.warning()
+                }
             }
             Button("button.cancel", role: .cancel) {}
         } message: {
@@ -82,8 +84,16 @@ struct NotesView: View {
                 TextField("notes.search", text: $searchText)
                     .textFieldStyle(.plain)
                     .font(.system(size: 10 * zoomScale, design: .monospaced))
+                if !searchText.isEmpty {
+                    Button { searchText = "" } label: {
+                        Image(systemName: "xmark.circle.fill")
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundStyle(.white.opacity(0.3))
+                    .accessibilityLabel(Text("button.clear"))
+                }
                 Button {
-                    _ = service.addNote()
+                    createNote()
                 } label: {
                     Image(systemName: "square.and.pencil")
                 }
@@ -122,7 +132,10 @@ struct NotesView: View {
     private func noteRow(_ note: ClassGodNote) -> some View {
         let selected = service.selectedNoteID == note.id
         return Button {
-            service.select(note.id)
+            if service.select(note.id) {
+                SoundEffectManager.shared.playButtonClick()
+                HapticManager.shared.generic()
+            }
         } label: {
             VStack(alignment: .leading, spacing: 4 * zoomScale) {
                 HStack(spacing: 5 * zoomScale) {
@@ -166,7 +179,10 @@ struct NotesView: View {
                         .font(.system(size: 18 * zoomScale, weight: .bold, design: .rounded))
 
                     Button {
-                        service.togglePin(note.id)
+                        if service.togglePin(note.id) {
+                            SoundEffectManager.shared.playButtonClick()
+                            HapticManager.shared.generic()
+                        }
                     } label: {
                         Image(systemName: note.isPinned ? "pin.fill" : "pin")
                     }
@@ -200,7 +216,7 @@ struct NotesView: View {
                 Text("notes.select_or_create")
                     .font(.system(size: 12 * zoomScale, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.45))
-                Button("notes.new") { _ = service.addNote() }
+                Button("notes.new") { createNote() }
                     .buttonStyle(.borderedProminent)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -219,6 +235,20 @@ struct NotesView: View {
             get: { service.selectedNote?.body ?? "" },
             set: service.updateSelectedBody
         )
+    }
+
+    private func createNote() {
+        guard service.addNote() != nil else {
+            ErrorToastManager.shared.show(
+                title: String(localized: "notes.title"),
+                message: String(localized: "notes.limit_reached")
+            )
+            HapticManager.shared.warning()
+            return
+        }
+        searchText = ""
+        SoundEffectManager.shared.playTabSaved()
+        HapticManager.shared.success()
     }
 }
 

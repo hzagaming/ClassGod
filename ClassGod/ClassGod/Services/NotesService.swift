@@ -50,37 +50,54 @@ final class NotesService: ObservableObject {
         return note.id
     }
 
-    func select(_ id: UUID) {
-        guard notes.contains(where: { $0.id == id }), selectedNoteID != id else { return }
+    @discardableResult
+    func select(_ id: UUID) -> Bool {
+        guard notes.contains(where: { $0.id == id }), selectedNoteID != id else { return false }
         selectedNoteID = id
         save()
+        return true
     }
 
     func updateSelectedTitle(_ title: String) {
-        updateSelected { $0.title = String(title.prefix(NotesContentPolicy.maximumTitleLength)) }
+        let normalized = String(title.prefix(NotesContentPolicy.maximumTitleLength))
+        updateSelected {
+            guard $0.title != normalized else { return false }
+            $0.title = normalized
+            return true
+        }
     }
 
     func updateSelectedBody(_ body: String) {
-        updateSelected { $0.body = String(body.prefix(NotesContentPolicy.maximumBodyLength)) }
+        let normalized = String(body.prefix(NotesContentPolicy.maximumBodyLength))
+        updateSelected {
+            guard $0.body != normalized else { return false }
+            $0.body = normalized
+            return true
+        }
     }
 
-    func togglePin(_ id: UUID) {
-        guard let index = notes.firstIndex(where: { $0.id == id }) else { return }
+    @discardableResult
+    func togglePin(_ id: UUID) -> Bool {
+        guard let index = notes.firstIndex(where: { $0.id == id }) else { return false }
         notes[index].isPinned.toggle()
         notes[index].updatedAt = Date()
         save()
+        return true
     }
 
-    func delete(_ id: UUID) {
-        let visibleNotes = NotesCollectionPolicy.sorted(notes)
+    @discardableResult
+    func delete(_ id: UUID, visibleNotes: [ClassGodNote]? = nil) -> Bool {
+        guard notes.contains(where: { $0.id == id }) else { return false }
+        let orderedNotes = visibleNotes ?? NotesCollectionPolicy.sorted(notes)
         let replacement = NotesCollectionPolicy.selectionAfterDeleting(
             id,
-            from: visibleNotes,
+            from: orderedNotes,
             selectedID: selectedNoteID
         )
         notes.removeAll { $0.id == id }
         selectedNoteID = replacement
         save()
+        return true
     }
 
     func stop() {
@@ -90,10 +107,10 @@ final class NotesService: ObservableObject {
         persistenceQueue.sync {}
     }
 
-    private func updateSelected(_ change: (inout ClassGodNote) -> Void) {
+    private func updateSelected(_ change: (inout ClassGodNote) -> Bool) {
         guard let selectedNoteID,
               let index = notes.firstIndex(where: { $0.id == selectedNoteID }) else { return }
-        change(&notes[index])
+        guard change(&notes[index]) else { return }
         notes[index].updatedAt = Date()
         save()
     }

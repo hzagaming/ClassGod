@@ -63,6 +63,8 @@ struct ClipoView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .background(Color.black)
+        .tint(accent)
+        .preferredColorScheme(.dark)
         .overlay(
             RoundedRectangle(cornerRadius: 12 * zoomScale)
                 .stroke(Color.white.opacity(0.12), lineWidth: zoomScale)
@@ -244,7 +246,10 @@ struct ClipoView: View {
     private func filterButton(title: String, type: ClipoType?) -> some View {
         let selected = selectedType == type
         return Button {
+            guard !selected else { return }
             selectedType = type
+            SoundEffectManager.shared.playButtonClick()
+            HapticManager.shared.generic()
         } label: {
             Text(title)
                 .font(.system(size: 9 * zoomScale, weight: .semibold, design: .monospaced))
@@ -382,8 +387,10 @@ struct ClipoView: View {
                         Spacer()
                         Button("clipo.shortcuts.restore_defaults") {
                             recordingShortcut = nil
-                            service.resetShortcuts()
-                            SoundEffectManager.shared.playButtonClick()
+                            if service.resetShortcuts() {
+                                SoundEffectManager.shared.playButtonClick()
+                                HapticManager.shared.generic()
+                            }
                         }
                         .clipoButtonStyle(zoomScale: zoomScale, color: accent)
                     }

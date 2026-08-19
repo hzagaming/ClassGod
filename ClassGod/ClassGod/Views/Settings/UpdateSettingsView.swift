@@ -95,7 +95,10 @@ struct UpdateSettingsView: View {
             }
 
             if let lastChecked = service.lastCheckedAt {
-                Text(lastChecked, format: .dateTime.year().month().day().hour().minute())
+                HStack(spacing: 4 * zoomScale) {
+                    Text("update.last_checked")
+                    Text(lastChecked, format: .dateTime.year().month().day().hour().minute())
+                }
                     .font(.system(size: 8 * zoomScale, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.28))
             }

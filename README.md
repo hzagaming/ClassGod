@@ -25,7 +25,7 @@
   </p>
 </div>
 
-> Current release: **v1.5.41 (Build 66)**. Download the DMG or PKG from [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest).
+> Current release: **v1.5.42 (Build 67)**. Download the DMG or PKG from [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest).
 
 ## Why ClassGod
 
@@ -170,9 +170,9 @@ ClassGod/ClassGodTests/    App tests
 ClassGodHelper/            Privileged helper Swift package and tests
 ```
 
-## Latest announcement: v1.5.41
+## Latest announcement: v1.5.42
 
-This stability release restricts automatic-update assets to this repository's GitHub Release download path and trusted GitHub redirect hosts while retaining exact-size and SHA-256 verification. Permission Center now labels its live refresh strategy as adaptive instead of claiming a fixed 100 ms interval. Verification covers 198 main-app tests and 17 helper tests, Debug and Release builds, static analysis, localization output, embedded helper contents, and signatures.
+This quality release hardens Notes against oversized sidebar work, keeps filtered selection and autosave writes accurate, and adds clear limit and interaction feedback. Clipo now applies normalized settings without skipping hot-key refresh, retention, persistence, or monitoring changes, treats whitespace-only searches as empty, and renders consistently in dark mode. The updater validates final GitHub API and release-page destinations, rejects malformed version tags, and resets transient state cleanly. Verification covers 201 main-app tests and 17 helper tests, Debug and Release builds, static analysis, localization output, embedded helper contents, and signatures.
 
 Read [CHANGELOG.md](CHANGELOG.md) for current releases and [CHANGELOG_HISTORY.md](CHANGELOG_HISTORY.md) for older history.
 

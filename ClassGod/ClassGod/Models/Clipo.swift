@@ -408,6 +408,20 @@ struct ClipoSettings: Codable, Equatable, Sendable {
     }
 }
 
+struct ClipoSettingsChangePlan {
+    let settings: ClipoSettings
+    let hasChanges: Bool
+    let requiresShortcutRefresh: Bool
+
+    init(previous: ClipoSettings, requested: ClipoSettings) {
+        settings = requested.normalized
+        hasChanges = previous != settings
+        requiresShortcutRefresh = previous.openShortcut != settings.openShortcut
+            || previous.slotSaveShortcuts != settings.slotSaveShortcuts
+            || previous.slotCopyShortcuts != settings.slotCopyShortcuts
+    }
+}
+
 enum ClipoClipboardRestorePolicy {
     static func shouldRestore(expectedChangeCount: Int, currentChangeCount: Int) -> Bool {
         expectedChangeCount == currentChangeCount
@@ -547,7 +561,8 @@ enum ClipoSearch {
         caseSensitive: Bool,
         fuzzy: Bool
     ) -> [ClipoItem] {
-        items.filter { item in
+        let query = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        return items.filter { item in
             guard type == nil || item.type == type else { return false }
             guard !query.isEmpty else { return true }
             let searchable = item.content + " " + item.preview + " " + (item.sourceApp ?? "")
