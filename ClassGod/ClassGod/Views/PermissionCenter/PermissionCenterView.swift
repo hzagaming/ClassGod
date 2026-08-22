@@ -695,6 +695,19 @@ struct PermissionOnboardingView: View {
                 Spacer(minLength: 0)
                 
                 HStack(spacing: 10 * zoomScale) {
+                    Button(action: {
+                        SoundEffectManager.shared.playButtonClick()
+                        HapticManager.shared.generic()
+                        onComplete()
+                    }) {
+                        Text("button.skip")
+                            .font(.system(size: 10 * zoomScale, weight: .medium, design: .monospaced))
+                            .foregroundStyle(.white.opacity(0.7))
+                            .padding(.horizontal, 14 * zoomScale)
+                            .padding(.vertical, 6 * zoomScale)
+                    }
+                    .buttonStyle(.plain)
+
                     if step > 0 && step < pendingPermissions.count {
                         Button(action: {
                             SoundEffectManager.shared.playButtonClick()

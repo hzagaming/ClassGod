@@ -609,6 +609,12 @@ nonisolated enum PermissionGateSessionPolicy {
     }
 }
 
+nonisolated enum DeferredPermissionReminderPolicy {
+    static func shouldRemind(state: PermissionAuthorizationState?) -> Bool {
+        state?.isGranted != true
+    }
+}
+
 enum PermissionCatalogPolicy {
     static func items(
         from items: [PermissionItemInfo],

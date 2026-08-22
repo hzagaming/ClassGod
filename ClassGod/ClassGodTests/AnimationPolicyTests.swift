@@ -25,6 +25,16 @@ struct AnimationPolicyTests {
         #expect(LaunchWindowPresentationPolicy.shouldResetBeforeInitialShow(isVisible: true, isKeyWindow: false))
         #expect(!LaunchWindowPresentationPolicy.shouldResetBeforeInitialShow(isVisible: false, isKeyWindow: false))
         #expect(!LaunchWindowPresentationPolicy.shouldResetBeforeInitialShow(isVisible: true, isKeyWindow: true))
+
+        var tracker = LaunchDestinationTracker()
+        let firstGate = tracker.transition(to: .permissionGate)
+        let repeatedGate = tracker.transition(to: .permissionGate)
+        let firstPanel = tracker.transition(to: .mainPanel)
+        let repeatedPanel = tracker.transition(to: .mainPanel)
+        #expect(firstGate)
+        #expect(!repeatedGate)
+        #expect(firstPanel)
+        #expect(!repeatedPanel)
     }
 
     @Test("Chaos completion advances without animation callbacks")
@@ -46,6 +56,27 @@ struct AnimationPolicyTests {
         #expect(SoundPlaybackPolicy.channelIndex(isPlaying: [true, true], limit: 4) == 2)
         #expect(SoundPlaybackPolicy.channelIndex(isPlaying: [true, true, true, true], limit: 4) == nil)
         #expect(SoundPlaybackPolicy.channelIndex(isPlaying: [false], limit: 0) == nil)
+        #expect(!SoundPlaybackPolicy.shouldPlay(
+            name: "Tink",
+            previousName: "Tink",
+            elapsed: 0.01,
+            minimumInterval: 0.04,
+            allowsOverlap: false
+        ))
+        #expect(SoundPlaybackPolicy.shouldPlay(
+            name: "Tink",
+            previousName: "Tink",
+            elapsed: 0.01,
+            minimumInterval: 0.04,
+            allowsOverlap: true
+        ))
+        #expect(SoundPlaybackPolicy.shouldPlay(
+            name: "Ping",
+            previousName: "Tink",
+            elapsed: 0.01,
+            minimumInterval: 0.04,
+            allowsOverlap: false
+        ))
     }
 
     @Test("Preflight uses a distinct diagnostic sound")

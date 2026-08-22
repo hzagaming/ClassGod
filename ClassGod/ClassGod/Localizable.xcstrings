@@ -12533,6 +12533,54 @@
         }
       }
     },
+    "menu.mode.bad_student" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bad Student"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "坏学生"
+          }
+        }
+      }
+    },
+    "menu.mode.good_student" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Good Student"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "好学生"
+          }
+        }
+      }
+    },
+    "menu.mode.other" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Other"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "其他"
+          }
+        }
+      }
+    },
     "menu.permission_center.description" : {
       "localizations" : {
         "en" : {
@@ -25203,6 +25251,7 @@
     "permission.gate.system_note" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"macOS permissions must be approved by you. Skipped access only limits the related feature and remains available in Permission Center."}},"zh-Hans":{"stringUnit":{"state":"translated","value":"macOS 权限必须由你本人批准；跳过只会限制对应功能，之后仍可在权限中心补充。"}}}},
     "permission.gate.title" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Permission Setup"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"权限设置"}}}},
     "permission.gate.undo_confirmation" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Undo Confirmation"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"取消确认"}}}},
+    "permission.required.automation_message" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Browser Automation is off. Enable it to find and switch existing browser tabs, or cancel and keep using features that do not need it."}},"zh-Hans":{"stringUnit":{"state":"translated","value":"浏览器自动化权限尚未开启。开启后才能查找并切换已有浏览器标签；也可以取消并继续使用不依赖此权限的功能。"}}}},
     "permission.maximize_access" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Maximize Access"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"最大化权限"}}}},
     "permission.privacy.detail" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"ClassGod processes permission status and user data locally. It has no telemetry, background uploads, or ClassGod backend. Websites you open connect only to their destination."}},"zh-Hans":{"stringUnit":{"state":"translated","value":"ClassGod 的权限状态与用户数据仅在本机处理，不会上传到 ClassGod 后端；应用不含遥测或后台上传。你主动打开的网页仅连接其目标网站。"}}}},
     "permission.privacy.title" : {"localizations":{"en":{"stringUnit":{"state":"translated","value":"Local Privacy Promise"}},"zh-Hans":{"stringUnit":{"state":"translated","value":"本地隐私承诺"}}}},

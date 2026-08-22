@@ -67,6 +67,7 @@ final class TabListViewModel: ObservableObject {
     @Published var errorMessage: String?
     @Published var showError = false
     @Published var showPermissionAlert = false
+    @Published var missingPermission: PermissionType?
     @Published var isAccessibilityTrusted = false
     
     // MARK: - Search & Filter
@@ -215,6 +216,7 @@ final class TabListViewModel: ObservableObject {
     // MARK: - Detect & Switch
     
     func detectAndAddCurrentTab() {
+        guard ensurePermission(.appleEvents, showsReminder: true) else { return }
         BrowserDetector.shared.detectFrontmostTab { [weak self] result in
             guard let self = self else { return }
             switch result {
@@ -247,6 +249,7 @@ final class TabListViewModel: ObservableObject {
     }
     
     func detectCurrentTabOnShowIfNeeded() {
+        guard ensurePermission(.appleEvents, showsReminder: false) else { return }
         BrowserDetector.shared.detectFrontmostTab { [weak self] result in
             guard let self = self else { return }
             guard case .success(let detected) = result else { return }
@@ -350,6 +353,7 @@ final class TabListViewModel: ObservableObject {
         let trusted = AXIsProcessTrustedWithOptions(options as CFDictionary)
         isAccessibilityTrusted = trusted
         if !trusted {
+            missingPermission = .accessibility
             showPermissionAlert = true
             SoundEffectManager.shared.playSwitchFailure()
             HapticManager.shared.warning()
@@ -358,6 +362,22 @@ final class TabListViewModel: ObservableObject {
             HapticManager.shared.success()
         }
         return trusted
+    }
+
+    var permissionReminderMessage: String {
+        missingPermission == .appleEvents
+            ? String(localized: "permission.required.automation_message")
+            : String(localized: "permission.required.message")
+    }
+
+    func requestMissingPermission() {
+        guard let missingPermission else { return }
+        PermissionCenterService.shared.requestPermission(missingPermission)
+        self.missingPermission = nil
+    }
+
+    func dismissPermissionReminder() {
+        missingPermission = nil
     }
     
     func checkPermissionOnShow() {
@@ -376,6 +396,17 @@ final class TabListViewModel: ObservableObject {
     }
     
     // MARK: - Private
+
+    private func ensurePermission(_ type: PermissionType, showsReminder: Bool) -> Bool {
+        let state = PermissionCenterService.shared.statuses[type]?.state
+        guard DeferredPermissionReminderPolicy.shouldRemind(state: state) else { return true }
+        guard showsReminder else { return false }
+        missingPermission = type
+        showPermissionAlert = true
+        SoundEffectManager.shared.playSwitchFailure()
+        HapticManager.shared.warning()
+        return false
+    }
     
     private func applySort() {
         switch sortMode {

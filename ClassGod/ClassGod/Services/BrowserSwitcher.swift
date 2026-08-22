@@ -56,6 +56,30 @@ nonisolated struct BrowserSwitchSession: Sendable {
     }
 }
 
+nonisolated enum BrowserSwitchPreparation: Equatable {
+    case failNotRunning
+    case launchOnly
+    case openDirectly
+    case activateExisting
+}
+
+nonisolated enum BrowserSwitchRoutingPolicy {
+    static func preparation(
+        isRunning: Bool,
+        notRunningBehavior: BrowserNotRunningBehavior,
+        switchBehavior: SwitchBehavior
+    ) -> BrowserSwitchPreparation {
+        guard isRunning else {
+            switch notRunningBehavior {
+            case .doNothing: return .failNotRunning
+            case .launchOnly: return .launchOnly
+            case .launchAndOpen: return .openDirectly
+            }
+        }
+        return switchBehavior == .alwaysNewTab ? .openDirectly : .activateExisting
+    }
+}
+
 final class BrowserSwitcher {
     static let shared = BrowserSwitcher()
 
@@ -114,28 +138,39 @@ final class BrowserSwitcher {
         let targetURL = tab.url
         let isRunning = isBrowserRunning(tab.browser)
 
-        // If browser not running, respect user preference
-        if !isRunning {
-            switch prefs.browserNotRunningBehavior {
-            case .doNothing:
-                complete(
-                    request: request,
-                    success: false,
-                    message: String(format: String(localized: "error.browser_not_running"), tab.browser.displayName),
-                    completion: completion
-                )
-                return
-            case .launchOnly:
-                launchBrowser(tab.browser, request: request, completion: completion)
-                return
-            case .launchAndOpen:
-                break // fall through to open URL
-            }
+        switch BrowserSwitchRoutingPolicy.preparation(
+            isRunning: isRunning,
+            notRunningBehavior: prefs.browserNotRunningBehavior,
+            switchBehavior: prefs.switchBehavior
+        ) {
+        case .failNotRunning:
+            complete(
+                request: request,
+                success: false,
+                message: String(format: String(localized: "error.browser_not_running"), tab.browser.displayName),
+                completion: completion
+            )
+            return
+        case .launchOnly:
+            launchBrowser(tab.browser, request: request, completion: completion)
+            return
+        case .openDirectly:
+            openURLDirectly(tab: tab, url: targetURL, request: request, completion: completion)
+            return
+        case .activateExisting:
+            break
         }
 
-        // If "always new tab" is selected, skip search and directly open URL
-        if prefs.switchBehavior == .alwaysNewTab {
-            openURLDirectly(tab: tab, url: targetURL, request: request, completion: completion)
+        let permissionService = PermissionCenterService.shared
+        let permissionState = permissionService.statuses[.appleEvents]?.state
+        guard !DeferredPermissionReminderPolicy.shouldRemind(state: permissionState) else {
+            permissionService.requestPermission(.appleEvents)
+            complete(
+                request: request,
+                success: false,
+                message: String(localized: "permission.required.automation_message"),
+                completion: completion
+            )
             return
         }
 

@@ -29,6 +29,16 @@ nonisolated enum LaunchWindowPresentationPolicy {
     }
 }
 
+nonisolated struct LaunchDestinationTracker {
+    private var current: LaunchDestination?
+
+    mutating func transition(to destination: LaunchDestination) -> Bool {
+        guard current != destination else { return false }
+        current = destination
+        return true
+    }
+}
+
 nonisolated enum SettingsWindowLayoutPolicy {
     static let baseWidth: CGFloat = 720
     static let baseHeight: CGFloat = 620
@@ -175,6 +185,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var widgetSnapshotTimer: Timer?
     private var widgetAccentReloadWorkItem: DispatchWorkItem?
     private var windowTransitions = WindowTransitionTracker<ObjectIdentifier>()
+    private var launchDestinationTracker = LaunchDestinationTracker()
     private var lastObservedPreferences = PreferencesManager.shared.preferences
     private var permissionGateCancellable: AnyCancellable?
     private var launchAnimationCompleted = false
@@ -244,9 +255,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func presentPostLaunchDestination() {
         guard launchAnimationCompleted else { return }
-        switch LaunchWindowPresentationPolicy.destination(
+        let destination = LaunchWindowPresentationPolicy.destination(
             isPermissionGateUnlocked: PermissionCenterService.shared.isGateUnlocked
-        ) {
+        )
+        guard launchDestinationTracker.transition(to: destination) else { return }
+        switch destination {
         case .mainPanel:
             activateGatedFeatures()
             hidePermissionGateWindow()
@@ -411,6 +424,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             backing: .buffered,
             defer: false
         )
+        window.minimumWindowSize = NSSize(width: 320 * zoom, height: 340 * zoom)
 
         window.level = windowLevel
         window.backgroundColor = .clear
@@ -1894,9 +1908,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         window.hasShadow = true
         window.isReleasedWhenClosed = false
         window.isOpaque = false
-        window.contentView = NSHostingView(rootView: PermissionGateView {
-            NSApp.terminate(nil)
-        })
+        window.contentView = NSHostingView(rootView: PermissionGateView(
+            onContinue: { [weak self] in self?.presentPostLaunchDestination() },
+            onQuit: { NSApp.terminate(nil) }
+        ))
         window.contentView?.wantsLayer = true
         window.contentView?.layer?.cornerRadius = 14 * zoom
         window.contentView?.layer?.masksToBounds = true

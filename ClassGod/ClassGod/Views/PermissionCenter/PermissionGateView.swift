@@ -5,6 +5,7 @@ struct PermissionGateView: View {
     @StateObject private var service = PermissionCenterService.shared
     @ObservedObject private var prefs = PreferencesManager.shared
 
+    let onContinue: () -> Void
     let onQuit: () -> Void
 
     private var progress: PermissionGateProgress { service.gateProgress }
@@ -306,6 +307,7 @@ struct PermissionGateView: View {
                     SoundEffectManager.shared.playButtonClick()
                     HapticManager.shared.generic()
                     service.skipGateForCurrentSession()
+                    onContinue()
                 } label: {
                     Label("permission.gate.skip", systemImage: "arrow.right.circle.fill")
                 }

@@ -6,6 +6,62 @@ import Testing
 
 @Suite("Regression policies")
 struct RegressionPolicyTests {
+    @Test("Main panel modes partition every feature without overlap")
+    func categorizesMainPanelFeatures() {
+        #expect(MainPanelMode.goodStudent.features == [.clipo, .notes, .wallpaper, .widgets])
+        #expect(MainPanelMode.other.features == [.errorHub, .activityMonitor, .fanControl, .permissionCenter])
+        #expect(MainPanelMode.badStudent.features == [
+            .preflight,
+            .destinTab,
+            .superSwitch,
+            .ghostProtocol,
+            .browserBypasser,
+            .fakeLock,
+            .assessPrepHack
+        ])
+
+        let categorized = MainPanelMode.allCases.flatMap(\.features)
+        #expect(categorized.count == MainPanelFeature.allCases.count)
+        #expect(Set(categorized) == Set(MainPanelFeature.allCases))
+    }
+
+    @Test("Browser switching requests automation only when searching existing tabs")
+    func routesBrowserSwitchPreparation() {
+        #expect(BrowserSwitchRoutingPolicy.preparation(
+            isRunning: true,
+            notRunningBehavior: .launchAndOpen,
+            switchBehavior: .activateExisting
+        ) == .activateExisting)
+        #expect(BrowserSwitchRoutingPolicy.preparation(
+            isRunning: true,
+            notRunningBehavior: .launchAndOpen,
+            switchBehavior: .alwaysNewTab
+        ) == .openDirectly)
+        #expect(BrowserSwitchRoutingPolicy.preparation(
+            isRunning: false,
+            notRunningBehavior: .launchAndOpen,
+            switchBehavior: .activateExisting
+        ) == .openDirectly)
+        #expect(BrowserSwitchRoutingPolicy.preparation(
+            isRunning: false,
+            notRunningBehavior: .launchOnly,
+            switchBehavior: .activateExisting
+        ) == .launchOnly)
+        #expect(BrowserSwitchRoutingPolicy.preparation(
+            isRunning: false,
+            notRunningBehavior: .doNothing,
+            switchBehavior: .activateExisting
+        ) == .failNotRunning)
+    }
+
+    @Test("Main panel grid adapts from one to three columns")
+    func adaptsMainPanelColumns() {
+        #expect(MainPanelLayoutPolicy.columnCount(availableWidth: 320, zoomScale: 1) == 1)
+        #expect(MainPanelLayoutPolicy.columnCount(availableWidth: 620, zoomScale: 1) == 2)
+        #expect(MainPanelLayoutPolicy.columnCount(availableWidth: 940, zoomScale: 1) == 3)
+        #expect(MainPanelLayoutPolicy.columnCount(availableWidth: 620, zoomScale: 2) == 1)
+    }
+
     @Test("Imported appearance geometry is finite and constrained to UI ranges")
     func normalizesImportedAppearanceGeometry() throws {
         let data = try #require(#"""

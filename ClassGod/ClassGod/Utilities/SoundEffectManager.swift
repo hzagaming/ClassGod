@@ -14,6 +14,16 @@ nonisolated enum SoundPlaybackPolicy {
         if let idle = isPlaying.prefix(limit).firstIndex(of: false) { return idle }
         return isPlaying.count < limit ? isPlaying.count : nil
     }
+
+    static func shouldPlay(
+        name: String,
+        previousName: String?,
+        elapsed: TimeInterval,
+        minimumInterval: TimeInterval,
+        allowsOverlap: Bool
+    ) -> Bool {
+        allowsOverlap || previousName != name || elapsed >= max(0, minimumInterval)
+    }
 }
 
 nonisolated enum UserInteractionFeedbackPolicy {
@@ -98,7 +108,9 @@ final class SoundEffectManager {
     private var sounds: [String: NSSound] = [:]
     private var overlapSounds: [String: [NSSound]] = [:]
     private var glitchGeneration = 0
+    private var lastPlayedSound: (name: String, uptime: TimeInterval)?
     private let maximumOverlapChannels = 4
+    private let minimumRepeatedSoundInterval: TimeInterval = 0.04
     
     private init() {}
 
@@ -108,6 +120,15 @@ final class SoundEffectManager {
     }
 
     private func playSound(named name: String, allowsOverlap: Bool = false) {
+        let uptime = ProcessInfo.processInfo.systemUptime
+        guard SoundPlaybackPolicy.shouldPlay(
+            name: name,
+            previousName: lastPlayedSound?.name,
+            elapsed: uptime - (lastPlayedSound?.uptime ?? -.infinity),
+            minimumInterval: minimumRepeatedSoundInterval,
+            allowsOverlap: allowsOverlap
+        ) else { return }
+
         if allowsOverlap {
             var channels = overlapSounds[name] ?? []
             guard let index = SoundPlaybackPolicy.channelIndex(
@@ -136,6 +157,7 @@ final class SoundEffectManager {
             NSSound.beep()
             return
         }
+        lastPlayedSound = (name, uptime)
         sound.stop()
         sound.play()
     }

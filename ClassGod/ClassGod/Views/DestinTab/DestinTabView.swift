@@ -86,12 +86,14 @@ struct DestinTabView: View {
             Text(viewModel.errorMessage ?? String(localized: "error.unknown"))
         }
         .alert(String(localized: "permission.required.title"), isPresented: $viewModel.showPermissionAlert) {
-            Button(String(localized: "button.open_settings")) {
-                openAccessibilitySettings()
+            Button(String(localized: "permission.allow")) {
+                viewModel.requestMissingPermission()
             }
-            Button(String(localized: "button.cancel"), role: .cancel) {}
+            Button(String(localized: "button.cancel"), role: .cancel) {
+                viewModel.dismissPermissionReminder()
+            }
         } message: {
-            Text(String(localized: "permission.required.message"))
+            Text(viewModel.permissionReminderMessage)
         }
         .alert(String(localized: "delete.confirm.title"), isPresented: .init(
             get: { tabToDelete != nil },
@@ -613,11 +615,6 @@ struct DestinTabView: View {
                 }
             }
         }
-    }
-
-    private func openAccessibilitySettings() {
-        guard let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") else { return }
-        NSWorkspace.shared.open(url)
     }
 
     private func openAutomationSettings() {

@@ -192,8 +192,28 @@ struct PermissionCenterTests {
     @Test("Permission gate can be skipped for the current session")
     func permissionGateSessionSkip() {
         #expect(!PermissionGateSessionPolicy.isUnlocked(progressUnlocked: false, skipped: false))
-        #expect(PermissionGateSessionPolicy.isUnlocked(progressUnlocked: false, skipped: true))
         #expect(PermissionGateSessionPolicy.isUnlocked(progressUnlocked: true, skipped: false))
+
+        let required = PermissionType.allCases.filter { $0.requirement == .required }
+        for completed in 0...required.count {
+            let progress = PermissionGateProgress(
+                completed: completed,
+                total: required.count,
+                pending: Array(required.dropFirst(completed))
+            )
+            #expect(PermissionGateSessionPolicy.isUnlocked(
+                progressUnlocked: progress.isUnlocked,
+                skipped: true
+            ))
+        }
+    }
+
+    @Test("Deferred permissions remind only while the dependent feature is used")
+    func deferredPermissionReminder() {
+        #expect(DeferredPermissionReminderPolicy.shouldRemind(state: nil))
+        #expect(DeferredPermissionReminderPolicy.shouldRemind(state: .notDetermined))
+        #expect(DeferredPermissionReminderPolicy.shouldRemind(state: .denied))
+        #expect(!DeferredPermissionReminderPolicy.shouldRemind(state: .granted))
     }
 
     @Test("Manual permission confirmations only accept manual-review catalog entries")
