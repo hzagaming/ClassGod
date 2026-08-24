@@ -36,6 +36,33 @@ nonisolated enum UserInteractionFeedbackPolicy {
     }
 }
 
+nonisolated enum WindowSoundPolicy {
+    static func openSoundName(feature: String) -> String? {
+        switch feature {
+        case "preflight": "Morse"
+        case "destintab", "errorhub": "Basso"
+        case "superswitch", "fancontrol", "todo": "Ping"
+        case "browserbypasser", "hackerdesktop": "Sosumi"
+        case "assessprephack": "Funk"
+        case "activitymonitor": "Tink"
+        case "permissioncenter", "clipo", "notes": "Glass"
+        case "ghostprotocol", "fakelock": "Submarine"
+        default: nil
+        }
+    }
+
+    static func closeSoundName(feature: String) -> String? {
+        switch feature {
+        case "preflight", "destintab", "superswitch", "browserbypasser", "assessprephack",
+             "hackerdesktop", "fancontrol", "activitymonitor", "permissioncenter", "errorhub",
+             "ghostprotocol", "clipo", "notes", "todo", "fakelock":
+            "Tink"
+        default:
+            nil
+        }
+    }
+}
+
 enum SoundEffect: String, CaseIterable {
     case popoverOpen = "PopoverOpen"
     case popoverClose = "PopoverClose"
@@ -63,7 +90,6 @@ enum SoundEffect: String, CaseIterable {
     case temperatureWarning = "TemperatureWarning"
     case ghostDeploy = "GhostDeploy"
     case ghostRestore = "GhostRestore"
-    case preflightScan = "PreflightScan"
     
     var systemSoundName: String {
         switch self {
@@ -93,7 +119,6 @@ enum SoundEffect: String, CaseIterable {
         case .temperatureWarning: return "Basso"
         case .ghostDeploy:        return "Submarine"
         case .ghostRestore:       return "Glass"
-        case .preflightScan:      return "Morse"
         }
     }
 }
@@ -319,48 +344,20 @@ final class SoundEffectManager {
     
     func playWindowOpen(feature: String = "") {
         guard isEnabled else { return }
-        switch feature {
-        case "preflight":
-            play(.preflightScan)
-        case "destintab":
-            playSound(named: "Basso")
-        case "superswitch":
-            playSound(named: "Ping")
-        case "browserbypasser":
-            playSound(named: "Sosumi")
-        case "assessprephack":
-            playSound(named: "Funk")
-        case "hackerdesktop":
-            playSound(named: "Sosumi")
-        case "fancontrol":
-            playSound(named: "Ping")
-        case "activitymonitor":
-            playSound(named: "Tink")
-        case "permissioncenter":
-            playSound(named: "Glass")
-        case "errorhub":
-            playSound(named: "Basso")
-        case "ghostprotocol":
-            playSound(named: "Submarine")
-        case "clipo":
-            playSound(named: "Glass")
-        case "fakelock":
-            playSound(named: "Submarine")
-        default:
+        guard let name = WindowSoundPolicy.openSoundName(feature: feature) else {
             playPopoverOpen()
+            return
         }
+        playSound(named: name)
     }
     
     func playWindowClose(feature: String = "") {
         guard isEnabled else { return }
-        switch feature {
-        case "preflight", "destintab", "superswitch", "browserbypasser", "assessprephack", "hackerdesktop",
-             "fancontrol", "activitymonitor", "permissioncenter", "errorhub", "ghostprotocol",
-             "clipo", "fakelock":
-            playSound(named: "Tink")
-        default:
+        guard let name = WindowSoundPolicy.closeSoundName(feature: feature) else {
             playPopoverClose()
+            return
         }
+        playSound(named: name)
     }
     
     func playFeatureSwitch() {

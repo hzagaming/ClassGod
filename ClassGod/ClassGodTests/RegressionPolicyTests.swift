@@ -8,7 +8,7 @@ import Testing
 struct RegressionPolicyTests {
     @Test("Main panel modes partition every feature without overlap")
     func categorizesMainPanelFeatures() {
-        #expect(MainPanelMode.goodStudent.features == [.clipo, .notes, .wallpaper, .widgets])
+        #expect(MainPanelMode.goodStudent.features == [.clipo, .notes, .todo, .wallpaper, .widgets])
         #expect(MainPanelMode.other.features == [.errorHub, .activityMonitor, .fanControl, .permissionCenter])
         #expect(MainPanelMode.badStudent.features == [
             .preflight,

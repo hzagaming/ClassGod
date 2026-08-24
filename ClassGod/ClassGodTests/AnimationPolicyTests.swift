@@ -79,9 +79,24 @@ struct AnimationPolicyTests {
         ))
     }
 
-    @Test("Preflight uses a distinct diagnostic sound")
-    func resolvesPreflightSound() {
-        #expect(SoundEffect.preflightScan.systemSoundName == "Morse")
+    @Test("Feature windows use complete semantic sound routes")
+    func resolvesFeatureWindowSounds() {
+        let features = [
+            "preflight", "destintab", "superswitch", "browserbypasser", "assessprephack",
+            "hackerdesktop", "fancontrol", "activitymonitor", "permissioncenter", "errorhub",
+            "ghostprotocol", "clipo", "notes", "todo", "fakelock",
+        ]
+        for feature in features {
+            #expect(WindowSoundPolicy.openSoundName(feature: feature) != nil)
+            #expect(WindowSoundPolicy.closeSoundName(feature: feature) != nil)
+        }
+        #expect(WindowSoundPolicy.openSoundName(feature: "preflight") == "Morse")
+        #expect(WindowSoundPolicy.openSoundName(feature: "notes") == "Glass")
+        #expect(WindowSoundPolicy.openSoundName(feature: "todo") == "Ping")
+        #expect(WindowSoundPolicy.closeSoundName(feature: "notes") == "Tink")
+        #expect(WindowSoundPolicy.closeSoundName(feature: "todo") == "Tink")
+        #expect(WindowSoundPolicy.openSoundName(feature: "unknown") == nil)
+        #expect(WindowSoundPolicy.closeSoundName(feature: "unknown") == nil)
     }
 
     @Test("Window transitions ignore duplicates and stale completions")

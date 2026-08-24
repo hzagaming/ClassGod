@@ -46,7 +46,7 @@ nonisolated enum SettingsWindowLayoutPolicy {
 
 nonisolated enum FeatureWindowKind: CaseIterable {
     case preflight, destinTab, superSwitch, ghostProtocol, browserBypasser, assessPrepHack
-    case settings, wallpaper, hackerDesktop, clipo, notes, errorHub, fanControl
+    case settings, wallpaper, hackerDesktop, clipo, notes, todo, errorHub, fanControl
     case activityMonitor, permissionCenter, fakeLock
 }
 
@@ -71,6 +71,7 @@ nonisolated enum FeatureWindowLayoutPolicy {
         case .hackerDesktop: return .init(defaultWidth: 940, defaultHeight: 680, minimumWidth: 680, minimumHeight: 480)
         case .clipo: return .init(defaultWidth: 780, defaultHeight: 640, minimumWidth: 560, minimumHeight: 420)
         case .notes: return .init(defaultWidth: 760, defaultHeight: 600, minimumWidth: 520, minimumHeight: 380)
+        case .todo: return .init(defaultWidth: 960, defaultHeight: 680, minimumWidth: 720, minimumHeight: 500)
         case .errorHub: return .init(defaultWidth: 700, defaultHeight: 640, minimumWidth: 460, minimumHeight: 400)
         case .fanControl: return .init(defaultWidth: 680, defaultHeight: 680, minimumWidth: 500, minimumHeight: 460)
         case .activityMonitor: return .init(defaultWidth: 1_000, defaultHeight: 680, minimumWidth: 720, minimumHeight: 480)
@@ -171,6 +172,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var hackerDesktopWindow: NSWindow?
     var clipoWindow: NSWindow?
     var notesWindow: NSWindow?
+    var todoWindow: NSWindow?
     var errorHubWindow: NSWindow?
     var fanControlWindow: NSWindow?
     var activityMonitorWindow: NSWindow?
@@ -485,6 +487,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             self?.showClipoWindow()
         }, onOpenNotes: { [weak self] in
             self?.showNotesWindow()
+        }, onOpenTodo: { [weak self] in
+            self?.showTodoWindow()
         }, onOpenFanControl: { [weak self] in
             self?.showFanControlWindow()
         }, onOpenErrorHub: { [weak self] in
@@ -1581,6 +1585,95 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         windowTargetIsVisible(window) ? hideNotesWindow() : showNotesWindow(animated: true)
     }
 
+    // MARK: - Todo Window
+
+    private func setupTodoWindow() {
+        let zoom = CGFloat(PreferencesManager.shared.preferences.windowZoomScale)
+        let size = featureWindowSize(.todo, zoom: zoom, margin: 80, screen: NSScreen.main)
+        let window = DraggableWindow(
+            contentRect: NSRect(origin: .zero, size: size),
+            styleMask: [.borderless],
+            backing: .buffered,
+            defer: false
+        )
+        configureFeatureWindow(window, kind: .todo, zoom: zoom)
+        window.level = windowLevel
+        window.backgroundColor = .clear
+        window.hasShadow = true
+        window.isMovableByWindowBackground = false
+        window.isReleasedWhenClosed = false
+        window.isOpaque = false
+
+        if let screen = NSScreen.main {
+            let frame = screen.visibleFrame
+            window.setFrameOrigin(NSPoint(x: frame.midX - size.width / 2, y: frame.midY - size.height / 2))
+        }
+
+        window.contentView = NSHostingView(
+            rootView: TodoWindowView(onClose: { [weak self] in
+                self?.hideTodoWindow()
+            })
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Color.clear)
+            .overlay(WindowResizeHandles())
+        )
+        updateWindowCornerMask(window)
+        todoWindow = window
+    }
+
+    func showTodoWindow(animated: Bool = true) {
+        guard let window = todoWindow else {
+            setupTodoWindow()
+            guard todoWindow != nil else { return }
+            showTodoWindow(animated: animated)
+            return
+        }
+        guard beginWindowTransition(window, targetVisible: true) != nil else { return }
+        SoundEffectManager.shared.playWindowOpen(feature: "todo")
+        NSApp.activate(ignoringOtherApps: true)
+        if animated && Anim.enabled {
+            window.alphaValue = 0
+            window.makeKeyAndOrderFront(nil)
+            NSAnimationContext.runAnimationGroup { context in
+                context.duration = Anim.duration
+                context.timingFunction = .init(name: .easeOut)
+                window.animator().alphaValue = targetWindowAlpha
+            }
+        } else {
+            window.alphaValue = targetWindowAlpha
+            window.makeKeyAndOrderFront(nil)
+        }
+    }
+
+    func hideTodoWindow() {
+        guard let window = todoWindow,
+              let transition = beginWindowTransition(window, targetVisible: false) else { return }
+        SoundEffectManager.shared.playWindowClose(feature: "todo")
+        guard Anim.enabled else {
+            window.alphaValue = 0
+            window.orderOut(nil)
+            return
+        }
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = Anim.duration
+            context.timingFunction = .init(name: .easeIn)
+            window.animator().alphaValue = 0
+        } completionHandler: { [weak self, weak window] in
+            guard let self, let window,
+                  self.isCurrentWindowTransition(transition, for: window, targetVisible: false) else { return }
+            window.orderOut(nil)
+        }
+    }
+
+    @objc func toggleTodoWindow() {
+        guard let window = todoWindow else {
+            setupTodoWindow()
+            showTodoWindow(animated: true)
+            return
+        }
+        windowTargetIsVisible(window) ? hideTodoWindow() : showTodoWindow(animated: true)
+    }
+
     // MARK: - Error Hub Window
 
     private func setupErrorHubWindow() {
@@ -1940,7 +2033,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let windows = [
             mainWindow, preflightWindow, destinTabWindow, superSwitchWindow, ghostProtocolWindow,
             browserBypasserWindow, assessPrepHackWindow, settingsWindow,
-            wallpaperBrowserWindow, hackerDesktopWindow, clipoWindow, notesWindow, errorHubWindow,
+            wallpaperBrowserWindow, hackerDesktopWindow, clipoWindow, notesWindow, todoWindow, errorHubWindow,
             fanControlWindow, activityMonitorWindow, permissionCenterWindow, fakeLockWindow,
         ]
         for window in windows.compactMap({ $0 }) {
@@ -2414,6 +2507,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         hackerDesktopWindow?.level = level
         clipoWindow?.level = level
         notesWindow?.level = .floating
+        todoWindow?.level = level
         errorHubWindow?.level = level
         fanControlWindow?.level = level
         activityMonitorWindow?.level = level
@@ -2425,7 +2519,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let windows = [
             mainWindow, preflightWindow, destinTabWindow, superSwitchWindow, ghostProtocolWindow,
             browserBypasserWindow, assessPrepHackWindow, settingsWindow,
-            wallpaperBrowserWindow, hackerDesktopWindow, clipoWindow, notesWindow, errorHubWindow,
+            wallpaperBrowserWindow, hackerDesktopWindow, clipoWindow, notesWindow, todoWindow, errorHubWindow,
             fanControlWindow, activityMonitorWindow, permissionCenterWindow, fakeLockWindow,
         ]
         for window in windows.compactMap({ $0 }) where windowTargetIsVisible(window) {
@@ -2437,7 +2531,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let windows = [
             mainWindow, preflightWindow, destinTabWindow, superSwitchWindow, ghostProtocolWindow,
             browserBypasserWindow, assessPrepHackWindow, settingsWindow,
-            wallpaperBrowserWindow, hackerDesktopWindow, clipoWindow, notesWindow, errorHubWindow,
+            wallpaperBrowserWindow, hackerDesktopWindow, clipoWindow, notesWindow, todoWindow, errorHubWindow,
             fanControlWindow, activityMonitorWindow, permissionCenterWindow, fakeLockWindow,
         ]
         windows.compactMap { $0 }.forEach(updateWindowCornerMask)
@@ -2458,6 +2552,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             (hackerDesktopWindow as? DraggableWindow, .hackerDesktop),
             (clipoWindow as? DraggableWindow, .clipo),
             (notesWindow as? DraggableWindow, .notes),
+            (todoWindow as? DraggableWindow, .todo),
             (errorHubWindow as? DraggableWindow, .errorHub),
             (fanControlWindow as? DraggableWindow, .fanControl),
             (activityMonitorWindow as? DraggableWindow, .activityMonitor),
@@ -2607,6 +2702,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         ShortcutCatalogCoordinator.shared.stop()
         ClipoService.shared.stop()
         NotesService.shared.stop()
+        TodoService.shared.stop()
         UpdateService.shared.stop()
         FakeLockService.shared.stop()
         
@@ -2664,6 +2760,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             window.orderOut(nil)
         }
         if let window = notesWindow {
+            window.orderOut(nil)
+        }
+        if let window = todoWindow {
             window.orderOut(nil)
         }
         if let window = errorHubWindow {
@@ -2920,6 +3019,7 @@ struct MenuBarWindowView: View {
     var onOpenHackerDesktop: () -> Void
     var onOpenClipo: () -> Void = {}
     var onOpenNotes: () -> Void = {}
+    var onOpenTodo: () -> Void = {}
     var onOpenFanControl: () -> Void = {}
     var onOpenErrorHub: () -> Void = {}
     var onOpenActivityMonitor: () -> Void = {}
@@ -2927,7 +3027,7 @@ struct MenuBarWindowView: View {
     var onOpenFakeLock: () -> Void = {}
 
     var body: some View {
-        MenuBarView(onClose: onClose, onOpenPreflight: onOpenPreflight, onOpenDestinTab: onOpenDestinTab, onOpenSuperSwitch: onOpenSuperSwitch, onOpenGhostProtocol: onOpenGhostProtocol, onOpenBrowserBypasser: onOpenBrowserBypasser, onOpenAssessPrepHack: onOpenAssessPrepHack, onOpenSettings: onOpenSettings, onOpenWallpaper: onOpenWallpaper, onOpenHackerDesktop: onOpenHackerDesktop, onOpenClipo: onOpenClipo, onOpenNotes: onOpenNotes, onOpenFanControl: onOpenFanControl, onOpenErrorHub: onOpenErrorHub, onOpenActivityMonitor: onOpenActivityMonitor, onOpenPermissionCenter: onOpenPermissionCenter, onOpenFakeLock: onOpenFakeLock)
+        MenuBarView(onClose: onClose, onOpenPreflight: onOpenPreflight, onOpenDestinTab: onOpenDestinTab, onOpenSuperSwitch: onOpenSuperSwitch, onOpenGhostProtocol: onOpenGhostProtocol, onOpenBrowserBypasser: onOpenBrowserBypasser, onOpenAssessPrepHack: onOpenAssessPrepHack, onOpenSettings: onOpenSettings, onOpenWallpaper: onOpenWallpaper, onOpenHackerDesktop: onOpenHackerDesktop, onOpenClipo: onOpenClipo, onOpenNotes: onOpenNotes, onOpenTodo: onOpenTodo, onOpenFanControl: onOpenFanControl, onOpenErrorHub: onOpenErrorHub, onOpenActivityMonitor: onOpenActivityMonitor, onOpenPermissionCenter: onOpenPermissionCenter, onOpenFakeLock: onOpenFakeLock)
     }
 }
 
@@ -2990,6 +3090,14 @@ struct NotesWindowView: View {
 
     var body: some View {
         NotesView(onClose: onClose)
+    }
+}
+
+struct TodoWindowView: View {
+    var onClose: () -> Void
+
+    var body: some View {
+        TodoView(onClose: onClose)
     }
 }
 
