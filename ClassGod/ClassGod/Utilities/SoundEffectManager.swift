@@ -39,7 +39,7 @@ nonisolated enum UserInteractionFeedbackPolicy {
 nonisolated enum WindowSoundPolicy {
     static func openSoundName(feature: String) -> String? {
         switch feature {
-        case "preflight": "Morse"
+        case "preflight", "schedule": "Morse"
         case "destintab", "errorhub": "Basso"
         case "superswitch", "fancontrol", "todo": "Ping"
         case "browserbypasser", "hackerdesktop": "Sosumi"
@@ -55,7 +55,7 @@ nonisolated enum WindowSoundPolicy {
         switch feature {
         case "preflight", "destintab", "superswitch", "browserbypasser", "assessprephack",
              "hackerdesktop", "fancontrol", "activitymonitor", "permissioncenter", "errorhub",
-             "ghostprotocol", "clipo", "notes", "todo", "fakelock":
+             "ghostprotocol", "clipo", "notes", "todo", "schedule", "fakelock":
             "Tink"
         default:
             nil

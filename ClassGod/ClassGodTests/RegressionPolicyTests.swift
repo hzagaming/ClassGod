@@ -8,7 +8,7 @@ import Testing
 struct RegressionPolicyTests {
     @Test("Main panel modes partition every feature without overlap")
     func categorizesMainPanelFeatures() {
-        #expect(MainPanelMode.goodStudent.features == [.clipo, .notes, .todo, .wallpaper, .widgets])
+        #expect(MainPanelMode.goodStudent.features == [.clipo, .notes, .todo, .schedule, .wallpaper, .widgets])
         #expect(MainPanelMode.other.features == [.errorHub, .activityMonitor, .fanControl, .permissionCenter])
         #expect(MainPanelMode.badStudent.features == [
             .preflight,
@@ -621,6 +621,12 @@ struct RegressionPolicyTests {
         #expect(FeatureWindowLayoutPolicy.layout(for: .fanControl).defaultWidth == 680)
         #expect(FeatureWindowLayoutPolicy.layout(for: .permissionCenter).defaultWidth == 900)
         #expect(FeatureWindowLayoutPolicy.layout(for: .preflight).defaultWidth == 760)
+        #expect(FeatureWindowLayoutPolicy.layout(for: .schedule) == .init(
+            defaultWidth: 980,
+            defaultHeight: 700,
+            minimumWidth: 760,
+            minimumHeight: 520
+        ))
     }
 
     @Test("Unrelated preference changes never reset manually resized feature windows")

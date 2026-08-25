@@ -25,7 +25,7 @@
   </p>
 </div>
 
-> Current release: **v1.5.44 (Build 69)**. Download the DMG or PKG from [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest).
+> Current release: **v1.5.45 (Build 70)**. Download the DMG or PKG from [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest).
 
 ## Why ClassGod
 
@@ -43,6 +43,7 @@ It has grown into a focused desktop toolkit while keeping the same rule: user da
 | **Clipo** | Keeps local clipboard history, quick slots, search, pinning, import/export, and controlled retention. |
 | **Notes** | Keeps searchable local notes in an optional floating window that follows every app, Space, and full-screen workspace. |
 | **Todo** | Organizes local tasks with smart lists, projects, priorities, subtasks, recurrence, search, and a Focus Pulse dashboard. |
+| **Schedule Lab** | Builds a local weekly timetable with live status, conflict detection, overlap lanes, locations, notes, and colors. |
 | **Software Update** | Checks stable GitHub releases automatically, verifies installer metadata and SHA-256, then opens the macOS Installer. |
 | **Permission Center** | Shows every supported macOS permission, its live state, why it is used, and the exact system settings destination. |
 | **Fan Control** | Reads available temperature and fan data, supports System, Max, Manual, and Custom policies, and uses a privileged helper when approved. |
@@ -171,9 +172,9 @@ ClassGod/ClassGodTests/    App tests
 ClassGodHelper/            Privileged helper Swift package and tests
 ```
 
-## Latest announcement: v1.5.44
+## Latest announcement: v1.5.45
 
-This release adds a local Todo workspace with smart lists, projects, priorities, dates, subtasks, recurrence, search, and atomic Application Support persistence. Its Hacker-themed Focus Pulse dashboard recommends the next task and animates workload metrics while respecting Reduce Motion and instant animation settings. Deletion preferences, state transitions, VoiceOver semantics, interaction feedback, and sound routing were audited; all named windows now have deterministic SFX, wallpaper video audio remains bounded by mute and volume controls, and the app still has no continuous BGM. Verification covers 216 main-app tests, 17 helper tests, static analysis, localization parsing, and version consistency.
+This release adds Schedule Lab, a local weekly timetable in Good Student with live current/next status, conflict detection, deterministic overlap lanes, and atomic Application Support persistence. Dense overlaps and midnight boundaries are now bounded correctly; short cards, editor state, Reduce Motion behavior, VoiceOver details, SFX/Haptic feedback, bilingual strings, and minimum-window editor fit were audited. Wallpaper video audio remains governed by mute, volume, pause, and primary-display rules, and ClassGod still plays no continuous BGM. Verification covers 226 main-app tests, 17 helper tests, static analysis, Debug and Release builds, localization parsing, and native-window UI checks.
 
 Read [CHANGELOG.md](CHANGELOG.md) for current releases and [CHANGELOG_HISTORY.md](CHANGELOG_HISTORY.md) for older history.
 

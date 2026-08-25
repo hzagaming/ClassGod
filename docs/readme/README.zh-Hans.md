@@ -4,7 +4,7 @@
 
 [English](../../README.md) · **简体中文** · [繁體中文](README.zh-Hant.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Français](README.fr.md) · [Deutsch](README.de.md) · [Español](README.es.md) · [Português](README.pt.md) · [Русский](README.ru.md)
 
-> 当前版本：**v1.5.44 (Build 69)**。可从 [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest) 下载 DMG 或 PKG。
+> 当前版本：**v1.5.45 (Build 70)**。可从 [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest) 下载 DMG 或 PKG。
 
 ## ClassGod 是什么
 
@@ -21,6 +21,7 @@ ClassGod 常驻 macOS 菜单栏。你可以保存浏览器目标、绑定全局�
 | **Fake Lock** | 以 Safe Browser 或 MapTest Bypass 模式打开指定浏览器和网址，可分别锁定前进、后退导航。 |
 | **Clipo** | 本地剪贴板历史、快捷槽、搜索、置顶、导入导出和自动清理。 |
 | **Todo** | 本地智能清单、项目、优先级、子任务、重复任务、搜索与专注脉冲面板。 |
+| **Schedule Lab** | 本地周日程、当前与下一项状态、冲突检测、重叠分栏、地点、备注和颜色。 |
 | **Permission Center** | 展示全部支持权限的实时状态、用途、检测方式和精确系统设置入口。 |
 | **Fan Control** | 读取可用温度与风扇数据，支持 System、Max、Manual、Custom 模式；用户批准后可使用特权 Helper。 |
 | **Widgets** | 19 个原生 WidgetKit 小组件，覆盖系统、天气、便签、任务、文件、终端和应用启动。 |
