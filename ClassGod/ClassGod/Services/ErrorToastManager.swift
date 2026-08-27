@@ -346,7 +346,12 @@ struct ErrorToastView: View {
                 )
         )
         .shadow(color: Color.black.opacity(0.4), radius: 12, x: 0, y: 4)
-        .scaleEffect(isHovered ? 1.02 : 1.0)
+        .scaleEffect(InteractiveMotionPolicy.scale(
+            active: isHovered,
+            requestedScale: 1.02,
+            animationsEnabled: Anim.enabled
+        ))
+        .animation(Anim.enabled ? .easeOut(duration: Anim.duration) : nil, value: isHovered)
         .onHover { hovering in
             isHovered = hovering
         }

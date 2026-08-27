@@ -779,7 +779,11 @@ struct TabRow: View {
             .contentShape(Rectangle())
             .background(Rectangle().fill(backgroundColor))
             .overlay(Rectangle().stroke(borderColor, lineWidth: 1 * zoomScale))
-            .scaleEffect(isPressed ? 0.98 : 1.0)
+            .scaleEffect(InteractiveMotionPolicy.scale(
+                active: isPressed,
+                requestedScale: 0.98,
+                animationsEnabled: Anim.enabled
+            ))
         }
         .buttonStyle(.plain)
         .focusable(prefs.preferences.enableKeyboardNavigation)

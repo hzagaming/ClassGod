@@ -45,7 +45,8 @@ nonisolated enum WindowSoundPolicy {
         case "browserbypasser", "hackerdesktop": "Sosumi"
         case "assessprephack": "Funk"
         case "activitymonitor": "Tink"
-        case "permissioncenter", "clipo", "notes": "Glass"
+        case "permissioncenter", "clipo", "notes", "settings": "Glass"
+        case "wallpaper": "Blow"
         case "ghostprotocol", "fakelock": "Submarine"
         default: nil
         }
@@ -55,7 +56,8 @@ nonisolated enum WindowSoundPolicy {
         switch feature {
         case "preflight", "destintab", "superswitch", "browserbypasser", "assessprephack",
              "hackerdesktop", "fancontrol", "activitymonitor", "permissioncenter", "errorhub",
-             "ghostprotocol", "clipo", "notes", "todo", "schedule", "fakelock":
+             "ghostprotocol", "clipo", "notes", "todo", "schedule", "settings", "wallpaper",
+             "fakelock":
             "Tink"
         default:
             nil

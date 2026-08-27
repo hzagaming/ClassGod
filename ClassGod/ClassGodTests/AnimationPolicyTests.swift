@@ -12,6 +12,30 @@ struct AnimationPolicyTests {
         #expect(AnimationDurationPolicy.shouldRunLaunchEffects(duration: 0.2))
     }
 
+    @Test("Disabled animation modes remove transient spatial scaling")
+    func resolvesInteractiveScale() {
+        #expect(InteractiveMotionPolicy.scale(
+            active: true,
+            requestedScale: 0.9,
+            animationsEnabled: true
+        ) == 0.9)
+        #expect(InteractiveMotionPolicy.scale(
+            active: true,
+            requestedScale: 0.9,
+            animationsEnabled: false
+        ) == 1)
+        #expect(InteractiveMotionPolicy.scale(
+            active: false,
+            requestedScale: 0.9,
+            animationsEnabled: true
+        ) == 1)
+        #expect(InteractiveMotionPolicy.scale(
+            active: true,
+            requestedScale: .nan,
+            animationsEnabled: true
+        ) == 1)
+    }
+
     @Test("The ClassGod splash remains visible in instant mode")
     func resolvesLaunchDelay() {
         #expect(LaunchWindowPresentationPolicy.splashDelay(preferred: 2, animationDuration: 0) == 1)
@@ -84,7 +108,8 @@ struct AnimationPolicyTests {
         let features = [
             "preflight", "destintab", "superswitch", "browserbypasser", "assessprephack",
             "hackerdesktop", "fancontrol", "activitymonitor", "permissioncenter", "errorhub",
-            "ghostprotocol", "clipo", "notes", "todo", "schedule", "fakelock",
+            "ghostprotocol", "clipo", "notes", "todo", "schedule", "settings", "wallpaper",
+            "fakelock",
         ]
         for feature in features {
             #expect(WindowSoundPolicy.openSoundName(feature: feature) != nil)
@@ -94,6 +119,8 @@ struct AnimationPolicyTests {
         #expect(WindowSoundPolicy.openSoundName(feature: "notes") == "Glass")
         #expect(WindowSoundPolicy.openSoundName(feature: "todo") == "Ping")
         #expect(WindowSoundPolicy.openSoundName(feature: "schedule") == "Morse")
+        #expect(WindowSoundPolicy.openSoundName(feature: "settings") == "Glass")
+        #expect(WindowSoundPolicy.openSoundName(feature: "wallpaper") == "Blow")
         #expect(WindowSoundPolicy.closeSoundName(feature: "notes") == "Tink")
         #expect(WindowSoundPolicy.closeSoundName(feature: "todo") == "Tink")
         #expect(WindowSoundPolicy.closeSoundName(feature: "schedule") == "Tink")

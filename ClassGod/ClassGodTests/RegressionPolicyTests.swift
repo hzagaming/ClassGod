@@ -629,6 +629,16 @@ struct RegressionPolicyTests {
         ))
     }
 
+    @Test("Click-outside behavior covers transient feature windows")
+    func validatesClickOutsideWindowCoverage() {
+        #expect(ClickOutsideWindowPolicy.shouldClose(.todo))
+        #expect(ClickOutsideWindowPolicy.shouldClose(.schedule))
+        #expect(!ClickOutsideWindowPolicy.shouldClose(.notes))
+        #expect(!ClickOutsideWindowPolicy.shouldClose(.fanControl))
+        #expect(FeatureWindowKind.allCases.filter(ClickOutsideWindowPolicy.shouldClose).count
+            == FeatureWindowKind.allCases.count - 2)
+    }
+
     @Test("Unrelated preference changes never reset manually resized feature windows")
     func preservesManualFeatureWindowSizes() {
         #expect(!FeatureWindowResizePolicy.shouldApplyScale(previousZoom: 1, currentZoom: 1))

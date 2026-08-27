@@ -455,7 +455,11 @@ struct WallpaperBrowserView: View {
                         .shadow(color: isSelected ? prefs.preferences.themeAccent.color.opacity(0.25) : Color.clear, radius: 4 * zoomScale)
                         .allowsHitTesting(false)
                 )
-                .scaleEffect(isHovered ? 1.03 : 1.0)
+                .scaleEffect(InteractiveMotionPolicy.scale(
+                    active: isHovered,
+                    requestedScale: 1.03,
+                    animationsEnabled: Anim.enabled
+                ))
                 .animation(Anim.enabled ? .easeOut(duration: Anim.duration) : nil, value: isHovered)
                 
                 VStack(spacing: 2 * zoomScale) {
@@ -596,7 +600,11 @@ struct ControlButton: View {
                 .frame(width: 28 * zoomScale, height: 28 * zoomScale)
                 .background(isHovered ? Color(white: 0.12) : Color.clear)
                 .clipShape(Circle())
-                .scaleEffect(isPressed ? 0.88 : 1.0)
+                .scaleEffect(InteractiveMotionPolicy.scale(
+                    active: isPressed,
+                    requestedScale: 0.88,
+                    animationsEnabled: Anim.enabled
+                ))
         }
         .buttonStyle(.plain)
         .accessibilityLabel(Text(accessibilityLabel))

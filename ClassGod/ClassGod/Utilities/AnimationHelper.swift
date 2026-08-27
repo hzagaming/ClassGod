@@ -21,6 +21,20 @@ nonisolated enum AnimationDurationPolicy {
 
 }
 
+nonisolated enum InteractiveMotionPolicy {
+    static func scale(
+        active: Bool,
+        requestedScale: CGFloat,
+        animationsEnabled: Bool
+    ) -> CGFloat {
+        guard active,
+              animationsEnabled,
+              requestedScale.isFinite,
+              requestedScale > 0 else { return 1 }
+        return requestedScale
+    }
+}
+
 enum Anim {
     static var enabled: Bool {
         duration > 0
@@ -53,7 +67,11 @@ struct HoverScaleModifier: ViewModifier {
     func body(content: Content) -> some View {
         let dur = Anim.duration
         return content
-            .scaleEffect(isHovered ? scale : 1.0)
+            .scaleEffect(InteractiveMotionPolicy.scale(
+                active: isHovered,
+                requestedScale: scale,
+                animationsEnabled: dur > 0
+            ))
             .animation(dur > 0 ? .easeOut(duration: dur) : .none, value: isHovered)
             .onHover { hovering in
                 isHovered = hovering

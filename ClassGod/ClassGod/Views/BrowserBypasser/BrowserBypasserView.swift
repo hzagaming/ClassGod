@@ -435,7 +435,11 @@ struct RuleRow: View {
                 .stroke(borderColor, lineWidth: 1 * zoomScale)
                 .allowsHitTesting(false)
         )
-        .scaleEffect(isPressed ? 0.98 : 1.0)
+        .scaleEffect(InteractiveMotionPolicy.scale(
+            active: isPressed,
+            requestedScale: 0.98,
+            animationsEnabled: Anim.enabled
+        ))
         .contextMenu {
             Button(String(format: String(localized: "bypass.context.run"), rule.bypassType.displayName)) {
                 HapticManager.shared.generic()

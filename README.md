@@ -25,7 +25,7 @@
   </p>
 </div>
 
-> Current release: **v1.5.45 (Build 70)**. Download the DMG or PKG from [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest).
+> Current release: **v1.5.46 (Build 71)**. Download the DMG or PKG from [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest).
 
 ## Why ClassGod
 
@@ -172,9 +172,9 @@ ClassGod/ClassGodTests/    App tests
 ClassGodHelper/            Privileged helper Swift package and tests
 ```
 
-## Latest announcement: v1.5.45
+## Latest announcement: v1.5.46
 
-This release adds Schedule Lab, a local weekly timetable in Good Student with live current/next status, conflict detection, deterministic overlap lanes, and atomic Application Support persistence. Dense overlaps and midnight boundaries are now bounded correctly; short cards, editor state, Reduce Motion behavior, VoiceOver details, SFX/Haptic feedback, bilingual strings, and minimum-window editor fit were audited. Wallpaper video audio remains governed by mute, volume, pause, and primary-display rules, and ClassGod still plays no continuous BGM. Verification covers 226 main-app tests, 17 helper tests, static analysis, Debug and Release builds, localization parsing, and native-window UI checks.
+This release polishes interaction consistency across the app. Instant animation and Reduce Motion modes now remove transient hover and press scaling while retaining color, border, opacity, and selection feedback. Click-outside handling now covers Todo and Schedule through an exhaustive feature-window route while preserving the intentional persistent behavior of Notes and Fan Control. Settings and Wallpaper also receive explicit semantic open/close SFX. Wallpaper video audio remains governed by mute, volume, pause, primary-display, and player-cleanup rules, and ClassGod still plays no continuous BGM. Verification covers 228 main-app tests, 17 helper tests, static analysis, Debug and Release builds, localization parsing, version consistency, and native-window UI checks.
 
 Read [CHANGELOG.md](CHANGELOG.md) for current releases and [CHANGELOG_HISTORY.md](CHANGELOG_HISTORY.md) for older history.
 

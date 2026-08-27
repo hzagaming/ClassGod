@@ -50,6 +50,12 @@ nonisolated enum FeatureWindowKind: CaseIterable {
     case activityMonitor, permissionCenter, fakeLock
 }
 
+nonisolated enum ClickOutsideWindowPolicy {
+    static func shouldClose(_ kind: FeatureWindowKind) -> Bool {
+        kind != .notes && kind != .fanControl
+    }
+}
+
 nonisolated struct FeatureWindowLayout: Equatable {
     let defaultWidth: CGFloat
     let defaultHeight: CGFloat
@@ -1161,7 +1167,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
         guard beginWindowTransition(window, targetVisible: true) != nil else { return }
         
-        SoundEffectManager.shared.playWindowOpen()
+        SoundEffectManager.shared.playWindowOpen(feature: "settings")
         
         if animated {
             window.alphaValue = 0
@@ -1180,7 +1186,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func hideSettingsWindow() {
         guard let window = settingsWindow,
               let transition = beginWindowTransition(window, targetVisible: false) else { return }
-        SoundEffectManager.shared.playWindowClose()
+        SoundEffectManager.shared.playWindowClose(feature: "settings")
         
         NSAnimationContext.runAnimationGroup { context in
             context.duration = Anim.duration
@@ -1260,7 +1266,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
         guard beginWindowTransition(window, targetVisible: true) != nil else { return }
 
-        SoundEffectManager.shared.playWindowOpen()
+        SoundEffectManager.shared.playWindowOpen(feature: "wallpaper")
 
         if animated {
             window.alphaValue = 0
@@ -1279,7 +1285,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func hideWallpaperBrowserWindow() {
         guard let window = wallpaperBrowserWindow,
               let transition = beginWindowTransition(window, targetVisible: false) else { return }
-        SoundEffectManager.shared.playWindowClose()
+        SoundEffectManager.shared.playWindowClose(feature: "wallpaper")
 
         NSAnimationContext.runAnimationGroup { context in
             context.duration = Anim.duration
@@ -2692,30 +2698,40 @@ class AppDelegate: NSObject, NSApplicationDelegate {
            statusItemFrame.contains(mouseLoc) {
             return
         }
-        let windows: [(NSWindow?, () -> Void)] = [
+        let windows = [
             (mainWindow, { [weak self] in self?.hideMainWindow() }),
-            (preflightWindow, { [weak self] in self?.hidePreflightWindow() }),
-            (destinTabWindow, { [weak self] in self?.hideDestinTabWindow() }),
-            (superSwitchWindow, { [weak self] in self?.hideSuperSwitchWindow() }),
-            (ghostProtocolWindow, { [weak self] in self?.hideGhostProtocolWindow() }),
-            (browserBypasserWindow, { [weak self] in self?.hideBrowserBypasserWindow() }),
-            (assessPrepHackWindow, { [weak self] in self?.hideAssessPrepHackWindow() }),
-            (settingsWindow, { [weak self] in self?.hideSettingsWindow() }),
-            (wallpaperBrowserWindow, { [weak self] in self?.hideWallpaperBrowserWindow() }),
-            (hackerDesktopWindow, { [weak self] in self?.hideHackerDesktopWindow() }),
-            (clipoWindow, { [weak self] in self?.hideClipoWindow() }),
-            (errorHubWindow, { [weak self] in self?.hideErrorHubWindow() }),
-            (activityMonitorWindow, { [weak self] in self?.hideActivityMonitorWindow() }),
-            (permissionCenterWindow, { [weak self] in self?.hidePermissionCenterWindow() }),
-            (fakeLockWindow, { [weak self] in self?.hideFakeLockWindow() }),
-            // FanControl is intentionally excluded: it should only close via its own close button.
-        ]
+        ] + FeatureWindowKind.allCases
+            .filter(ClickOutsideWindowPolicy.shouldClose)
+            .map(clickOutsideTarget)
 
         for (window, hideAction) in windows {
             guard let w = window, w.isVisible, w.alphaValue > 0 else { continue }
             if !NSPointInRect(mouseLoc, w.frame) {
                 hideAction()
             }
+        }
+    }
+
+    private func clickOutsideTarget(for kind: FeatureWindowKind) -> (NSWindow?, () -> Void) {
+        switch kind {
+        case .preflight: (preflightWindow, { [weak self] in self?.hidePreflightWindow() })
+        case .destinTab: (destinTabWindow, { [weak self] in self?.hideDestinTabWindow() })
+        case .superSwitch: (superSwitchWindow, { [weak self] in self?.hideSuperSwitchWindow() })
+        case .ghostProtocol: (ghostProtocolWindow, { [weak self] in self?.hideGhostProtocolWindow() })
+        case .browserBypasser: (browserBypasserWindow, { [weak self] in self?.hideBrowserBypasserWindow() })
+        case .assessPrepHack: (assessPrepHackWindow, { [weak self] in self?.hideAssessPrepHackWindow() })
+        case .settings: (settingsWindow, { [weak self] in self?.hideSettingsWindow() })
+        case .wallpaper: (wallpaperBrowserWindow, { [weak self] in self?.hideWallpaperBrowserWindow() })
+        case .hackerDesktop: (hackerDesktopWindow, { [weak self] in self?.hideHackerDesktopWindow() })
+        case .clipo: (clipoWindow, { [weak self] in self?.hideClipoWindow() })
+        case .notes: (notesWindow, { [weak self] in self?.hideNotesWindow() })
+        case .todo: (todoWindow, { [weak self] in self?.hideTodoWindow() })
+        case .schedule: (scheduleWindow, { [weak self] in self?.hideScheduleWindow() })
+        case .errorHub: (errorHubWindow, { [weak self] in self?.hideErrorHubWindow() })
+        case .fanControl: (fanControlWindow, { [weak self] in self?.hideFanControlWindow() })
+        case .activityMonitor: (activityMonitorWindow, { [weak self] in self?.hideActivityMonitorWindow() })
+        case .permissionCenter: (permissionCenterWindow, { [weak self] in self?.hidePermissionCenterWindow() })
+        case .fakeLock: (fakeLockWindow, { [weak self] in self?.hideFakeLockWindow() })
         }
     }
 

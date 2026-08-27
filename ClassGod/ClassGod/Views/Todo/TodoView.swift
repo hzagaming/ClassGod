@@ -823,8 +823,12 @@ private struct TodoFocusPulseView: View {
             RoundedRectangle(cornerRadius: 10 * zoomScale)
                 .stroke(hovered ? accent.opacity(0.34) : Color.white.opacity(0.07), lineWidth: zoomScale)
         )
-        .scaleEffect(hovered && !reduceMotion ? 1.004 : 1)
-        .offset(y: hovered && !reduceMotion ? -zoomScale : 0)
+        .scaleEffect(InteractiveMotionPolicy.scale(
+            active: hovered && !reduceMotion,
+            requestedScale: 1.004,
+            animationsEnabled: Anim.enabled
+        ))
+        .offset(y: hovered && !reduceMotion && Anim.enabled ? -zoomScale : 0)
         .shadow(color: hovered ? accent.opacity(0.1) : .clear, radius: 12 * zoomScale)
         .animation(animation, value: hovered)
         .animation(animation, value: snapshot)
@@ -978,8 +982,12 @@ private struct TodoTaskCardStyle: ViewModifier {
                     .stroke(hovered ? accent.opacity(0.28) : Color.white.opacity(0.07), lineWidth: zoomScale)
             )
             .clipShape(RoundedRectangle(cornerRadius: 9 * zoomScale))
-            .scaleEffect(hovered && !reduceMotion ? 1.006 : 1, anchor: .leading)
-            .offset(x: hovered && !reduceMotion ? 2 * zoomScale : 0)
+            .scaleEffect(InteractiveMotionPolicy.scale(
+                active: hovered && !reduceMotion,
+                requestedScale: 1.006,
+                animationsEnabled: Anim.enabled
+            ), anchor: .leading)
+            .offset(x: hovered && !reduceMotion && Anim.enabled ? 2 * zoomScale : 0)
             .shadow(color: hovered ? accent.opacity(0.1) : .clear, radius: 10 * zoomScale)
             .animation(animation, value: hovered)
             .animation(animation, value: completed)

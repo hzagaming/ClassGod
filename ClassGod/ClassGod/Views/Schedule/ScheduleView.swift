@@ -722,7 +722,11 @@ private struct ScheduleEntryCard: View {
                     )
             )
             .clipShape(RoundedRectangle(cornerRadius: 7 * zoomScale))
-            .scaleEffect(hovered && !reduceMotion ? 1.008 : 1)
+            .scaleEffect(InteractiveMotionPolicy.scale(
+                active: hovered && !reduceMotion,
+                requestedScale: 1.008,
+                animationsEnabled: Anim.enabled
+            ))
             .shadow(color: hovered ? color.opacity(0.16) : .clear, radius: 9 * zoomScale)
         }
         .buttonStyle(.plain)

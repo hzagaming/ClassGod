@@ -408,7 +408,11 @@ struct TargetRow: View {
                 .stroke(borderColor, lineWidth: 1 * zoomScale)
                 .allowsHitTesting(false)
         )
-        .scaleEffect(isPressed ? 0.985 : 1.0)
+        .scaleEffect(InteractiveMotionPolicy.scale(
+            active: isPressed,
+            requestedScale: 0.985,
+            animationsEnabled: Anim.enabled
+        ))
         .contextMenu {
             Button(String(format: String(localized: "superswitch.context_switch"), target.name)) {
                 onSwitch()

@@ -653,7 +653,11 @@ struct FeatureButton: View {
                     .stroke(isHovered && isEnabled ? palette.accent.opacity(0.55) : palette.border, lineWidth: 1 * zoomScale)
                     .allowsHitTesting(false)
             )
-            .scaleEffect(isPressed ? 0.97 : 1.0)
+            .scaleEffect(InteractiveMotionPolicy.scale(
+                active: isPressed,
+                requestedScale: 0.97,
+                animationsEnabled: Anim.enabled
+            ))
         }
         .buttonStyle(.plain)
         .disabled(!isEnabled)
