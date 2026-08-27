@@ -46,6 +46,7 @@ nonisolated enum WindowSoundPolicy {
         case "assessprephack": "Funk"
         case "activitymonitor": "Tink"
         case "permissioncenter", "clipo", "notes", "settings": "Glass"
+        case "focusflow": "Bottle"
         case "wallpaper": "Blow"
         case "ghostprotocol", "fakelock": "Submarine"
         default: nil
@@ -56,8 +57,8 @@ nonisolated enum WindowSoundPolicy {
         switch feature {
         case "preflight", "destintab", "superswitch", "browserbypasser", "assessprephack",
              "hackerdesktop", "fancontrol", "activitymonitor", "permissioncenter", "errorhub",
-             "ghostprotocol", "clipo", "notes", "todo", "schedule", "settings", "wallpaper",
-             "fakelock":
+             "ghostprotocol", "clipo", "notes", "todo", "schedule", "focusflow", "settings",
+             "wallpaper", "fakelock":
             "Tink"
         default:
             nil
@@ -90,6 +91,8 @@ enum SoundEffect: String, CaseIterable {
     case dragStart = "DragStart"
     case resizeStart = "ResizeStart"
     case temperatureWarning = "TemperatureWarning"
+    case focusCompleted = "FocusCompleted"
+    case breakCompleted = "BreakCompleted"
     case ghostDeploy = "GhostDeploy"
     case ghostRestore = "GhostRestore"
     
@@ -119,6 +122,8 @@ enum SoundEffect: String, CaseIterable {
         case .dragStart:          return "Pop"
         case .resizeStart:        return "Pop"
         case .temperatureWarning: return "Basso"
+        case .focusCompleted:     return "Glass"
+        case .breakCompleted:     return "Ping"
         case .ghostDeploy:        return "Submarine"
         case .ghostRestore:       return "Glass"
         }
@@ -425,6 +430,10 @@ final class SoundEffectManager {
     
     func playTemperatureWarning() {
         play(.temperatureWarning)
+    }
+
+    func playFocusPhaseComplete(completedFocus: Bool) {
+        play(completedFocus ? .focusCompleted : .breakCompleted)
     }
 }
 

@@ -46,7 +46,7 @@ nonisolated enum SettingsWindowLayoutPolicy {
 
 nonisolated enum FeatureWindowKind: CaseIterable {
     case preflight, destinTab, superSwitch, ghostProtocol, browserBypasser, assessPrepHack
-    case settings, wallpaper, hackerDesktop, clipo, notes, todo, schedule, errorHub, fanControl
+    case settings, wallpaper, hackerDesktop, clipo, notes, todo, schedule, focusFlow, errorHub, fanControl
     case activityMonitor, permissionCenter, fakeLock
 }
 
@@ -79,11 +79,21 @@ nonisolated enum FeatureWindowLayoutPolicy {
         case .notes: return .init(defaultWidth: 760, defaultHeight: 600, minimumWidth: 520, minimumHeight: 380)
         case .todo: return .init(defaultWidth: 960, defaultHeight: 680, minimumWidth: 720, minimumHeight: 500)
         case .schedule: return .init(defaultWidth: 980, defaultHeight: 700, minimumWidth: 760, minimumHeight: 520)
+        case .focusFlow: return .init(defaultWidth: 760, defaultHeight: 560, minimumWidth: 560, minimumHeight: 460)
         case .errorHub: return .init(defaultWidth: 700, defaultHeight: 640, minimumWidth: 460, minimumHeight: 400)
         case .fanControl: return .init(defaultWidth: 680, defaultHeight: 680, minimumWidth: 500, minimumHeight: 460)
         case .activityMonitor: return .init(defaultWidth: 1_000, defaultHeight: 680, minimumWidth: 720, minimumHeight: 480)
         case .permissionCenter: return .init(defaultWidth: 900, defaultHeight: 680, minimumWidth: 680, minimumHeight: 500)
         case .fakeLock: return .init(defaultWidth: 760, defaultHeight: 650, minimumWidth: 560, minimumHeight: 440)
+        }
+    }
+
+    static func screenMargin(for kind: FeatureWindowKind) -> CGFloat {
+        switch kind {
+        case .hackerDesktop: 100
+        case .clipo, .notes, .todo, .schedule, .focusFlow, .activityMonitor,
+             .permissionCenter, .fakeLock: 80
+        default: 40
         }
     }
 }
@@ -181,6 +191,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var notesWindow: NSWindow?
     var todoWindow: NSWindow?
     var scheduleWindow: NSWindow?
+    var focusFlowWindow: NSWindow?
     var errorHubWindow: NSWindow?
     var fanControlWindow: NSWindow?
     var activityMonitorWindow: NSWindow?
@@ -499,6 +510,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             self?.showTodoWindow()
         }, onOpenSchedule: { [weak self] in
             self?.showScheduleWindow()
+        }, onOpenFocusFlow: { [weak self] in
+            self?.showFocusFlowWindow()
         }, onOpenFanControl: { [weak self] in
             self?.showFanControlWindow()
         }, onOpenErrorHub: { [weak self] in
@@ -1319,7 +1332,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let zoom = CGFloat(prefs.windowZoomScale)
         guard let screen = NSScreen.main else { return }
         let screenFrame = screen.visibleFrame
-        let size = featureWindowSize(.hackerDesktop, zoom: zoom, margin: 100, screen: screen)
+        let size = featureWindowSize(.hackerDesktop, zoom: zoom, screen: screen)
 
         let window = DraggableWindow(
             contentRect: NSRect(origin: .zero, size: size),
@@ -1416,7 +1429,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func setupClipoWindow() {
         let prefs = PreferencesManager.shared.preferences
         let zoom = CGFloat(prefs.windowZoomScale)
-        let size = featureWindowSize(.clipo, zoom: zoom, margin: 80, screen: NSScreen.main)
+        let size = featureWindowSize(.clipo, zoom: zoom, screen: NSScreen.main)
 
         let window = DraggableWindow(
             contentRect: NSRect(origin: .zero, size: size),
@@ -1508,7 +1521,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func setupNotesWindow() {
         let zoom = CGFloat(PreferencesManager.shared.preferences.windowZoomScale)
-        let size = featureWindowSize(.notes, zoom: zoom, margin: 80, screen: NSScreen.main)
+        let size = featureWindowSize(.notes, zoom: zoom, screen: NSScreen.main)
         let window = DraggableWindow(
             contentRect: NSRect(origin: .zero, size: size),
             styleMask: [.borderless],
@@ -1599,7 +1612,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func setupTodoWindow() {
         let zoom = CGFloat(PreferencesManager.shared.preferences.windowZoomScale)
-        let size = featureWindowSize(.todo, zoom: zoom, margin: 80, screen: NSScreen.main)
+        let size = featureWindowSize(.todo, zoom: zoom, screen: NSScreen.main)
         let window = DraggableWindow(
             contentRect: NSRect(origin: .zero, size: size),
             styleMask: [.borderless],
@@ -1688,7 +1701,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func setupScheduleWindow() {
         let zoom = CGFloat(PreferencesManager.shared.preferences.windowZoomScale)
-        let size = featureWindowSize(.schedule, zoom: zoom, margin: 80, screen: NSScreen.main)
+        let size = featureWindowSize(.schedule, zoom: zoom, screen: NSScreen.main)
         let window = DraggableWindow(
             contentRect: NSRect(origin: .zero, size: size),
             styleMask: [.borderless],
@@ -1771,6 +1784,95 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
         windowTargetIsVisible(window) ? hideScheduleWindow() : showScheduleWindow(animated: true)
+    }
+
+    // MARK: - Focus Flow Window
+
+    private func setupFocusFlowWindow() {
+        let zoom = CGFloat(PreferencesManager.shared.preferences.windowZoomScale)
+        let size = featureWindowSize(.focusFlow, zoom: zoom, screen: NSScreen.main)
+        let window = DraggableWindow(
+            contentRect: NSRect(origin: .zero, size: size),
+            styleMask: [.borderless],
+            backing: .buffered,
+            defer: false
+        )
+        configureFeatureWindow(window, kind: .focusFlow, zoom: zoom)
+        window.level = windowLevel
+        window.backgroundColor = .clear
+        window.hasShadow = true
+        window.isMovableByWindowBackground = false
+        window.isReleasedWhenClosed = false
+        window.isOpaque = false
+
+        if let screen = NSScreen.main {
+            let frame = screen.visibleFrame
+            window.setFrameOrigin(NSPoint(x: frame.midX - size.width / 2, y: frame.midY - size.height / 2))
+        }
+
+        window.contentView = NSHostingView(
+            rootView: FocusFlowWindowView(onClose: { [weak self] in
+                self?.hideFocusFlowWindow()
+            })
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Color.clear)
+            .overlay(WindowResizeHandles())
+        )
+        updateWindowCornerMask(window)
+        focusFlowWindow = window
+    }
+
+    func showFocusFlowWindow(animated: Bool = true) {
+        guard let window = focusFlowWindow else {
+            setupFocusFlowWindow()
+            guard focusFlowWindow != nil else { return }
+            showFocusFlowWindow(animated: animated)
+            return
+        }
+        guard beginWindowTransition(window, targetVisible: true) != nil else { return }
+        SoundEffectManager.shared.playWindowOpen(feature: "focusflow")
+        NSApp.activate(ignoringOtherApps: true)
+        if animated && Anim.enabled {
+            window.alphaValue = 0
+            window.makeKeyAndOrderFront(nil)
+            NSAnimationContext.runAnimationGroup { context in
+                context.duration = Anim.duration
+                context.timingFunction = .init(name: .easeOut)
+                window.animator().alphaValue = targetWindowAlpha
+            }
+        } else {
+            window.alphaValue = targetWindowAlpha
+            window.makeKeyAndOrderFront(nil)
+        }
+    }
+
+    func hideFocusFlowWindow() {
+        guard let window = focusFlowWindow,
+              let transition = beginWindowTransition(window, targetVisible: false) else { return }
+        SoundEffectManager.shared.playWindowClose(feature: "focusflow")
+        guard Anim.enabled else {
+            window.alphaValue = 0
+            window.orderOut(nil)
+            return
+        }
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = Anim.duration
+            context.timingFunction = .init(name: .easeIn)
+            window.animator().alphaValue = 0
+        } completionHandler: { [weak self, weak window] in
+            guard let self, let window,
+                  self.isCurrentWindowTransition(transition, for: window, targetVisible: false) else { return }
+            window.orderOut(nil)
+        }
+    }
+
+    @objc func toggleFocusFlowWindow() {
+        guard let window = focusFlowWindow else {
+            setupFocusFlowWindow()
+            showFocusFlowWindow(animated: true)
+            return
+        }
+        windowTargetIsVisible(window) ? hideFocusFlowWindow() : showFocusFlowWindow(animated: true)
     }
 
     // MARK: - Error Hub Window
@@ -1988,7 +2090,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let zoom = CGFloat(prefs.windowZoomScale)
         guard let screen = NSScreen.main else { return }
         let screenFrame = screen.visibleFrame
-        let size = featureWindowSize(.activityMonitor, zoom: zoom, margin: 80, screen: screen)
+        let size = featureWindowSize(.activityMonitor, zoom: zoom, screen: screen)
 
         let window = DraggableWindow(
             contentRect: NSRect(origin: .zero, size: size),
@@ -2132,7 +2234,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let windows = [
             mainWindow, preflightWindow, destinTabWindow, superSwitchWindow, ghostProtocolWindow,
             browserBypasserWindow, assessPrepHackWindow, settingsWindow,
-            wallpaperBrowserWindow, hackerDesktopWindow, clipoWindow, notesWindow, todoWindow, scheduleWindow, errorHubWindow,
+            wallpaperBrowserWindow, hackerDesktopWindow, clipoWindow, notesWindow, todoWindow, scheduleWindow, focusFlowWindow, errorHubWindow,
             fanControlWindow, activityMonitorWindow, permissionCenterWindow, fakeLockWindow,
         ]
         for window in windows.compactMap({ $0 }) {
@@ -2152,7 +2254,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let zoom = CGFloat(prefs.windowZoomScale)
         guard let screen = NSScreen.main else { return }
         let screenFrame = screen.visibleFrame
-        let size = featureWindowSize(.permissionCenter, zoom: zoom, margin: 80, screen: screen)
+        let size = featureWindowSize(.permissionCenter, zoom: zoom, screen: screen)
 
         let window = DraggableWindow(
             contentRect: NSRect(origin: .zero, size: size),
@@ -2249,7 +2351,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func setupFakeLockWindow() {
         let prefs = PreferencesManager.shared.preferences
         let zoom = CGFloat(prefs.windowZoomScale)
-        let size = featureWindowSize(.fakeLock, zoom: zoom, margin: 80, screen: NSScreen.main)
+        let size = featureWindowSize(.fakeLock, zoom: zoom, screen: NSScreen.main)
         let window = DraggableWindow(
             contentRect: NSRect(origin: .zero, size: size),
             styleMask: [.borderless],
@@ -2373,14 +2475,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func featureWindowSize(
         _ kind: FeatureWindowKind,
         zoom: CGFloat,
-        margin: CGFloat = 40,
         screen: NSScreen? = nil
     ) -> NSSize {
         let layout = FeatureWindowLayoutPolicy.layout(for: kind)
         return constrainedWindowSize(
             base: NSSize(width: layout.defaultWidth, height: layout.defaultHeight),
             zoom: zoom,
-            margin: margin,
+            margin: FeatureWindowLayoutPolicy.screenMargin(for: kind),
             screen: screen
         )
     }
@@ -2391,9 +2492,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         zoom: CGFloat
     ) {
         let layout = FeatureWindowLayoutPolicy.layout(for: kind)
-        window.minimumWindowSize = NSSize(
-            width: layout.minimumWidth * zoom,
-            height: layout.minimumHeight * zoom
+        window.minimumWindowSize = constrainedWindowSize(
+            base: NSSize(width: layout.minimumWidth, height: layout.minimumHeight),
+            zoom: zoom,
+            margin: FeatureWindowLayoutPolicy.screenMargin(for: kind),
+            screen: window.screen
         )
     }
 
@@ -2608,6 +2711,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         notesWindow?.level = .floating
         todoWindow?.level = level
         scheduleWindow?.level = level
+        focusFlowWindow?.level = level
         errorHubWindow?.level = level
         fanControlWindow?.level = level
         activityMonitorWindow?.level = level
@@ -2619,7 +2723,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let windows = [
             mainWindow, preflightWindow, destinTabWindow, superSwitchWindow, ghostProtocolWindow,
             browserBypasserWindow, assessPrepHackWindow, settingsWindow,
-            wallpaperBrowserWindow, hackerDesktopWindow, clipoWindow, notesWindow, todoWindow, scheduleWindow, errorHubWindow,
+            wallpaperBrowserWindow, hackerDesktopWindow, clipoWindow, notesWindow, todoWindow, scheduleWindow, focusFlowWindow, errorHubWindow,
             fanControlWindow, activityMonitorWindow, permissionCenterWindow, fakeLockWindow,
         ]
         for window in windows.compactMap({ $0 }) where windowTargetIsVisible(window) {
@@ -2631,7 +2735,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let windows = [
             mainWindow, preflightWindow, destinTabWindow, superSwitchWindow, ghostProtocolWindow,
             browserBypasserWindow, assessPrepHackWindow, settingsWindow,
-            wallpaperBrowserWindow, hackerDesktopWindow, clipoWindow, notesWindow, todoWindow, scheduleWindow, errorHubWindow,
+            wallpaperBrowserWindow, hackerDesktopWindow, clipoWindow, notesWindow, todoWindow, scheduleWindow, focusFlowWindow, errorHubWindow,
             fanControlWindow, activityMonitorWindow, permissionCenterWindow, fakeLockWindow,
         ]
         windows.compactMap { $0 }.forEach(updateWindowCornerMask)
@@ -2654,6 +2758,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             (notesWindow as? DraggableWindow, .notes),
             (todoWindow as? DraggableWindow, .todo),
             (scheduleWindow as? DraggableWindow, .schedule),
+            (focusFlowWindow as? DraggableWindow, .focusFlow),
             (errorHubWindow as? DraggableWindow, .errorHub),
             (fanControlWindow as? DraggableWindow, .fanControl),
             (activityMonitorWindow as? DraggableWindow, .activityMonitor),
@@ -2670,6 +2775,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             window.setContentSize(constrainedWindowSize(
                 base: NSSize(width: scaled.width * ratio, height: scaled.height * ratio),
                 zoom: 1,
+                margin: FeatureWindowLayoutPolicy.screenMargin(for: kind),
                 screen: window.screen
             ))
             constrainWindowToVisibleScreen(window)
@@ -2727,6 +2833,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         case .notes: (notesWindow, { [weak self] in self?.hideNotesWindow() })
         case .todo: (todoWindow, { [weak self] in self?.hideTodoWindow() })
         case .schedule: (scheduleWindow, { [weak self] in self?.hideScheduleWindow() })
+        case .focusFlow: (focusFlowWindow, { [weak self] in self?.hideFocusFlowWindow() })
         case .errorHub: (errorHubWindow, { [weak self] in self?.hideErrorHubWindow() })
         case .fanControl: (fanControlWindow, { [weak self] in self?.hideFanControlWindow() })
         case .activityMonitor: (activityMonitorWindow, { [weak self] in self?.hideActivityMonitorWindow() })
@@ -2815,6 +2922,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         NotesService.shared.stop()
         TodoService.shared.stop()
         ScheduleService.shared.stop()
+        FocusFlowService.shared.stop()
         UpdateService.shared.stop()
         FakeLockService.shared.stop()
         
@@ -2878,6 +2986,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             window.orderOut(nil)
         }
         if let window = scheduleWindow {
+            window.orderOut(nil)
+        }
+        if let window = focusFlowWindow {
             window.orderOut(nil)
         }
         if let window = errorHubWindow {
@@ -3136,6 +3247,7 @@ struct MenuBarWindowView: View {
     var onOpenNotes: () -> Void = {}
     var onOpenTodo: () -> Void = {}
     var onOpenSchedule: () -> Void = {}
+    var onOpenFocusFlow: () -> Void = {}
     var onOpenFanControl: () -> Void = {}
     var onOpenErrorHub: () -> Void = {}
     var onOpenActivityMonitor: () -> Void = {}
@@ -3143,7 +3255,7 @@ struct MenuBarWindowView: View {
     var onOpenFakeLock: () -> Void = {}
 
     var body: some View {
-        MenuBarView(onClose: onClose, onOpenPreflight: onOpenPreflight, onOpenDestinTab: onOpenDestinTab, onOpenSuperSwitch: onOpenSuperSwitch, onOpenGhostProtocol: onOpenGhostProtocol, onOpenBrowserBypasser: onOpenBrowserBypasser, onOpenAssessPrepHack: onOpenAssessPrepHack, onOpenSettings: onOpenSettings, onOpenWallpaper: onOpenWallpaper, onOpenHackerDesktop: onOpenHackerDesktop, onOpenClipo: onOpenClipo, onOpenNotes: onOpenNotes, onOpenTodo: onOpenTodo, onOpenSchedule: onOpenSchedule, onOpenFanControl: onOpenFanControl, onOpenErrorHub: onOpenErrorHub, onOpenActivityMonitor: onOpenActivityMonitor, onOpenPermissionCenter: onOpenPermissionCenter, onOpenFakeLock: onOpenFakeLock)
+        MenuBarView(onClose: onClose, onOpenPreflight: onOpenPreflight, onOpenDestinTab: onOpenDestinTab, onOpenSuperSwitch: onOpenSuperSwitch, onOpenGhostProtocol: onOpenGhostProtocol, onOpenBrowserBypasser: onOpenBrowserBypasser, onOpenAssessPrepHack: onOpenAssessPrepHack, onOpenSettings: onOpenSettings, onOpenWallpaper: onOpenWallpaper, onOpenHackerDesktop: onOpenHackerDesktop, onOpenClipo: onOpenClipo, onOpenNotes: onOpenNotes, onOpenTodo: onOpenTodo, onOpenSchedule: onOpenSchedule, onOpenFocusFlow: onOpenFocusFlow, onOpenFanControl: onOpenFanControl, onOpenErrorHub: onOpenErrorHub, onOpenActivityMonitor: onOpenActivityMonitor, onOpenPermissionCenter: onOpenPermissionCenter, onOpenFakeLock: onOpenFakeLock)
     }
 }
 

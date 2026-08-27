@@ -108,8 +108,8 @@ struct AnimationPolicyTests {
         let features = [
             "preflight", "destintab", "superswitch", "browserbypasser", "assessprephack",
             "hackerdesktop", "fancontrol", "activitymonitor", "permissioncenter", "errorhub",
-            "ghostprotocol", "clipo", "notes", "todo", "schedule", "settings", "wallpaper",
-            "fakelock",
+            "ghostprotocol", "clipo", "notes", "todo", "schedule", "focusflow", "settings",
+            "wallpaper", "fakelock",
         ]
         for feature in features {
             #expect(WindowSoundPolicy.openSoundName(feature: feature) != nil)
@@ -119,8 +119,11 @@ struct AnimationPolicyTests {
         #expect(WindowSoundPolicy.openSoundName(feature: "notes") == "Glass")
         #expect(WindowSoundPolicy.openSoundName(feature: "todo") == "Ping")
         #expect(WindowSoundPolicy.openSoundName(feature: "schedule") == "Morse")
+        #expect(WindowSoundPolicy.openSoundName(feature: "focusflow") == "Bottle")
         #expect(WindowSoundPolicy.openSoundName(feature: "settings") == "Glass")
         #expect(WindowSoundPolicy.openSoundName(feature: "wallpaper") == "Blow")
+        #expect(SoundEffect.focusCompleted.systemSoundName == "Glass")
+        #expect(SoundEffect.breakCompleted.systemSoundName == "Ping")
         #expect(WindowSoundPolicy.closeSoundName(feature: "notes") == "Tink")
         #expect(WindowSoundPolicy.closeSoundName(feature: "todo") == "Tink")
         #expect(WindowSoundPolicy.closeSoundName(feature: "schedule") == "Tink")

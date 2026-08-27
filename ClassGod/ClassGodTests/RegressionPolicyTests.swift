@@ -8,7 +8,9 @@ import Testing
 struct RegressionPolicyTests {
     @Test("Main panel modes partition every feature without overlap")
     func categorizesMainPanelFeatures() {
-        #expect(MainPanelMode.goodStudent.features == [.clipo, .notes, .todo, .schedule, .wallpaper, .widgets])
+        #expect(MainPanelMode.goodStudent.features == [
+            .clipo, .notes, .todo, .schedule, .focusFlow, .wallpaper, .widgets,
+        ])
         #expect(MainPanelMode.other.features == [.errorHub, .activityMonitor, .fanControl, .permissionCenter])
         #expect(MainPanelMode.badStudent.features == [
             .preflight,
@@ -627,12 +629,22 @@ struct RegressionPolicyTests {
             minimumWidth: 760,
             minimumHeight: 520
         ))
+        #expect(FeatureWindowLayoutPolicy.layout(for: .focusFlow) == .init(
+            defaultWidth: 760,
+            defaultHeight: 560,
+            minimumWidth: 560,
+            minimumHeight: 460
+        ))
+        #expect(FeatureWindowLayoutPolicy.screenMargin(for: .preflight) == 40)
+        #expect(FeatureWindowLayoutPolicy.screenMargin(for: .focusFlow) == 80)
+        #expect(FeatureWindowLayoutPolicy.screenMargin(for: .hackerDesktop) == 100)
     }
 
     @Test("Click-outside behavior covers transient feature windows")
     func validatesClickOutsideWindowCoverage() {
         #expect(ClickOutsideWindowPolicy.shouldClose(.todo))
         #expect(ClickOutsideWindowPolicy.shouldClose(.schedule))
+        #expect(ClickOutsideWindowPolicy.shouldClose(.focusFlow))
         #expect(!ClickOutsideWindowPolicy.shouldClose(.notes))
         #expect(!ClickOutsideWindowPolicy.shouldClose(.fanControl))
         #expect(FeatureWindowKind.allCases.filter(ClickOutsideWindowPolicy.shouldClose).count

@@ -14,6 +14,7 @@ enum MainPanelFeature: String, CaseIterable, Hashable {
     case notes
     case todo
     case schedule
+    case focusFlow
     case superSwitch
     case ghostProtocol
     case browserBypasser
@@ -34,6 +35,7 @@ enum MainPanelFeature: String, CaseIterable, Hashable {
         case .notes: "note.text"
         case .todo: "checkmark.circle.fill"
         case .schedule: "calendar.badge.clock"
+        case .focusFlow: "timer.circle.fill"
         case .superSwitch: "arrow.left.arrow.right"
         case .ghostProtocol: "eye.slash.circle.fill"
         case .browserBypasser: "lock.open.fill"
@@ -56,6 +58,7 @@ enum MainPanelFeature: String, CaseIterable, Hashable {
         case .notes: "notes.title"
         case .todo: "todo.title"
         case .schedule: "schedule.title"
+        case .focusFlow: "focus.title"
         case .superSwitch: "SuperSwitch"
         case .ghostProtocol: "ghost.title"
         case .browserBypasser: "BrowserBypasser"
@@ -78,6 +81,7 @@ enum MainPanelFeature: String, CaseIterable, Hashable {
         case .notes: "menu.notes.description"
         case .todo: "menu.todo.description"
         case .schedule: "menu.schedule.description"
+        case .focusFlow: "menu.focus.description"
         case .superSwitch: "menu.superswitch.description"
         case .ghostProtocol: "menu.ghost_protocol.description"
         case .browserBypasser: "menu.browser_bypasser.description"
@@ -103,7 +107,7 @@ enum MainPanelMode: String, CaseIterable, Identifiable {
     var features: [MainPanelFeature] {
         switch self {
         case .goodStudent:
-            [.clipo, .notes, .todo, .schedule, .wallpaper, .widgets]
+            [.clipo, .notes, .todo, .schedule, .focusFlow, .wallpaper, .widgets]
         case .badStudent:
             [.preflight, .destinTab, .superSwitch, .ghostProtocol, .browserBypasser, .fakeLock, .assessPrepHack]
         case .other:
@@ -219,6 +223,7 @@ struct MenuBarView: View {
     var onOpenNotes: () -> Void
     var onOpenTodo: () -> Void
     var onOpenSchedule: () -> Void
+    var onOpenFocusFlow: () -> Void
     var onOpenFanControl: () -> Void
     var onOpenErrorHub: () -> Void
     var onOpenActivityMonitor: () -> Void
@@ -410,6 +415,7 @@ struct MenuBarView: View {
         case .notes: onOpenNotes
         case .todo: onOpenTodo
         case .schedule: onOpenSchedule
+        case .focusFlow: onOpenFocusFlow
         case .superSwitch: onOpenSuperSwitch
         case .ghostProtocol: onOpenGhostProtocol
         case .browserBypasser: onOpenBrowserBypasser
@@ -697,5 +703,5 @@ struct FeatureButton: View {
 }
 
 #Preview {
-    MenuBarView(onClose: {}, onOpenPreflight: {}, onOpenDestinTab: {}, onOpenSuperSwitch: {}, onOpenGhostProtocol: {}, onOpenBrowserBypasser: {}, onOpenAssessPrepHack: {}, onOpenSettings: {}, onOpenWallpaper: {}, onOpenHackerDesktop: {}, onOpenClipo: {}, onOpenNotes: {}, onOpenTodo: {}, onOpenSchedule: {}, onOpenFanControl: {}, onOpenErrorHub: {}, onOpenActivityMonitor: {}, onOpenPermissionCenter: {}, onOpenFakeLock: {})
+    MenuBarView(onClose: {}, onOpenPreflight: {}, onOpenDestinTab: {}, onOpenSuperSwitch: {}, onOpenGhostProtocol: {}, onOpenBrowserBypasser: {}, onOpenAssessPrepHack: {}, onOpenSettings: {}, onOpenWallpaper: {}, onOpenHackerDesktop: {}, onOpenClipo: {}, onOpenNotes: {}, onOpenTodo: {}, onOpenSchedule: {}, onOpenFocusFlow: {}, onOpenFanControl: {}, onOpenErrorHub: {}, onOpenActivityMonitor: {}, onOpenPermissionCenter: {}, onOpenFakeLock: {})
 }

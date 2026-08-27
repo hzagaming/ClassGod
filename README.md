@@ -25,7 +25,7 @@
   </p>
 </div>
 
-> Current release: **v1.5.46 (Build 71)**. Download the DMG or PKG from [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest).
+> Current release: **v1.5.47 (Build 72)**. Download the DMG or PKG from [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest).
 
 ## Why ClassGod
 
@@ -44,6 +44,7 @@ It has grown into a focused desktop toolkit while keeping the same rule: user da
 | **Notes** | Keeps searchable local notes in an optional floating window that follows every app, Space, and full-screen workspace. |
 | **Todo** | Organizes local tasks with smart lists, projects, priorities, subtasks, recurrence, search, and a Focus Pulse dashboard. |
 | **Schedule Lab** | Builds a local weekly timetable with live status, conflict detection, overlap lanes, locations, notes, and colors. |
+| **Focus Flow** | Runs drift-free focus and recovery cycles with three rhythms, long-break cadence, and local daily statistics. |
 | **Software Update** | Checks stable GitHub releases automatically, verifies installer metadata and SHA-256, then opens the macOS Installer. |
 | **Permission Center** | Shows every supported macOS permission, its live state, why it is used, and the exact system settings destination. |
 | **Fan Control** | Reads available temperature and fan data, supports System, Max, Manual, and Custom policies, and uses a privileged helper when approved. |
@@ -172,9 +173,9 @@ ClassGod/ClassGodTests/    App tests
 ClassGodHelper/            Privileged helper Swift package and tests
 ```
 
-## Latest announcement: v1.5.46
+## Latest announcement: v1.5.47
 
-This release polishes interaction consistency across the app. Instant animation and Reduce Motion modes now remove transient hover and press scaling while retaining color, border, opacity, and selection feedback. Click-outside handling now covers Todo and Schedule through an exhaustive feature-window route while preserving the intentional persistent behavior of Notes and Fan Control. Settings and Wallpaper also receive explicit semantic open/close SFX. Wallpaper video audio remains governed by mute, volume, pause, primary-display, and player-cleanup rules, and ClassGod still plays no continuous BGM. Verification covers 228 main-app tests, 17 helper tests, static analysis, Debug and Release builds, localization parsing, version consistency, and native-window UI checks.
+This release adds Focus Flow to Good Student: a drift-free local focus timer with Quick, Classic, and Deep rhythms, short and long breaks, precise pause/resume behavior, persisted rhythm choice, and daily statistics. Its Hacker-style progress ring, phase colors, numeric transitions, SFX/Haptic feedback, and VoiceOver output respect Reduce Motion and instant-animation settings. Window sizing now keeps both default and minimum sizes inside the visible screen at high zoom. Wallpaper audio remains governed by mute, normalized volume, pause, primary-display, and cleanup rules, and ClassGod still plays no continuous BGM. Verification covers 239 main-app tests, 17 helper tests, static analysis, Debug and Release builds, localization parsing, version consistency, and native-window accessibility checks.
 
 Read [CHANGELOG.md](CHANGELOG.md) for current releases and [CHANGELOG_HISTORY.md](CHANGELOG_HISTORY.md) for older history.
 

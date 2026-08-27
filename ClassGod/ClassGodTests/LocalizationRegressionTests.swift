@@ -46,6 +46,21 @@ struct LocalizationRegressionTests {
         #expect(chinese.localizedString(forKey: "clipo.seconds_format", value: nil, table: nil) == "%.2f 秒")
     }
 
+    @Test("Focus Flow status and timing labels are localized")
+    func validatesFocusFlowLabels() throws {
+        let english = Locale(identifier: "en")
+        let chineseURL = try #require(Bundle.main.url(forResource: "zh-Hans", withExtension: "lproj"))
+        let chinese = try #require(Bundle(url: chineseURL))
+
+        #expect(String(localized: "focus.title", bundle: .main, locale: english) == "Focus Flow")
+        #expect(String(localized: "focus.long_break_active", bundle: .main, locale: english) == "Long break active")
+        #expect(chinese.localizedString(forKey: "focus.long_break_active", value: nil, table: nil) == "长休息进行中")
+        #expect(String(
+            format: chinese.localizedString(forKey: "focus.long_break_in", value: nil, table: nil),
+            2
+        ) == "距离长休息还有 2 轮")
+    }
+
     @Test("Permission gate and uninstall warnings are localized")
     func validatesPermissionGateAndUninstallLabels() throws {
         let english = Locale(identifier: "en")
