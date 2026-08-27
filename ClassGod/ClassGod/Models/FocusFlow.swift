@@ -54,6 +54,10 @@ nonisolated struct FocusFlowTransition: Equatable, Sendable {
 nonisolated enum FocusFlowPolicy {
     static let focusSessionsBeforeLongBreak = 4
 
+    static func normalizedCycleSessions(_ completedFocusSessions: Int) -> Int {
+        max(0, completedFocusSessions) % focusSessionsBeforeLongBreak
+    }
+
     static func durationSeconds(
         for phase: FocusFlowPhase,
         preset: FocusFlowPreset
@@ -108,7 +112,7 @@ nonisolated enum FocusFlowPolicy {
         during phase: FocusFlowPhase,
         completedFocusSessions: Int
     ) -> Int {
-        let remainder = max(0, completedFocusSessions) % focusSessionsBeforeLongBreak
+        let remainder = normalizedCycleSessions(completedFocusSessions)
         return phase == .longBreak ? focusSessionsBeforeLongBreak : remainder
     }
 
@@ -117,7 +121,7 @@ nonisolated enum FocusFlowPolicy {
         completedFocusSessions: Int
     ) -> Int? {
         guard phase != .longBreak else { return nil }
-        let remainder = max(0, completedFocusSessions) % focusSessionsBeforeLongBreak
+        let remainder = normalizedCycleSessions(completedFocusSessions)
         return focusSessionsBeforeLongBreak - remainder
     }
 }

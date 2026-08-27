@@ -13,7 +13,9 @@ final class FocusFlowService: ObservableObject {
 
     private static let storageKey = "com.hanazar.classgod.focusFlow.dailyStats"
     private static let presetStorageKey = "com.hanazar.classgod.focusFlow.preset"
+    private static let cycleStorageKey = "com.hanazar.classgod.focusFlow.cycleSessions"
     private let defaults: UserDefaults
+    @Published private var cycleCompletedSessions: Int
     private var deadline: Date?
     private var pausedRemaining: TimeInterval
     private var timer: Timer?
@@ -24,6 +26,9 @@ final class FocusFlowService: ObservableObject {
             .flatMap(FocusFlowPreset.init(rawValue:)) ?? .classic
         preset = initialPreset
         dailyStats = Self.loadDailyStats(from: defaults, key: Self.storageKey, now: now)
+        cycleCompletedSessions = FocusFlowPolicy.normalizedCycleSessions(
+            defaults.integer(forKey: Self.cycleStorageKey)
+        )
         let initial = FocusFlowPolicy.durationSeconds(for: .focus, preset: initialPreset)
         remainingSeconds = initial
         pausedRemaining = TimeInterval(initial)
@@ -43,14 +48,14 @@ final class FocusFlowService: ObservableObject {
     var completedSessionsInCycle: Int {
         FocusFlowPolicy.completedSessionsInCycle(
             during: phase,
-            completedFocusSessions: dailyStats.completedSessions
+            completedFocusSessions: cycleCompletedSessions
         )
     }
 
     var sessionsUntilLongBreak: Int? {
         FocusFlowPolicy.sessionsUntilLongBreak(
             during: phase,
-            completedFocusSessions: dailyStats.completedSessions
+            completedFocusSessions: cycleCompletedSessions
         )
     }
 
@@ -170,9 +175,13 @@ final class FocusFlowService: ObservableObject {
         let completedPhase = phase
         let transition = FocusFlowPolicy.completedTransition(
             after: completedPhase,
-            completedFocusSessions: dailyStats.completedSessions
+            completedFocusSessions: cycleCompletedSessions
         )
         if completedPhase.isFocus {
+            cycleCompletedSessions = FocusFlowPolicy.normalizedCycleSessions(
+                transition.completedFocusSessions
+            )
+            defaults.set(cycleCompletedSessions, forKey: Self.cycleStorageKey)
             dailyStats = FocusFlowDailyPolicy.recordingFocusSession(
                 in: dailyStats,
                 durationSeconds: phaseDurationSeconds,

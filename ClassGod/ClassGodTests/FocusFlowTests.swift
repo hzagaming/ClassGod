@@ -98,6 +98,8 @@ struct FocusFlowTests {
 
     @Test("Cycle presentation stays complete during the earned long break")
     func presentsLongBreakCycle() {
+        #expect(FocusFlowPolicy.normalizedCycleSessions(-1) == 0)
+        #expect(FocusFlowPolicy.normalizedCycleSessions(7) == 3)
         #expect(FocusFlowPolicy.completedSessionsInCycle(
             during: .focus,
             completedFocusSessions: 3
@@ -188,5 +190,40 @@ struct FocusFlowTests {
             completedSessions: 1,
             focusedSeconds: 1_500
         ))
+    }
+
+    @Test("Four-session cycle survives daily statistics rollover")
+    @MainActor
+    func preservesCycleAcrossDays() {
+        let suiteName = "com.hanazar.classgod.tests.focusflow.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let calendar = Calendar.current
+        var now = calendar.startOfDay(for: Date()).addingTimeInterval(12 * 60 * 60)
+        let service = FocusFlowService(defaults: defaults, now: now)
+        #expect(service.selectPreset(.quick))
+
+        for _ in 0..<3 {
+            #expect(service.startOrResume(now: now))
+            now = now.addingTimeInterval(15 * 60)
+            #expect(service.pause(now: now))
+            #expect(service.phase == .shortBreak)
+            #expect(service.skipPhase(now: now))
+            #expect(service.phase == .focus)
+        }
+
+        #expect(service.completedSessionsInCycle == 3)
+        #expect(service.sessionsUntilLongBreak == 1)
+
+        let nextDay = calendar.date(byAdding: .day, value: 1, to: now)!
+        service.refreshDailyStats(now: nextDay)
+        #expect(service.dailyStats.completedSessions == 0)
+        #expect(service.completedSessionsInCycle == 3)
+        #expect(service.sessionsUntilLongBreak == 1)
+
+        let restored = FocusFlowService(defaults: defaults, now: nextDay)
+        #expect(restored.completedSessionsInCycle == 3)
+        #expect(restored.sessionsUntilLongBreak == 1)
+        service.stop()
     }
 }
