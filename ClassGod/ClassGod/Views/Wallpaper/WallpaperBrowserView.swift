@@ -6,6 +6,12 @@
 import SwiftUI
 import UniformTypeIdentifiers
 
+nonisolated enum WallpaperThumbnailActionPolicy {
+    static func isDeleteAvailable(isHovered: Bool, isSelected: Bool) -> Bool {
+        isHovered || isSelected
+    }
+}
+
 struct WallpaperBrowserView: View {
     @ObservedObject var engine = WallpaperEngine.shared
     @State private var showImportPanel = false
@@ -404,6 +410,10 @@ struct WallpaperBrowserView: View {
     private func wallpaperThumbnail(item: WallpaperItem) -> some View {
         let isSelected = engine.currentWallpaper?.id == item.id
         let isHovered = hoverItemID == item.id
+        let isDeleteAvailable = WallpaperThumbnailActionPolicy.isDeleteAvailable(
+            isHovered: isHovered,
+            isSelected: isSelected
+        )
         let sizeText = fileSizeString(item.fileURL)
         
         return Button(action: {
@@ -493,8 +503,10 @@ struct WallpaperBrowserView: View {
             }
             .buttonStyle(.plain)
             .padding(5 * zoomScale)
-            .opacity(isHovered || isSelected ? 1 : 0)
-            .animation(Anim.enabled ? .easeInOut(duration: Anim.duration) : nil, value: isHovered)
+            .opacity(isDeleteAvailable ? 1 : 0)
+            .animation(Anim.enabled ? .easeInOut(duration: Anim.duration) : nil, value: isDeleteAvailable)
+            .allowsHitTesting(isDeleteAvailable)
+            .accessibilityHidden(!isDeleteAvailable)
             .accessibilityLabel(Text("button.delete"))
         }
         .onHover { hovering in

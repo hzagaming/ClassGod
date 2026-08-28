@@ -137,6 +137,13 @@ struct WallpaperSettingsTests {
         #expect(WallpaperAudioPolicy.shouldMute(userMuted: true, allowsAudio: true))
     }
 
+    @Test("Hidden wallpaper actions never intercept thumbnail input")
+    func resolvesWallpaperThumbnailActions() {
+        #expect(!WallpaperThumbnailActionPolicy.isDeleteAvailable(isHovered: false, isSelected: false))
+        #expect(WallpaperThumbnailActionPolicy.isDeleteAvailable(isHovered: true, isSelected: false))
+        #expect(WallpaperThumbnailActionPolicy.isDeleteAvailable(isHovered: false, isSelected: true))
+    }
+
     @Test("Wallpaper volume always remains finite and in range")
     func normalizesWallpaperVolume() {
         #expect(WallpaperVolumePolicy.normalized(-1) == 0)

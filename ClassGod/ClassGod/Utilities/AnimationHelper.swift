@@ -35,6 +35,12 @@ nonisolated enum InteractiveMotionPolicy {
     }
 }
 
+nonisolated enum EntranceMotionPolicy {
+    static func isPresented(state: Bool, animationsEnabled: Bool) -> Bool {
+        state || !animationsEnabled
+    }
+}
+
 enum Anim {
     static var enabled: Bool {
         duration > 0
@@ -166,12 +172,16 @@ struct SlideInModifier: ViewModifier {
     
     func body(content: Content) -> some View {
         let dur = Anim.duration
+        let isPresented = EntranceMotionPolicy.isPresented(
+            state: isVisible,
+            animationsEnabled: dur > 0
+        )
         let offsetX: CGFloat = edge == .leading ? -20 : (edge == .trailing ? 20 : 0)
         let offsetY: CGFloat = edge == .top ? -15 : (edge == .bottom ? 15 : 0)
         
         return content
-            .offset(x: isVisible ? 0 : offsetX, y: isVisible ? 0 : offsetY)
-            .opacity(isVisible ? 1 : 0)
+            .offset(x: isPresented ? 0 : offsetX, y: isPresented ? 0 : offsetY)
+            .opacity(isPresented ? 1 : 0)
             .animation(dur > 0 ? .easeOut(duration: dur).delay(delay * dur * 5) : .none, value: isVisible)
             .onAppear {
                 isVisible = true

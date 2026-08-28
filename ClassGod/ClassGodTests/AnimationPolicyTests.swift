@@ -36,6 +36,14 @@ struct AnimationPolicyTests {
         ) == 1)
     }
 
+    @Test("Disabled entrance motion presents content on the first frame")
+    func resolvesEntrancePresentation() {
+        #expect(EntranceMotionPolicy.isPresented(state: false, animationsEnabled: false))
+        #expect(EntranceMotionPolicy.isPresented(state: true, animationsEnabled: false))
+        #expect(!EntranceMotionPolicy.isPresented(state: false, animationsEnabled: true))
+        #expect(EntranceMotionPolicy.isPresented(state: true, animationsEnabled: true))
+    }
+
     @Test("The ClassGod splash remains visible in instant mode")
     func resolvesLaunchDelay() {
         #expect(LaunchWindowPresentationPolicy.splashDelay(preferred: 2, animationDuration: 0) == 1)

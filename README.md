@@ -25,7 +25,7 @@
   </p>
 </div>
 
-> Current release: **v1.5.48 (Build 73)**. Download the DMG or PKG from [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest).
+> Current release: **v1.5.49 (Build 74)**. Download the DMG or PKG from [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest).
 
 ## Why ClassGod
 
@@ -173,9 +173,9 @@ ClassGod/ClassGodTests/    App tests
 ClassGodHelper/            Privileged helper Swift package and tests
 ```
 
-## Latest announcement: v1.5.48
+## Latest announcement: v1.5.49
 
-This release fixes Focus Flow's four-session cadence across midnight and time-zone refreshes: daily statistics can reset without erasing a pending `3/4` cycle, and cycle progress now survives service recreation independently. A full UI/UX review reconfirmed window bounds, click-outside behavior, VoiceOver, Reduce Motion, and instant-animation behavior across all 19 feature windows. Semantic window SFX retain duplicate-hit protection; wallpaper audio remains governed by mute, normalized volume, pause, primary-display playback, secondary-display muting, and teardown cleanup, with no continuous BGM added. Verification covers 240 main-app tests, 17 helper tests, static analysis, Debug and Release builds, localization parsing, version consistency, native-window visual checks, and accessibility regression tests.
+This release removes a first-frame jump from DestinTab's empty state when Reduce Motion or instant animations are enabled. Wallpaper thumbnail delete controls now share one visibility, hit-testing, and accessibility policy, so hidden controls cannot intercept clicks or remain exposed to VoiceOver. A full UI/UX/SFX/BGM review reconfirmed semantic window sounds, repeated-sound protection, bounded overlap channels, and wallpaper mute, volume, pause, primary-display audio, secondary-display muting, and teardown behavior; no continuous BGM was added. Verification covers 242 main-app tests, 17 helper tests, static analysis, Debug and Release builds, localization parsing, version consistency, native-window visual checks, and accessibility regression tests.
 
 Read [CHANGELOG.md](CHANGELOG.md) for current releases and [CHANGELOG_HISTORY.md](CHANGELOG_HISTORY.md) for older history.
 
