@@ -137,6 +137,24 @@ struct WallpaperSettingsTests {
         #expect(WallpaperAudioPolicy.shouldMute(userMuted: true, allowsAudio: true))
     }
 
+    @Test("Wallpaper transport reflects whether playback can actually run")
+    func resolvesWallpaperTransportAvailability() {
+        #expect(WallpaperTransportPolicy.canTogglePlayback(isEnabled: true, hasWallpaper: true))
+        #expect(!WallpaperTransportPolicy.canTogglePlayback(isEnabled: false, hasWallpaper: true))
+        #expect(!WallpaperTransportPolicy.canTogglePlayback(isEnabled: true, hasWallpaper: false))
+        #expect(WallpaperTransportPolicy.showsPause(isEnabled: true, isPlaying: true))
+        #expect(!WallpaperTransportPolicy.showsPause(isEnabled: false, isPlaying: true))
+        #expect(!WallpaperTransportPolicy.showsPause(isEnabled: true, isPlaying: false))
+    }
+
+    @Test("Disabled wallpaper controls never look interactive")
+    func resolvesWallpaperControlFeedback() {
+        #expect(WallpaperControlInteractionPolicy.isHighlighted(isHovered: true, isEnabled: true))
+        #expect(!WallpaperControlInteractionPolicy.isHighlighted(isHovered: true, isEnabled: false))
+        #expect(WallpaperControlInteractionPolicy.opacity(isEnabled: true) == 1)
+        #expect(WallpaperControlInteractionPolicy.opacity(isEnabled: false) == 0.3)
+    }
+
     @Test("Hidden wallpaper actions never intercept thumbnail input")
     func resolvesWallpaperThumbnailActions() {
         #expect(!WallpaperThumbnailActionPolicy.isDeleteAvailable(isHovered: false, isSelected: false))

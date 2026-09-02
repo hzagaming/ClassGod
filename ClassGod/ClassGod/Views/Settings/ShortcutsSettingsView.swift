@@ -7,13 +7,32 @@ import SwiftUI
 import AppKit
 import Carbon
 
+nonisolated enum ShortcutRecordingMotionPolicy {
+    static func shouldPulse(
+        isRecording: Bool,
+        animationsEnabled: Bool,
+        reduceMotion: Bool
+    ) -> Bool {
+        isRecording && animationsEnabled && !reduceMotion
+    }
+}
+
 struct ShortcutsSettingsView: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @ObservedObject var prefs = PreferencesManager.shared
     private var zoomScale: CGFloat { CGFloat(prefs.preferences.windowZoomScale) }
     @State private var isRecordingPopoverShortcut = false
     @State private var pulseScale: CGFloat = 1.0
     @State private var pulseOpacity: Double = 1.0
     @State private var localMonitor: Any?
+
+    private var shouldPulse: Bool {
+        ShortcutRecordingMotionPolicy.shouldPulse(
+            isRecording: isRecordingPopoverShortcut,
+            animationsEnabled: Anim.enabled,
+            reduceMotion: reduceMotion
+        )
+    }
 
     var displayShortcut: String {
         let flags = NSEvent.ModifierFlags(rawValue: UInt(prefs.preferences.showPopoverModifiers))
@@ -115,23 +134,8 @@ struct ShortcutsSettingsView: View {
             .padding(.horizontal, 8 * zoomScale)
             .padding(.vertical, 8 * zoomScale)
         }
-        .onChange(of: isRecordingPopoverShortcut) { _, recording in
-            if recording && Anim.enabled {
-                withAnimation(.easeInOut(duration: Anim.duration).repeatForever(autoreverses: true)) {
-                    pulseScale = 1.04
-                    pulseOpacity = 0.4
-                }
-            } else {
-                if Anim.enabled {
-                    withAnimation(.easeOut(duration: Anim.duration)) {
-                        pulseScale = 1.0
-                        pulseOpacity = 1.0
-                    }
-                } else {
-                    pulseScale = 1.0
-                    pulseOpacity = 1.0
-                }
-            }
+        .onChange(of: shouldPulse, initial: true) { _, shouldPulse in
+            updatePulse(shouldPulse)
         }
         .onDisappear {
             stopRecording()
@@ -148,6 +152,23 @@ struct ShortcutsSettingsView: View {
                 .font(.system(size: 12 * zoomScale))
                 .foregroundStyle(.secondary)
             Spacer()
+        }
+    }
+
+    private func updatePulse(_ shouldPulse: Bool) {
+        if shouldPulse {
+            withAnimation(.easeInOut(duration: Anim.duration).repeatForever(autoreverses: true)) {
+                pulseScale = 1.04
+                pulseOpacity = 0.4
+            }
+        } else if Anim.enabled && !reduceMotion {
+            withAnimation(.easeOut(duration: Anim.duration)) {
+                pulseScale = 1
+                pulseOpacity = 1
+            }
+        } else {
+            pulseScale = 1
+            pulseOpacity = 1
         }
     }
 

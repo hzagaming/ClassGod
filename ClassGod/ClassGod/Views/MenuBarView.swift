@@ -130,6 +130,14 @@ enum MainPanelMode: String, CaseIterable, Identifiable {
         case .other: "desktopcomputer"
         }
     }
+
+    var signature: LocalizedStringKey {
+        switch self {
+        case .goodStudent: "menu.mode.good_student.signature"
+        case .badStudent: "menu.mode.bad_student.signature"
+        case .other: "menu.mode.other.signature"
+        }
+    }
 }
 
 enum MainPanelLayoutPolicy {
@@ -139,6 +147,32 @@ enum MainPanelLayoutPolicy {
         let spacing = 10 * scale
         let count = Int((max(0, availableWidth) + spacing) / (minimumCardWidth + spacing))
         return min(3, max(1, count))
+    }
+}
+
+enum MainPanelBackdropPattern: Hashable {
+    case blueprintGrid
+    case warningStripes
+    case terminalDots
+}
+
+enum MainPanelIdentityPolicy {
+    static func backdropPattern(for mode: MainPanelMode) -> MainPanelBackdropPattern {
+        switch mode {
+        case .goodStudent: .blueprintGrid
+        case .badStudent: .warningStripes
+        case .other: .terminalDots
+        }
+    }
+
+    static func moduleCount(for mode: MainPanelMode) -> Int {
+        mode.features.count
+    }
+}
+
+enum MainPanelCardInteractionPolicy {
+    static func chevronOffset(isHovered: Bool, animationsEnabled: Bool) -> CGFloat {
+        isHovered && animationsEnabled ? 2 : 0
     }
 }
 
@@ -197,6 +231,61 @@ private extension MainPanelMode {
     }
 }
 
+private struct MainPanelBackdrop: View {
+    let pattern: MainPanelBackdropPattern
+    let color: Color
+    let zoomScale: CGFloat
+
+    var body: some View {
+        Canvas { context, size in
+            let scale = max(0.5, zoomScale)
+
+            switch pattern {
+            case .blueprintGrid:
+                let spacing = 28 * scale
+                var path = Path()
+                for x in stride(from: CGFloat.zero, through: size.width, by: spacing) {
+                    path.move(to: CGPoint(x: x, y: 0))
+                    path.addLine(to: CGPoint(x: x, y: size.height))
+                }
+                for y in stride(from: CGFloat.zero, through: size.height, by: spacing) {
+                    path.move(to: CGPoint(x: 0, y: y))
+                    path.addLine(to: CGPoint(x: size.width, y: y))
+                }
+                context.stroke(path, with: .color(color.opacity(0.075)), lineWidth: 0.6 * scale)
+
+            case .warningStripes:
+                let spacing = 36 * scale
+                let span = size.height
+                var path = Path()
+                for x in stride(from: -span, through: size.width + span, by: spacing) {
+                    path.move(to: CGPoint(x: x, y: 0))
+                    path.addLine(to: CGPoint(x: x + span, y: size.height))
+                }
+                context.stroke(path, with: .color(color.opacity(0.07)), lineWidth: 1.1 * scale)
+
+            case .terminalDots:
+                let spacing = 24 * scale
+                let diameter = 1.4 * scale
+                var path = Path()
+                for x in stride(from: spacing / 2, through: size.width, by: spacing) {
+                    for y in stride(from: spacing / 2, through: size.height, by: spacing) {
+                        path.addEllipse(in: CGRect(
+                            x: x - diameter / 2,
+                            y: y - diameter / 2,
+                            width: diameter,
+                            height: diameter
+                        ))
+                    }
+                }
+                context.fill(path, with: .color(color.opacity(0.14)))
+            }
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+}
+
 struct MenuBarView: View {
     @ObservedObject private var prefs = PreferencesManager.shared
     @AppStorage("com.hanazar.classgod.mainPanelMode") private var selectedMode: MainPanelMode = .goodStudent
@@ -243,6 +332,13 @@ struct MenuBarView: View {
             .ignoresSafeArea()
             .allowsHitTesting(false)
 
+            MainPanelBackdrop(
+                pattern: MainPanelIdentityPolicy.backdropPattern(for: selectedMode),
+                color: palette.accent,
+                zoomScale: zoomScale
+            )
+            .ignoresSafeArea()
+
             VStack(spacing: 0 * zoomScale) {
                 titleBar
                 modeSelector
@@ -288,46 +384,90 @@ struct MenuBarView: View {
     }
 
     private var modeSelector: some View {
-        HStack(spacing: 6 * zoomScale) {
-            ForEach(MainPanelMode.allCases) { mode in
-                let modePalette = mode.palette
-                let isSelected = selectedMode == mode
+        VStack(spacing: 6 * zoomScale) {
+            HStack(spacing: 6 * zoomScale) {
+                ForEach(MainPanelMode.allCases) { mode in
+                    let modePalette = mode.palette
+                    let isSelected = selectedMode == mode
 
-                Button {
-                    guard !isSelected else { return }
-                    SoundEffectManager.shared.playButtonClick()
-                    HapticManager.shared.generic()
-                    Anim.with { selectedMode = mode }
-                } label: {
-                    HStack(spacing: 5 * zoomScale) {
-                        Image(systemName: mode.icon)
-                            .font(.system(size: 10 * zoomScale, weight: .semibold))
-                            .foregroundStyle(isSelected ? modePalette.accent : palette.secondaryText)
-                        Text(mode.title)
-                            .font(.system(size: 10 * zoomScale, weight: .semibold, design: .monospaced))
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.7)
+                    Button {
+                        guard !isSelected else { return }
+                        SoundEffectManager.shared.playButtonClick()
+                        HapticManager.shared.generic()
+                        Anim.with { selectedMode = mode }
+                    } label: {
+                        HStack(spacing: 5 * zoomScale) {
+                            Image(systemName: mode.icon)
+                                .font(.system(size: 10 * zoomScale, weight: .semibold))
+                                .foregroundStyle(isSelected ? modePalette.accent : palette.secondaryText)
+                            Text(mode.title)
+                                .font(.system(size: 10 * zoomScale, weight: .semibold, design: .monospaced))
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.7)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 7 * zoomScale)
+                        .foregroundStyle(isSelected ? palette.primaryText : palette.secondaryText)
+                        .background(
+                            RoundedRectangle(cornerRadius: 7 * zoomScale)
+                                .fill(isSelected ? modePalette.accent.opacity(0.18) : palette.surface.opacity(0.45))
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 7 * zoomScale)
+                                .stroke(isSelected ? modePalette.accent.opacity(0.55) : palette.border.opacity(0.45), lineWidth: 1 * zoomScale)
+                        )
                     }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 7 * zoomScale)
-                    .foregroundStyle(isSelected ? palette.primaryText : palette.secondaryText)
-                    .background(
-                        RoundedRectangle(cornerRadius: 7 * zoomScale)
-                            .fill(isSelected ? modePalette.accent.opacity(0.18) : palette.surface.opacity(0.45))
-                    )
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 7 * zoomScale)
-                            .stroke(isSelected ? modePalette.accent.opacity(0.55) : palette.border.opacity(0.45), lineWidth: 1 * zoomScale)
-                    )
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(mode.title)
+                    .accessibilityAddTraits(isSelected ? .isSelected : [])
                 }
-                .buttonStyle(.plain)
-                .accessibilityLabel(mode.title)
-                .accessibilityAddTraits(isSelected ? .isSelected : [])
             }
+
+            modeIdentity
         }
         .padding(.horizontal, 12 * zoomScale)
         .padding(.bottom, 9 * zoomScale)
         .background(palette.header)
+    }
+
+    private var modeIdentity: some View {
+        HStack(spacing: 7 * zoomScale) {
+            Capsule()
+                .fill(palette.accent)
+                .frame(width: 18 * zoomScale, height: 2 * zoomScale)
+
+            Text(selectedMode.signature)
+                .font(.system(size: 8 * zoomScale, weight: .semibold, design: .monospaced))
+                .tracking(0.7 * zoomScale)
+                .foregroundStyle(palette.secondaryText)
+                .lineLimit(1)
+                .minimumScaleFactor(0.75)
+
+            Spacer(minLength: 8 * zoomScale)
+
+            Text(verbatim: moduleCountLabel)
+                .font(.system(size: 8 * zoomScale, weight: .bold, design: .monospaced))
+                .foregroundStyle(palette.accent.opacity(0.9))
+                .fixedSize()
+        }
+        .padding(.horizontal, 9 * zoomScale)
+        .padding(.vertical, 5 * zoomScale)
+        .background(
+            RoundedRectangle(cornerRadius: 5 * zoomScale)
+                .fill(palette.accent.opacity(0.065))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 5 * zoomScale)
+                .stroke(palette.accent.opacity(0.18), lineWidth: 1 * zoomScale)
+        )
+        .accessibilityElement(children: .combine)
+    }
+
+    private var moduleCountLabel: String {
+        String(
+            format: String(localized: "menu.mode.module_count"),
+            MainPanelIdentityPolicy.moduleCount(for: selectedMode)
+        )
     }
 
     private var featureGrid: some View {
@@ -620,11 +760,19 @@ struct FeatureButton: View {
     
     var body: some View {
         Button(action: performAction) {
-            HStack(spacing: 12 * zoomScale) {
+            HStack(spacing: 11 * zoomScale) {
+                Capsule()
+                    .fill(signalColor)
+                    .frame(width: 3 * zoomScale, height: 30 * zoomScale)
+
                 ZStack {
                     RoundedRectangle(cornerRadius: 8 * zoomScale)
                         .fill(palette.accent.opacity(isHovered && isEnabled ? 0.2 : 0.1))
                         .frame(width: 44 * zoomScale, height: 44 * zoomScale)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8 * zoomScale)
+                                .stroke(palette.accent.opacity(isHovered && isEnabled ? 0.32 : 0.12), lineWidth: 1 * zoomScale)
+                        )
                     
                     Image(systemName: icon)
                         .font(.system(size: 20 * zoomScale, weight: .medium))
@@ -644,9 +792,21 @@ struct FeatureButton: View {
                 
                 Spacer()
                 
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 10 * zoomScale, weight: .medium))
-                    .foregroundStyle(isEnabled ? palette.accent.opacity(0.55) : palette.secondaryText.opacity(0.18))
+                ZStack {
+                    Circle()
+                        .fill(palette.accent.opacity(isHovered && isEnabled ? 0.15 : 0.055))
+                    Circle()
+                        .stroke(palette.accent.opacity(isHovered && isEnabled ? 0.32 : 0.12), lineWidth: 1 * zoomScale)
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 9 * zoomScale, weight: .bold))
+                        .foregroundStyle(isEnabled ? palette.accent.opacity(isHovered ? 0.95 : 0.58) : palette.secondaryText.opacity(0.18))
+                }
+                .frame(width: 25 * zoomScale, height: 25 * zoomScale)
+                .offset(x: MainPanelCardInteractionPolicy.chevronOffset(
+                    isHovered: isHovered,
+                    animationsEnabled: Anim.enabled
+                ) * zoomScale)
+                .animation(Anim.enabled ? .easeOut(duration: Anim.duration) : nil, value: isHovered)
             }
             .frame(maxWidth: .infinity, minHeight: 44 * zoomScale, alignment: .leading)
             .padding(16 * zoomScale)
@@ -693,6 +853,11 @@ struct FeatureButton: View {
                 release()
             }
         }
+    }
+
+    private var signalColor: Color {
+        guard isEnabled else { return palette.secondaryText.opacity(0.18) }
+        return palette.accent.opacity(isHovered ? 0.95 : 0.42)
     }
 
     private func performAction() {

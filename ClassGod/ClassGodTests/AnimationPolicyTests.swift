@@ -44,6 +44,30 @@ struct AnimationPolicyTests {
         #expect(EntranceMotionPolicy.isPresented(state: true, animationsEnabled: true))
     }
 
+    @Test("Shortcut recording pulse stops for instant and reduced motion modes")
+    func resolvesShortcutRecordingPulse() {
+        #expect(ShortcutRecordingMotionPolicy.shouldPulse(
+            isRecording: true,
+            animationsEnabled: true,
+            reduceMotion: false
+        ))
+        #expect(!ShortcutRecordingMotionPolicy.shouldPulse(
+            isRecording: false,
+            animationsEnabled: true,
+            reduceMotion: false
+        ))
+        #expect(!ShortcutRecordingMotionPolicy.shouldPulse(
+            isRecording: true,
+            animationsEnabled: false,
+            reduceMotion: false
+        ))
+        #expect(!ShortcutRecordingMotionPolicy.shouldPulse(
+            isRecording: true,
+            animationsEnabled: true,
+            reduceMotion: true
+        ))
+    }
+
     @Test("The ClassGod splash remains visible in instant mode")
     func resolvesLaunchDelay() {
         #expect(LaunchWindowPresentationPolicy.splashDelay(preferred: 2, animationDuration: 0) == 1)

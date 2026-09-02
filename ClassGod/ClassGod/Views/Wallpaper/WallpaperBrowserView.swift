@@ -24,6 +24,18 @@ struct WallpaperBrowserView: View {
     @ObservedObject private var prefs = PreferencesManager.shared
     private var zoomScale: CGFloat { CGFloat(prefs.preferences.windowZoomScale) }
     private var hasVideoAudio: Bool { WallpaperAudioPolicy.isAvailable(for: engine.currentWallpaper?.type) }
+    private var canTogglePlayback: Bool {
+        WallpaperTransportPolicy.canTogglePlayback(
+            isEnabled: engine.isEnabled,
+            hasWallpaper: engine.currentWallpaper != nil
+        )
+    }
+    private var showsPause: Bool {
+        WallpaperTransportPolicy.showsPause(
+            isEnabled: engine.isEnabled,
+            isPlaying: engine.isPlaying
+        )
+    }
     
     private var gridColumns: [GridItem] {
         [
@@ -193,17 +205,18 @@ struct WallpaperBrowserView: View {
                 .disabled(engine.playlist.count < 2)
                 
                 Button(action: {
-                    SoundEffectManager.shared.playWallpaperPlayPause()
-                    engine.togglePlayPause()
+                    if engine.togglePlayPause() {
+                        SoundEffectManager.shared.playWallpaperPlayPause()
+                    }
                 }) {
-                    Image(systemName: engine.isPlaying ? "pause.circle.fill" : "play.circle.fill")
+                    Image(systemName: showsPause ? "pause.circle.fill" : "play.circle.fill")
                         .font(.system(size: 34 * zoomScale))
-                        .foregroundStyle(engine.currentWallpaper != nil ? .white : .white.opacity(0.2))
-                        .shadow(color: engine.isPlaying ? prefs.preferences.themeAccent.color.opacity(0.35) : Color.clear, radius: 10 * zoomScale)
+                        .foregroundStyle(canTogglePlayback ? .white : .white.opacity(0.2))
+                        .shadow(color: showsPause ? prefs.preferences.themeAccent.color.opacity(0.35) : Color.clear, radius: 10 * zoomScale)
                 }
                 .buttonStyle(.plain)
-                .disabled(engine.currentWallpaper == nil)
-                .accessibilityLabel(engine.isPlaying ? Text("wallpaper.pause") : Text("wallpaper.play"))
+                .disabled(!canTogglePlayback)
+                .accessibilityLabel(showsPause ? Text("wallpaper.pause") : Text("wallpaper.play"))
                 
                 ControlButton(icon: "forward.fill", size: 14, accessibilityLabel: "wallpaper.next") {
                     if engine.nextWallpaper() {
@@ -593,6 +606,7 @@ struct WallpaperBrowserView: View {
 // MARK: - Control Button
 
 struct ControlButton: View {
+    @Environment(\.isEnabled) private var isEnabled
     @ObservedObject private var prefs = PreferencesManager.shared
     private var zoomScale: CGFloat { CGFloat(prefs.preferences.windowZoomScale) }
     let icon: String
@@ -605,26 +619,38 @@ struct ControlButton: View {
     @State private var isPressed = false
     
     var body: some View {
+        let isHighlighted = WallpaperControlInteractionPolicy.isHighlighted(
+            isHovered: isHovered,
+            isEnabled: isEnabled
+        )
+
         Button(action: action) {
             Image(systemName: icon)
                 .font(.system(size: size * zoomScale, weight: .semibold))
                 .foregroundStyle(color)
                 .frame(width: 28 * zoomScale, height: 28 * zoomScale)
-                .background(isHovered ? Color(white: 0.12) : Color.clear)
+                .background(isHighlighted ? Color(white: 0.12) : Color.clear)
                 .clipShape(Circle())
                 .scaleEffect(InteractiveMotionPolicy.scale(
-                    active: isPressed,
+                    active: isPressed && isEnabled,
                     requestedScale: 0.88,
                     animationsEnabled: Anim.enabled
                 ))
         }
         .buttonStyle(.plain)
+        .opacity(WallpaperControlInteractionPolicy.opacity(isEnabled: isEnabled))
         .accessibilityLabel(Text(accessibilityLabel))
-        .onHover { isHovered = $0 }
+        .onHover { isHovered = $0 && isEnabled }
         .pressEvents {
+            guard isEnabled else { return }
             Anim.with { isPressed = true }
         } onRelease: {
             Anim.with { isPressed = false }
+        }
+        .onChange(of: isEnabled) { _, enabled in
+            guard !enabled else { return }
+            isHovered = false
+            isPressed = false
         }
     }
 }

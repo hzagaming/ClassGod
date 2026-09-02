@@ -16,6 +16,20 @@ struct LocalizationRegressionTests {
         #expect(ImportFeedback.failure(detail: "No permission", locale: locale) == "Import failed: No permission")
     }
 
+    @Test("Main panel mode signatures are localized")
+    func validatesMainPanelModeSignatures() throws {
+        let english = Locale(identifier: "en")
+        let chineseURL = try #require(Bundle.main.url(forResource: "zh-Hans", withExtension: "lproj"))
+        let chinese = try #require(Bundle(url: chineseURL))
+
+        #expect(String(localized: "menu.mode.good_student.signature", bundle: .main, locale: english) == "FOCUS / BUILD / FINISH")
+        #expect(String(localized: "menu.mode.bad_student.signature", bundle: .main, locale: english) == "READY / ROUTE / VANISH")
+        #expect(String(localized: "menu.mode.other.signature", bundle: .main, locale: english) == "OBSERVE / TUNE / CONTROL")
+        #expect(String(format: String(localized: "menu.mode.module_count", bundle: .main, locale: english), 7) == "07 MODULES")
+        #expect(chinese.localizedString(forKey: "menu.mode.good_student.signature", value: nil, table: nil) == "专注 / 构建 / 完成")
+        #expect(String(format: chinese.localizedString(forKey: "menu.mode.module_count", value: nil, table: nil), 7) == "07 个模块")
+    }
+
     @Test("English is the app development language and every supported locale is bundled")
     func validatesBundleLanguageConfiguration() {
         #expect(Bundle.main.developmentLocalization == "en")

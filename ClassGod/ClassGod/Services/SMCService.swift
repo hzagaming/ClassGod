@@ -1241,18 +1241,16 @@ nonisolated final class SMCService: @unchecked Sendable {
             }
         }
         guard result == KERN_SUCCESS else { return 0 }
-        
-        let total = Double(cpuInfo.cpu_ticks.0 + cpuInfo.cpu_ticks.1 + cpuInfo.cpu_ticks.2 + cpuInfo.cpu_ticks.3)
+
         guard let prev = previousCPUInfo else {
             previousCPUInfo = cpuInfo
             return 0
         }
-        let prevTotal = Double(prev.cpu_ticks.0 + prev.cpu_ticks.1 + prev.cpu_ticks.2 + prev.cpu_ticks.3)
-        let totalDelta = total - prevTotal
-        guard totalDelta > 0 else { return 0 }
-        let idleDelta = Double(cpuInfo.cpu_ticks.2 - prev.cpu_ticks.2)
         previousCPUInfo = cpuInfo
-        return max(0, min(100, 100.0 * (1.0 - idleDelta / totalDelta)))
+        return CPUTickLoadPolicy.usage(
+            current: CPUTickSnapshot(cpuInfo),
+            previous: CPUTickSnapshot(prev)
+        )?.total ?? 0
     }
 
     /// Returns CPU/GPU temperature estimates based on thermal state and current CPU load.

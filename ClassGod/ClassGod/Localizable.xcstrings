@@ -12549,6 +12549,22 @@
         }
       }
     },
+    "menu.mode.bad_student.signature" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "READY / ROUTE / VANISH"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "就绪 / 切换 / 隐匿"
+          }
+        }
+      }
+    },
     "menu.mode.good_student" : {
       "localizations" : {
         "en" : {
@@ -12565,6 +12581,38 @@
         }
       }
     },
+    "menu.mode.good_student.signature" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FOCUS / BUILD / FINISH"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "专注 / 构建 / 完成"
+          }
+        }
+      }
+    },
+    "menu.mode.module_count" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%02d MODULES"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%02d 个模块"
+          }
+        }
+      }
+    },
     "menu.mode.other" : {
       "localizations" : {
         "en" : {
@@ -12577,6 +12625,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "其他"
+          }
+        }
+      }
+    },
+    "menu.mode.other.signature" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OBSERVE / TUNE / CONTROL"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "观察 / 调校 / 掌控"
           }
         }
       }

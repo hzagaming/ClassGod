@@ -119,6 +119,55 @@ nonisolated enum SystemMonitorIntervalPolicy {
     }
 }
 
+nonisolated struct CPUTickSnapshot {
+    let user: UInt32
+    let system: UInt32
+    let idle: UInt32
+    let nice: UInt32
+
+    init(user: UInt32, system: UInt32, idle: UInt32, nice: UInt32) {
+        self.user = user
+        self.system = system
+        self.idle = idle
+        self.nice = nice
+    }
+
+    init(_ info: host_cpu_load_info) {
+        self.init(
+            user: info.cpu_ticks.0,
+            system: info.cpu_ticks.1,
+            idle: info.cpu_ticks.2,
+            nice: info.cpu_ticks.3
+        )
+    }
+}
+
+nonisolated struct CPUTickLoad {
+    let total: Double
+    let user: Double
+    let system: Double
+    let idle: Double
+}
+
+nonisolated enum CPUTickLoadPolicy {
+    static func usage(current: CPUTickSnapshot, previous: CPUTickSnapshot) -> CPUTickLoad? {
+        let userDelta = UInt64(current.user &- previous.user)
+        let systemDelta = UInt64(current.system &- previous.system)
+        let idleDelta = UInt64(current.idle &- previous.idle)
+        let niceDelta = UInt64(current.nice &- previous.nice)
+        let totalDelta = userDelta + systemDelta + idleDelta + niceDelta
+        guard totalDelta > 0 else { return nil }
+
+        let total = Double(totalDelta)
+        return CPUTickLoad(
+            total: 100 * Double(userDelta + systemDelta + niceDelta) / total,
+            user: 100 * Double(userDelta) / total,
+            system: 100 * Double(systemDelta) / total,
+            idle: 100 * Double(idleDelta) / total
+        )
+    }
+}
+
 nonisolated enum MonotonicCounterPolicy {
     static func delta(current: UInt64, previous: UInt64?) -> UInt64 {
         guard let previous, current >= previous else { return 0 }
@@ -248,28 +297,17 @@ final class SystemMonitor: ObservableObject, @unchecked Sendable {
             }
         }
         guard result == KERN_SUCCESS else { return }
-        
-        let user = Double(cpuInfo.cpu_ticks.0)
-        let system = Double(cpuInfo.cpu_ticks.1)
-        let idle = Double(cpuInfo.cpu_ticks.2)
-        let nice = Double(cpuInfo.cpu_ticks.3)
-        let total = user + system + idle + nice
-        
+
         if let prev = previousCPUInfo {
-            let prevTotal = Double(prev.cpu_ticks.0 + prev.cpu_ticks.1 + prev.cpu_ticks.2 + prev.cpu_ticks.3)
-            let currTotal = total
-            let totalDelta = currTotal - prevTotal
-            
-            if totalDelta > 0 {
-                let userDelta = Double(cpuInfo.cpu_ticks.0 - prev.cpu_ticks.0)
-                let systemDelta = Double(cpuInfo.cpu_ticks.1 - prev.cpu_ticks.1)
-                let idleDelta = Double(cpuInfo.cpu_ticks.2 - prev.cpu_ticks.2)
-                
+            if let usage = CPUTickLoadPolicy.usage(
+                current: CPUTickSnapshot(cpuInfo),
+                previous: CPUTickSnapshot(prev)
+            ) {
                 self.cpu = CPUUsage(
-                    total: 100.0 * (1.0 - idleDelta / totalDelta),
-                    user: 100.0 * userDelta / totalDelta,
-                    system: 100.0 * systemDelta / totalDelta,
-                    idle: 100.0 * idleDelta / totalDelta
+                    total: usage.total,
+                    user: usage.user,
+                    system: usage.system,
+                    idle: usage.idle
                 )
             }
         }

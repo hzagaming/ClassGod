@@ -97,6 +97,16 @@ enum WallpaperVolumePolicy {
     }
 }
 
+nonisolated enum WallpaperTransportPolicy {
+    static func canTogglePlayback(isEnabled: Bool, hasWallpaper: Bool) -> Bool {
+        isEnabled && hasWallpaper
+    }
+
+    static func showsPause(isEnabled: Bool, isPlaying: Bool) -> Bool {
+        isEnabled && isPlaying
+    }
+}
+
 @MainActor
 final class WallpaperEngine: ObservableObject {
     static let shared = WallpaperEngine()
@@ -284,10 +294,16 @@ final class WallpaperEngine: ObservableObject {
         return showOnDesktop != previousValue
     }
     
-    func togglePlayPause() {
+    @discardableResult
+    func togglePlayPause() -> Bool {
+        guard WallpaperTransportPolicy.canTogglePlayback(
+            isEnabled: isEnabled,
+            hasWallpaper: currentWallpaper != nil
+        ) else { return false }
         isPlaying.toggle()
         saveSettings()
         NotificationCenter.default.post(name: .wallpaperStateDidChange, object: nil)
+        return true
     }
     
     func toggleMute() {

@@ -64,6 +64,32 @@ struct RegressionPolicyTests {
         #expect(MainPanelLayoutPolicy.columnCount(availableWidth: 620, zoomScale: 2) == 1)
     }
 
+    @Test("Main panel modes have distinct visual signatures")
+    func distinguishesMainPanelModes() {
+        let patterns = MainPanelMode.allCases.map(MainPanelIdentityPolicy.backdropPattern(for:))
+
+        #expect(Set(patterns).count == MainPanelMode.allCases.count)
+        for mode in MainPanelMode.allCases {
+            #expect(MainPanelIdentityPolicy.moduleCount(for: mode) == mode.features.count)
+        }
+    }
+
+    @Test("Feature card hover motion is instant-safe")
+    func resolvesMainPanelCardMotion() {
+        #expect(MainPanelCardInteractionPolicy.chevronOffset(
+            isHovered: true,
+            animationsEnabled: true
+        ) == 2)
+        #expect(MainPanelCardInteractionPolicy.chevronOffset(
+            isHovered: true,
+            animationsEnabled: false
+        ) == 0)
+        #expect(MainPanelCardInteractionPolicy.chevronOffset(
+            isHovered: false,
+            animationsEnabled: true
+        ) == 0)
+    }
+
     @Test("Imported appearance geometry is finite and constrained to UI ranges")
     func normalizesImportedAppearanceGeometry() throws {
         let data = try #require(#"""

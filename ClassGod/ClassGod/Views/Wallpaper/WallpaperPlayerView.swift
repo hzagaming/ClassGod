@@ -104,6 +104,16 @@ enum WallpaperAudioPolicy {
     }
 }
 
+nonisolated enum WallpaperControlInteractionPolicy {
+    static func isHighlighted(isHovered: Bool, isEnabled: Bool) -> Bool {
+        isHovered && isEnabled
+    }
+
+    static func opacity(isEnabled: Bool) -> Double {
+        isEnabled ? 1 : 0.3
+    }
+}
+
 enum WallpaperMediaLoadPolicy {
     static func shouldAccept(
         requestURL: URL,
@@ -482,6 +492,18 @@ struct WallpaperQuickAccessBar: View {
     @ObservedObject private var prefs = PreferencesManager.shared
     private var zoomScale: CGFloat { CGFloat(prefs.preferences.windowZoomScale) }
     private var hasVideoAudio: Bool { WallpaperAudioPolicy.isAvailable(for: engine.currentWallpaper?.type) }
+    private var canTogglePlayback: Bool {
+        WallpaperTransportPolicy.canTogglePlayback(
+            isEnabled: engine.isEnabled,
+            hasWallpaper: engine.currentWallpaper != nil
+        )
+    }
+    private var showsPause: Bool {
+        WallpaperTransportPolicy.showsPause(
+            isEnabled: engine.isEnabled,
+            isPlaying: engine.isPlaying
+        )
+    }
     @State private var isHovered = false
     
     var body: some View {
@@ -500,16 +522,17 @@ struct WallpaperQuickAccessBar: View {
             .accessibilityLabel(Text("wallpaper.previous"))
             
             Button(action: {
-                SoundEffectManager.shared.playWallpaperPlayPause()
-                engine.togglePlayPause()
+                if engine.togglePlayPause() {
+                    SoundEffectManager.shared.playWallpaperPlayPause()
+                }
             }) {
-                Image(systemName: engine.isPlaying ? "pause.fill" : "play.fill")
+                Image(systemName: showsPause ? "pause.fill" : "play.fill")
                     .font(.system(size: 12 * zoomScale))
             }
             .buttonStyle(.plain)
             .foregroundStyle(.white)
-            .disabled(engine.currentWallpaper == nil)
-            .accessibilityLabel(engine.isPlaying ? Text("wallpaper.pause") : Text("wallpaper.play"))
+            .disabled(!canTogglePlayback)
+            .accessibilityLabel(showsPause ? Text("wallpaper.pause") : Text("wallpaper.play"))
             
             Button(action: {
                 if engine.nextWallpaper() {
