@@ -25,7 +25,7 @@
   </p>
 </div>
 
-> Current release: **v1.5.49 (Build 74)**. Download the DMG or PKG from [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest).
+> Current release: **v1.5.50 (Build 75)**. Download the DMG or PKG from [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest).
 
 ## Why ClassGod
 
@@ -173,9 +173,9 @@ ClassGod/ClassGodTests/    App tests
 ClassGodHelper/            Privileged helper Swift package and tests
 ```
 
-## Latest announcement: v1.5.49
+## Latest announcement: v1.5.50
 
-This release removes a first-frame jump from DestinTab's empty state when Reduce Motion or instant animations are enabled. Wallpaper thumbnail delete controls now share one visibility, hit-testing, and accessibility policy, so hidden controls cannot intercept clicks or remain exposed to VoiceOver. A full UI/UX/SFX/BGM review reconfirmed semantic window sounds, repeated-sound protection, bounded overlap channels, and wallpaper mute, volume, pause, primary-display audio, secondary-display muting, and teardown behavior; no continuous BGM was added. Verification covers 242 main-app tests, 17 helper tests, static analysis, Debug and Release builds, localization parsing, version consistency, native-window visual checks, and accessibility regression tests.
+This release prevents long-running CPU monitoring from crashing when Mach tick counters grow large or wrap around. It also gives each main-panel mode a distinct visual identity, makes wallpaper playback controls reflect whether playback can actually run, suppresses sounds for invalid media actions, and keeps shortcut-recording motion aligned with Reduce Motion and instant-animation preferences. Wallpaper audio remains muted by default, persists normalized volume, plays only on the primary display, and cleans up on teardown; no continuous BGM was added. Verification covers 250 main-app tests, 17 helper tests, static analysis, Debug and Release builds, native launch smoke testing, localization parsing, version consistency, package structure, and signing checks.
 
 Read [CHANGELOG.md](CHANGELOG.md) for current releases and [CHANGELOG_HISTORY.md](CHANGELOG_HISTORY.md) for older history.
 
