@@ -174,6 +174,10 @@ enum MainPanelCardInteractionPolicy {
     static func chevronOffset(isHovered: Bool, animationsEnabled: Bool) -> CGFloat {
         isHovered && animationsEnabled ? 2 : 0
     }
+
+    static func isPressActive(isPressed: Bool, isEnabled: Bool) -> Bool {
+        isPressed && isEnabled
+    }
 }
 
 private struct MainPanelPalette {
@@ -820,7 +824,10 @@ struct FeatureButton: View {
                     .allowsHitTesting(false)
             )
             .scaleEffect(InteractiveMotionPolicy.scale(
-                active: isPressed,
+                active: MainPanelCardInteractionPolicy.isPressActive(
+                    isPressed: isPressed,
+                    isEnabled: isEnabled
+                ),
                 requestedScale: 0.97,
                 animationsEnabled: Anim.enabled
             ))
@@ -843,7 +850,6 @@ struct FeatureButton: View {
                 press()
             }
         } onRelease: {
-            guard isEnabled else { return }
             let release = {
                 isPressed = false
             }
@@ -852,6 +858,11 @@ struct FeatureButton: View {
             } else {
                 release()
             }
+        }
+        .onChange(of: isEnabled) { _, enabled in
+            guard !enabled else { return }
+            isHovered = false
+            isPressed = false
         }
     }
 

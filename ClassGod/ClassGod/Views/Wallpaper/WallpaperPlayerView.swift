@@ -501,7 +501,8 @@ struct WallpaperQuickAccessBar: View {
     private var showsPause: Bool {
         WallpaperTransportPolicy.showsPause(
             isEnabled: engine.isEnabled,
-            isPlaying: engine.isPlaying
+            isPlaying: engine.isPlaying,
+            hasWallpaper: engine.currentWallpaper != nil
         )
     }
     @State private var isHovered = false

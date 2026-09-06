@@ -142,9 +142,46 @@ struct WallpaperSettingsTests {
         #expect(WallpaperTransportPolicy.canTogglePlayback(isEnabled: true, hasWallpaper: true))
         #expect(!WallpaperTransportPolicy.canTogglePlayback(isEnabled: false, hasWallpaper: true))
         #expect(!WallpaperTransportPolicy.canTogglePlayback(isEnabled: true, hasWallpaper: false))
-        #expect(WallpaperTransportPolicy.showsPause(isEnabled: true, isPlaying: true))
-        #expect(!WallpaperTransportPolicy.showsPause(isEnabled: false, isPlaying: true))
-        #expect(!WallpaperTransportPolicy.showsPause(isEnabled: true, isPlaying: false))
+        #expect(WallpaperTransportPolicy.showsPause(
+            isEnabled: true,
+            isPlaying: true,
+            hasWallpaper: true
+        ))
+        #expect(!WallpaperTransportPolicy.showsPause(
+            isEnabled: false,
+            isPlaying: true,
+            hasWallpaper: true
+        ))
+        #expect(!WallpaperTransportPolicy.showsPause(
+            isEnabled: true,
+            isPlaying: false,
+            hasWallpaper: true
+        ))
+        #expect(!WallpaperTransportPolicy.showsPause(
+            isEnabled: true,
+            isPlaying: true,
+            hasWallpaper: false
+        ))
+    }
+
+    @Test("Wallpaper restore drops media that no longer exists")
+    func filtersUnavailableWallpaperFiles() {
+        let available = WallpaperItem(
+            name: "Available",
+            filePath: "/wallpapers/available.mov",
+            type: .video
+        )
+        let missing = WallpaperItem(
+            name: "Missing",
+            filePath: "/wallpapers/missing.mov",
+            type: .video
+        )
+
+        let restored = WallpaperRestorePolicy.availableItems([missing, available]) { path in
+            path == available.filePath
+        }
+
+        #expect(restored == [available])
     }
 
     @Test("Disabled wallpaper controls never look interactive")

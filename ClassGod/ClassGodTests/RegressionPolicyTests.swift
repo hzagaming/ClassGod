@@ -88,6 +88,14 @@ struct RegressionPolicyTests {
             isHovered: false,
             animationsEnabled: true
         ) == 0)
+        #expect(MainPanelCardInteractionPolicy.isPressActive(
+            isPressed: true,
+            isEnabled: true
+        ))
+        #expect(!MainPanelCardInteractionPolicy.isPressActive(
+            isPressed: true,
+            isEnabled: false
+        ))
     }
 
     @Test("Imported appearance geometry is finite and constrained to UI ranges")

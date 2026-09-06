@@ -102,8 +102,17 @@ nonisolated enum WallpaperTransportPolicy {
         isEnabled && hasWallpaper
     }
 
-    static func showsPause(isEnabled: Bool, isPlaying: Bool) -> Bool {
-        isEnabled && isPlaying
+    static func showsPause(isEnabled: Bool, isPlaying: Bool, hasWallpaper: Bool) -> Bool {
+        isEnabled && isPlaying && hasWallpaper
+    }
+}
+
+enum WallpaperRestorePolicy {
+    static func availableItems(
+        _ items: [WallpaperItem],
+        fileExists: (String) -> Bool
+    ) -> [WallpaperItem] {
+        items.filter { fileExists($0.filePath) }
     }
 }
 
@@ -362,7 +371,13 @@ final class WallpaperEngine: ObservableObject {
     private func loadPlaylist() {
         guard let data = UserDefaults.standard.data(forKey: playlistKey) else { return }
         do {
-            playlist = try decoder.decode([WallpaperItem].self, from: data)
+            let decoded = try decoder.decode([WallpaperItem].self, from: data)
+            playlist = WallpaperRestorePolicy.availableItems(decoded) {
+                FileManager.default.fileExists(atPath: $0)
+            }
+            if playlist.count != decoded.count {
+                savePlaylist()
+            }
         } catch {
             print("[WallpaperEngine] Failed to load playlist: \(error)")
         }
