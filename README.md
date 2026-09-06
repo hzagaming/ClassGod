@@ -25,7 +25,7 @@
   </p>
 </div>
 
-> Current release: **v1.5.50 (Build 75)**. Download the DMG or PKG from [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest).
+> Current release: **v1.5.51 (Build 76)**. Download the DMG or PKG from [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest).
 
 ## Why ClassGod
 
@@ -173,9 +173,9 @@ ClassGod/ClassGodTests/    App tests
 ClassGodHelper/            Privileged helper Swift package and tests
 ```
 
-## Latest announcement: v1.5.50
+## Latest announcement: v1.5.51
 
-This release prevents long-running CPU monitoring from crashing when Mach tick counters grow large or wrap around. It also gives each main-panel mode a distinct visual identity, makes wallpaper playback controls reflect whether playback can actually run, suppresses sounds for invalid media actions, and keeps shortcut-recording motion aligned with Reduce Motion and instant-animation preferences. Wallpaper audio remains muted by default, persists normalized volume, plays only on the primary display, and cleans up on teardown; no continuous BGM was added. Verification covers 250 main-app tests, 17 helper tests, static analysis, Debug and Release builds, native launch smoke testing, localization parsing, version consistency, package structure, and signing checks.
+This release prevents a main-panel card from remaining visually pressed if it becomes disabled mid-interaction. Wallpaper startup now removes missing media from the saved playlist instead of restoring a false LIVE state with an empty player, and transport icons require a real current resource before presenting Pause. A full UI/UX/SFX/BGM review reconfirmed reduced-motion behavior, semantic and bounded sound playback, wallpaper mute and volume handling, primary-display audio, secondary-display muting, and player teardown; no continuous BGM was added. Verification covers 251 main-app tests, 17 helper tests, static analysis, Debug and Release builds, isolated native launch smoke testing, localization parsing, version consistency, package structure, architecture, and signing checks.
 
 Read [CHANGELOG.md](CHANGELOG.md) for current releases and [CHANGELOG_HISTORY.md](CHANGELOG_HISTORY.md) for older history.
 

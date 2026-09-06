@@ -32,9 +32,9 @@
         </dict>
     </array>
     <key>CFBundleShortVersionString</key>
-    <string>1.5.50</string>
+    <string>1.5.51</string>
     <key>CFBundleVersion</key>
-    <string>75</string>
+    <string>76</string>
     <key>NSQuitAlwaysKeepsWindows</key>
     <false/>
 </dict>
