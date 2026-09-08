@@ -11,9 +11,20 @@ nonisolated enum SettingsValueFormatter {
     }
 }
 
+nonisolated enum SettingsRowInteractionPolicy {
+    static func isHighlighted(isHovered: Bool, isEnabled: Bool) -> Bool {
+        isHovered && isEnabled
+    }
+
+    static func opacity(isEnabled: Bool) -> Double {
+        isEnabled ? 1 : 0.45
+    }
+}
+
 // MARK: - Toggle Row
 
 struct SettingsToggleRow: View {
+    @Environment(\.isEnabled) private var isEnabled
     let icon: String?
     let title: LocalizedStringKey
     var subtitle: LocalizedStringKey? = nil
@@ -73,9 +84,16 @@ struct SettingsToggleRow: View {
         .padding(.vertical, 8 * zoomScale)
         .background(
             RoundedRectangle(cornerRadius: 6 * zoomScale)
-                .fill(isHovered ? Color.white.opacity(0.04) : Color.clear)
+                .fill(SettingsRowInteractionPolicy.isHighlighted(
+                    isHovered: isHovered,
+                    isEnabled: isEnabled
+                ) ? Color.white.opacity(0.04) : Color.clear)
         )
-        .onHover { isHovered = $0 }
+        .opacity(SettingsRowInteractionPolicy.opacity(isEnabled: isEnabled))
+        .onHover { isHovered = $0 && isEnabled }
+        .onChange(of: isEnabled) { _, enabled in
+            if !enabled { isHovered = false }
+        }
         .animation(Anim.enabled ? .easeInOut(duration: Anim.duration) : nil, value: isHovered)
     }
 }
@@ -205,6 +223,7 @@ struct SettingsSliderRow: View {
 // MARK: - Picker Row
 
 struct SettingsPickerRow<T: Hashable>: View {
+    @Environment(\.isEnabled) private var isEnabled
     let label: LocalizedStringKey
     @Binding var selection: T
     let options: [T]
@@ -278,9 +297,16 @@ struct SettingsPickerRow<T: Hashable>: View {
         .padding(.vertical, 8 * zoomScale)
         .background(
             RoundedRectangle(cornerRadius: 6 * zoomScale)
-                .fill(isHovered ? Color.white.opacity(0.03) : Color.clear)
+                .fill(SettingsRowInteractionPolicy.isHighlighted(
+                    isHovered: isHovered,
+                    isEnabled: isEnabled
+                ) ? Color.white.opacity(0.03) : Color.clear)
         )
-        .onHover { isHovered = $0 }
+        .opacity(SettingsRowInteractionPolicy.opacity(isEnabled: isEnabled))
+        .onHover { isHovered = $0 && isEnabled }
+        .onChange(of: isEnabled) { _, enabled in
+            if !enabled { isHovered = false }
+        }
         .animation(Anim.enabled ? .easeInOut(duration: Anim.duration) : nil, value: isHovered)
     }
 }

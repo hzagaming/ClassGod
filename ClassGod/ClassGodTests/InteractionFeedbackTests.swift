@@ -50,4 +50,12 @@ struct InteractionFeedbackTests {
             isUserInitiated: true
         ))
     }
+
+    @Test("Disabled settings rows never look interactive")
+    func resolvesSettingsRowFeedback() {
+        #expect(SettingsRowInteractionPolicy.isHighlighted(isHovered: true, isEnabled: true))
+        #expect(!SettingsRowInteractionPolicy.isHighlighted(isHovered: true, isEnabled: false))
+        #expect(SettingsRowInteractionPolicy.opacity(isEnabled: true) == 1)
+        #expect(SettingsRowInteractionPolicy.opacity(isEnabled: false) < 1)
+    }
 }
