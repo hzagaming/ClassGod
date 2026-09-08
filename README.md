@@ -25,7 +25,7 @@
   </p>
 </div>
 
-> Current release: **v1.5.51 (Build 76)**. Download the DMG or PKG from [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest).
+> Current release: **v1.5.52 (Build 77)**. Download the DMG or PKG from [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest).
 
 ## Why ClassGod
 
@@ -173,9 +173,9 @@ ClassGod/ClassGodTests/    App tests
 ClassGodHelper/            Privileged helper Swift package and tests
 ```
 
-## Latest announcement: v1.5.51
+## Latest announcement: v1.5.52
 
-This release prevents a main-panel card from remaining visually pressed if it becomes disabled mid-interaction. Wallpaper startup now removes missing media from the saved playlist instead of restoring a false LIVE state with an empty player, and transport icons require a real current resource before presenting Pause. A full UI/UX/SFX/BGM review reconfirmed reduced-motion behavior, semantic and bounded sound playback, wallpaper mute and volume handling, primary-display audio, secondary-display muting, and player teardown; no continuous BGM was added. Verification covers 251 main-app tests, 17 helper tests, static analysis, Debug and Release builds, isolated native launch smoke testing, localization parsing, version consistency, package structure, architecture, and signing checks.
+This release makes disabled Toggle and Picker settings rows visually match their real interaction state: hover highlights are cleared immediately and the row is dimmed as a unit. This fixes misleading feedback in instant-animation settings, the unavailable launch-at-login option, and conditional Fake Lock controls. A full UI/UX/SFX/BGM review also reconfirmed reduced-motion behavior, semantic and bounded sound playback, wallpaper mute and volume handling, primary-display audio, secondary-display muting, player teardown, and the secure update-check path; no continuous BGM was added. Verification covers 252 main-app tests, 17 helper tests, static analysis, Debug and Release builds, isolated native launch smoke testing, localization parsing, and version consistency.
 
 Read [CHANGELOG.md](CHANGELOG.md) for current releases and [CHANGELOG_HISTORY.md](CHANGELOG_HISTORY.md) for older history.
 
