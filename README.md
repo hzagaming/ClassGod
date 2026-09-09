@@ -25,7 +25,7 @@
   </p>
 </div>
 
-> Current release: **v1.5.52 (Build 77)**. Download the DMG or PKG from [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest).
+> Current release: **v1.5.53 (Build 78)**. Download the DMG or PKG from [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest).
 
 ## Why ClassGod
 
@@ -173,9 +173,9 @@ ClassGod/ClassGodTests/    App tests
 ClassGodHelper/            Privileged helper Swift package and tests
 ```
 
-## Latest announcement: v1.5.52
+## Latest announcement: v1.5.53
 
-This release makes disabled Toggle and Picker settings rows visually match their real interaction state: hover highlights are cleared immediately and the row is dimmed as a unit. This fixes misleading feedback in instant-animation settings, the unavailable launch-at-login option, and conditional Fake Lock controls. A full UI/UX/SFX/BGM review also reconfirmed reduced-motion behavior, semantic and bounded sound playback, wallpaper mute and volume handling, primary-display audio, secondary-display muting, player teardown, and the secure update-check path; no continuous BGM was added. Verification covers 252 main-app tests, 17 helper tests, static analysis, Debug and Release builds, isolated native launch smoke testing, localization parsing, and version consistency.
+This release completes disabled-state feedback across reusable controls. Hover scaling now follows SwiftUI's environment-enabled state, and action rows clear highlights and dim consistently with Toggle and Picker rows. Disabled shortcut reset and active-uninstall actions no longer look interactive. A full UI/UX/SFX/BGM review reconfirmed reduced-motion and instant-animation behavior, semantic and bounded sound playback, wallpaper audio ownership and teardown, resource cleanup, and the trusted GitHub update path; no continuous BGM was added. Verification covers 253 main-app tests, 17 helper tests, static analysis, Debug and Release builds, isolated native launch smoke testing, localization parsing, and version consistency.
 
 Read [CHANGELOG.md](CHANGELOG.md) for current releases and [CHANGELOG_HISTORY.md](CHANGELOG_HISTORY.md) for older history.
 
