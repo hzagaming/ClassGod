@@ -35,6 +35,12 @@ nonisolated enum InteractiveMotionPolicy {
     }
 }
 
+nonisolated enum HoverInteractionPolicy {
+    static func isActive(isHovered: Bool, isEnabled: Bool) -> Bool {
+        isHovered && isEnabled
+    }
+}
+
 nonisolated enum EntranceMotionPolicy {
     static func isPresented(state: Bool, animationsEnabled: Bool) -> Bool {
         state || !animationsEnabled
@@ -67,20 +73,27 @@ enum Anim {
 // MARK: - View Modifiers
 
 struct HoverScaleModifier: ViewModifier {
+    @Environment(\.isEnabled) private var isEnabled
     @State private var isHovered = false
     let scale: CGFloat
-    
+
     func body(content: Content) -> some View {
         let dur = Anim.duration
         return content
             .scaleEffect(InteractiveMotionPolicy.scale(
-                active: isHovered,
+                active: HoverInteractionPolicy.isActive(
+                    isHovered: isHovered,
+                    isEnabled: isEnabled
+                ),
                 requestedScale: scale,
                 animationsEnabled: dur > 0
             ))
             .animation(dur > 0 ? .easeOut(duration: dur) : .none, value: isHovered)
             .onHover { hovering in
-                isHovered = hovering
+                isHovered = hovering && isEnabled
+            }
+            .onChange(of: isEnabled) { _, enabled in
+                if !enabled { isHovered = false }
             }
     }
 }

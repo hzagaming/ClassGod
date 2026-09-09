@@ -36,6 +36,13 @@ struct AnimationPolicyTests {
         ) == 1)
     }
 
+    @Test("Disabled controls never activate hover feedback")
+    func resolvesHoverInteraction() {
+        #expect(HoverInteractionPolicy.isActive(isHovered: true, isEnabled: true))
+        #expect(!HoverInteractionPolicy.isActive(isHovered: true, isEnabled: false))
+        #expect(!HoverInteractionPolicy.isActive(isHovered: false, isEnabled: true))
+    }
+
     @Test("Disabled entrance motion presents content on the first frame")
     func resolvesEntrancePresentation() {
         #expect(EntranceMotionPolicy.isPresented(state: false, animationsEnabled: false))

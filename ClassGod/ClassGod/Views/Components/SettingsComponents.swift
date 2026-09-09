@@ -13,7 +13,7 @@ nonisolated enum SettingsValueFormatter {
 
 nonisolated enum SettingsRowInteractionPolicy {
     static func isHighlighted(isHovered: Bool, isEnabled: Bool) -> Bool {
-        isHovered && isEnabled
+        HoverInteractionPolicy.isActive(isHovered: isHovered, isEnabled: isEnabled)
     }
 
     static func opacity(isEnabled: Bool) -> Double {
@@ -314,6 +314,7 @@ struct SettingsPickerRow<T: Hashable>: View {
 // MARK: - Action Row
 
 struct SettingsActionRow: View {
+    @Environment(\.isEnabled) private var isEnabled
     let icon: String?
     let title: LocalizedStringKey
     var subtitle: LocalizedStringKey? = nil
@@ -325,6 +326,11 @@ struct SettingsActionRow: View {
     private var zoomScale: CGFloat { CGFloat(prefs.preferences.windowZoomScale) }
 
     var body: some View {
+        let isHighlighted = SettingsRowInteractionPolicy.isHighlighted(
+            isHovered: isHovered,
+            isEnabled: isEnabled
+        )
+
         Button(action: {
             SoundEffectManager.shared.playButtonClick()
             HapticManager.shared.generic()
@@ -362,16 +368,20 @@ struct SettingsActionRow: View {
             .padding(.vertical, 8 * zoomScale)
             .background(
                 RoundedRectangle(cornerRadius: 6 * zoomScale)
-                    .fill(isHovered ? Color.white.opacity(0.06) : Color.white.opacity(0.02))
+                    .fill(isHighlighted ? Color.white.opacity(0.06) : Color.white.opacity(0.02))
                     .overlay(
                         RoundedRectangle(cornerRadius: 6 * zoomScale)
-                            .stroke(Color.white.opacity(isHovered ? 0.1 : 0.04), lineWidth: 1 * zoomScale)
+                            .stroke(Color.white.opacity(isHighlighted ? 0.1 : 0.04), lineWidth: 1 * zoomScale)
                     
                         .allowsHitTesting(false))
             )
         }
         .buttonStyle(.plain)
-        .onHover { isHovered = $0 }
+        .opacity(SettingsRowInteractionPolicy.opacity(isEnabled: isEnabled))
+        .onHover { isHovered = $0 && isEnabled }
+        .onChange(of: isEnabled) { _, enabled in
+            if !enabled { isHovered = false }
+        }
         .animation(Anim.enabled ? .easeInOut(duration: Anim.duration) : nil, value: isHovered)
     }
 }
