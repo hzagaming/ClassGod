@@ -47,7 +47,7 @@ struct NumberSprintView: View {
             Image(systemName: "plus.forwardslash.minus")
                 .font(.system(size: 70 * zoom, weight: .light)).foregroundStyle(accent)
                 .frame(maxWidth: .infinity).padding(.vertical, 35 * zoom)
-            Button("numbers.start") { start() }.buttonStyle(.borderedProminent)
+            Button("numbers.start") { start() }.buttonStyle(TrainingButtonStyle(accent: accent, zoom: zoom, prominent: true))
         }
     }
 
@@ -57,7 +57,7 @@ struct NumberSprintView: View {
                 Text(String(format: String(localized: "numbers.question_format"), service.session.position + 1))
                     .foregroundStyle(accent).monospacedDigit()
                 Spacer()
-                Button("numbers.end") { confirmsReset = true }.buttonStyle(.bordered)
+                Button("numbers.end") { confirmsReset = true }
             }
             ProgressView(value: Double(service.session.results.count), total: 10)
                 .accessibilityLabel("numbers.progress")
@@ -96,11 +96,11 @@ struct NumberSprintView: View {
                 Button(LocalizedStringKey(service.session.position == 9 ? "numbers.finish" : "numbers.next")) {
                     service.advance(); feedback()
                 }
-                .buttonStyle(.borderedProminent).keyboardShortcut(.defaultAction)
+                .buttonStyle(TrainingButtonStyle(accent: accent, zoom: zoom, prominent: true)).keyboardShortcut(.defaultAction)
             } else {
                 HStack(spacing: 12 * zoom) {
-                    Button("numbers.submit", action: submit).buttonStyle(.borderedProminent)
-                    Button("numbers.reveal") { service.reveal(); answerFocused = false; feedback() }.buttonStyle(.bordered)
+                    Button("numbers.submit", action: submit).buttonStyle(TrainingButtonStyle(accent: accent, zoom: zoom, prominent: true))
+                    Button("numbers.reveal") { service.reveal(); answerFocused = false; feedback() }
                 }
             }
         }
@@ -124,7 +124,7 @@ struct NumberSprintView: View {
                 .background(.white.opacity(0.04), in: RoundedRectangle(cornerRadius: 10 * zoom))
             }
             Button("numbers.new_round") { service.reset(); answer = ""; submission = nil; feedback() }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(TrainingButtonStyle(accent: accent, zoom: zoom, prominent: true))
         }
     }
 

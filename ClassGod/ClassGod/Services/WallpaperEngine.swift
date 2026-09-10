@@ -121,13 +121,13 @@ final class WallpaperEngine: ObservableObject {
     static let shared = WallpaperEngine()
     
     // MARK: - Published State
-    @Published var isEnabled: Bool = false
-    @Published var showOnDesktop: Bool = false
-    @Published var currentWallpaper: WallpaperItem?
+    @Published var isEnabled: Bool = false { didSet { if oldValue != isEnabled { loopTask?.cancel() } } }
+    @Published var showOnDesktop: Bool = false { didSet { if oldValue != showOnDesktop { loopTask?.cancel() } } }
+    @Published var currentWallpaper: WallpaperItem? { didSet { if oldValue?.id != currentWallpaper?.id { loopTask?.cancel() } } }
     @Published var playlist: [WallpaperItem] = []
-    @Published var isPlaying: Bool = true
+    @Published var isPlaying: Bool = true { didSet { if oldValue != isPlaying { loopTask?.cancel() } } }
     @Published var isMuted: Bool = true
-    @Published var playbackMode: WallpaperPlaybackMode = .singleLoop
+    @Published var playbackMode: WallpaperPlaybackMode = .singleLoop { didSet { if oldValue != playbackMode { loopTask?.cancel() } } }
     @Published var volume: Double = 0.3
     
     // MARK: - Storage
@@ -136,6 +136,7 @@ final class WallpaperEngine: ObservableObject {
     private let encoder = JSONEncoder()
     private let decoder = JSONDecoder()
     private var loopObserver: NSObjectProtocol?
+    private var loopTask: Task<Void, Never>?
     
     private init() {
         encoder.dateEncodingStrategy = .iso8601
@@ -148,14 +149,20 @@ final class WallpaperEngine: ObservableObject {
             object: nil,
             queue: .main
         ) { [weak self] _ in
-            guard let self = self else { return }
-            Task { @MainActor in
-                self.handleVideoLoop()
+            MainActor.assumeIsolated {
+                guard let self else { return }
+                self.loopTask?.cancel()
+                self.loopTask = Task { @MainActor [weak self] in
+                    guard !Task.isCancelled, let self else { return }
+                    self.loopTask = nil
+                    self.handleVideoLoop()
+                }
             }
         }
     }
     
     deinit {
+        loopTask?.cancel()
         if let observer = loopObserver {
             NotificationCenter.default.removeObserver(observer)
         }
@@ -362,7 +369,7 @@ final class WallpaperEngine: ObservableObject {
     }
     
     private func handleVideoLoop() {
-        guard playbackMode != .singleLoop else { return }
+        guard isEnabled, isPlaying, playbackMode != .singleLoop else { return }
         nextWallpaper()
     }
     

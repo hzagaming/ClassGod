@@ -73,7 +73,7 @@ struct SwitchDrillView: View {
             } else {
                 Label("drill.no_targets", systemImage: "keyboard.badge.ellipsis")
                     .foregroundStyle(.orange)
-                Button("drill.open_preflight", action: onOpenPreflight).buttonStyle(.bordered)
+                Button("drill.open_preflight", action: onOpenPreflight)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -130,7 +130,6 @@ struct SwitchDrillView: View {
         HStack {
             if service.session.isActive {
                 Button("drill.cancel") { service.cancel() }
-                    .buttonStyle(.bordered)
             } else {
                 Button {
                     refreshTargets()
@@ -141,9 +140,9 @@ struct SwitchDrillView: View {
                 } label: {
                     Label("drill.start", systemImage: "play.fill")
                 }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(TrainingButtonStyle(accent: accent, zoom: zoom, prominent: true))
                 .disabled(service.selectedTarget == nil)
-                Button("drill.open_preflight", action: onOpenPreflight).buttonStyle(.bordered)
+                Button("drill.open_preflight", action: onOpenPreflight)
             }
             Spacer(minLength: 0)
         }

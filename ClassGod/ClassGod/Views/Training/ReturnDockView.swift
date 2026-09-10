@@ -27,14 +27,14 @@ struct ReturnDockView: View {
                             .font(.system(size: 54 * zoom, weight: .light)).foregroundStyle(accent)
                         Text(LocalizedStringKey(service.isEnabled ? "return.empty_enabled" : "return.empty_disabled"))
                             .multilineTextAlignment(.center)
-                        Button("return.open_destinations", action: onOpenDestinTab).buttonStyle(.bordered)
+                        Button("return.open_destinations", action: onOpenDestinTab)
                     }
                     .frame(maxWidth: .infinity).padding(.vertical, 30 * zoom)
                 } else {
                     HStack {
                         Label("return.recent", systemImage: "clock.arrow.circlepath")
                         Spacer()
-                        Button("return.clear", role: .destructive) { confirmsClear = true }.buttonStyle(.bordered)
+                        Button("return.clear", role: .destructive) { confirmsClear = true }
                     }
                     TimelineView(.periodic(from: .now, by: 2)) { _ in
                         VStack(spacing: 12 * zoom) {
@@ -71,7 +71,7 @@ struct ReturnDockView: View {
                 if service.returnTo(ticket.id) { HapticManager.shared.success() }
                 else { HapticManager.shared.warning() }
             } label: { Label("return.activate", systemImage: "arrow.uturn.backward") }
-            .buttonStyle(.borderedProminent).disabled(!available)
+            .buttonStyle(TrainingButtonStyle(accent: accent, zoom: zoom, prominent: true)).disabled(!available)
         }
         .padding(18 * zoom)
         .background(accent.opacity(0.055), in: RoundedRectangle(cornerRadius: 14 * zoom))

@@ -41,7 +41,30 @@ struct TrainingPanel<Content: View>: View {
         .background(.black)
         .foregroundStyle(.white)
         .tint(accent)
+        .buttonStyle(TrainingButtonStyle(accent: accent, zoom: zoom))
         .preferredColorScheme(.dark)
         .onExitCommand(perform: onClose)
+    }
+}
+
+struct TrainingButtonStyle: ButtonStyle {
+    @Environment(\.isEnabled) private var isEnabled
+    let accent: Color
+    let zoom: CGFloat
+    var prominent = false
+
+    func makeBody(configuration: Configuration) -> some View {
+        let color = configuration.role == .destructive ? Color(red: 1, green: 0.4, blue: 0.5) : accent
+        return configuration.label
+            .font(.system(size: 12 * zoom, weight: .semibold))
+            .multilineTextAlignment(.center)
+            .padding(.horizontal, 12 * zoom)
+            .padding(.vertical, 7 * zoom)
+            .frame(minHeight: 30 * zoom)
+            .foregroundStyle(prominent ? .black : configuration.role == .destructive ? color : .white)
+            .background(prominent ? color : .white.opacity(0.075), in: RoundedRectangle(cornerRadius: 8 * zoom))
+            .overlay(RoundedRectangle(cornerRadius: 8 * zoom).stroke(color.opacity(prominent ? 0 : 0.25)))
+            .contentShape(RoundedRectangle(cornerRadius: 8 * zoom))
+            .opacity(!isEnabled ? 0.35 : configuration.isPressed ? 0.7 : 1)
     }
 }

@@ -34,12 +34,12 @@ struct ScreenCurtainView: View {
                 if service.session.isActive {
                     Text(String(format: String(localized: "curtain.active_format"), service.screenCount, service.session.remainingSeconds))
                         .foregroundStyle(accent).monospacedDigit()
-                    Button("curtain.dismiss", action: service.hide).buttonStyle(.borderedProminent)
+                    Button("curtain.dismiss", action: service.hide).buttonStyle(TrainingButtonStyle(accent: accent, zoom: zoom, prominent: true))
                 } else {
                     Button {
                         if service.show(duration: TimeInterval(duration)) { HapticManager.shared.generic() }
                     } label: { Label("curtain.show", systemImage: "rectangle.fill") }
-                    .buttonStyle(.borderedProminent)
+                    .buttonStyle(TrainingButtonStyle(accent: accent, zoom: zoom, prominent: true))
                 }
                 Text("curtain.exit_hint").foregroundStyle(.white.opacity(0.6))
                 Text("curtain.limits").font(.system(size: 10 * zoom)).foregroundStyle(.white.opacity(0.5))

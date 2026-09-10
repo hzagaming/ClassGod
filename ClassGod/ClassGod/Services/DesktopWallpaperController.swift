@@ -124,7 +124,7 @@ final class DesktopWallpaperController {
             connected: connectedIDs
         )
         for displayID in disconnectedIDs {
-            windows[displayID]?.orderOut(nil)
+            windows[displayID]?.close()
             windows.removeValue(forKey: displayID)
         }
         
@@ -148,7 +148,7 @@ final class DesktopWallpaperController {
     
     func hideWallpapers() {
         for (_, window) in windows {
-            window.orderOut(nil)
+            window.close()
         }
         windows.removeAll()
     }
@@ -241,6 +241,25 @@ private final class DesktopWallpaperWindow: NSWindow {
     func updateFrame(_ screen: NSScreen) {
         setFrame(screen.frame, display: true)
     }
+
+    override func close() {
+        discardContent()
+        super.close()
+    }
+
+    private func discardContent() {
+        func stopPlayback(in view: NSView) {
+            (view as? VideoWallpaperNSView)?.stopPlayback()
+            (view as? AnimatedImageNSView)?.stopAnimation()
+            view.subviews.forEach { stopPlayback(in: $0) }
+        }
+        if let hostingView {
+            stopPlayback(in: hostingView)
+            hostingView.removeFromSuperview()
+        }
+        contentView = nil
+        hostingView = nil
+    }
     
     func setupContent() {
         guard let wallpaper = WallpaperEngine.shared.currentWallpaper else { return }
@@ -267,9 +286,7 @@ private final class DesktopWallpaperWindow: NSWindow {
             ) else { return }
             self.coordinatesPlayback = coordinatesPlayback
         }
-        // Remove old hosting view
-        hostingView?.removeFromSuperview()
-        hostingView = nil
+        discardContent()
         
         guard let wallpaper = WallpaperEngine.shared.currentWallpaper else {
             contentView = nil

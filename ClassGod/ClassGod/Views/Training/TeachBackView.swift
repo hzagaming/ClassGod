@@ -50,12 +50,12 @@ struct TeachBackView: View {
             Text(verbatim: "\(service.session.text(for: step).count) / \(step.limit)")
                 .font(.system(size: 10 * zoom, design: .monospaced)).foregroundStyle(.white.opacity(0.5))
             HStack {
-                Button("teach.previous") { service.previous() }.buttonStyle(.bordered).disabled(step == .topic)
+                Button("teach.previous") { service.previous() }.disabled(step == .topic)
                 Spacer()
                 Button(LocalizedStringKey(step == .gap ? "teach.review" : "teach.next")) {
                     service.next(); HapticManager.shared.generic()
                 }
-                .buttonStyle(.borderedProminent).disabled(!service.session.canAdvance)
+                .buttonStyle(TrainingButtonStyle(accent: accent, zoom: zoom, prominent: true)).disabled(!service.session.canAdvance)
             }
         }
     }
@@ -100,14 +100,14 @@ struct TeachBackView: View {
             NSPasteboard.general.clearContents()
             copied = NSPasteboard.general.setString(summary, forType: .string)
         }
-        .buttonStyle(.borderedProminent)
-        Button("teach.edit") { service.previous() }.buttonStyle(.bordered)
+        .buttonStyle(TrainingButtonStyle(accent: accent, zoom: zoom, prominent: true))
+        Button("teach.edit") { service.previous() }
         clearButton
     }
 
     private var clearButton: some View {
         Button("teach.clear", role: .destructive) { confirmsClear = true }
-            .buttonStyle(.bordered).disabled(!service.session.hasContent)
+            .disabled(!service.session.hasContent)
     }
 }
 

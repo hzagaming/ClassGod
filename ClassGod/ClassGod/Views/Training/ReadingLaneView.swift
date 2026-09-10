@@ -57,10 +57,10 @@ struct ReadingLaneView: View {
         Button {
             if service.start() { feedback() }
         } label: { Label("reading.start", systemImage: "play.fill") }
-        .buttonStyle(.borderedProminent)
+        .buttonStyle(TrainingButtonStyle(accent: accent, zoom: zoom, prominent: true))
         .disabled(service.source.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
         Button("reading.clear", role: .destructive) { confirmsClear = true }
-            .buttonStyle(.bordered).disabled(service.source.isEmpty)
+            .disabled(service.source.isEmpty)
     }
 
     private var reader: some View {
@@ -91,7 +91,7 @@ struct ReadingLaneView: View {
                     Button(LocalizedStringKey(service.session.position + 1 == service.session.passages.count ? "reading.finish" : "reading.next")) {
                         service.advance(); feedback()
                     }
-                    .buttonStyle(.borderedProminent)
+                    .buttonStyle(TrainingButtonStyle(accent: accent, zoom: zoom, prominent: true))
                 }
             } else {
                 VStack(spacing: 18 * zoom) {
@@ -100,7 +100,7 @@ struct ReadingLaneView: View {
                     Text("reading.complete_hint").foregroundStyle(.white.opacity(0.65))
                     HStack(spacing: 12 * zoom) {
                         previousButton
-                        Button("reading.restart") { _ = service.start(); feedback() }.buttonStyle(.borderedProminent)
+                        Button("reading.restart") { _ = service.start(); feedback() }.buttonStyle(TrainingButtonStyle(accent: accent, zoom: zoom, prominent: true))
                     }
                 }
                 .multilineTextAlignment(.center)
@@ -115,12 +115,12 @@ struct ReadingLaneView: View {
     }
 
     private var sourceButton: some View {
-        Button("reading.edit_source") { service.editSource(); feedback() }.buttonStyle(.bordered)
+        Button("reading.edit_source") { service.editSource(); feedback() }
     }
 
     private var previousButton: some View {
         Button("reading.previous") { service.previous(); feedback() }
-            .buttonStyle(.bordered).disabled(service.session.position == 0)
+            .disabled(service.session.position == 0)
     }
 
     private func feedback() {

@@ -4,7 +4,7 @@
 
 [English](../../README.md) · [简体中文](README.zh-Hans.md) · [繁體中文](README.zh-Hant.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Français](README.fr.md) · [Deutsch](README.de.md) · [Español](README.es.md) · [Português](README.pt.md) · **Русский**
 
-> Версия исходного кода: **v1.5.54 (Build 79)**. Опубликованные загрузки доступны в [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest).
+> Версия исходного кода: **v1.5.55 (Build 80)**. Опубликованные загрузки доступны в [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest).
 
 ## Что такое ClassGod
 

@@ -25,7 +25,7 @@
   </p>
 </div>
 
-> Source version: **v1.5.54 (Build 79)**. Published downloads are available on [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest).
+> Source version: **v1.5.55 (Build 80)**. Published downloads are available on [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest).
 
 ## Why ClassGod
 
@@ -189,9 +189,9 @@ ClassGod/ClassGodTests/    App tests
 ClassGodHelper/            Privileged helper Swift package and tests
 ```
 
-## Latest changes: v1.5.54
+## Latest changes: v1.5.55
 
-Good Student gains Recall Lab, Reading Lane, Number Sprint, and Teach Back; Bad Student gains Switch Drill, Screen Curtain, Return Dock, and Quiet Desk. Both modes now offer eleven tools. Turning sound effects off stops active sounds and cancels queued bursts, animation audio has a shared four-channel limit with reduced gain, and removed wallpaper players cannot advance the playlist. Quiet Desk keeps recovery actions and failure feedback together and distinguishes the last operation from current output status.
+Training buttons now scale their text and hit areas with the panel, with distinct primary, secondary, destructive, and disabled states. Wallpaper auto-advance is cancelled when playback controls or the selected item change, so a queued completion cannot undo a pause, re-enable a disabled wallpaper, or override manual selection. Hiding or replacing desktop wallpaper content explicitly stops its video, audio, and animated-image playback.
 
 Read [CHANGELOG.md](CHANGELOG.md) for current releases and [CHANGELOG_HISTORY.md](CHANGELOG_HISTORY.md) for older history.
 

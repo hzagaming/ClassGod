@@ -93,7 +93,7 @@ struct RecallLabView: View {
         } label: {
             Label("recall.start", systemImage: "play.fill")
         }
-        .buttonStyle(.borderedProminent)
+        .buttonStyle(TrainingButtonStyle(accent: accent, zoom: zoom, prominent: true))
         .disabled(due == 0 || !service.canEdit)
         Button {
             draft = RecallEditorDraft(card: nil)
@@ -101,7 +101,6 @@ struct RecallLabView: View {
         } label: {
             Label("recall.add", systemImage: "plus")
         }
-        .buttonStyle(.bordered)
         .disabled(!service.canEdit || service.cards.count >= RecallPolicy.maximumCards)
     }
 
@@ -167,7 +166,6 @@ struct RecallLabView: View {
                             } label: { Image(systemName: "trash") }
                             .accessibilityLabel("button.delete")
                         }
-                        .buttonStyle(.bordered)
                         .padding(14 * zoom)
                         .background(.white.opacity(0.04), in: RoundedRectangle(cornerRadius: 10 * zoom))
                         .disabled(!service.canEdit)
@@ -184,7 +182,7 @@ struct RecallLabView: View {
                 Text("recall.review")
                 Spacer()
                 Text(verbatim: "\(service.reviewedCount) / \(service.sessionTotal)").monospacedDigit()
-                Button("recall.back_library") { service.endReview(); feedback() }.buttonStyle(.bordered)
+                Button("recall.back_library") { service.endReview(); feedback() }
             }
             ProgressView(value: Double(service.reviewedCount), total: Double(max(1, service.sessionTotal)))
                 .accessibilityLabel("recall.progress")
@@ -215,7 +213,7 @@ struct RecallLabView: View {
                     }
                 } else {
                     Button("recall.reveal") { if service.reveal() { feedback() } }
-                        .buttonStyle(.borderedProminent)
+                        .buttonStyle(TrainingButtonStyle(accent: accent, zoom: zoom, prominent: true))
                 }
             } else {
                 VStack(spacing: 16 * zoom) {
@@ -240,7 +238,6 @@ struct RecallLabView: View {
                 }
                 .padding(5 * zoom)
             }
-            .buttonStyle(.bordered)
         }
     }
 
@@ -248,7 +245,7 @@ struct RecallLabView: View {
         HStack {
             Image(systemName: "exclamationmark.triangle.fill")
             Text(issue.message)
-            if issue != .recovered { Button("recall.retry", action: service.retryStorage).buttonStyle(.bordered) }
+            if issue != .recovered { Button("recall.retry", action: service.retryStorage) }
         }
         .font(.system(size: 11 * zoom))
         .foregroundStyle(.orange)
@@ -324,7 +321,7 @@ struct RecallCardEditor: View {
                     Button("button.save") {
                         if onSave(question, answer, topic) { dismiss() } else { saveFailed = true }
                     }
-                    .buttonStyle(.borderedProminent)
+                    .buttonStyle(TrainingButtonStyle(accent: accent, zoom: zoom, prominent: true))
                     .disabled(RecallPolicy.text(question, limit: 500).isEmpty || RecallPolicy.text(answer, limit: 5_000).isEmpty)
                 }
             }
@@ -338,6 +335,7 @@ struct RecallCardEditor: View {
         .background(Color(red: 0.025, green: 0.075, blue: 0.12))
         .preferredColorScheme(.dark)
         .tint(accent)
+        .buttonStyle(TrainingButtonStyle(accent: accent, zoom: zoom))
         .onChange(of: topic) { _, value in topic = String(value.prefix(60)) }
     }
 

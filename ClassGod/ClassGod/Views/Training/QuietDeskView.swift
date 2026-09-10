@@ -22,14 +22,14 @@ struct QuietDeskView: View {
                         }
                         statusMessage
                         Button("quiet.restore") { _ = service.restore(); HapticManager.shared.generic() }
-                            .buttonStyle(.borderedProminent)
-                        Button("quiet.forget", role: .destructive) { confirmsForget = true }.buttonStyle(.bordered)
+                            .buttonStyle(TrainingButtonStyle(accent: accent, zoom: zoom, prominent: true))
+                        Button("quiet.forget", role: .destructive) { confirmsForget = true }
                     }
                     .frame(maxWidth: .infinity, alignment: .leading).padding(18 * zoom)
                     .background(.white.opacity(0.04), in: RoundedRectangle(cornerRadius: 14 * zoom))
                 } else {
                     Button("quiet.mute") { _ = service.mute(); HapticManager.shared.generic() }
-                        .buttonStyle(.borderedProminent).disabled(service.currentMuted != false)
+                        .buttonStyle(TrainingButtonStyle(accent: accent, zoom: zoom, prominent: true)).disabled(service.currentMuted != false)
                     statusMessage
                 }
                 HStack(spacing: 20 * zoom) {

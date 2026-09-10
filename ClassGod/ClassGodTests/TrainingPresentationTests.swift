@@ -245,20 +245,8 @@ struct TrainingPresentationTests {
         defer {
             (engine.isEnabled, engine.isPlaying, engine.isMuted, engine.playbackMode, engine.playlist, engine.currentWallpaper) = original
         }
-        let file = FileManager.default.temporaryDirectory.appendingPathComponent("ClassGodSilent-\(UUID()).wav")
+        let file = try silentMediaFile()
         defer { try? FileManager.default.removeItem(at: file) }
-        var data = Data()
-        func append<T: FixedWidthInteger>(_ value: T) {
-            var littleEndian = value.littleEndian
-            withUnsafeBytes(of: &littleEndian) { data.append(contentsOf: $0) }
-        }
-        data.append(contentsOf: "RIFF".utf8); append(UInt32(16_036))
-        data.append(contentsOf: "WAVEfmt ".utf8); append(UInt32(16))
-        append(UInt16(1)); append(UInt16(1)); append(UInt32(8_000)); append(UInt32(16_000))
-        append(UInt16(2)); append(UInt16(16))
-        data.append(contentsOf: "data".utf8); append(UInt32(16_000))
-        data.append(Data(count: 16_000))
-        try data.write(to: file)
         engine.isEnabled = true
         engine.isPlaying = false
         engine.isMuted = true
@@ -297,6 +285,143 @@ struct TrainingPresentationTests {
         NotificationCenter.default.post(name: .AVPlayerItemDidPlayToEndTime, object: currentItem)
         try await Task.sleep(for: .milliseconds(100))
         #expect(advances == 1)
+    }
+
+    @Test("Queued wallpaper navigation respects pause, disable, and manual selection")
+    func cancelsQueuedWallpaperNavigation() async throws {
+        let engine = WallpaperEngine.shared
+        let original = (engine.isEnabled, engine.isPlaying, engine.playbackMode, engine.playlist, engine.currentWallpaper)
+        let file = FileManager.default.temporaryDirectory.appendingPathComponent("ClassGodLoop-\(UUID()).mov")
+        try Data().write(to: file)
+        defer {
+            (engine.isEnabled, engine.isPlaying, engine.playbackMode, engine.playlist, engine.currentWallpaper) = original
+            try? FileManager.default.removeItem(at: file)
+        }
+        let items = ["First", "Second", "Third"].map { WallpaperItem(name: $0, filePath: file.path, type: .video) }
+        engine.playlist = items
+        engine.playbackMode = .listLoop
+        for action in ["pause", "disable", "select", "resume", "reenable", "reselect", "normal"] {
+            engine.isEnabled = true
+            engine.isPlaying = true
+            engine.currentWallpaper = items[0]
+            NotificationCenter.default.post(name: .wallpaperVideoDidLoop, object: nil)
+            switch action {
+            case "pause": _ = engine.togglePlayPause()
+            case "disable": _ = engine.setEnabled(false)
+            case "select": _ = engine.selectWallpaper(items[2])
+            case "resume": _ = engine.togglePlayPause(); _ = engine.togglePlayPause()
+            case "reenable": _ = engine.setEnabled(false); _ = engine.setEnabled(true)
+            case "reselect": _ = engine.selectWallpaper(items[2]); _ = engine.selectWallpaper(items[0])
+            default: break
+            }
+            try await Task.sleep(for: .milliseconds(100))
+            let expected = action == "normal" ? items[1] : action == "select" ? items[2] : items[0]
+            #expect(engine.currentWallpaper?.id == expected.id)
+            if action == "disable" { #expect(!engine.isEnabled) }
+        }
+    }
+
+    @Test("Hiding desktop wallpaper stops retained native players immediately")
+    func releasesHiddenDesktopPlayback() async throws {
+        let engine = WallpaperEngine.shared
+        let desktop = DesktopWallpaperController.shared
+        let original = (engine.isEnabled, engine.showOnDesktop, engine.isPlaying, engine.isMuted, engine.playbackMode, engine.currentWallpaper)
+        let file = try silentMediaFile()
+        var videos: [VideoWallpaperNSView] = []
+        defer {
+            videos.forEach { $0.stopPlayback() }
+            desktop.hideWallpapers()
+            (engine.isEnabled, engine.showOnDesktop, engine.isPlaying, engine.isMuted, engine.playbackMode, engine.currentWallpaper) = original
+            desktop.refreshWindows()
+            try? FileManager.default.removeItem(at: file)
+        }
+        engine.isEnabled = true
+        engine.showOnDesktop = true
+        engine.isPlaying = true
+        engine.isMuted = true
+        engine.playbackMode = .singleLoop
+        engine.currentWallpaper = WallpaperItem(name: "Silent fixture", filePath: file.path, type: .video)
+        desktop.refreshWindows()
+        func videoViews(_ view: NSView) -> [VideoWallpaperNSView] {
+            (view as? VideoWallpaperNSView).map { [$0] } ?? view.subviews.flatMap(videoViews)
+        }
+        var players: [AVPlayer] = []
+        for _ in 0..<100 {
+            videos = NSApplication.shared.windows.compactMap(\.contentView).flatMap(videoViews)
+            players = videos.flatMap { $0.layer?.sublayers?.compactMap { ($0 as? AVPlayerLayer)?.player } ?? [] }
+            if players.count == NSScreen.screens.count, players.allSatisfy({ $0.rate > 0 }) { break }
+            try await Task.sleep(for: .milliseconds(20))
+        }
+        #expect(players.count == NSScreen.screens.count)
+        #expect(players.allSatisfy { $0.rate > 0 })
+        let windows = videos.compactMap(\.window)
+        desktop.hideWallpapers()
+        #expect(windows.allSatisfy { !$0.isVisible })
+        #expect(players.allSatisfy { $0.rate == 0 && $0.currentItem == nil })
+        desktop.refreshWindows()
+        var reopened: [VideoWallpaperNSView] = []
+        var reopenedPlayers: [AVPlayer] = []
+        for _ in 0..<100 {
+            reopened = NSApplication.shared.windows.compactMap(\.contentView).flatMap(videoViews)
+            reopenedPlayers = reopened.flatMap { $0.layer?.sublayers?.compactMap { ($0 as? AVPlayerLayer)?.player } ?? [] }
+            if reopenedPlayers.count == NSScreen.screens.count, reopenedPlayers.allSatisfy({ $0.rate > 0 }) { break }
+            try await Task.sleep(for: .milliseconds(20))
+        }
+        videos += reopened
+        #expect(reopenedPlayers.count == NSScreen.screens.count)
+        #expect(reopenedPlayers.allSatisfy { $0.rate > 0 })
+        #expect(reopened.allSatisfy { $0.window?.isVisible == true })
+        desktop.refreshContent()
+        #expect(reopenedPlayers.allSatisfy { $0.rate == 0 && $0.currentItem == nil })
+    }
+
+    @Test("Training actions scale with zoom and preserve keyboard activation and disabled behavior")
+    func scalesTrainingActions() async throws {
+        func size(zoom: CGFloat) -> NSSize {
+            let host = NSHostingView(rootView: Button("quiet.restore") {}
+                .buttonStyle(TrainingButtonStyle(accent: .pink, zoom: zoom, prominent: true)))
+            return host.fittingSize
+        }
+        let standard = size(zoom: 1)
+        let enlarged = size(zoom: 2)
+        #expect(standard.height >= 30)
+        #expect(enlarged.height >= standard.height * 1.8)
+        #expect(enlarged.width >= standard.width * 1.8)
+        var activations = 0
+        let window = NSWindow(contentRect: .init(x: 0, y: 0, width: 320, height: 100), styleMask: [.titled], backing: .buffered, defer: false)
+        window.isReleasedWhenClosed = false
+        defer { window.close() }
+        for enabled in [true, false] {
+            window.contentView = NSHostingView(rootView: Button("button.save") { activations += 1 }
+                .buttonStyle(TrainingButtonStyle(accent: .cyan, zoom: 2, prominent: true))
+                .keyboardShortcut("s", modifiers: .command)
+                .disabled(!enabled))
+            window.makeKeyAndOrderFront(nil)
+            try await Task.sleep(for: .milliseconds(100))
+            let event = try #require(NSEvent.keyEvent(
+                with: .keyDown, location: .zero, modifierFlags: .command, timestamp: 0,
+                windowNumber: window.windowNumber, context: nil, characters: "s", charactersIgnoringModifiers: "s", isARepeat: false, keyCode: 1
+            ))
+            _ = window.performKeyEquivalent(with: event)
+            #expect(activations == 1)
+        }
+    }
+
+    private func silentMediaFile() throws -> URL {
+        let file = FileManager.default.temporaryDirectory.appendingPathComponent("ClassGodSilent-\(UUID()).wav")
+        var data = Data()
+        func append<T: FixedWidthInteger>(_ value: T) {
+            var littleEndian = value.littleEndian
+            withUnsafeBytes(of: &littleEndian) { data.append(contentsOf: $0) }
+        }
+        data.append(contentsOf: "RIFF".utf8); append(UInt32(16_036))
+        data.append(contentsOf: "WAVEfmt ".utf8); append(UInt32(16))
+        append(UInt16(1)); append(UInt16(1)); append(UInt32(8_000)); append(UInt32(16_000))
+        append(UInt16(2)); append(UInt16(16))
+        data.append(contentsOf: "data".utf8); append(UInt32(16_000))
+        data.append(Data(count: 16_000))
+        try data.write(to: file)
+        return file
     }
 
     private func render<Content: View>(_ content: Content, name: String, size: NSSize, prepare: () -> Void = {}) async throws {
