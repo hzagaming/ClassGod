@@ -4,7 +4,7 @@
 
 [English](../../README.md) · [简体中文](README.zh-Hans.md) · [繁體中文](README.zh-Hant.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Français](README.fr.md) · **Deutsch** · [Español](README.es.md) · [Português](README.pt.md) · [Русский](README.ru.md)
 
-> Quellcode-Version: **v1.5.55 (Build 80)**. Veröffentlichte Downloads finden Sie unter [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest).
+> Quellcode-Version: **v1.5.56 (Build 81)**. Veröffentlichte Downloads finden Sie unter [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest).
 
 ## Was ist ClassGod?
 

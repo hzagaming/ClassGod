@@ -20,6 +20,12 @@ struct TrainingPresentationTests {
         PreferencesManager.shared.preferences.enableSoundEffects = false
         PreferencesManager.shared.preferences.enableHapticFeedback = false
         PreferencesManager.shared.preferences.enableFanControl = false
+        let editorModel = TabListViewModel()
+        let draft = BrowserTab(title: "Learning notes / 学习笔记", url: "https://example.org/notes", browser: .safari,
+                               shortcutKey: "K", shortcutModifiers: NSEvent.ModifierFlags([.command, .shift]).rawValue)
+        editorModel.tabs = [BrowserTab(title: "Existing target", url: "https://example.org/study", browser: .safari,
+                                      shortcutKey: draft.shortcutKey, shortcutModifiers: draft.shortcutModifiers)]
+        #expect(AddTabView(viewModel: editorModel, tab: draft).hasConflict)
         for zoom in [1.0, 2.0] {
             PreferencesManager.shared.preferences.windowZoomScale = zoom
             for mode in MainPanelMode.allCases {
@@ -30,6 +36,8 @@ struct TrainingPresentationTests {
                     onOpenSettings: {}, onOpenWallpaper: {}, onOpenHackerDesktop: {}
                 ), name: "main-\(mode.rawValue)-\(Int(zoom * 100))", size: .init(width: 400 * zoom, height: 700))
             }
+            try await render(AddTabView(viewModel: editorModel, tab: draft), name: "shortcut-conflict-\(Int(zoom * 100))",
+                             size: .init(width: 420 * zoom, height: 400 * zoom))
         }
     }
 
@@ -407,6 +415,100 @@ struct TrainingPresentationTests {
         }
     }
 
+    @Test("Browser picker has one labeled segment per browser and selects the saved browser")
+    func browserPickerSegments() async throws {
+        let original = PreferencesManager.shared.preferences
+        defer { PreferencesManager.shared.preferences = original }
+        PreferencesManager.shared.preferences.useInstantAnimations = true
+        PreferencesManager.shared.preferences.enableSoundEffects = false
+        PreferencesManager.shared.preferences.enableHapticFeedback = false
+        let model = TabListViewModel()
+        let window = NSWindow(contentRect: .init(x: 0, y: 0, width: 840, height: 800), styleMask: [.borderless], backing: .buffered, defer: false)
+        window.isReleasedWhenClosed = false
+        defer { window.close() }
+        func segmentedControl(in view: NSView) -> NSSegmentedControl? {
+            if let control = view as? NSSegmentedControl { return control }
+            return view.subviews.lazy.compactMap { segmentedControl(in: $0) }.first
+        }
+        for zoom in [1.0, 2.0] {
+            PreferencesManager.shared.preferences.windowZoomScale = zoom
+            for (index, browser) in BrowserType.allCases.enumerated() {
+                let tab = BrowserTab(title: "Study", url: "https://example.org", browser: browser)
+                let host = NSHostingView(rootView: AddTabView(viewModel: model, tab: tab))
+                window.contentView = host
+                host.layoutSubtreeIfNeeded()
+                try await Task.sleep(for: .milliseconds(100))
+                let picker = try #require(segmentedControl(in: host))
+                #expect(picker.segmentCount == BrowserType.allCases.count)
+                #expect((0..<picker.segmentCount).map { picker.label(forSegment: $0) ?? "" } == BrowserType.allCases.map(\.displayName))
+                #expect(picker.selectedSegment == index)
+            }
+        }
+    }
+
+    @Test("Every shortcut conflict toggle produces visible shake feedback",
+          .enabled(if: !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion, "Pixel sampling requires system motion."))
+    func repeatsConflictShake() async throws {
+        let original = PreferencesManager.shared.preferences
+        defer { PreferencesManager.shared.preferences = original }
+        PreferencesManager.shared.preferences.animationSpeed = .normal
+        PreferencesManager.shared.preferences.useInstantAnimations = false
+        let controls = MotionControls()
+        let probe = MotionProbe(controls: controls, bounce: false)
+        defer { probe.window.close() }
+        try await Task.sleep(for: .milliseconds(100))
+        let baseline = try probe.markerBounds()
+        for _ in 0..<3 {
+            controls.trigger.toggle()
+            var greatestOffset: CGFloat = 0
+            for _ in 0..<25 {
+                try await Task.sleep(for: .milliseconds(30))
+                greatestOffset = max(greatestOffset, abs(try probe.markerBounds().midX - baseline.midX))
+            }
+            #expect(greatestOffset > 5)
+            #expect(abs(try probe.markerBounds().midX - baseline.midX) < 1)
+        }
+    }
+
+    @Test("Disabling motion resets active feedback and cancels its remaining steps",
+          .enabled(if: !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion, "Pixel sampling requires system motion."),
+          arguments: ["instant", "speed"], [false, true])
+    func cancelsFeedbackMotion(setting: String, bounce: Bool) async throws {
+        let original = PreferencesManager.shared.preferences
+        defer { PreferencesManager.shared.preferences = original }
+        PreferencesManager.shared.preferences.animationSpeed = .normal
+        PreferencesManager.shared.preferences.useInstantAnimations = false
+        let controls = MotionControls()
+        let probe = MotionProbe(controls: controls, bounce: bounce)
+        defer { probe.window.close() }
+        if !bounce {
+            try await Task.sleep(for: .milliseconds(100))
+            controls.trigger = true
+        }
+        var moved = false
+        for _ in 0..<15 {
+            try await Task.sleep(for: .milliseconds(20))
+            let bounds = try probe.markerBounds()
+            if abs(bounds.midX - 80) > 5 || bounds.width > 25 { moved = true; break }
+        }
+        #expect(moved)
+        if setting == "instant" {
+            PreferencesManager.shared.preferences.useInstantAnimations = true
+        } else {
+            PreferencesManager.shared.preferences.animationSpeed = .instant
+        }
+        for step in 0..<20 {
+            try await Task.sleep(for: .milliseconds(30))
+            let bounds = try probe.markerBounds()
+            #expect(abs(bounds.midX - 80) < 1)
+            #expect(abs(bounds.width - 20) < 1)
+            if step == 2 {
+                PreferencesManager.shared.preferences.useInstantAnimations = false
+                PreferencesManager.shared.preferences.animationSpeed = .normal
+            }
+        }
+    }
+
     private func silentMediaFile() throws -> URL {
         let file = FileManager.default.temporaryDirectory.appendingPathComponent("ClassGodSilent-\(UUID()).wav")
         var data = Data()
@@ -445,5 +547,60 @@ struct TrainingPresentationTests {
             try png.write(to: directory.appendingPathComponent(name + ".png"), options: .atomic)
         }
         window.close()
+    }
+}
+
+@MainActor
+private final class MotionControls: ObservableObject {
+    @Published var trigger = false
+}
+
+private struct MotionFixture: View {
+    @ObservedObject var controls: MotionControls
+    let bounce: Bool
+
+    var body: some View {
+        Group {
+            if bounce {
+                Color.red.frame(width: 20, height: 20).bounce(intensity: 2)
+            } else {
+                Color.red.frame(width: 20, height: 20).shake(trigger: controls.trigger, intensity: 20)
+            }
+        }
+        .frame(width: 160, height: 120)
+        .background(.black)
+    }
+}
+
+@MainActor
+private final class MotionProbe {
+    let window: NSWindow
+    let host: NSHostingView<MotionFixture>
+
+    init(controls: MotionControls, bounce: Bool) {
+        window = NSWindow(contentRect: .init(x: 0, y: 0, width: 160, height: 120), styleMask: [.borderless], backing: .buffered, defer: false)
+        window.isReleasedWhenClosed = false
+        host = NSHostingView(rootView: MotionFixture(controls: controls, bounce: bounce))
+        window.contentView = host
+        host.frame = NSRect(x: 0, y: 0, width: 160, height: 120)
+        window.orderFront(nil)
+        host.layoutSubtreeIfNeeded()
+    }
+
+    func markerBounds() throws -> CGRect {
+        host.layoutSubtreeIfNeeded()
+        let bitmap = try #require(host.bitmapImageRepForCachingDisplay(in: host.bounds))
+        host.cacheDisplay(in: host.bounds, to: bitmap)
+        let row = bitmap.pixelsHigh / 2
+        let pixels = (0..<bitmap.pixelsWide).filter { x in
+            guard let color = bitmap.colorAt(x: x, y: row)?.usingColorSpace(.deviceRGB) else { return false }
+            return color.redComponent > 0.6
+                && color.redComponent > color.greenComponent + 0.25
+                && color.redComponent > color.blueComponent + 0.25
+        }
+        let first = try #require(pixels.first)
+        let last = try #require(pixels.last)
+        let scale = CGFloat(bitmap.pixelsWide) / host.bounds.width
+        return CGRect(x: CGFloat(first) / scale, y: 0, width: CGFloat(last - first + 1) / scale, height: 20)
     }
 }

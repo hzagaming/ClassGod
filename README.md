@@ -25,7 +25,7 @@
   </p>
 </div>
 
-> Source version: **v1.5.55 (Build 80)**. Published downloads are available on [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest).
+> Source version: **v1.5.56 (Build 81)**. Published downloads are available on [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest).
 
 ## Why ClassGod
 
@@ -189,9 +189,9 @@ ClassGod/ClassGodTests/    App tests
 ClassGodHelper/            Privileged helper Swift package and tests
 ```
 
-## Latest changes: v1.5.55
+## Latest changes: v1.5.56
 
-Training buttons now scale their text and hit areas with the panel, with distinct primary, secondary, destructive, and disabled states. Wallpaper auto-advance is cancelled when playback controls or the selected item change, so a queued completion cannot undo a pause, re-enable a disabled wallpaper, or override manual selection. Hiding or replacing desktop wallpaper content explicitly stops its video, audio, and animated-image playback.
+The browser picker now has one labeled option each for Safari, Chrome, and Edge, fixing the split icon/text segments and misleading selection. Shortcut conflicts produce shake feedback on every attempt. Shake and bounce effects observe animation preferences and Reduce Motion, cancel pending steps when their timing changes, and reset immediately. Re-enabling motion does not replay cancelled feedback. Native regressions cover picker labels, selection, repeated conflicts, and motion interruption; audio and wallpaper playback retain their existing lifecycle protections.
 
 Read [CHANGELOG.md](CHANGELOG.md) for current releases and [CHANGELOG_HISTORY.md](CHANGELOG_HISTORY.md) for older history.
 

@@ -145,13 +145,7 @@ struct AddTabView: View {
 
                 Picker(String(localized: "field.browser"), selection: $browser) {
                     ForEach(BrowserType.allCases) { b in
-                        HStack {
-                            Image(systemName: b == .safari ? "safari" : b == .chrome ? "globe" : "wave.3.forward")
-                                .foregroundStyle(.white)
-                            Text(b.displayName)
-                                .foregroundStyle(.white)
-                        }
-                        .tag(b)
+                        Text(b.displayName).tag(b)
                     }
                 }
                 .pickerStyle(.segmented)

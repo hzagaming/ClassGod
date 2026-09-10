@@ -99,15 +99,27 @@ struct HoverScaleModifier: ViewModifier {
 }
 
 struct BounceModifier: ViewModifier {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @ObservedObject private var preferences = PreferencesManager.shared
     @State private var scale: CGFloat = 1.0
     @State private var hasAnimated = false
     @State private var resetWorkItem: DispatchWorkItem?
     let intensity: CGFloat
     
     func body(content: Content) -> some View {
-        let dur = Anim.duration
+        let dur = AnimationDurationPolicy.duration(
+            preferred: preferences.preferences.animationSpeed.duration,
+            useInstant: preferences.preferences.useInstantAnimations,
+            reduceMotion: reduceMotion
+        )
         return content
-            .scaleEffect(scale)
+            .scaleEffect(dur > 0 ? scale : 1)
+            .transaction { transaction in
+                if dur == 0 {
+                    transaction.animation = .linear(duration: 0)
+                    transaction.disablesAnimations = true
+                }
+            }
             .onAppear {
                 guard dur > 0, !hasAnimated else { return }
                 hasAnimated = true
@@ -115,7 +127,6 @@ struct BounceModifier: ViewModifier {
                     scale = intensity
                 }
                 let item = DispatchWorkItem {
-                    guard dur > 0 else { return }
                     withAnimation(.easeOut(duration: dur * 2)) {
                         scale = 1.0
                     }
@@ -123,57 +134,67 @@ struct BounceModifier: ViewModifier {
                 resetWorkItem = item
                 DispatchQueue.main.asyncAfter(deadline: .now() + dur * 2, execute: item)
             }
-            .onDisappear {
-                resetWorkItem?.cancel()
-                resetWorkItem = nil
-                scale = 1.0
-            }
+            .onChange(of: dur) { _, _ in reset() }
+            .onDisappear(perform: reset)
+    }
+
+    private func reset() {
+        resetWorkItem?.cancel()
+        resetWorkItem = nil
+        withTransaction(Transaction(animation: .linear(duration: 0))) { scale = 1 }
     }
 }
 
 struct ShakeModifier: ViewModifier {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @ObservedObject private var preferences = PreferencesManager.shared
     @State private var offset: CGFloat = 0
     @State private var workItems: [DispatchWorkItem] = []
     let trigger: Bool
     let intensity: CGFloat
     
     func body(content: Content) -> some View {
-        let dur = Anim.duration
+        let dur = AnimationDurationPolicy.duration(
+            preferred: preferences.preferences.animationSpeed.duration,
+            useInstant: preferences.preferences.useInstantAnimations,
+            reduceMotion: reduceMotion
+        )
         return content
-            .offset(x: offset)
-            .onChange(of: trigger) { _, newValue in
-                if newValue {
-                    // Cancel any pending shake animations
-                    for item in workItems { item.cancel() }
-                    workItems.removeAll()
-                    
-                    if dur > 0 {
-                        let steps: [(CGFloat, Double)] = [
-                            (-intensity, dur),
-                            (intensity, dur * 2),
-                            (-intensity / 2, dur * 3),
-                            (intensity / 2, dur * 4),
-                            (0, dur * 5)
-                        ]
-                        for (targetOffset, delay) in steps {
-                            let item = DispatchWorkItem {
-                                withAnimation(.easeInOut(duration: dur)) {
-                                    offset = targetOffset
-                                }
-                            }
-                            workItems.append(item)
-                            DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: item)
-                        }
-                    } else {
-                        offset = 0
-                    }
+            .offset(x: dur > 0 ? offset : 0)
+            .transaction { transaction in
+                if dur == 0 {
+                    transaction.animation = .linear(duration: 0)
+                    transaction.disablesAnimations = true
                 }
             }
-            .onDisappear {
-                for item in workItems { item.cancel() }
-                workItems.removeAll()
-                offset = 0
+            .onChange(of: trigger) { _, _ in
+                reset()
+                guard dur > 0 else { return }
+                let steps: [(CGFloat, Double)] = [
+                    (-intensity, dur),
+                    (intensity, dur * 2),
+                    (-intensity / 2, dur * 3),
+                    (intensity / 2, dur * 4),
+                    (0, dur * 5)
+                ]
+                for (targetOffset, delay) in steps {
+                    let item = DispatchWorkItem {
+                        withAnimation(.easeInOut(duration: dur)) {
+                            offset = targetOffset
+                        }
+                    }
+                    workItems.append(item)
+                    DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: item)
+                }
             }
+            .onChange(of: dur) { _, _ in reset() }
+            .onDisappear(perform: reset)
+    }
+
+    private func reset() {
+        for item in workItems { item.cancel() }
+        workItems.removeAll()
+        withTransaction(Transaction(animation: .linear(duration: 0))) { offset = 0 }
     }
 }
 
