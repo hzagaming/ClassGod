@@ -73,6 +73,12 @@ struct ShortcutPicker: View {
         .onDisappear {
             stopRecording()
         }
+        .onReceive(NotificationCenter.default.publisher(for: NSWindow.didResignKeyNotification)) { _ in
+            stopRecording()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didResignActiveNotification)) { _ in
+            stopRecording()
+        }
         .onChange(of: isRecording) { _, recording in
             if !recording, let monitor = localMonitor {
                 NSEvent.removeMonitor(monitor)
@@ -98,10 +104,16 @@ struct ShortcutPicker: View {
     }
 
     private func startRecording() {
+        guard !isRecording, let window = NSApplication.shared.keyWindow else { return }
         isRecording = true
 
-        localMonitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown, .flagsChanged]) { [self] event in
+        localMonitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown, .flagsChanged]) { [self, weak window] event in
             guard self.isRecording else { return event }
+            guard let window, window.isKeyWindow else {
+                self.stopRecording()
+                return event
+            }
+            guard event.window === window else { return event }
 
             let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
             let shortcutModifiers = ShortcutModifierPolicy.captured(flags.rawValue)

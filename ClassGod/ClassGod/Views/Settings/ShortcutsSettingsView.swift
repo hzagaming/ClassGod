@@ -98,6 +98,7 @@ struct ShortcutsSettingsView: View {
 
                         Button(String(localized: "button.reset")) {
                             SoundEffectManager.shared.playButtonClick()
+                            stopRecording()
                             prefs.preferences.showPopoverKeyCode = AppPreferences.default.showPopoverKeyCode
                             prefs.preferences.showPopoverModifiers = AppPreferences.default.showPopoverModifiers
                         }
@@ -140,6 +141,12 @@ struct ShortcutsSettingsView: View {
         .onDisappear {
             stopRecording()
         }
+        .onReceive(NotificationCenter.default.publisher(for: NSWindow.didResignKeyNotification)) { _ in
+            stopRecording()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didResignActiveNotification)) { _ in
+            stopRecording()
+        }
     }
 
     private func tipRow(icon: String, text: String) -> some View {
@@ -173,7 +180,7 @@ struct ShortcutsSettingsView: View {
     }
 
     private func startRecording() {
-        guard !isRecordingPopoverShortcut else { return }
+        guard !isRecordingPopoverShortcut, let window = NSApplication.shared.keyWindow else { return }
         isRecordingPopoverShortcut = true
         HapticManager.shared.generic()
 
@@ -181,8 +188,13 @@ struct ShortcutsSettingsView: View {
             NSEvent.removeMonitor(monitor)
             localMonitor = nil
         }
-        localMonitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown, .flagsChanged]) { [self] event in
-            handleRecordingEvent(event)
+        localMonitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown, .flagsChanged]) { [self, weak window] event in
+            guard let window, window.isKeyWindow else {
+                stopRecording()
+                return event
+            }
+            guard event.window === window else { return event }
+            return handleRecordingEvent(event)
         }
     }
 

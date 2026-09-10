@@ -38,6 +38,8 @@ struct TrainingPresentationTests {
             }
             try await render(AddTabView(viewModel: editorModel, tab: draft), name: "shortcut-conflict-\(Int(zoom * 100))",
                              size: .init(width: 420 * zoom, height: 400 * zoom))
+            try await render(ShortcutsSettingsView(), name: "shortcut-settings-\(Int(zoom * 100))",
+                             size: .init(width: 520 * zoom, height: 650))
         }
     }
 
@@ -415,6 +417,95 @@ struct TrainingPresentationTests {
         }
     }
 
+    @Test("Shortcut recording cancels on focus loss or reset without stealing later input",
+          arguments: [false, true], ["window", "application", "reset"])
+    func scopesShortcutRecording(global: Bool, interruption: String) async throws {
+        let original = PreferencesManager.shared.preferences
+        defer { PreferencesManager.shared.preferences = original }
+        PreferencesManager.shared.preferences.useInstantAnimations = true
+        PreferencesManager.shared.preferences.windowZoomScale = 1
+        PreferencesManager.shared.preferences.enableSoundEffects = false
+        PreferencesManager.shared.preferences.enableHapticFeedback = false
+        PreferencesManager.shared.preferences.showPopoverKeyCode = 0x26
+        PreferencesManager.shared.preferences.showPopoverModifiers = UInt32(NSEvent.ModifierFlags.command.rawValue)
+        let controls = ShortcutControls()
+        let window = NSWindow(contentRect: .init(x: 0, y: 0, width: 520, height: 400), styleMask: [.titled], backing: .buffered, defer: false)
+        let other = NSWindow(contentRect: .init(x: 0, y: 0, width: 200, height: 100), styleMask: [.titled], backing: .buffered, defer: false)
+        window.isReleasedWhenClosed = false
+        other.isReleasedWhenClosed = false
+        defer {
+            window.contentView = nil
+            window.close()
+            other.close()
+        }
+        let content = global ? AnyView(ShortcutsSettingsView()) : AnyView(ShortcutFixture(controls: controls))
+        let host = NSHostingView(rootView: content.frame(width: 520, height: 400))
+        window.contentView = host
+        window.makeKeyAndOrderFront(nil)
+        NSApplication.shared.activate(ignoringOtherApps: true)
+        host.layoutSubtreeIfNeeded()
+        try await Task.sleep(for: .milliseconds(150))
+        try #require(window.isKeyWindow)
+        func click(_ location: NSPoint) async throws {
+            for type in [NSEvent.EventType.leftMouseDown, .leftMouseUp] {
+                let event = try #require(NSEvent.mouseEvent(
+                    with: type, location: location,
+                    modifierFlags: [], timestamp: ProcessInfo.processInfo.systemUptime,
+                    windowNumber: window.windowNumber, context: nil, eventNumber: 1, clickCount: 1, pressure: 1
+                ))
+                NSApplication.shared.postEvent(event, atStart: false)
+            }
+            try await Task.sleep(for: .milliseconds(100))
+        }
+        func startRecording() async throws {
+            try await click(global ? NSPoint(x: 360, y: 320) : NSPoint(x: 180, y: 200))
+            if !global { try #require(controls.isRecording) }
+        }
+        func sendKey(_ name: String, code: UInt16, to target: NSWindow) throws {
+            let event = try #require(NSEvent.keyEvent(
+                with: .keyDown, location: .zero, modifierFlags: .shift, timestamp: 0,
+                windowNumber: target.windowNumber, context: nil, characters: name,
+                charactersIgnoringModifiers: name.lowercased(), isARepeat: false, keyCode: code
+            ))
+            NSApplication.shared.sendEvent(event)
+        }
+        try await startRecording()
+        try sendKey("K", code: 0x28, to: window)
+        try await Task.sleep(for: .milliseconds(50))
+        if global { try #require(PreferencesManager.shared.preferences.showPopoverKeyCode == 0x28) }
+        else { try #require(controls.key == "K"); #expect(!controls.isRecording) }
+        try await startRecording()
+        let sink = KeyEventSink()
+        other.contentView = sink
+        if interruption == "window" {
+            other.makeKeyAndOrderFront(nil)
+            other.makeFirstResponder(sink)
+        } else if interruption == "reset" {
+            try await click(global ? NSPoint(x: 475, y: 320) : NSPoint(x: 493, y: 200))
+        } else {
+            NotificationCenter.default.post(name: NSApplication.didResignActiveNotification, object: NSApplication.shared)
+        }
+        try await Task.sleep(for: .milliseconds(50))
+        if !global { #expect(!controls.isRecording) }
+        try sendKey("L", code: 0x25, to: interruption == "window" ? other : window)
+        try await Task.sleep(for: .milliseconds(50))
+        if global {
+            #expect(PreferencesManager.shared.preferences.showPopoverKeyCode == (interruption == "reset" ? AppPreferences.default.showPopoverKeyCode : 0x28))
+            #expect(PreferencesManager.shared.preferences.showPopoverModifiers == (interruption == "reset" ? AppPreferences.default.showPopoverModifiers : UInt32(NSEvent.ModifierFlags.shift.rawValue)))
+        } else {
+            #expect(controls.key == (interruption == "reset" ? "" : "K"))
+            #expect(controls.modifiers == (interruption == "reset" ? 0 : NSEvent.ModifierFlags.shift.rawValue))
+        }
+        if interruption == "window" { #expect(sink.keys == ["L"]) }
+        window.makeKeyAndOrderFront(nil)
+        try await Task.sleep(for: .milliseconds(50))
+        try await startRecording()
+        try sendKey("M", code: 0x2E, to: window)
+        try await Task.sleep(for: .milliseconds(50))
+        if global { #expect(PreferencesManager.shared.preferences.showPopoverKeyCode == 0x2E) }
+        else { #expect(controls.key == "M"); #expect(!controls.isRecording) }
+    }
+
     @Test("Browser picker has one labeled segment per browser and selects the saved browser")
     func browserPickerSegments() async throws {
         let original = PreferencesManager.shared.preferences
@@ -553,6 +644,28 @@ struct TrainingPresentationTests {
 @MainActor
 private final class MotionControls: ObservableObject {
     @Published var trigger = false
+}
+
+@MainActor
+private final class ShortcutControls: ObservableObject {
+    @Published var key = "J"
+    @Published var modifiers = NSEvent.ModifierFlags.command.rawValue
+    @Published var isRecording = false
+}
+
+private struct ShortcutFixture: View {
+    @ObservedObject var controls: ShortcutControls
+    var body: some View {
+        ShortcutPicker(key: $controls.key, modifiers: $controls.modifiers, isRecording: $controls.isRecording)
+            .padding(20)
+    }
+}
+
+@MainActor
+private final class KeyEventSink: NSView {
+    var keys: [String] = []
+    override var acceptsFirstResponder: Bool { true }
+    override func keyDown(with event: NSEvent) { keys.append(event.characters ?? "") }
 }
 
 private struct MotionFixture: View {

@@ -4,7 +4,7 @@
 
 [English](../../README.md) · **简体中文** · [繁體中文](README.zh-Hant.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Français](README.fr.md) · [Deutsch](README.de.md) · [Español](README.es.md) · [Português](README.pt.md) · [Русский](README.ru.md)
 
-> 源码版本：**v1.5.56 (Build 81)**。已发布安装包请查看 [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest)。
+> 源码版本：**v1.5.57 (Build 82)**。已发布安装包请查看 [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest)。
 
 ## ClassGod 是什么
 

@@ -25,7 +25,7 @@
   </p>
 </div>
 
-> Source version: **v1.5.56 (Build 81)**. Published downloads are available on [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest).
+> Source version: **v1.5.57 (Build 82)**. Published downloads are available on [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest).
 
 ## Why ClassGod
 
@@ -189,9 +189,9 @@ ClassGod/ClassGodTests/    App tests
 ClassGodHelper/            Privileged helper Swift package and tests
 ```
 
-## Latest changes: v1.5.56
+## Latest changes: v1.5.57
 
-The browser picker now has one labeled option each for Safari, Chrome, and Edge, fixing the split icon/text segments and misleading selection. Shortcut conflicts produce shake feedback on every attempt. Shake and bounce effects observe animation preferences and Reduce Motion, cancel pending steps when their timing changes, and reset immediately. Re-enabling motion does not replay cancelled feedback. Native regressions cover picker labels, selection, repeated conflicts, and motion interruption; audio and wallpaper playback retain their existing lifecycle protections.
+Shortcut recording now stays within the window that had keyboard focus when recording began. Switching windows or leaving the app cancels recording and preserves the saved combination, so typing elsewhere cannot overwrite shortcuts or trigger false success feedback. Resetting the global shortcut also ends recording. Native regressions cover both recorders, focus loss, reset/clear, input delivery to another window, and starting a new recording afterward.
 
 Read [CHANGELOG.md](CHANGELOG.md) for current releases and [CHANGELOG_HISTORY.md](CHANGELOG_HISTORY.md) for older history.
 
