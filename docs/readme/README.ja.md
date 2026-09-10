@@ -4,7 +4,7 @@
 
 [English](../../README.md) · [简体中文](README.zh-Hans.md) · [繁體中文](README.zh-Hant.md) · **日本語** · [한국어](README.ko.md) · [Français](README.fr.md) · [Deutsch](README.de.md) · [Español](README.es.md) · [Português](README.pt.md) · [Русский](README.ru.md)
 
-> 現在のリリース：**v1.5.53 (Build 78)**。[GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest) から DMG または PKG をダウンロードできます。
+> ソースコードのバージョン：**v1.5.54 (Build 79)**。公開済みのダウンロードは [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest) をご覧ください。
 
 ## ClassGod について
 

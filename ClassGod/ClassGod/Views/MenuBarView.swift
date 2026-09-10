@@ -15,6 +15,14 @@ enum MainPanelFeature: String, CaseIterable, Hashable {
     case todo
     case schedule
     case focusFlow
+    case recallLab
+    case switchDrill
+    case readingLane
+    case screenCurtain
+    case numberSprint
+    case returnDock
+    case teachBack
+    case quietDesk
     case superSwitch
     case ghostProtocol
     case browserBypasser
@@ -36,6 +44,14 @@ enum MainPanelFeature: String, CaseIterable, Hashable {
         case .todo: "checkmark.circle.fill"
         case .schedule: "calendar.badge.clock"
         case .focusFlow: "timer.circle.fill"
+        case .recallLab: "rectangle.stack.fill"
+        case .switchDrill: "bolt.horizontal.circle.fill"
+        case .readingLane: "text.alignleft"
+        case .screenCurtain: "eye.slash.fill"
+        case .numberSprint: "number.square.fill"
+        case .returnDock: "arrow.uturn.backward.circle.fill"
+        case .teachBack: "text.bubble.fill"
+        case .quietDesk: "speaker.slash.fill"
         case .superSwitch: "arrow.left.arrow.right"
         case .ghostProtocol: "eye.slash.circle.fill"
         case .browserBypasser: "lock.open.fill"
@@ -59,6 +75,14 @@ enum MainPanelFeature: String, CaseIterable, Hashable {
         case .todo: "todo.title"
         case .schedule: "schedule.title"
         case .focusFlow: "focus.title"
+        case .recallLab: "recall.title"
+        case .switchDrill: "drill.title"
+        case .readingLane: "reading.title"
+        case .screenCurtain: "curtain.title"
+        case .numberSprint: "numbers.title"
+        case .returnDock: "return.title"
+        case .teachBack: "teach.title"
+        case .quietDesk: "quiet.title"
         case .superSwitch: "SuperSwitch"
         case .ghostProtocol: "ghost.title"
         case .browserBypasser: "BrowserBypasser"
@@ -82,6 +106,14 @@ enum MainPanelFeature: String, CaseIterable, Hashable {
         case .todo: "menu.todo.description"
         case .schedule: "menu.schedule.description"
         case .focusFlow: "menu.focus.description"
+        case .recallLab: "menu.recall.description"
+        case .switchDrill: "menu.drill.description"
+        case .readingLane: "menu.reading.description"
+        case .screenCurtain: "menu.curtain.description"
+        case .numberSprint: "menu.numbers.description"
+        case .returnDock: "menu.return.description"
+        case .teachBack: "menu.teach.description"
+        case .quietDesk: "menu.quiet.description"
         case .superSwitch: "menu.superswitch.description"
         case .ghostProtocol: "menu.ghost_protocol.description"
         case .browserBypasser: "menu.browser_bypasser.description"
@@ -107,9 +139,9 @@ enum MainPanelMode: String, CaseIterable, Identifiable {
     var features: [MainPanelFeature] {
         switch self {
         case .goodStudent:
-            [.clipo, .notes, .todo, .schedule, .focusFlow, .wallpaper, .widgets]
+            [.clipo, .notes, .todo, .schedule, .focusFlow, .recallLab, .readingLane, .numberSprint, .teachBack, .wallpaper, .widgets]
         case .badStudent:
-            [.preflight, .destinTab, .superSwitch, .ghostProtocol, .browserBypasser, .fakeLock, .assessPrepHack]
+            [.preflight, .switchDrill, .screenCurtain, .returnDock, .quietDesk, .destinTab, .superSwitch, .ghostProtocol, .browserBypasser, .fakeLock, .assessPrepHack]
         case .other:
             [.errorHub, .activityMonitor, .fanControl, .permissionCenter]
         }
@@ -317,6 +349,14 @@ struct MenuBarView: View {
     var onOpenTodo: () -> Void
     var onOpenSchedule: () -> Void
     var onOpenFocusFlow: () -> Void
+    var onOpenRecallLab: () -> Void
+    var onOpenSwitchDrill: () -> Void
+    var onOpenReadingLane: () -> Void
+    var onOpenScreenCurtain: () -> Void
+    var onOpenNumberSprint: () -> Void
+    var onOpenReturnDock: () -> Void
+    var onOpenTeachBack: () -> Void
+    var onOpenQuietDesk: () -> Void
     var onOpenFanControl: () -> Void
     var onOpenErrorHub: () -> Void
     var onOpenActivityMonitor: () -> Void
@@ -560,6 +600,14 @@ struct MenuBarView: View {
         case .todo: onOpenTodo
         case .schedule: onOpenSchedule
         case .focusFlow: onOpenFocusFlow
+        case .recallLab: onOpenRecallLab
+        case .switchDrill: onOpenSwitchDrill
+        case .readingLane: onOpenReadingLane
+        case .screenCurtain: onOpenScreenCurtain
+        case .numberSprint: onOpenNumberSprint
+        case .returnDock: onOpenReturnDock
+        case .teachBack: onOpenTeachBack
+        case .quietDesk: onOpenQuietDesk
         case .superSwitch: onOpenSuperSwitch
         case .ghostProtocol: onOpenGhostProtocol
         case .browserBypasser: onOpenBrowserBypasser
@@ -879,5 +927,5 @@ struct FeatureButton: View {
 }
 
 #Preview {
-    MenuBarView(onClose: {}, onOpenPreflight: {}, onOpenDestinTab: {}, onOpenSuperSwitch: {}, onOpenGhostProtocol: {}, onOpenBrowserBypasser: {}, onOpenAssessPrepHack: {}, onOpenSettings: {}, onOpenWallpaper: {}, onOpenHackerDesktop: {}, onOpenClipo: {}, onOpenNotes: {}, onOpenTodo: {}, onOpenSchedule: {}, onOpenFocusFlow: {}, onOpenFanControl: {}, onOpenErrorHub: {}, onOpenActivityMonitor: {}, onOpenPermissionCenter: {}, onOpenFakeLock: {})
+    MenuBarView(onClose: {}, onOpenPreflight: {}, onOpenDestinTab: {}, onOpenSuperSwitch: {}, onOpenGhostProtocol: {}, onOpenBrowserBypasser: {}, onOpenAssessPrepHack: {}, onOpenSettings: {}, onOpenWallpaper: {}, onOpenHackerDesktop: {}, onOpenClipo: {}, onOpenNotes: {}, onOpenTodo: {}, onOpenSchedule: {}, onOpenFocusFlow: {}, onOpenRecallLab: {}, onOpenSwitchDrill: {}, onOpenReadingLane: {}, onOpenScreenCurtain: {}, onOpenNumberSprint: {}, onOpenReturnDock: {}, onOpenTeachBack: {}, onOpenQuietDesk: {}, onOpenFanControl: {}, onOpenErrorHub: {}, onOpenActivityMonitor: {}, onOpenPermissionCenter: {}, onOpenFakeLock: {})
 }

@@ -9,11 +9,15 @@ struct RegressionPolicyTests {
     @Test("Main panel modes partition every feature without overlap")
     func categorizesMainPanelFeatures() {
         #expect(MainPanelMode.goodStudent.features == [
-            .clipo, .notes, .todo, .schedule, .focusFlow, .wallpaper, .widgets,
+            .clipo, .notes, .todo, .schedule, .focusFlow, .recallLab, .readingLane, .numberSprint, .teachBack, .wallpaper, .widgets,
         ])
         #expect(MainPanelMode.other.features == [.errorHub, .activityMonitor, .fanControl, .permissionCenter])
         #expect(MainPanelMode.badStudent.features == [
             .preflight,
+            .switchDrill,
+            .screenCurtain,
+            .returnDock,
+            .quietDesk,
             .destinTab,
             .superSwitch,
             .ghostProtocol,
@@ -25,6 +29,7 @@ struct RegressionPolicyTests {
         let categorized = MainPanelMode.allCases.flatMap(\.features)
         #expect(categorized.count == MainPanelFeature.allCases.count)
         #expect(Set(categorized) == Set(MainPanelFeature.allCases))
+        #expect(MainPanelMode.goodStudent.features.count == MainPanelMode.badStudent.features.count)
     }
 
     @Test("Browser switching requests automation only when searching existing tabs")
@@ -679,6 +684,14 @@ struct RegressionPolicyTests {
         #expect(ClickOutsideWindowPolicy.shouldClose(.todo))
         #expect(ClickOutsideWindowPolicy.shouldClose(.schedule))
         #expect(ClickOutsideWindowPolicy.shouldClose(.focusFlow))
+        #expect(ClickOutsideWindowPolicy.shouldClose(.recallLab))
+        #expect(ClickOutsideWindowPolicy.shouldClose(.switchDrill))
+        #expect(ClickOutsideWindowPolicy.shouldClose(.readingLane))
+        #expect(ClickOutsideWindowPolicy.shouldClose(.screenCurtain))
+        #expect(ClickOutsideWindowPolicy.shouldClose(.numberSprint))
+        #expect(ClickOutsideWindowPolicy.shouldClose(.returnDock))
+        #expect(ClickOutsideWindowPolicy.shouldClose(.teachBack))
+        #expect(ClickOutsideWindowPolicy.shouldClose(.quietDesk))
         #expect(!ClickOutsideWindowPolicy.shouldClose(.notes))
         #expect(!ClickOutsideWindowPolicy.shouldClose(.fanControl))
         #expect(FeatureWindowKind.allCases.filter(ClickOutsideWindowPolicy.shouldClose).count

@@ -144,11 +144,16 @@ struct AnimationPolicyTests {
 
     @Test("Feature windows use complete semantic sound routes")
     func resolvesFeatureWindowSounds() {
+        #expect(WindowSoundPolicy.isSilent(feature: "quietdesk"))
+        #expect(!WindowSoundPolicy.isSilent(feature: ""))
+        #expect(!WindowSoundPolicy.isSilent(feature: "teachback"))
+        #expect(WindowSoundPolicy.openSoundName(feature: "quietdesk") == nil)
+        #expect(WindowSoundPolicy.closeSoundName(feature: "quietdesk") == nil)
         let features = [
             "preflight", "destintab", "superswitch", "browserbypasser", "assessprephack",
             "hackerdesktop", "fancontrol", "activitymonitor", "permissioncenter", "errorhub",
             "ghostprotocol", "clipo", "notes", "todo", "schedule", "focusflow", "settings",
-            "wallpaper", "fakelock",
+            "wallpaper", "fakelock", "recalllab", "switchdrill", "readinglane", "screencurtain", "numbersprint", "returndock", "teachback",
         ]
         for feature in features {
             #expect(WindowSoundPolicy.openSoundName(feature: feature) != nil)

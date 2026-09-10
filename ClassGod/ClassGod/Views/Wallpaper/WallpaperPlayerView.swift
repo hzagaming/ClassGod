@@ -392,7 +392,7 @@ final class VideoWallpaperNSView: NSView {
             queue: .main
         ) { [weak self, weak player] _ in
             Task { @MainActor [weak self, weak player] in
-                guard let self, let player else { return }
+                guard let self, let player, self.playerLayer?.player === player else { return }
                 let engine = WallpaperEngine.shared
                 switch WallpaperLoopPolicy.action(
                     mode: engine.playbackMode,

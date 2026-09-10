@@ -2,7 +2,7 @@
 
 ## 项目定位
 
-ClassGod 本质上是一个**紧急切屏工具**——帮用户在关键时刻（比如老师来了、老板路过）瞬间切回指定页面。当前版本 v1.5.53 (Build 78)，核心逻辑是 AppleScript + Carbon HotKey + SwiftUI。
+ClassGod 本质上是一个**紧急切屏工具**——帮用户在关键时刻（比如老师来了、老板路过）瞬间切回指定页面。当前版本 v1.5.54 (Build 79)，核心逻辑是 AppleScript + Carbon HotKey + SwiftUI。
 
 ## 技术约束
 
@@ -24,6 +24,14 @@ ClassGod 本质上是一个**紧急切屏工具**——帮用户在关键时刻�
 - `SwitchTarget` / `AppIconStyle` / `WallpaperPlaybackMode` / `ClipoItem`：SuperSwitch、图标伪装、壁纸与剪贴板中心相关模型
 - `ClassGodNote` / `NotesSnapshot`：本地笔记与持久化快照模型
 - `FocusFlowPhase` / `FocusFlowPreset` / `FocusFlowDailyStats`：专注流阶段、节奏预设与每日统计模型
+- `RecallCard` / `RecallPolicy`：本地问答卡、输入校验与间隔复习规则
+- `SwitchDrillSession` / `SwitchDrillTarget`：快切演练状态机、已注册目标与反应/切换计时
+- `ReadingLanePolicy` / `ReadingLaneSession`：保留 Unicode 字符的阅读分段、进度与回看规则
+- `ScreenCurtainSession`：使用单调时钟的临时幕布期限与退出状态
+- `NumberSprintPolicy` / `NumberSprintSession`：十题心算生成、运算均衡与首次/重试/揭晓计分
+- `ReturnApplication` / `ReturnDockPolicy`：以 PID、bundle ID 和启动时间识别原应用进程
+- `TeachBackSession`：四步讲解草稿、Unicode 输入限制与人工自检
+- `QuietDevice`：音频输出 UID 与显示名称；恢复以 UID 定位
 - `GitHubRelease` / `GitHubReleaseAsset` / `AppVersion`：更新元数据、安装资产与版本比较模型
 
 ### Services
@@ -39,6 +47,14 @@ ClassGod 本质上是一个**紧急切屏工具**——帮用户在关键时刻�
 - `PermissionCenterService`：集中管理所有 macOS 权限（Accessibility / AppleEvents / Screen Recording / Full Disk / Mic / Camera / Location / Notifications / Contacts / Reminders / Calendar / Bluetooth）。支持实时状态检测、按 feature 分类展示、一键请求 / 跳转系统设置、First-Time Setup 引导流程。
 - `NotesService`：管理多笔记、搜索、置顶、自动保存与损坏文件备份；数据保存在 Application Support，不写入仓库
 - `FocusFlowService`：无漂移专注/休息计时器，支持暂停、跳过、四轮长休息和本机每日统计
+- `RecallLabService`：问答卡管理、揭晓与评分、自动保存、损坏文件备份；数据保存在 Application Support
+- `SwitchDrillService`：随机信号演练、目标变更取消、过期回调过滤；最近五轮成绩仅保留在内存中
+- `ReadingLaneService`：本次应用会话内的学习材料与逐段阅读进度，不写入磁盘
+- `ScreenCurtainController`：跨显示器临时幕布，Escape/按钮/超时/应用失焦/睡眠/屏幕变化时退出；不修改下方应用
+- `NumberSprintService`：本次会话的难度选择、心算练习与结果，不写入磁盘
+- `ReturnDockService`：默认关闭，目标快捷键成功跨应用切换后保留最近五条返回记录；只激活原进程，关闭功能或退出应用清空
+- `TeachBackService`：本次会话的概念讲解、例子、疑问与自检，不写入磁盘
+- `QuietDeskService` / `QuietAudioHardware`：Core Audio 输出主声道静音，写入后读回验证；原设备恢复失败保留重试入口，正常退出时尝试恢复，监测计时器随面板关闭清理
 - `UpdateService`：启动时及每 6 小时检查 GitHub 最新正式 Release，验证 HTTPS、大小与 SHA-256 后打开 macOS 安装器
 
 ### Utilities
@@ -65,6 +81,10 @@ ClassGod 本质上是一个**紧急切屏工具**——帮用户在关键时刻�
 - `WallpaperBrowserView`：视频/动态壁纸选择器。
 - `NotesView`：Notes 风格双栏编辑器，通过跨应用、Spaces 与全屏的悬浮窗口持续显示。
 - `FocusFlowView`：Good Student 模式的专注循环面板，包含进度环、节奏预设、阶段控制与每日统计。
+- `RecallLabView` / `SwitchDrillView`：蓝色回忆训练与红色快切演练，共用可缩放的 `TrainingPanel` 窗口样式。
+- `ReadingLaneView` / `ScreenCurtainView`：蓝色逐段阅读与红色幕布控制页；`ScreenCurtainOverlay` 为不透明的临时遮挡层。
+- `NumberSprintView` / `ReturnDockView`：蓝色心算练习与红色返回台，共用 `TrainingPanel` 的缩放与关闭规则。
+- `TeachBackView` / `QuietDeskView`：蓝色讲解工坊与红色静音台；静音台开关窗口不播放音效。
 - `UpdateSettingsView`：软件更新状态、Release 说明、下载进度与安装入口。
 
 ## 开发规范

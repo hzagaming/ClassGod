@@ -25,7 +25,7 @@
   </p>
 </div>
 
-> Current release: **v1.5.53 (Build 78)**. Download the DMG or PKG from [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest).
+> Source version: **v1.5.54 (Build 79)**. Published downloads are available on [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest).
 
 ## Why ClassGod
 
@@ -45,12 +45,28 @@ It has grown into a focused desktop toolkit while keeping the same rule: user da
 | **Todo** | Organizes local tasks with smart lists, projects, priorities, subtasks, recurrence, search, and a Focus Pulse dashboard. |
 | **Schedule Lab** | Builds a local weekly timetable with live status, conflict detection, overlap lanes, locations, notes, and colors. |
 | **Focus Flow** | Runs drift-free focus and recovery cycles with three rhythms, long-break cadence, and local daily statistics. |
+| **Recall Lab** | Good Student: creates local question cards, reveals answers on demand, and schedules reviews from your recall rating. |
+| **Switch Drill** | Bad Student: rehearses registered destination shortcuts with randomized cues, separate reaction/switch timing, and the last five results. |
+| **Reading Lane** | Good Student: reads pasted study material one passage at a time, with manual progress, backtracking, and a reflection prompt. |
+| **Screen Curtain** | Bad Student: temporarily covers connected displays, with Escape dismissal and automatic return after 15–120 seconds. |
+| **Number Sprint** | Good Student: ten arithmetic questions in three levels, with retries, answer reveal, and separate first-try and corrected scores. |
+| **Return Dock** | Bad Student: opt-in return tickets after successful DestinTab or SuperSwitch target shortcuts, returning to the original running app. |
+| **Teach Back** | Good Student: develops a concept through an explanation, example, and open questions, with a self-check and plain-text copy. |
+| **Quiet Desk** | Bad Student: temporarily mutes a supported default audio output and keeps a restoration for that exact device without changing its volume. |
 | **Software Update** | Checks stable GitHub releases automatically, verifies installer metadata and SHA-256, then opens the macOS Installer. |
 | **Permission Center** | Shows every supported macOS permission, its live state, why it is used, and the exact system settings destination. |
 | **Fan Control** | Reads available temperature and fan data, supports System, Max, Manual, and Custom policies, and uses a privileged helper when approved. |
 | **Widgets** | Provides 19 native WidgetKit widgets, including system, weather, notes, tasks, files, terminal, and launcher views. |
 | **Desktop tools** | Includes Activity Monitor, dynamic wallpapers, Hacker Desktop, Error Hub, BrowserBypasser, and AssessPrep tools. |
 | **Personalization** | Uses a black visual base with a custom accent, scalable windows, animation controls, sound effects, and haptic feedback. |
+
+Recall Lab and Switch Drill are additions in the current development tree. Recall cards stay in Application Support; drill results last only for the current app session. A drill executes the selected shortcut with its existing settings, so it really switches apps or browser tabs.
+
+Reading Lane and Screen Curtain also belong to the development build. Reading material and progress remain in memory until quit. The curtain is a visual cover, not a lock or recording blocker; switching apps, sleep, or display changes dismiss it.
+
+Number Sprint and Return Dock keep session data in memory. Return Dock defaults to off, keeps five tickets, and clears them when disabled or on quit. It does not reopen closed apps or restore browser tabs, windows, or cursor positions.
+
+Teach Back and Quiet Desk bring the development menu to eleven features per student mode. Teach Back drafts stay in memory until quit; the worksheet provides self-checks, not automatic fact checking. Quiet Desk controls the writable main mute property of one output device and remembers its UID for restoration. Closing the panel keeps it muted; normal quit attempts restoration. Unsupported outputs, microphones, and independently routed audio are outside its scope.
 
 ## Privacy by design
 
@@ -173,9 +189,9 @@ ClassGod/ClassGodTests/    App tests
 ClassGodHelper/            Privileged helper Swift package and tests
 ```
 
-## Latest announcement: v1.5.53
+## Latest changes: v1.5.54
 
-This release completes disabled-state feedback across reusable controls. Hover scaling now follows SwiftUI's environment-enabled state, and action rows clear highlights and dim consistently with Toggle and Picker rows. Disabled shortcut reset and active-uninstall actions no longer look interactive. A full UI/UX/SFX/BGM review reconfirmed reduced-motion and instant-animation behavior, semantic and bounded sound playback, wallpaper audio ownership and teardown, resource cleanup, and the trusted GitHub update path; no continuous BGM was added. Verification covers 253 main-app tests, 17 helper tests, static analysis, Debug and Release builds, isolated native launch smoke testing, localization parsing, and version consistency.
+Good Student gains Recall Lab, Reading Lane, Number Sprint, and Teach Back; Bad Student gains Switch Drill, Screen Curtain, Return Dock, and Quiet Desk. Both modes now offer eleven tools. Turning sound effects off stops active sounds and cancels queued bursts, animation audio has a shared four-channel limit with reduced gain, and removed wallpaper players cannot advance the playlist. Quiet Desk keeps recovery actions and failure feedback together and distinguishes the last operation from current output status.
 
 Read [CHANGELOG.md](CHANGELOG.md) for current releases and [CHANGELOG_HISTORY.md](CHANGELOG_HISTORY.md) for older history.
 

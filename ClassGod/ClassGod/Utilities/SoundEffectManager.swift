@@ -7,6 +7,16 @@
 
 import Foundation
 import AppKit
+import Combine
+
+protocol EffectSound: AnyObject {
+    var isPlaying: Bool { get }
+    var volume: Float { get set }
+    @discardableResult func play() -> Bool
+    @discardableResult func stop() -> Bool
+}
+
+extension NSSound: EffectSound {}
 
 nonisolated enum SoundPlaybackPolicy {
     static func channelIndex(isPlaying: [Bool], limit: Int) -> Int? {
@@ -37,18 +47,20 @@ nonisolated enum UserInteractionFeedbackPolicy {
 }
 
 nonisolated enum WindowSoundPolicy {
+    static func isSilent(feature: String) -> Bool { feature == "quietdesk" }
+
     static func openSoundName(feature: String) -> String? {
         switch feature {
-        case "preflight", "schedule": "Morse"
+        case "preflight", "schedule", "switchdrill": "Morse"
         case "destintab", "errorhub": "Basso"
         case "superswitch", "fancontrol", "todo": "Ping"
         case "browserbypasser", "hackerdesktop": "Sosumi"
         case "assessprephack": "Funk"
         case "activitymonitor": "Tink"
         case "permissioncenter", "clipo", "notes", "settings": "Glass"
-        case "focusflow": "Bottle"
+        case "focusflow", "recalllab", "readinglane", "numbersprint", "teachback": "Bottle"
         case "wallpaper": "Blow"
-        case "ghostprotocol", "fakelock": "Submarine"
+        case "ghostprotocol", "fakelock", "screencurtain", "returndock": "Submarine"
         default: nil
         }
     }
@@ -58,7 +70,7 @@ nonisolated enum WindowSoundPolicy {
         case "preflight", "destintab", "superswitch", "browserbypasser", "assessprephack",
              "hackerdesktop", "fancontrol", "activitymonitor", "permissioncenter", "errorhub",
              "ghostprotocol", "clipo", "notes", "todo", "schedule", "focusflow", "settings",
-             "wallpaper", "fakelock":
+             "wallpaper", "fakelock", "recalllab", "switchdrill", "readinglane", "screencurtain", "numbersprint", "returndock", "teachback":
             "Tink"
         default:
             nil
@@ -133,25 +145,40 @@ enum SoundEffect: String, CaseIterable {
 final class SoundEffectManager {
     static let shared = SoundEffectManager()
     
-    private var isEnabled: Bool {
-        PreferencesManager.shared.preferences.enableSoundEffects
-    }
-
-    private var sounds: [String: NSSound] = [:]
-    private var overlapSounds: [String: [NSSound]] = [:]
+    private var isEnabled = false
+    private var preferenceSubscription: AnyCancellable?
+    private let makeSound: (Data) -> (any EffectSound)?
+    private let schedule: (TimeInterval, @escaping () -> Void) -> Void
+    private var sounds: [String: any EffectSound] = [:]
+    private var overlapSounds: [String: [any EffectSound]] = [:]
     private var glitchGeneration = 0
     private var lastPlayedSound: (name: String, uptime: TimeInterval)?
     private let maximumOverlapChannels = 4
     private let minimumRepeatedSoundInterval: TimeInterval = 0.04
     
-    private init() {}
+    init(
+        enabled: AnyPublisher<Bool, Never> = PreferencesManager.shared.$preferences.map(\.enableSoundEffects).eraseToAnyPublisher(),
+        makeSound: @escaping (Data) -> (any EffectSound)? = { NSSound(data: $0) },
+        schedule: @escaping (TimeInterval, @escaping () -> Void) -> Void = { delay, action in
+            DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: action)
+        }
+    ) {
+        self.makeSound = makeSound
+        self.schedule = schedule
+        preferenceSubscription = enabled.removeDuplicates().sink { [weak self] value in
+            guard let self else { return }
+            self.isEnabled = value
+            if !value { self.stopAllSounds() }
+        }
+    }
 
     func play(_ effect: SoundEffect) {
         guard isEnabled else { return }
         playSound(named: effect.systemSoundName)
     }
 
-    private func playSound(named name: String, allowsOverlap: Bool = false) {
+    func playSound(named name: String, allowsOverlap: Bool = false) {
+        guard isEnabled else { return }
         let uptime = ProcessInfo.processInfo.systemUptime
         guard SoundPlaybackPolicy.shouldPlay(
             name: name,
@@ -162,16 +189,18 @@ final class SoundEffectManager {
         ) else { return }
 
         if allowsOverlap {
+            guard overlapSounds.values.flatMap({ $0 }).filter(\.isPlaying).count < maximumOverlapChannels else { return }
             var channels = overlapSounds[name] ?? []
             guard let index = SoundPlaybackPolicy.channelIndex(
                 isPlaying: channels.map(\.isPlaying),
                 limit: maximumOverlapChannels
             ) else { return }
             if index == channels.count {
-                guard let sound = NSSound(data: makeToneData(named: name)) else { return }
+                guard let sound = makeSound(makeToneData(named: name)) else { return }
                 channels.append(sound)
                 overlapSounds[name] = channels
             }
+            channels[index].volume = 0.35
             channels[index].play()
             return
         }
@@ -179,10 +208,10 @@ final class SoundEffectManager {
         sounds.values.forEach { $0.stop() }
         overlapSounds.values.flatMap { $0 }.forEach { $0.stop() }
 
-        let sound: NSSound
+        let sound: any EffectSound
         if let cached = sounds[name] {
             sound = cached
-        } else if let created = NSSound(data: makeToneData(named: name)) {
+        } else if let created = makeSound(makeToneData(named: name)) {
             sounds[name] = created
             sound = created
         } else {
@@ -311,10 +340,10 @@ final class SoundEffectManager {
     }
     
     func playGlitchBurst(count: Int) {
-        guard isEnabled else { return }
+        guard isEnabled, count > 0 else { return }
         let generation = glitchGeneration
         for i in 0..<count {
-            DispatchQueue.main.asyncAfter(deadline: .now() + Double(i) * 0.05) { [weak self] in
+            schedule(Double(i) * 0.05) { [weak self] in
                 guard let self, self.glitchGeneration == generation else { return }
                 self.playGlitchSound()
             }
@@ -322,10 +351,10 @@ final class SoundEffectManager {
     }
     
     func playCloseBurst(count: Int) {
-        guard isEnabled else { return }
+        guard isEnabled, count > 0 else { return }
         let generation = glitchGeneration
         for i in 0..<count {
-            DispatchQueue.main.asyncAfter(deadline: .now() + Double(i) * 0.04) { [weak self] in
+            schedule(Double(i) * 0.04) { [weak self] in
                 guard let self, self.glitchGeneration == generation else { return }
                 self.playGlitchSound()
             }
@@ -335,6 +364,12 @@ final class SoundEffectManager {
     func cancelGlitchSounds() {
         glitchGeneration &+= 1
         overlapSounds.values.flatMap { $0 }.forEach { $0.stop() }
+    }
+
+    func stopAllSounds() {
+        cancelGlitchSounds()
+        sounds.values.forEach { $0.stop() }
+        lastPlayedSound = nil
     }
     
     func playHackerRevealSound() {
@@ -350,7 +385,7 @@ final class SoundEffectManager {
     // MARK: - Window Switch SFX
     
     func playWindowOpen(feature: String = "") {
-        guard isEnabled else { return }
+        guard isEnabled, !WindowSoundPolicy.isSilent(feature: feature) else { return }
         guard let name = WindowSoundPolicy.openSoundName(feature: feature) else {
             playPopoverOpen()
             return
@@ -359,7 +394,7 @@ final class SoundEffectManager {
     }
     
     func playWindowClose(feature: String = "") {
-        guard isEnabled else { return }
+        guard isEnabled, !WindowSoundPolicy.isSilent(feature: feature) else { return }
         guard let name = WindowSoundPolicy.closeSoundName(feature: feature) else {
             playPopoverClose()
             return

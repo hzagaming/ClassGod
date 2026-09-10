@@ -4,7 +4,7 @@
 
 [English](../../README.md) · **简体中文** · [繁體中文](README.zh-Hant.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Français](README.fr.md) · [Deutsch](README.de.md) · [Español](README.es.md) · [Português](README.pt.md) · [Русский](README.ru.md)
 
-> 当前版本：**v1.5.53 (Build 78)**。可从 [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest) 下载 DMG 或 PKG。
+> 源码版本：**v1.5.54 (Build 79)**。已发布安装包请查看 [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest)。
 
 ## ClassGod 是什么
 
@@ -23,10 +23,26 @@ ClassGod 常驻 macOS 菜单栏。你可以保存浏览器目标、绑定全局�
 | **Todo** | 本地智能清单、项目、优先级、子任务、重复任务、搜索与专注脉冲面板。 |
 | **Schedule Lab** | 本地周日程、当前与下一项状态、冲突检测、重叠分栏、地点、备注和颜色。 |
 | **Focus Flow** | 无漂移专注与恢复循环、三套节奏、长休息周期和本地每日统计。 |
+| **回忆训练 / Recall Lab** | 好学生模式：本地问答卡、主动回忆、揭晓答案，并按记忆评分安排间隔复习。 |
+| **快切演练 / Switch Drill** | 坏学生模式：随机提示后练习已注册的目标快捷键，分别记录反应与切换用时，保留最近五轮结果。 |
+| **逐段阅读 / Reading Lane** | 好学生模式：粘贴学习材料，逐段阅读、手动推进、前后回看，并在读完后回忆主旨。 |
+| **屏幕幕布 / Screen Curtain** | 坏学生模式：临时遮住当前连接的屏幕，Escape 退出，15–120 秒后自动恢复。 |
+| **心算练习 / Number Sprint** | 好学生模式：三种难度、每轮十题，支持重试与查看答案，分别统计首次答对和重试答对。 |
+| **返回台 / Return Dock** | 坏学生模式：开启后，DestinTab 或 SuperSwitch 的目标快捷键成功切换时留下记录，可返回仍在运行的原应用。 |
+| **讲解工坊 / Teach Back** | 好学生模式：按概念、解释、例子和疑问整理学习，支持自检和纯文本复制。 |
+| **静音台 / Quiet Desk** | 坏学生模式：临时静音支持控制的默认音频输出，保留原设备的恢复入口，不改变音量数值。 |
 | **Permission Center** | 展示全部支持权限的实时状态、用途、检测方式和精确系统设置入口。 |
 | **Fan Control** | 读取可用温度与风扇数据，支持 System、Max、Manual、Custom 模式；用户批准后可使用特权 Helper。 |
 | **Widgets** | 19 个原生 WidgetKit 小组件，覆盖系统、天气、便签、任务、文件、终端和应用启动。 |
 | **桌面工具** | Activity Monitor、动态壁纸、Hacker Desktop、Error Hub、BrowserBypasser 和 AssessPrep 工具。 |
+
+回忆训练与快切演练是当前开发代码中的新增模块。问答卡保存在本机 Application Support；演练成绩仅保留在本次应用会话中。演练沿用目标现有的快捷键与设置，会真实切换应用或浏览器标签。
+
+逐段阅读与屏幕幕布同样属于开发版。阅读材料和进度仅保留在内存中，退出应用后清除。幕布是视觉遮挡，不是锁屏或录屏阻断；切换应用、睡眠或显示器变化时会自动收起。
+
+心算练习与返回台的会话数据均只保留在内存中。返回台默认关闭，最多保留五条记录，关闭功能或退出应用即清除；不重新打开已退出的应用，也不恢复浏览器标签、窗口或光标位置。
+
+讲解工坊与静音台让开发版两种学生模式各有十一项功能。讲解草稿退出后清除，只提供自检，不自动判断知识对错。静音台仅使用一个输出设备可写的主声道静音属性，以设备 UID 定位恢复目标；关闭面板会保持静音，正常退出时尝试恢复。不支持的输出、麦克风和独立路由的音频不受它控制。
 
 ## 隐私承诺
 

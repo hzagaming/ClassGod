@@ -48,6 +48,7 @@ nonisolated enum FeatureWindowKind: CaseIterable {
     case preflight, destinTab, superSwitch, ghostProtocol, browserBypasser, assessPrepHack
     case settings, wallpaper, hackerDesktop, clipo, notes, todo, schedule, focusFlow, errorHub, fanControl
     case activityMonitor, permissionCenter, fakeLock
+    case recallLab, switchDrill, readingLane, screenCurtain, numberSprint, returnDock, teachBack, quietDesk
 }
 
 nonisolated enum ClickOutsideWindowPolicy {
@@ -80,6 +81,10 @@ nonisolated enum FeatureWindowLayoutPolicy {
         case .todo: return .init(defaultWidth: 960, defaultHeight: 680, minimumWidth: 720, minimumHeight: 500)
         case .schedule: return .init(defaultWidth: 980, defaultHeight: 700, minimumWidth: 760, minimumHeight: 520)
         case .focusFlow: return .init(defaultWidth: 760, defaultHeight: 560, minimumWidth: 560, minimumHeight: 460)
+        case .recallLab: return .init(defaultWidth: 780, defaultHeight: 700, minimumWidth: 520, minimumHeight: 460)
+        case .switchDrill: return .init(defaultWidth: 760, defaultHeight: 720, minimumWidth: 520, minimumHeight: 460)
+        case .readingLane: return .init(defaultWidth: 780, defaultHeight: 700, minimumWidth: 520, minimumHeight: 460)
+        case .screenCurtain, .numberSprint, .returnDock, .teachBack, .quietDesk: return .init(defaultWidth: 720, defaultHeight: 700, minimumWidth: 520, minimumHeight: 460)
         case .errorHub: return .init(defaultWidth: 700, defaultHeight: 640, minimumWidth: 460, minimumHeight: 400)
         case .fanControl: return .init(defaultWidth: 680, defaultHeight: 680, minimumWidth: 500, minimumHeight: 460)
         case .activityMonitor: return .init(defaultWidth: 1_000, defaultHeight: 680, minimumWidth: 720, minimumHeight: 480)
@@ -91,7 +96,7 @@ nonisolated enum FeatureWindowLayoutPolicy {
     static func screenMargin(for kind: FeatureWindowKind) -> CGFloat {
         switch kind {
         case .hackerDesktop: 100
-        case .clipo, .notes, .todo, .schedule, .focusFlow, .activityMonitor,
+        case .clipo, .notes, .todo, .schedule, .focusFlow, .recallLab, .switchDrill, .readingLane, .screenCurtain, .numberSprint, .returnDock, .teachBack, .quietDesk, .activityMonitor,
              .permissionCenter, .fakeLock: 80
         default: 40
         }
@@ -192,6 +197,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var todoWindow: NSWindow?
     var scheduleWindow: NSWindow?
     var focusFlowWindow: NSWindow?
+    var recallLabWindow: NSWindow?
+    var switchDrillWindow: NSWindow?
+    var readingLaneWindow: NSWindow?
+    var screenCurtainWindow: NSWindow?
+    var numberSprintWindow: NSWindow?
+    var returnDockWindow: NSWindow?
+    var teachBackWindow: NSWindow?
+    var quietDeskWindow: NSWindow?
     var errorHubWindow: NSWindow?
     var fanControlWindow: NSWindow?
     var activityMonitorWindow: NSWindow?
@@ -224,6 +237,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        #if DEBUG
+        if ProcessInfo.processInfo.environment["CLASSGOD_TEST_HOST"] == "1" { return }
+        #endif
         let launchAnimationDuration = Anim.duration
         showSplashScreen()
         UpdateService.shared.start()
@@ -343,6 +359,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         FakeLockService.shared.stop()
         ClipoService.shared.stop()
         GhostProtocolController.shared.shutdown()
+        SwitchDrillService.shared.cancel()
+        ScreenCurtainController.shared.hide()
+        ReturnDockService.shared.setEnabled(false)
+        QuietDeskService.shared.shutdown()
         ShortcutCatalogCoordinator.shared.stop()
         AssessPrepHackViewModel.shared.stopAllBypasses()
         DesktopWallpaperController.shared.hideWallpapers()
@@ -512,6 +532,22 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             self?.showScheduleWindow()
         }, onOpenFocusFlow: { [weak self] in
             self?.showFocusFlowWindow()
+        }, onOpenRecallLab: { [weak self] in
+            self?.showTrainingWindow(.recallLab)
+        }, onOpenSwitchDrill: { [weak self] in
+            self?.showTrainingWindow(.switchDrill)
+        }, onOpenReadingLane: { [weak self] in
+            self?.showTrainingWindow(.readingLane)
+        }, onOpenScreenCurtain: { [weak self] in
+            self?.showTrainingWindow(.screenCurtain)
+        }, onOpenNumberSprint: { [weak self] in
+            self?.showTrainingWindow(.numberSprint)
+        }, onOpenReturnDock: { [weak self] in
+            self?.showTrainingWindow(.returnDock)
+        }, onOpenTeachBack: { [weak self] in
+            self?.showTrainingWindow(.teachBack)
+        }, onOpenQuietDesk: { [weak self] in
+            self?.showTrainingWindow(.quietDesk)
         }, onOpenFanControl: { [weak self] in
             self?.showFanControlWindow()
         }, onOpenErrorHub: { [weak self] in
@@ -1875,6 +1911,133 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         windowTargetIsVisible(window) ? hideFocusFlowWindow() : showFocusFlowWindow(animated: true)
     }
 
+    // MARK: - Training Windows
+
+    private func trainingWindow(_ kind: FeatureWindowKind) -> NSWindow? {
+        switch kind {
+        case .recallLab: recallLabWindow
+        case .switchDrill: switchDrillWindow
+        case .readingLane: readingLaneWindow
+        case .screenCurtain: screenCurtainWindow
+        case .numberSprint: numberSprintWindow
+        case .returnDock: returnDockWindow
+        case .teachBack: teachBackWindow
+        case .quietDesk: quietDeskWindow
+        default: nil
+        }
+    }
+
+    private func showTrainingWindow(_ kind: FeatureWindowKind) {
+        if kind == .quietDesk { QuietDeskService.shared.startMonitoring() }
+        guard [.recallLab, .switchDrill, .readingLane, .screenCurtain, .numberSprint, .returnDock, .teachBack, .quietDesk].contains(kind) else { return }
+        let isRecall = kind == .recallLab
+        let window: NSWindow
+        if let existing = trainingWindow(kind) {
+            window = existing
+        } else {
+            let zoom = CGFloat(PreferencesManager.shared.preferences.windowZoomScale)
+            let created = DraggableWindow(
+                contentRect: NSRect(origin: .zero, size: featureWindowSize(kind, zoom: zoom, screen: NSScreen.main)),
+                styleMask: [.borderless], backing: .buffered, defer: false
+            )
+            configureFeatureWindow(created, kind: kind, zoom: zoom)
+            created.level = windowLevel
+            created.backgroundColor = .clear
+            created.hasShadow = true
+            created.isMovableByWindowBackground = false
+            created.isReleasedWhenClosed = false
+            created.isOpaque = false
+            centerWindowOnScreen(created)
+            constrainWindowToVisibleScreen(created)
+            created.contentView = NSHostingView(rootView: Group {
+                if isRecall {
+                    RecallLabView(onClose: { [weak self] in self?.hideTrainingWindow(.recallLab) })
+                } else if kind == .readingLane {
+                    ReadingLaneView(onClose: { [weak self] in self?.hideTrainingWindow(.readingLane) })
+                } else if kind == .teachBack {
+                    TeachBackView(onClose: { [weak self] in self?.hideTrainingWindow(.teachBack) })
+                } else if kind == .quietDesk {
+                    QuietDeskView(onClose: { [weak self] in self?.hideTrainingWindow(.quietDesk) })
+                } else if kind == .numberSprint {
+                    NumberSprintView(onClose: { [weak self] in self?.hideTrainingWindow(.numberSprint) })
+                } else if kind == .returnDock {
+                    ReturnDockView(
+                        onClose: { [weak self] in self?.hideTrainingWindow(.returnDock) },
+                        onOpenDestinTab: { [weak self] in
+                            self?.hideTrainingWindow(.returnDock)
+                            self?.showDestinTabWindow()
+                        }
+                    )
+                } else if kind == .screenCurtain {
+                    ScreenCurtainView(onClose: { [weak self] in self?.hideTrainingWindow(.screenCurtain) })
+                } else {
+                    SwitchDrillView(
+                        onClose: { [weak self] in self?.hideTrainingWindow(.switchDrill) },
+                        onOpenPreflight: { [weak self] in
+                            self?.hideTrainingWindow(.switchDrill)
+                            self?.showPreflightWindow()
+                        }
+                    )
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .overlay(WindowResizeHandles()))
+            updateWindowCornerMask(created)
+            switch kind {
+            case .recallLab: recallLabWindow = created
+            case .switchDrill: switchDrillWindow = created
+            case .readingLane: readingLaneWindow = created
+            case .screenCurtain: screenCurtainWindow = created
+            case .numberSprint: numberSprintWindow = created
+            case .returnDock: returnDockWindow = created
+            case .teachBack: teachBackWindow = created
+            case .quietDesk: quietDeskWindow = created
+            default: break
+            }
+            window = created
+        }
+        guard beginWindowTransition(window, targetVisible: true) != nil else { return }
+        SoundEffectManager.shared.playWindowOpen(feature: String(describing: kind).lowercased())
+        NSApp.activate(ignoringOtherApps: true)
+        if Anim.enabled {
+            window.alphaValue = 0
+            window.makeKeyAndOrderFront(nil)
+            NSAnimationContext.runAnimationGroup { context in
+                context.duration = Anim.duration
+                context.timingFunction = .init(name: .easeOut)
+                window.animator().alphaValue = targetWindowAlpha
+            }
+        } else {
+            window.alphaValue = targetWindowAlpha
+            window.makeKeyAndOrderFront(nil)
+        }
+    }
+
+    private func hideTrainingWindow(_ kind: FeatureWindowKind) {
+        if kind == .quietDesk { QuietDeskService.shared.stopMonitoring() }
+        guard [.recallLab, .switchDrill, .readingLane, .screenCurtain, .numberSprint, .returnDock, .teachBack, .quietDesk].contains(kind) else { return }
+        let isRecall = kind == .recallLab
+        guard let window = trainingWindow(kind),
+              let transition = beginWindowTransition(window, targetVisible: false) else { return }
+        if isRecall { RecallLabService.shared.flush() }
+        else if kind == .switchDrill { SwitchDrillService.shared.cancel() }
+        else if kind == .screenCurtain { ScreenCurtainController.shared.hide() }
+        SoundEffectManager.shared.playWindowClose(feature: String(describing: kind).lowercased())
+        guard Anim.enabled else {
+            window.alphaValue = 0
+            window.orderOut(nil)
+            return
+        }
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = Anim.duration
+            window.animator().alphaValue = 0
+        } completionHandler: { [weak self, weak window] in
+            guard let self, let window,
+                  self.isCurrentWindowTransition(transition, for: window, targetVisible: false) else { return }
+            window.orderOut(nil)
+        }
+    }
+
     // MARK: - Error Hub Window
 
     private func setupErrorHubWindow() {
@@ -2234,7 +2397,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let windows = [
             mainWindow, preflightWindow, destinTabWindow, superSwitchWindow, ghostProtocolWindow,
             browserBypasserWindow, assessPrepHackWindow, settingsWindow,
-            wallpaperBrowserWindow, hackerDesktopWindow, clipoWindow, notesWindow, todoWindow, scheduleWindow, focusFlowWindow, errorHubWindow,
+            wallpaperBrowserWindow, hackerDesktopWindow, clipoWindow, notesWindow, todoWindow, scheduleWindow, focusFlowWindow, recallLabWindow, switchDrillWindow, readingLaneWindow, screenCurtainWindow, numberSprintWindow, returnDockWindow, teachBackWindow, quietDeskWindow, errorHubWindow,
             fanControlWindow, activityMonitorWindow, permissionCenterWindow, fakeLockWindow,
         ]
         for window in windows.compactMap({ $0 }) {
@@ -2712,6 +2875,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         todoWindow?.level = level
         scheduleWindow?.level = level
         focusFlowWindow?.level = level
+        recallLabWindow?.level = level
+        switchDrillWindow?.level = level
+        readingLaneWindow?.level = level
+        screenCurtainWindow?.level = level
+        numberSprintWindow?.level = level
+        returnDockWindow?.level = level
+        teachBackWindow?.level = level
+        quietDeskWindow?.level = level
         errorHubWindow?.level = level
         fanControlWindow?.level = level
         activityMonitorWindow?.level = level
@@ -2723,7 +2894,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let windows = [
             mainWindow, preflightWindow, destinTabWindow, superSwitchWindow, ghostProtocolWindow,
             browserBypasserWindow, assessPrepHackWindow, settingsWindow,
-            wallpaperBrowserWindow, hackerDesktopWindow, clipoWindow, notesWindow, todoWindow, scheduleWindow, focusFlowWindow, errorHubWindow,
+            wallpaperBrowserWindow, hackerDesktopWindow, clipoWindow, notesWindow, todoWindow, scheduleWindow, focusFlowWindow, recallLabWindow, switchDrillWindow, readingLaneWindow, screenCurtainWindow, numberSprintWindow, returnDockWindow, teachBackWindow, quietDeskWindow, errorHubWindow,
             fanControlWindow, activityMonitorWindow, permissionCenterWindow, fakeLockWindow,
         ]
         for window in windows.compactMap({ $0 }) where windowTargetIsVisible(window) {
@@ -2735,7 +2906,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let windows = [
             mainWindow, preflightWindow, destinTabWindow, superSwitchWindow, ghostProtocolWindow,
             browserBypasserWindow, assessPrepHackWindow, settingsWindow,
-            wallpaperBrowserWindow, hackerDesktopWindow, clipoWindow, notesWindow, todoWindow, scheduleWindow, focusFlowWindow, errorHubWindow,
+            wallpaperBrowserWindow, hackerDesktopWindow, clipoWindow, notesWindow, todoWindow, scheduleWindow, focusFlowWindow, recallLabWindow, switchDrillWindow, readingLaneWindow, screenCurtainWindow, numberSprintWindow, returnDockWindow, teachBackWindow, quietDeskWindow, errorHubWindow,
             fanControlWindow, activityMonitorWindow, permissionCenterWindow, fakeLockWindow,
         ]
         windows.compactMap { $0 }.forEach(updateWindowCornerMask)
@@ -2759,6 +2930,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             (todoWindow as? DraggableWindow, .todo),
             (scheduleWindow as? DraggableWindow, .schedule),
             (focusFlowWindow as? DraggableWindow, .focusFlow),
+            (recallLabWindow as? DraggableWindow, .recallLab),
+            (switchDrillWindow as? DraggableWindow, .switchDrill),
+            (readingLaneWindow as? DraggableWindow, .readingLane),
+            (screenCurtainWindow as? DraggableWindow, .screenCurtain),
+            (numberSprintWindow as? DraggableWindow, .numberSprint),
+            (returnDockWindow as? DraggableWindow, .returnDock),
+            (teachBackWindow as? DraggableWindow, .teachBack),
+            (quietDeskWindow as? DraggableWindow, .quietDesk),
             (errorHubWindow as? DraggableWindow, .errorHub),
             (fanControlWindow as? DraggableWindow, .fanControl),
             (activityMonitorWindow as? DraggableWindow, .activityMonitor),
@@ -2834,6 +3013,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         case .todo: (todoWindow, { [weak self] in self?.hideTodoWindow() })
         case .schedule: (scheduleWindow, { [weak self] in self?.hideScheduleWindow() })
         case .focusFlow: (focusFlowWindow, { [weak self] in self?.hideFocusFlowWindow() })
+        case .recallLab: (recallLabWindow, { [weak self] in self?.hideTrainingWindow(.recallLab) })
+        case .switchDrill: (switchDrillWindow, { [weak self] in self?.hideTrainingWindow(.switchDrill) })
+        case .readingLane: (readingLaneWindow, { [weak self] in self?.hideTrainingWindow(.readingLane) })
+        case .screenCurtain: (screenCurtainWindow, { [weak self] in self?.hideTrainingWindow(.screenCurtain) })
+        case .numberSprint: (numberSprintWindow, { [weak self] in self?.hideTrainingWindow(.numberSprint) })
+        case .returnDock: (returnDockWindow, { [weak self] in self?.hideTrainingWindow(.returnDock) })
+        case .teachBack: (teachBackWindow, { [weak self] in self?.hideTrainingWindow(.teachBack) })
+        case .quietDesk: (quietDeskWindow, { [weak self] in self?.hideTrainingWindow(.quietDesk) })
         case .errorHub: (errorHubWindow, { [weak self] in self?.hideErrorHubWindow() })
         case .fanControl: (fanControlWindow, { [weak self] in self?.hideFanControlWindow() })
         case .activityMonitor: (activityMonitorWindow, { [weak self] in self?.hideActivityMonitorWindow() })
@@ -2898,6 +3085,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationWillTerminate(_ notification: Notification) {
+        #if DEBUG
+        if ProcessInfo.processInfo.environment["CLASSGOD_TEST_HOST"] == "1" { return }
+        #endif
         PermissionCenterService.shared.stopLiveMonitoring()
         permissionGateCancellable?.cancel()
         permissionGateCancellable = nil
@@ -2923,6 +3113,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         TodoService.shared.stop()
         ScheduleService.shared.stop()
         FocusFlowService.shared.stop()
+        RecallLabService.shared.flush()
+        SwitchDrillService.shared.cancel()
+        ScreenCurtainController.shared.hide()
+        ReturnDockService.shared.setEnabled(false)
+        QuietDeskService.shared.shutdown()
         UpdateService.shared.stop()
         FakeLockService.shared.stop()
         
@@ -2991,6 +3186,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         if let window = focusFlowWindow {
             window.orderOut(nil)
         }
+        recallLabWindow?.orderOut(nil)
+        switchDrillWindow?.orderOut(nil)
+        readingLaneWindow?.orderOut(nil)
+        screenCurtainWindow?.orderOut(nil)
+        numberSprintWindow?.orderOut(nil)
+        returnDockWindow?.orderOut(nil)
+        teachBackWindow?.orderOut(nil)
+        quietDeskWindow?.orderOut(nil)
         if let window = errorHubWindow {
             window.orderOut(nil)
         }
@@ -3207,24 +3410,43 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func setupGlobalHotKeyHandler() {
         ShortcutManager.shared.addHotKeyHandler { id in
             guard PermissionCenterService.shared.isGateUnlocked else { return }
+            let drillRequest = SwitchDrillService.shared.shortcutPressed(targetID: id)
             // Try BrowserTab first
             let tabs = StorageManager.shared.loadTabs()
             if let tab = tabs.first(where: { $0.id == id }) {
-                BrowserSwitcher.shared.switchToTab(tab) { _, _ in }
+                let returnRequest = ReturnDockService.shared.prepare(destination: tab.browser.bundleIdentifier)
+                BrowserSwitcher.shared.switchToTab(tab) { success, _ in
+                    SwitchDrillService.shared.complete(requestID: drillRequest, success: success)
+                    ReturnDockService.shared.complete(request: returnRequest, success: success)
+                }
                 return
             }
             
             // Try SwitchTarget
             let targets = StorageManager.shared.loadSwitchTargets()
             if let target = targets.first(where: { $0.id == id }) {
+                let returnRequest = ReturnDockService.shared.prepare(destination: target.bundleIdentifier)
                 let runningApps = NSWorkspace.shared.runningApplications
                 if let app = runningApps.first(where: { $0.bundleIdentifier == target.bundleIdentifier }) {
-                    app.activate(options: [.activateAllWindows])
+                    let success = app.activate(options: [.activateAllWindows])
+                    SwitchDrillService.shared.complete(requestID: drillRequest, success: success)
+                    ReturnDockService.shared.complete(request: returnRequest, success: success)
                 } else if let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: target.bundleIdentifier) {
                     let config = NSWorkspace.OpenConfiguration()
                     config.activates = true
-                    NSWorkspace.shared.openApplication(at: url, configuration: config)
+                    NSWorkspace.shared.openApplication(at: url, configuration: config) { application, error in
+                        let success = application != nil && error == nil
+                        Task { @MainActor in
+                            SwitchDrillService.shared.complete(requestID: drillRequest, success: success)
+                            ReturnDockService.shared.complete(request: returnRequest, success: success)
+                        }
+                    }
+                } else {
+                    SwitchDrillService.shared.complete(requestID: drillRequest, success: false)
+                    ReturnDockService.shared.complete(request: returnRequest, success: false)
                 }
+            } else {
+                SwitchDrillService.shared.complete(requestID: drillRequest, success: false)
             }
         }
     }
@@ -3248,6 +3470,14 @@ struct MenuBarWindowView: View {
     var onOpenTodo: () -> Void = {}
     var onOpenSchedule: () -> Void = {}
     var onOpenFocusFlow: () -> Void = {}
+    var onOpenRecallLab: () -> Void = {}
+    var onOpenSwitchDrill: () -> Void = {}
+    var onOpenReadingLane: () -> Void = {}
+    var onOpenScreenCurtain: () -> Void = {}
+    var onOpenNumberSprint: () -> Void = {}
+    var onOpenReturnDock: () -> Void = {}
+    var onOpenTeachBack: () -> Void = {}
+    var onOpenQuietDesk: () -> Void = {}
     var onOpenFanControl: () -> Void = {}
     var onOpenErrorHub: () -> Void = {}
     var onOpenActivityMonitor: () -> Void = {}
@@ -3255,7 +3485,7 @@ struct MenuBarWindowView: View {
     var onOpenFakeLock: () -> Void = {}
 
     var body: some View {
-        MenuBarView(onClose: onClose, onOpenPreflight: onOpenPreflight, onOpenDestinTab: onOpenDestinTab, onOpenSuperSwitch: onOpenSuperSwitch, onOpenGhostProtocol: onOpenGhostProtocol, onOpenBrowserBypasser: onOpenBrowserBypasser, onOpenAssessPrepHack: onOpenAssessPrepHack, onOpenSettings: onOpenSettings, onOpenWallpaper: onOpenWallpaper, onOpenHackerDesktop: onOpenHackerDesktop, onOpenClipo: onOpenClipo, onOpenNotes: onOpenNotes, onOpenTodo: onOpenTodo, onOpenSchedule: onOpenSchedule, onOpenFocusFlow: onOpenFocusFlow, onOpenFanControl: onOpenFanControl, onOpenErrorHub: onOpenErrorHub, onOpenActivityMonitor: onOpenActivityMonitor, onOpenPermissionCenter: onOpenPermissionCenter, onOpenFakeLock: onOpenFakeLock)
+        MenuBarView(onClose: onClose, onOpenPreflight: onOpenPreflight, onOpenDestinTab: onOpenDestinTab, onOpenSuperSwitch: onOpenSuperSwitch, onOpenGhostProtocol: onOpenGhostProtocol, onOpenBrowserBypasser: onOpenBrowserBypasser, onOpenAssessPrepHack: onOpenAssessPrepHack, onOpenSettings: onOpenSettings, onOpenWallpaper: onOpenWallpaper, onOpenHackerDesktop: onOpenHackerDesktop, onOpenClipo: onOpenClipo, onOpenNotes: onOpenNotes, onOpenTodo: onOpenTodo, onOpenSchedule: onOpenSchedule, onOpenFocusFlow: onOpenFocusFlow, onOpenRecallLab: onOpenRecallLab, onOpenSwitchDrill: onOpenSwitchDrill, onOpenReadingLane: onOpenReadingLane, onOpenScreenCurtain: onOpenScreenCurtain, onOpenNumberSprint: onOpenNumberSprint, onOpenReturnDock: onOpenReturnDock, onOpenTeachBack: onOpenTeachBack, onOpenQuietDesk: onOpenQuietDesk, onOpenFanControl: onOpenFanControl, onOpenErrorHub: onOpenErrorHub, onOpenActivityMonitor: onOpenActivityMonitor, onOpenPermissionCenter: onOpenPermissionCenter, onOpenFakeLock: onOpenFakeLock)
     }
 }
 
