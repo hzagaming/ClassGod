@@ -22,16 +22,13 @@ struct ScheduleView: View {
         let duration = Anim.duration
         return duration > 0 ? .easeOut(duration: duration) : nil
     }
-    private var conflictingIDs: Set<UUID> {
-        Set(ScheduleConflictPolicy.conflictingIDs(service.entries))
-    }
-
     var body: some View {
         TimelineView(.periodic(from: .now, by: 60)) { context in
+            let conflictingIDs = Set(ScheduleConflictPolicy.conflictingIDs(service.entries))
             HStack(spacing: 0) {
-                sidebar(now: context.date)
+                sidebar(now: context.date, conflictingIDs: conflictingIDs)
                 Divider().background(Color.white.opacity(0.1))
-                content(now: context.date)
+                content(now: context.date, conflictingIDs: conflictingIDs)
             }
         }
         .background(
@@ -73,8 +70,9 @@ struct ScheduleView: View {
         .onExitCommand(perform: onClose)
     }
 
-    private func sidebar(now: Date) -> some View {
+    private func sidebar(now: Date, conflictingIDs: Set<UUID>) -> some View {
         let today = ScheduleWeekday.current(on: now)
+        let entriesByDay = Dictionary(grouping: service.entries, by: \.weekday)
         return VStack(alignment: .leading, spacing: 13 * zoomScale) {
             HStack(spacing: 8 * zoomScale) {
                 Button(action: onClose) {
@@ -100,12 +98,18 @@ struct ScheduleView: View {
 
             VStack(spacing: 4 * zoomScale) {
                 ForEach(ScheduleWeekday.allCases) { weekday in
-                    dayButton(weekday, today: today)
+                    let entries = entriesByDay[weekday, default: []]
+                    dayButton(
+                        weekday,
+                        today: today,
+                        entryCount: entries.count,
+                        hasConflict: entries.contains { conflictingIDs.contains($0.id) }
+                    )
                 }
             }
 
             Spacer(minLength: 8 * zoomScale)
-            weeklySummary
+            weeklySummary(conflictCount: conflictingIDs.count)
         }
         .padding(14 * zoomScale)
         .frame(width: 215 * zoomScale)
@@ -114,11 +118,11 @@ struct ScheduleView: View {
 
     private func dayButton(
         _ weekday: ScheduleWeekday,
-        today: ScheduleWeekday
+        today: ScheduleWeekday,
+        entryCount: Int,
+        hasConflict: Bool
     ) -> some View {
         let selected = selectedDay == weekday
-        let entries = service.entries(for: weekday)
-        let hasConflict = entries.contains { conflictingIDs.contains($0.id) }
         return Button {
             guard !selected else { return }
             animated { selectedDay = weekday }
@@ -141,10 +145,10 @@ struct ScheduleView: View {
                         .foregroundStyle(.red)
                 }
                 Spacer(minLength: 4 * zoomScale)
-                Text("\(entries.count)")
+                Text("\(entryCount)")
                     .font(.system(size: 8 * zoomScale, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.38))
-                    .contentTransition(.numericText(value: Double(entries.count)))
+                    .contentTransition(.numericText(value: Double(entryCount)))
             }
             .foregroundStyle(selected ? .white : .white.opacity(0.6))
             .padding(.horizontal, 9 * zoomScale)
@@ -164,11 +168,11 @@ struct ScheduleView: View {
         }
         .buttonStyle(.plain)
         .animation(motionAnimation, value: selected)
-        .animation(motionAnimation, value: entries.count)
+        .animation(motionAnimation, value: entryCount)
         .accessibilityAddTraits(selected ? .isSelected : [])
     }
 
-    private var weeklySummary: some View {
+    private func weeklySummary(conflictCount: Int) -> some View {
         let enabledCount = service.entries.filter(\.isEnabled).count
         return VStack(alignment: .leading, spacing: 7 * zoomScale) {
             Text("schedule.weekly_signal")
@@ -186,9 +190,9 @@ struct ScheduleView: View {
                     color: .green
                 )
                 summaryMetric(
-                    value: conflictingIDs.count,
+                    value: conflictCount,
                     key: "schedule.conflicts",
-                    color: conflictingIDs.isEmpty ? .white : .red
+                    color: conflictCount == 0 ? .white : .red
                 )
             }
         }
@@ -218,14 +222,15 @@ struct ScheduleView: View {
         .accessibilityValue(Text("\(value)"))
     }
 
-    private func content(now: Date) -> some View {
-        VStack(spacing: 0) {
-            contentHeader(now: now)
+    private func content(now: Date, conflictingIDs: Set<UUID>) -> some View {
+        let entries = service.entries(for: selectedDay)
+        return VStack(spacing: 0) {
+            contentHeader(now: now, entryCount: entries.count)
             Divider().background(Color.white.opacity(0.08))
-            liveDashboard(now: now)
+            liveDashboard(now: now, dayEntries: entries, conflictingIDs: conflictingIDs)
             Divider().background(Color.white.opacity(0.08))
             ScheduleTimelineView(
-                entries: service.entries(for: selectedDay),
+                entries: entries,
                 conflictingIDs: conflictingIDs,
                 selectedDay: selectedDay,
                 now: now,
@@ -250,8 +255,7 @@ struct ScheduleView: View {
         }
     }
 
-    private func contentHeader(now: Date) -> some View {
-        let entries = service.entries(for: selectedDay)
+    private func contentHeader(now: Date, entryCount: Int) -> some View {
         let isToday = selectedDay == ScheduleWeekday.current(on: now)
         return HStack(spacing: 12 * zoomScale) {
             VStack(alignment: .leading, spacing: 3 * zoomScale) {
@@ -270,10 +274,10 @@ struct ScheduleView: View {
                             .clipShape(Capsule())
                     }
                 }
-                Text(String(format: String(localized: "schedule.entry_count"), entries.count))
+                Text(String(format: String(localized: "schedule.entry_count"), entryCount))
                     .font(.system(size: 9 * zoomScale, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.38))
-                    .contentTransition(.numericText(value: Double(entries.count)))
+                    .contentTransition(.numericText(value: Double(entryCount)))
             }
             .animation(motionAnimation, value: selectedDay)
             Spacer()
@@ -296,7 +300,7 @@ struct ScheduleView: View {
         .background(Color.black.opacity(0.3))
     }
 
-    private func liveDashboard(now: Date) -> some View {
+    private func liveDashboard(now: Date, dayEntries: [ScheduleEntry], conflictingIDs: Set<UUID>) -> some View {
         let today = ScheduleWeekday.current(on: now)
         let minute = ScheduleTimePolicy.minute(of: now)
         let state = ScheduleLivePolicy.state(
@@ -304,9 +308,9 @@ struct ScheduleView: View {
             weekday: today,
             minute: minute
         )
-        let dayEntries = service.entries(for: selectedDay)
-        let enabledCount = dayEntries.filter(\.isEnabled).count
-        let scheduledMinutes = dayEntries.filter(\.isEnabled).reduce(0) { $0 + $1.durationMinutes }
+        let enabledEntries = dayEntries.filter(\.isEnabled)
+        let enabledCount = enabledEntries.count
+        let scheduledMinutes = enabledEntries.reduce(0) { $0 + $1.durationMinutes }
         let dayConflicts = dayEntries.filter { conflictingIDs.contains($0.id) }.count
         return HStack(spacing: 10 * zoomScale) {
             liveStatusCard(state: state, today: today)
@@ -812,8 +816,7 @@ private struct ScheduleEditorSheet: View {
     }
     private var hasConflict: Bool {
         guard canSave else { return false }
-        let candidates = existingEntries.filter { $0.id != draft.id } + [draft]
-        return ScheduleConflictPolicy.conflictingIDs(candidates).contains(draft.id)
+        return existingEntries.contains { ScheduleConflictPolicy.conflicts(draft, $0) }
     }
 
     var body: some View {

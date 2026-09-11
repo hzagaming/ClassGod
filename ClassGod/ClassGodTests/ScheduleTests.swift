@@ -91,6 +91,57 @@ struct ScheduleTests {
         ) == [first.id, overlap.id])
     }
 
+    @Test("Conflict clusters include nested and chained overlaps without crossing gaps")
+    func detectsConflictClusters() {
+        let entries = [
+            ScheduleEntry(title: "Outer", weekday: .monday, startMinute: 540, endMinute: 720),
+            ScheduleEntry(title: "Nested", weekday: .monday, startMinute: 570, endMinute: 600),
+            ScheduleEntry(title: "Later nested", weekday: .monday, startMinute: 660, endMinute: 690),
+            ScheduleEntry(title: "Adjacent", weekday: .monday, startMinute: 720, endMinute: 750),
+            ScheduleEntry(title: "Disabled bridge", weekday: .monday, startMinute: 700, endMinute: 800, isEnabled: false),
+            ScheduleEntry(title: "After gap", weekday: .monday, startMinute: 780, endMinute: 810),
+            ScheduleEntry(title: "Chain start", weekday: .tuesday, startMinute: 540, endMinute: 600),
+            ScheduleEntry(title: "Chain middle", weekday: .tuesday, startMinute: 570, endMinute: 630),
+            ScheduleEntry(title: "Chain end", weekday: .tuesday, startMinute: 620, endMinute: 680),
+            ScheduleEntry(title: "Next day", weekday: .wednesday, startMinute: 540, endMinute: 600)
+        ]
+        let expected = [0, 1, 2, 6, 7, 8].map { entries[$0].id }
+        #expect(ScheduleConflictPolicy.conflictingIDs(entries.reversed()) == expected)
+        #expect(ScheduleConflictPolicy.conflictingIDs([]).isEmpty)
+    }
+
+    @Test("Repeated copies of one entry do not conflict with themselves")
+    func ignoresSelfConflicts() {
+        let first = ScheduleEntry(title: "Same", weekday: .friday, startMinute: 540, endMinute: 600)
+        var copy = first
+        copy.startMinute = 570
+        copy.endMinute = 630
+        let other = ScheduleEntry(title: "Other", weekday: .friday, startMinute: 615, endMinute: 645)
+        #expect(ScheduleConflictPolicy.conflictingIDs([copy, first, first]).isEmpty)
+        #expect(ScheduleConflictPolicy.conflictingIDs([other, copy, first]) == [first.id, first.id, other.id])
+    }
+
+    @Test("Conflict detection matches pairwise overlap rules for every interval subset")
+    func matchesPairwiseConflicts() {
+        let candidates = [
+            ScheduleEntry(title: "Early", weekday: .saturday, startMinute: 0, endMinute: 15),
+            ScheduleEntry(title: "Adjacent", weekday: .saturday, startMinute: 15, endMinute: 30),
+            ScheduleEntry(title: "Bridge", weekday: .saturday, startMinute: 10, endMinute: 40),
+            ScheduleEntry(title: "Nested", weekday: .saturday, startMinute: 20, endMinute: 35),
+            ScheduleEntry(title: "Disabled", weekday: .saturday, startMinute: 0, endMinute: 1_439, isEnabled: false),
+            ScheduleEntry(title: "Late", weekday: .saturday, startMinute: 1_420, endMinute: 1_439),
+            ScheduleEntry(title: "Sunday", weekday: .sunday, startMinute: 10, endMinute: 40),
+            ScheduleEntry(title: "Sunday overlap", weekday: .sunday, startMinute: 25, endMinute: 55)
+        ]
+        for mask in 0..<(1 << candidates.count) {
+            let entries = candidates.indices.filter { mask & (1 << $0) != 0 }.map { candidates[$0] }
+            let expected = ScheduleCollectionPolicy.sorted(entries).filter { entry in
+                entries.contains { ScheduleConflictPolicy.conflicts(entry, $0) }
+            }.map(\.id)
+            #expect(ScheduleConflictPolicy.conflictingIDs(entries.reversed()) == expected)
+        }
+    }
+
     @Test("Overlapping cards receive deterministic lanes per cluster")
     func laysOutOverlapLanes() {
         let first = ScheduleEntry(

@@ -160,17 +160,21 @@ nonisolated enum ScheduleConflictPolicy {
     static func conflictingIDs(_ entries: [ScheduleEntry]) -> [UUID] {
         let entries = ScheduleCollectionPolicy.sorted(entries)
         var conflictingIDs = Set<UUID>()
-        for leftIndex in entries.indices {
-            for rightIndex in entries.index(after: leftIndex)..<entries.endIndex {
-                let lhs = entries[leftIndex]
-                let rhs = entries[rightIndex]
-                if rhs.weekday != lhs.weekday || rhs.startMinute >= lhs.endMinute { break }
-                if conflicts(lhs, rhs) {
-                    conflictingIDs.insert(lhs.id)
-                    conflictingIDs.insert(rhs.id)
-                }
+        var clusterIDs = Set<UUID>()
+        var clusterDay: ScheduleWeekday?
+        var clusterEnd = 0
+        for entry in entries where entry.isEnabled {
+            if entry.weekday != clusterDay || entry.startMinute >= clusterEnd {
+                if clusterIDs.count > 1 { conflictingIDs.formUnion(clusterIDs) }
+                clusterIDs.removeAll(keepingCapacity: true)
+                clusterDay = entry.weekday
+                clusterEnd = entry.endMinute
+            } else {
+                clusterEnd = max(clusterEnd, entry.endMinute)
             }
+            clusterIDs.insert(entry.id)
         }
+        if clusterIDs.count > 1 { conflictingIDs.formUnion(clusterIDs) }
         return entries.compactMap { conflictingIDs.contains($0.id) ? $0.id : nil }
     }
 }
