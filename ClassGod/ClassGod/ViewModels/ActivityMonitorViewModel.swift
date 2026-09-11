@@ -41,6 +41,23 @@ enum ActivitySortKey {
     case name, cpu, memory, threads, pid, user, energy, diskRead, diskWrite, netRecv, netSent
 }
 
+enum ActivityUserSort {
+    static func sorted(
+        _ processes: [ProcessMonitorInfo],
+        ascending: Bool,
+        userName: (UInt32) -> String
+    ) -> [ProcessMonitorInfo] {
+        var names: [UInt32: String] = [:]
+        func name(_ uid: UInt32) -> String {
+            if let cached = names[uid] { return cached }
+            let resolved = userName(uid)
+            names[uid] = resolved
+            return resolved
+        }
+        return processes.sorted { ascending ? name($0.uid) < name($1.uid) : name($0.uid) > name($1.uid) }
+    }
+}
+
 enum ActivityPermissionPromptPolicy {
     static func shouldShow(isMonitoring: Bool, processCount: Int) -> Bool {
         isMonitoring && processCount == 0
@@ -62,16 +79,12 @@ final class ActivityMonitorViewModel: ObservableObject {
     @Published var sortAscending: Bool = false
     @Published var selectedProcess: ProcessMonitorInfo?
     @Published var showPermissionPrompt: Bool = false
-    @Published var energyHistory: [Int32: UInt64] = [:]
-    
-    private var timer: Timer?
-    private var energyAccumulator: [Int32: UInt64] = [:]
+
     private let monitor = SystemMonitor.shared
     private var isMonitoring = false
     private var permissionPromptWorkItem: DispatchWorkItem?
 
     deinit {
-        timer?.invalidate()
         permissionPromptWorkItem?.cancel()
     }
     
@@ -98,7 +111,7 @@ final class ActivityMonitorViewModel: ObservableObject {
         case .pid:
             list.sort { sortAscending ? $0.pid < $1.pid : $0.pid > $1.pid }
         case .user:
-            list.sort { sortAscending ? userName($0.uid) < userName($1.uid) : userName($0.uid) > userName($1.uid) }
+            list = ActivityUserSort.sorted(list, ascending: sortAscending, userName: userName)
         case .energy:
             list.sort { sortAscending ? $0.energyNanojoulesPerSecond < $1.energyNanojoulesPerSecond : $0.energyNanojoulesPerSecond > $1.energyNanojoulesPerSecond }
         case .diskRead:
@@ -114,33 +127,11 @@ final class ActivityMonitorViewModel: ObservableObject {
         return list
     }
     
-    var sortedProcessesForTab: [ProcessMonitorInfo] {
-        // Default sorting optimized per tab using real-time rates
-        switch selectedTab {
-        case .cpu:
-            return monitor.processes.sorted { $0.cpuPercent > $1.cpuPercent }
-        case .memory:
-            return monitor.processes.sorted { $0.memoryMB > $1.memoryMB }
-        case .energy:
-            return monitor.processes.sorted { $0.energyNanojoulesPerSecond > $1.energyNanojoulesPerSecond }
-        case .disk:
-            return monitor.processes.sorted { ($0.diskReadBytesPerSecond + $0.diskWriteBytesPerSecond) > ($1.diskReadBytesPerSecond + $1.diskWriteBytesPerSecond) }
-        case .network:
-            return monitor.processes.sorted { ($0.networkRecvBytesPerSecond + $0.networkSentBytesPerSecond) > ($1.networkRecvBytesPerSecond + $1.networkSentBytesPerSecond) }
-        }
-    }
-    
     func startMonitoring() {
         guard !isMonitoring else { return }
         isMonitoring = true
         monitor.start(client: .activityMonitor, interval: 1.0)
-        updateEnergyHistory()
         schedulePermissionPromptIfNeeded()
-        timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
-            Task { @MainActor [weak self] in
-                self?.updateEnergyHistory()
-            }
-        }
     }
     
     func stopMonitoring() {
@@ -149,8 +140,6 @@ final class ActivityMonitorViewModel: ObservableObject {
         showPermissionPrompt = false
         guard isMonitoring else { return }
         isMonitoring = false
-        timer?.invalidate()
-        timer = nil
         monitor.stop(client: .activityMonitor)
     }
 
@@ -199,17 +188,6 @@ final class ActivityMonitorViewModel: ObservableObject {
         return String(format: "%.0f B/s", bps)
     }
     
-    func formatEnergy(_ nanojoules: UInt64) -> String {
-        let joules = Double(nanojoules) / 1_000_000_000.0
-        if joules >= 1_000_000 {
-            return String(format: "%.1f MJ", joules / 1_000_000)
-        }
-        if joules >= 1000 {
-            return String(format: "%.1f kJ", joules / 1000)
-        }
-        return String(format: "%.1f J", joules)
-    }
-    
     func formatEnergyRate(_ nanojoulesPerSecond: UInt64) -> String {
         let watts = Double(nanojoulesPerSecond) / 1_000_000_000.0
         if watts >= 1000 {
@@ -224,17 +202,6 @@ final class ActivityMonitorViewModel: ObservableObject {
             return String(cString: name)
         }
         return String(uid)
-    }
-    
-    private func updateEnergyHistory() {
-        // Rebuild accumulator only from currently-live processes to prevent
-        // unbounded growth from exited PIDs.
-        var fresh: [Int32: UInt64] = [:]
-        for proc in monitor.processes {
-            fresh[proc.pid] = proc.energyNanojoulesPerSecond
-        }
-        energyAccumulator = fresh
-        energyHistory = fresh
     }
     
     // MARK: - Process Control
