@@ -109,6 +109,46 @@ struct TodoTests {
         #expect(TodoCollectionPolicy.filtered(tasks, selection: .smart(.completed), query: "", now: now, calendar: calendar).map(\.id) == [completed.id])
     }
 
+    @Test("Sidebar counts match every list across task metadata combinations")
+    func countsAllLists() {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        let now = Date(timeIntervalSince1970: 1_767_268_800)
+        let projectIDs = [UUID(), UUID()]
+        let dueDates: [Date?] = [nil, now.addingTimeInterval(-86_400), now, now.addingTimeInterval(86_400)]
+        var tasks: [ClassGodTodo] = []
+        for projectID in [nil] + projectIDs.map(Optional.some) {
+            for priority in TodoPriority.allCases {
+                for dueDate in dueDates {
+                    for completed in [false, true] {
+                        tasks.append(ClassGodTodo(
+                            title: "Task \(tasks.count)",
+                            projectID: projectID,
+                            dueDate: dueDate,
+                            priority: priority,
+                            completedAt: completed ? now : nil,
+                            createdAt: now
+                        ))
+                    }
+                }
+            }
+        }
+        let counts = TodoCollectionPolicy.counts(tasks, now: now, calendar: calendar)
+        let selections = TodoSmartList.allCases.map(TodoListSelection.smart)
+            + (projectIDs + [UUID()]).map(TodoListSelection.project)
+        for selection in selections {
+            let listed = TodoCollectionPolicy.filtered(tasks, selection: selection, query: "", now: now, calendar: calendar)
+            #expect(counts[selection, default: 0] == listed.count)
+        }
+        #expect(counts[.smart(.all)] == 60)
+        #expect(counts[.smart(.completed)] == 60)
+        #expect(counts[.smart(.today)] == 15)
+        #expect(counts[.smart(.priority)] == 24)
+        #expect(counts[.smart(.inbox)] == 20)
+        #expect(counts[.project(projectIDs[0])] == 20)
+        #expect(TodoCollectionPolicy.counts([], now: now, calendar: calendar).isEmpty)
+    }
+
     @Test("Search spans title, notes, tags, and project names")
     func searchesTaskMetadata() {
         let project = TodoProject(name: "Physics", color: .violet)
@@ -144,6 +184,83 @@ struct TodoTests {
         let sorted = TodoCollectionPolicy.sorted([normal, urgent, overdue], now: now)
 
         #expect(sorted.map(\.title) == ["Overdue", "Urgent", "Normal"])
+    }
+
+    @Test("Focus recommendations preserve every active-task ordering tie-breaker")
+    func preservesFocusOrdering() {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        let now = Date(timeIntervalSince1970: 1_767_268_800)
+        let created = now.addingTimeInterval(-7 * 86_400)
+        let expected = [
+            ClassGodTodo(title: "Oldest overdue", dueDate: now.addingTimeInterval(-2 * 86_400), createdAt: created),
+            ClassGodTodo(title: "Overdue", dueDate: now.addingTimeInterval(-86_400), createdAt: created),
+            ClassGodTodo(title: "Today", dueDate: now, createdAt: created),
+            ClassGodTodo(title: "Tomorrow", dueDate: now.addingTimeInterval(86_400), createdAt: created),
+            ClassGodTodo(title: "Urgent", priority: .urgent, createdAt: now),
+            ClassGodTodo(title: "Older", createdAt: created.addingTimeInterval(-1)),
+            ClassGodTodo(title: "Task 2", createdAt: created),
+            ClassGodTodo(title: "Task 10", createdAt: created),
+            ClassGodTodo(id: UUID(uuidString: "00000000-0000-0000-0000-000000000001")!, title: "Tie", createdAt: created),
+            ClassGodTodo(id: UUID(uuidString: "00000000-0000-0000-0000-000000000002")!, title: "Tie", createdAt: created)
+        ]
+        let completed = ClassGodTodo(title: "Completed", priority: .urgent, completedAt: now, createdAt: created)
+        for index in expected.indices {
+            let tasks = [completed] + expected[index...].reversed()
+            let snapshot = TodoFocusPolicy.snapshot(tasks, now: now, calendar: calendar)
+            #expect(snapshot.focusTaskID == expected[index].id)
+            #expect(snapshot.activeCount == expected.count - index)
+            #expect(snapshot.completedTodayCount == 1)
+            #expect(TodoCollectionPolicy.sorted(tasks, now: now, calendar: calendar).map(\.id)
+                == expected[index...].map(\.id) + [completed.id])
+        }
+        let completedOnly = TodoFocusPolicy.snapshot([completed], now: now, calendar: calendar)
+        #expect(completedOnly.focusTaskID == nil)
+        #expect(completedOnly.activeCount == 0)
+        #expect(completedOnly.progress == 1)
+    }
+
+    @Test("Today and overdue honor local midnight across daylight-saving changes", arguments: [
+        ("America/Los_Angeles", 2026, 3, 8),
+        ("America/Los_Angeles", 2026, 11, 1),
+        ("Europe/Berlin", 2026, 3, 29),
+        ("Europe/Berlin", 2026, 10, 25),
+        ("Asia/Singapore", 2026, 9, 11)
+    ])
+    func classifiesDayBoundaries(zone: String, year: Int, month: Int, day: Int) throws {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = try #require(TimeZone(identifier: zone))
+        let start = try #require(calendar.date(from: DateComponents(year: year, month: month, day: day)))
+        let end = try #require(calendar.date(byAdding: .day, value: 1, to: start))
+        let now = start.addingTimeInterval(3_600)
+        let tasks = [
+            ClassGodTodo(title: "Previous day", dueDate: start.addingTimeInterval(-1)),
+            ClassGodTodo(title: "Start", dueDate: start),
+            ClassGodTodo(title: "End", dueDate: end.addingTimeInterval(-1)),
+            ClassGodTodo(title: "Next day", dueDate: end),
+            ClassGodTodo(title: "No date"),
+            ClassGodTodo(title: "Done before", completedAt: start.addingTimeInterval(-1)),
+            ClassGodTodo(title: "Done at start", completedAt: start),
+            ClassGodTodo(title: "Done at end", completedAt: end.addingTimeInterval(-1)),
+            ClassGodTodo(title: "Done next day", completedAt: end)
+        ]
+        let expected: [TodoSmartList: [String]] = [
+            .today: ["Start", "End"],
+            .overdue: ["Previous day"],
+            .upcoming: ["Start", "End", "Next day"]
+        ]
+        for (list, titles) in expected {
+            #expect(TodoCollectionPolicy.filtered(tasks, selection: .smart(list), query: "", now: now, calendar: calendar).map(\.title) == titles)
+        }
+        let counts = TodoCollectionPolicy.counts(tasks, now: now, calendar: calendar)
+        for (list, titles) in expected {
+            #expect(counts[.smart(list)] == titles.count)
+        }
+        let snapshot = TodoFocusPolicy.snapshot(tasks, now: now, calendar: calendar)
+        #expect(snapshot.activeCount == 5)
+        #expect(snapshot.overdueCount == 1)
+        #expect(snapshot.completedTodayCount == 2)
+        #expect(snapshot.focusTaskID == tasks[0].id)
     }
 
     @Test("Recurrence skips missed intervals and weekdays skip weekends")

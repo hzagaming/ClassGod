@@ -38,16 +38,6 @@ final class TodoService: ObservableObject {
         )
     }
 
-    func count(for selection: TodoListSelection, now: Date = Date()) -> Int {
-        TodoCollectionPolicy.filtered(
-            tasks,
-            selection: selection,
-            projects: projects,
-            query: "",
-            now: now
-        ).count
-    }
-
     @discardableResult
     func save(_ task: ClassGodTodo) -> Bool {
         guard tasks.contains(where: { $0.id == task.id })

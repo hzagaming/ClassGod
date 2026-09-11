@@ -185,23 +185,30 @@ nonisolated enum TodoFocusPolicy {
         calendar: Calendar = .current
     ) -> TodoFocusSnapshot {
         let startOfToday = calendar.startOfDay(for: now)
-        let active = tasks.filter { !$0.isCompleted }
-        let overdueCount = active.filter {
-            $0.dueDate.map { $0 < startOfToday } == true
-        }.count
-        let completedTodayCount = tasks.filter {
-            $0.completedAt.map { calendar.isDate($0, inSameDayAs: now) } == true
-        }.count
-        let focusTaskID = TodoCollectionPolicy.sorted(
-            active,
-            now: now,
-            calendar: calendar
-        ).first?.id
+        var activeCount = 0
+        var overdueCount = 0
+        var completedTodayCount = 0
+        var focusTask: ClassGodTodo?
+        for task in tasks {
+            if let completedAt = task.completedAt {
+                if calendar.isDate(completedAt, inSameDayAs: now) { completedTodayCount += 1 }
+                continue
+            }
+            activeCount += 1
+            if task.dueDate.map({ $0 < startOfToday }) == true { overdueCount += 1 }
+            if let current = focusTask {
+                if TodoCollectionPolicy.precedes(task, current, startOfToday: startOfToday) {
+                    focusTask = task
+                }
+            } else {
+                focusTask = task
+            }
+        }
         return TodoFocusSnapshot(
-            activeCount: active.count,
+            activeCount: activeCount,
             overdueCount: overdueCount,
             completedTodayCount: completedTodayCount,
-            focusTaskID: focusTaskID
+            focusTaskID: focusTask?.id
         )
     }
 }
@@ -297,6 +304,37 @@ nonisolated enum TodoContentPolicy {
 }
 
 nonisolated enum TodoCollectionPolicy {
+    static func counts(
+        _ tasks: [ClassGodTodo],
+        now: Date = Date(),
+        calendar: Calendar = .current
+    ) -> [TodoListSelection: Int] {
+        let startOfToday = calendar.startOfDay(for: now)
+        var counts: [TodoListSelection: Int] = [:]
+        for task in tasks {
+            if task.isCompleted {
+                counts[.smart(.completed), default: 0] += 1
+                continue
+            }
+            counts[.smart(.all), default: 0] += 1
+            if let projectID = task.projectID {
+                counts[.project(projectID), default: 0] += 1
+            } else {
+                counts[.smart(.inbox), default: 0] += 1
+            }
+            if task.priority.rawValue >= TodoPriority.high.rawValue {
+                counts[.smart(.priority), default: 0] += 1
+            }
+            if let dueDate = task.dueDate {
+                counts[.smart(dueDate < startOfToday ? .overdue : .upcoming), default: 0] += 1
+                if calendar.isDate(dueDate, inSameDayAs: startOfToday) {
+                    counts[.smart(.today), default: 0] += 1
+                }
+            }
+        }
+        return counts
+    }
+
     static func filtered(
         _ tasks: [ClassGodTodo],
         selection: TodoListSelection,
@@ -330,21 +368,25 @@ nonisolated enum TodoCollectionPolicy {
     ) -> [ClassGodTodo] {
         let startOfToday = calendar.startOfDay(for: now)
         return tasks.sorted { lhs, rhs in
-            if lhs.isCompleted != rhs.isCompleted { return !lhs.isCompleted }
-            if lhs.isCompleted, rhs.isCompleted {
-                if lhs.completedAt != rhs.completedAt { return (lhs.completedAt ?? .distantPast) > (rhs.completedAt ?? .distantPast) }
-            }
-            let lhsOverdue = lhs.dueDate.map { $0 < startOfToday } ?? false
-            let rhsOverdue = rhs.dueDate.map { $0 < startOfToday } ?? false
-            if lhsOverdue != rhsOverdue { return lhsOverdue }
-            if lhs.dueDate != rhs.dueDate {
-                return (lhs.dueDate ?? .distantFuture) < (rhs.dueDate ?? .distantFuture)
-            }
-            if lhs.priority != rhs.priority { return lhs.priority.rawValue > rhs.priority.rawValue }
-            if lhs.createdAt != rhs.createdAt { return lhs.createdAt < rhs.createdAt }
-            if lhs.title != rhs.title { return lhs.title.localizedStandardCompare(rhs.title) == .orderedAscending }
-            return lhs.id.uuidString < rhs.id.uuidString
+            precedes(lhs, rhs, startOfToday: startOfToday)
         }
+    }
+
+    fileprivate static func precedes(_ lhs: ClassGodTodo, _ rhs: ClassGodTodo, startOfToday: Date) -> Bool {
+        if lhs.isCompleted != rhs.isCompleted { return !lhs.isCompleted }
+        if lhs.isCompleted, rhs.isCompleted {
+            if lhs.completedAt != rhs.completedAt { return (lhs.completedAt ?? .distantPast) > (rhs.completedAt ?? .distantPast) }
+        }
+        let lhsOverdue = lhs.dueDate.map { $0 < startOfToday } ?? false
+        let rhsOverdue = rhs.dueDate.map { $0 < startOfToday } ?? false
+        if lhsOverdue != rhsOverdue { return lhsOverdue }
+        if lhs.dueDate != rhs.dueDate {
+            return (lhs.dueDate ?? .distantFuture) < (rhs.dueDate ?? .distantFuture)
+        }
+        if lhs.priority != rhs.priority { return lhs.priority.rawValue > rhs.priority.rawValue }
+        if lhs.createdAt != rhs.createdAt { return lhs.createdAt < rhs.createdAt }
+        if lhs.title != rhs.title { return lhs.title.localizedStandardCompare(rhs.title) == .orderedAscending }
+        return lhs.id.uuidString < rhs.id.uuidString
     }
 
     private static func matches(

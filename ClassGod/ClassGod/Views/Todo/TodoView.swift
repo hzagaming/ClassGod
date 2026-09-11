@@ -26,10 +26,6 @@ struct TodoView: View {
 
     private var zoomScale: CGFloat { CGFloat(prefs.preferences.windowZoomScale) }
     private var accent: Color { prefs.preferences.themeAccent.color }
-    private var visibleTasks: [ClassGodTodo] {
-        service.filteredTasks(selection: selection, query: searchText)
-    }
-    private var visibleTaskIDs: [UUID] { visibleTasks.map(\.id) }
     private var motionAnimation: Animation? {
         let duration = Anim.duration
         return duration > 0 ? .easeOut(duration: duration) : nil
@@ -108,7 +104,8 @@ struct TodoView: View {
     }
 
     private var sidebar: some View {
-        VStack(alignment: .leading, spacing: 12 * zoomScale) {
+        let counts = TodoCollectionPolicy.counts(service.tasks)
+        return VStack(alignment: .leading, spacing: 12 * zoomScale) {
             HStack(spacing: 8 * zoomScale) {
                 Button(action: onClose) {
                     Image(systemName: "minus")
@@ -135,7 +132,7 @@ struct TodoView: View {
                         icon: list.icon,
                         title: Text(list.title),
                         color: list.color,
-                        count: service.count(for: .smart(list))
+                        count: counts[.smart(list), default: 0]
                     )
                 }
             }
@@ -171,7 +168,7 @@ struct TodoView: View {
                                 icon: "circle.fill",
                                 title: Text(project.name),
                                 color: project.color.color,
-                                count: service.count(for: .project(project.id))
+                                count: counts[.project(project.id), default: 0]
                             )
                             .contextMenu {
                                 Button("todo.delete_project", role: .destructive) {
@@ -280,8 +277,9 @@ struct TodoView: View {
     }
 
     private var content: some View {
-        VStack(spacing: 0) {
-            contentHeader
+        let visibleTasks = service.filteredTasks(selection: selection, query: searchText)
+        return VStack(spacing: 0) {
+            contentHeader(taskCount: visibleTasks.count)
             Divider().background(Color.white.opacity(0.08))
             focusPulse
             Divider().background(Color.white.opacity(0.08))
@@ -290,7 +288,7 @@ struct TodoView: View {
                     emptyState
                         .transition(panelTransition)
                 } else {
-                    taskList
+                    taskList(visibleTasks)
                         .transition(panelTransition)
                 }
             }
@@ -326,7 +324,7 @@ struct TodoView: View {
         }
     }
 
-    private var contentHeader: some View {
+    private func contentHeader(taskCount: Int) -> some View {
         HStack(spacing: 12 * zoomScale) {
             VStack(alignment: .leading, spacing: 2 * zoomScale) {
                 ZStack(alignment: .leading) {
@@ -336,11 +334,11 @@ struct TodoView: View {
                         .transition(panelTransition)
                 }
                 .animation(motionAnimation, value: selection)
-                Text(String(format: String(localized: "todo.task_count"), visibleTasks.count))
+                Text(String(format: String(localized: "todo.task_count"), taskCount))
                     .font(.system(size: 9 * zoomScale, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.38))
-                    .contentTransition(.numericText(value: Double(visibleTasks.count)))
-                    .animation(motionAnimation, value: visibleTasks.count)
+                    .contentTransition(.numericText(value: Double(taskCount)))
+                    .animation(motionAnimation, value: taskCount)
             }
 
             Spacer(minLength: 8 * zoomScale)
@@ -391,8 +389,10 @@ struct TodoView: View {
         .background(Color.black.opacity(0.3))
     }
 
-    private var taskList: some View {
-        ScrollView(showsIndicators: true) {
+    private func taskList(_ tasks: [ClassGodTodo]) -> some View {
+        let sectionGroups = sectionGroups(for: tasks)
+        let visibleTaskIDs = tasks.map(\.id)
+        return ScrollView(showsIndicators: true) {
             LazyVStack(alignment: .leading, spacing: 12 * zoomScale) {
                 ForEach(sectionGroups) { group in
                     VStack(alignment: .leading, spacing: 6 * zoomScale) {
@@ -596,8 +596,8 @@ struct TodoView: View {
         }
     }
 
-    private var sectionGroups: [TodoSectionGroup] {
-        let grouped = Dictionary(grouping: visibleTasks, by: taskSection)
+    private func sectionGroups(for tasks: [ClassGodTodo]) -> [TodoSectionGroup] {
+        let grouped = Dictionary(grouping: tasks, by: taskSection)
         return TodoTaskSection.allCases.compactMap { section in
             guard let tasks = grouped[section], !tasks.isEmpty else { return nil }
             return TodoSectionGroup(section: section, tasks: tasks)
