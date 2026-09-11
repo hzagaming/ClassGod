@@ -173,6 +173,50 @@ struct RecallLabTests {
         #expect(RecallLabService(directory: directory).cards.first?.answer == "Latest answer")
     }
 
+    @Test("Oversized saves preserve the readable archive and can recover after reducing content")
+    @MainActor
+    func preservesArchiveOnOversizedSave() async throws {
+        let directory = temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let service = RecallLabService(directory: directory)
+        let originalID = try #require(service.saveCard(question: "Original", answer: "Answer", topic: "", now: now))
+        service.flush()
+        let url = directory.appendingPathComponent("cards.json")
+        let originalData = try Data(contentsOf: url)
+        let originalCards = service.cards
+
+        let answer = String(repeating: "👨‍👩‍👧‍👦", count: 5_000)
+        for index in 0..<300 {
+            #expect(service.saveCard(question: "Question \(index)", answer: answer, topic: "", now: now) != nil)
+        }
+        service.flush()
+        for _ in 0..<100 {
+            if service.storageIssue == .archiveTooLarge { break }
+            try await Task.sleep(for: .milliseconds(10))
+        }
+
+        #expect(service.storageIssue == .archiveTooLarge)
+        #expect(service.canEdit)
+        #expect(service.cards.count == 301)
+        #expect(try Data(contentsOf: url) == originalData)
+        let restored = RecallLabService(directory: directory)
+        #expect(restored.canEdit)
+        #expect(restored.cards == originalCards)
+
+        for card in service.cards where card.id != originalID {
+            #expect(service.delete(card.id))
+        }
+        #expect(service.saveCard(id: originalID, question: "Original", answer: "Updated answer", topic: "", now: now) == originalID)
+        service.retryStorage()
+        service.flush()
+        for _ in 0..<100 {
+            if service.storageIssue == nil { break }
+            try await Task.sleep(for: .milliseconds(10))
+        }
+        #expect(service.storageIssue == nil)
+        #expect(RecallLabService(directory: directory).cards == service.cards)
+    }
+
     private func temporaryDirectory() -> URL {
         FileManager.default.temporaryDirectory.appendingPathComponent("ClassGodRecallTests-\(UUID())")
     }

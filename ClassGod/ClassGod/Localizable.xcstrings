@@ -3297,6 +3297,22 @@
         }
       }
     },
+    "recall.storage.too_large" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cards exceed the 32 MB storage limit. Keep ClassGod open and shorten or remove some content to save your changes."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "卡片库超过 32 MB 存储上限。请保持 ClassGod 开启，精简或删除部分内容以保存修改。"
+          }
+        }
+      }
+    },
     "recall.subtitle" : {
       "localizations" : {
         "en" : {

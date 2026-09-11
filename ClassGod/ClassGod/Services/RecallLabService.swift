@@ -8,8 +8,8 @@ final class RecallLabService: ObservableObject {
             ?? FileManager.default.temporaryDirectory
     ).appendingPathComponent("ClassGod/RecallLab", isDirectory: true))
 
-    enum StorageIssue {
-        case recovered, loadFailed, saveFailed, unsupportedVersion
+    enum StorageIssue: Sendable {
+        case recovered, loadFailed, saveFailed, archiveTooLarge, unsupportedVersion
     }
 
     @Published private(set) var cards: [RecallCard] = []
@@ -188,18 +188,23 @@ final class RecallLabService: ObservableObject {
         let url = storageURL
         let revision = revision
         persistenceQueue.async { [weak self] in
-            let failed: Bool
+            let issue: StorageIssue?
             do {
-                try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-                try JSONEncoder().encode(snapshot).write(to: url, options: .atomic)
-                failed = false
+                let data = try JSONEncoder().encode(snapshot)
+                if data.count > RecallPolicy.maximumArchiveBytes {
+                    issue = .archiveTooLarge
+                } else {
+                    try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+                    try data.write(to: url, options: .atomic)
+                    issue = nil
+                }
             } catch {
-                failed = true
+                issue = .saveFailed
             }
             Task { @MainActor [weak self] in
                 guard let self, self.revision == revision else { return }
-                self.storageIssue = failed ? .saveFailed : nil
-                if failed { self.hasPendingSave = true }
+                self.storageIssue = issue
+                if issue != nil { self.hasPendingSave = true }
             }
         }
     }

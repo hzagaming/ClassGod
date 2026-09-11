@@ -245,7 +245,9 @@ struct RecallLabView: View {
         HStack {
             Image(systemName: "exclamationmark.triangle.fill")
             Text(issue.message)
-            if issue != .recovered { Button("recall.retry", action: service.retryStorage) }
+            if issue != .recovered && issue != .archiveTooLarge {
+                Button("recall.retry", action: service.retryStorage)
+            }
         }
         .font(.system(size: 11 * zoom))
         .foregroundStyle(.orange)
@@ -282,6 +284,7 @@ private extension RecallLabService.StorageIssue {
         case .recovered: "recall.storage.recovered"
         case .loadFailed: "recall.storage.load_failed"
         case .saveFailed: "recall.storage.save_failed"
+        case .archiveTooLarge: "recall.storage.too_large"
         case .unsupportedVersion: "recall.storage.newer_version"
         }
     }
