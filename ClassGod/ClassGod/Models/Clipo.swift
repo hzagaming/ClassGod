@@ -119,7 +119,7 @@ struct ClipoPayload: Codable, Equatable, Sendable {
                 mix(UInt64(representation.type.utf8.count))
                 mix(representation.type.utf8)
                 mix(UInt64(representation.data.count))
-                mix(representation.data)
+                representation.data.withUnsafeBytes { (bytes: UnsafeRawBufferPointer) in mix(bytes) }
             }
         }
         return String(hash, radix: 16)
@@ -450,25 +450,44 @@ enum ClipoPasteSnapshotPolicy {
 
 enum ClipoPreview {
     static func make(from content: String, limit: Int = 180) -> String {
-        let normalized = content.trimmingCharacters(in: .whitespacesAndNewlines)
-            .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
-        guard normalized.count > limit else { return normalized }
-        return String(normalized.prefix(limit)) + "…"
+        let scalars = content.unicodeScalars
+        let trimming = CharacterSet.whitespacesAndNewlines
+        guard let first = scalars.firstIndex(where: { !trimming.contains($0) }),
+              let last = scalars.lastIndex(where: { !trimming.contains($0) }) else { return "" }
+        var remaining = content[first..<scalars.index(after: last)]
+        var normalized = ""
+        let maximumChunkSize = 4_096
+        var chunkSize = max(1, min(limit, maximumChunkSize))
+        while !remaining.isEmpty {
+            let end = remaining.index(remaining.startIndex, offsetBy: chunkSize, limitedBy: remaining.endIndex) ?? remaining.endIndex
+            normalized.append(contentsOf: remaining[..<end])
+            // Bound regex work and collapse whitespace runs spanning two chunks.
+            normalized = normalized.replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
+            if let boundary = normalized.index(normalized.startIndex, offsetBy: limit, limitedBy: normalized.endIndex),
+               boundary != normalized.endIndex {
+                return String(normalized[..<boundary]) + "…"
+            }
+            remaining = remaining[end...]
+            chunkSize = min(chunkSize * 2, maximumChunkSize)
+        }
+        return normalized
     }
 }
 
 enum ClipoContentClassifier {
     static func type(for content: String) -> ClipoType {
         let trimmed = content.trimmingCharacters(in: .whitespacesAndNewlines)
-        if let url = URL(string: trimmed), url.scheme != nil, !trimmed.contains(where: \.isWhitespace) {
+        if !trimmed.contains(where: \.isWhitespace), let url = URL(string: trimmed), url.scheme != nil {
             return .url
         }
 
         let markers = ["let ", "var ", "func ", "class ", "struct ", "import ", "=>", "</", "{", "};", "#!/"]
-        let markerCount = markers.reduce(0) { $0 + (trimmed.contains($1) ? 1 : 0) }
-        if markerCount >= 2 || (markerCount == 1 && trimmed.contains("\n")) {
-            return .code
+        var markerCount = 0
+        for marker in markers where trimmed.contains(marker) {
+            markerCount += 1
+            if markerCount == 2 { return .code }
         }
+        if markerCount == 1 && trimmed.contains("\n") { return .code }
         return .text
     }
 }

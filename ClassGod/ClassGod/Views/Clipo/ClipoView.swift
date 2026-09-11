@@ -177,7 +177,8 @@ struct ClipoView: View {
     }
 
     private var historySection: some View {
-        VStack(spacing: 10 * zoomScale) {
+        let history = filteredHistory
+        return VStack(spacing: 10 * zoomScale) {
             if !hasAccessibility {
                 permissionBanner
             }
@@ -227,12 +228,12 @@ struct ClipoView: View {
                 }
             }
 
-            if filteredHistory.isEmpty {
+            if history.isEmpty {
                 emptyState(icon: "clipboard", title: "clipo.empty_history", subtitle: "clipo.empty_history_hint")
             } else {
                 ScrollView {
                     LazyVStack(spacing: 7 * zoomScale) {
-                        ForEach(filteredHistory) { item in
+                        ForEach(history) { item in
                             ClipoHistoryRow(item: item, zoomScale: zoomScale)
                         }
                     }

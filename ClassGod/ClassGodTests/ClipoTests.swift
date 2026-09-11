@@ -314,6 +314,59 @@ struct ClipoTests {
         #expect(first.fingerprint != second.fingerprint)
     }
 
+    @Test("Payload fingerprints remain stable across small and large payloads", arguments: [0, 1, 14, 15, 1_024, 1_048_576, 10_485_760])
+    func preservesFingerprintBytes(size: Int) {
+        let data = Data((0..<size).map { UInt8(truncatingIfNeeded: $0) })
+        let payload = ClipoPayload(items: [.init(representations: [.init(type: "public.data", data: data)])])
+        let expected = [0: "6805fb906d717503", 1: "a035240c632ede06", 14: "71eed40628c39aee", 15: "e8d0b3717cdf3ecb",
+                        1_024: "21abfd7825c286f", 1_048_576: "b1637fd176d51173", 10_485_760: "9e8ad0c957cd58a3"]
+        #expect(payload.fingerprint == expected[size])
+    }
+
+    @Test("Preview normalization preserves Unicode whitespace and complete graphemes", arguments: [0, 1, 2, 5, 180])
+    func preservesPreviewNormalization(limit: Int) {
+        let samples = [
+            "", " \r\n\t ", "  ClassGod\r\n\t学 习  ",
+            "\u{200B}\u{00A0}A\u{2003}\u{85}B\u{2028}C\u{200B}",
+            " \u{301}e\u{301}\r\n\u{301}👨‍👩‍👧‍👦🇨🇳 ",
+            String(repeating: "👨‍👩‍👧‍👦学e\u{301}🇨🇳\t ", count: 100),
+            "start" + String(repeating: " \n\t", count: 10_000) + "end",
+            "value" + String(repeating: " \u{200B}", count: 10_000)
+        ]
+        for source in samples {
+            let normalized = source.trimmingCharacters(in: .whitespacesAndNewlines)
+                .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
+            let expected = normalized.count > limit ? String(normalized.prefix(limit)) + "…" : normalized
+            #expect(ClipoPreview.make(from: source, limit: limit) == expected)
+        }
+    }
+
+    @Test("Previews add an ellipsis only when normalized content exceeds the limit")
+    func preservesPreviewBoundaries() {
+        let exact = String(repeating: "学", count: 180)
+        #expect(ClipoPreview.make(from: exact + " \n\t") == exact)
+        #expect(ClipoPreview.make(from: exact + " \n\t more") == exact + "…")
+        #expect(ClipoPreview.make(from: exact + "\u{301}") == exact + "\u{301}")
+        #expect(ClipoPreview.make(from: exact + "\u{301}more") == exact + "\u{301}…")
+    }
+
+    @Test("Million-character whitespace runs collapse completely without leaking into previews")
+    func normalizesLargeWhitespaceRuns() {
+        let source = "start" + String(repeating: " \n", count: 4_500_000) + "end"
+        #expect(ClipoPreview.make(from: source) == "start end")
+        #expect(ClipoPreview.make(from: source, limit: 5) == "start…")
+    }
+
+    @Test("Large prose and code retain classification without being mistaken for URLs")
+    func classifiesLargeText() {
+        let prose = String(repeating: "Meeting notes for tomorrow\n", count: 40_000)
+        #expect(ClipoContentClassifier.type(for: prose) == .text)
+        #expect(ClipoContentClassifier.type(for: "let answer = 42\n" + prose) == .code)
+        #expect(ClipoContentClassifier.type(for: "class Notes {" + prose) == .code)
+        #expect(ClipoContentClassifier.type(for: "https://example.com/a%20b") == .url)
+        #expect(ClipoContentClassifier.type(for: "https://example.com/a b") == .text)
+    }
+
     @Test("Search combines query, fuzzy matching, and type filters")
     func filtersHistory() {
         let items = [
