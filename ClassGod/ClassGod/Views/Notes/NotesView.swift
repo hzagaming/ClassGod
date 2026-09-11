@@ -77,7 +77,8 @@ struct NotesView: View {
     }
 
     private var sidebar: some View {
-        VStack(spacing: 8 * zoomScale) {
+        let notes = visibleNotes
+        return VStack(spacing: 8 * zoomScale) {
             HStack(spacing: 7 * zoomScale) {
                 Image(systemName: "magnifyingglass")
                     .foregroundStyle(.white.opacity(0.35))
@@ -105,7 +106,7 @@ struct NotesView: View {
             .background(Color.white.opacity(0.05))
             .clipShape(RoundedRectangle(cornerRadius: 7 * zoomScale))
 
-            if visibleNotes.isEmpty {
+            if notes.isEmpty {
                 Spacer()
                 VStack(spacing: 7 * zoomScale) {
                     Image(systemName: "note.text")
@@ -118,7 +119,7 @@ struct NotesView: View {
             } else {
                 ScrollView {
                     LazyVStack(spacing: 5 * zoomScale) {
-                        ForEach(visibleNotes) { note in
+                        ForEach(notes) { note in
                             noteRow(note)
                         }
                     }
@@ -137,6 +138,7 @@ struct NotesView: View {
                 HapticManager.shared.generic()
             }
         } label: {
+            let preview = note.preview
             VStack(alignment: .leading, spacing: 4 * zoomScale) {
                 HStack(spacing: 5 * zoomScale) {
                     if note.isPinned {
@@ -149,7 +151,7 @@ struct NotesView: View {
                         .lineLimit(1)
                     Spacer(minLength: 0)
                 }
-                Text(note.preview.isEmpty ? String(localized: "notes.empty_body") : note.preview)
+                Text(preview.isEmpty ? String(localized: "notes.empty_body") : preview)
                     .font(.system(size: 8 * zoomScale, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.4))
                     .lineLimit(2)

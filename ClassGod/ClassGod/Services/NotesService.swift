@@ -31,13 +31,12 @@ final class NotesService: ObservableObject {
     }
 
     func filteredNotes(query: String) -> [ClassGodNote] {
-        let sorted = NotesCollectionPolicy.sorted(notes)
         let query = query.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !query.isEmpty else { return sorted }
-        return sorted.filter {
+        guard !query.isEmpty else { return NotesCollectionPolicy.sorted(notes) }
+        return NotesCollectionPolicy.sorted(notes.filter {
             $0.title.localizedCaseInsensitiveContains(query)
                 || $0.body.localizedCaseInsensitiveContains(query)
-        }
+        })
     }
 
     @discardableResult
