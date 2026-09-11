@@ -93,11 +93,11 @@ nonisolated enum FocusFlowPolicy {
     }
 
     static func remainingSeconds(
-        deadline: Date?,
+        deadline: TimeInterval?,
         pausedRemaining: TimeInterval,
-        now: Date
+        now: TimeInterval
     ) -> Int {
-        let remaining = deadline?.timeIntervalSince(now) ?? pausedRemaining
+        let remaining = deadline.map { $0 - now } ?? pausedRemaining
         guard remaining.isFinite else { return 0 }
         return max(0, Int(ceil(remaining)))
     }

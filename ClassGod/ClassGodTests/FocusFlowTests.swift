@@ -4,6 +4,124 @@ import Testing
 
 @Suite("Focus Flow")
 struct FocusFlowTests {
+    @Test("System date changes do not change the elapsed focus time", arguments: [-3_600.0, 3_600.0])
+    @MainActor
+    func ignoresSystemDateChanges(adjustment: TimeInterval) {
+        let suiteName = "com.hanazar.classgod.tests.focusflow.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let start = Calendar.current.startOfDay(for: Date()).addingTimeInterval(12 * 3_600)
+        var elapsed: TimeInterval = 0
+        let service = FocusFlowService(defaults: defaults, now: start, clock: { elapsed })
+        defer { service.stop() }
+
+        #expect(service.startOrResume(now: start))
+        elapsed = 10
+        #expect(service.pause(now: start.addingTimeInterval(adjustment + elapsed)))
+
+        #expect(service.phase == .focus)
+        #expect(service.remainingSeconds == 1_490)
+        #expect(service.dailyStats.completedSessions == 0)
+        #expect(service.completedSessionsInCycle == 0)
+    }
+
+    @Test("Elapsed time completes a focus session even if the system date moves backwards")
+    @MainActor
+    func completesAfterElapsedDuration() {
+        let suiteName = "com.hanazar.classgod.tests.focusflow.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let start = Calendar.current.startOfDay(for: Date()).addingTimeInterval(12 * 3_600)
+        var elapsed: TimeInterval = 0
+        let service = FocusFlowService(defaults: defaults, now: start, clock: { elapsed })
+        defer { service.stop() }
+
+        #expect(service.startOrResume(now: start))
+        elapsed = 1_500
+        #expect(service.pause(now: start.addingTimeInterval(-3_600)))
+
+        #expect(service.phase == .shortBreak)
+        #expect(service.remainingSeconds == 300)
+        #expect(service.dailyStats.completedSessions == 1)
+        #expect(service.dailyStats.focusedSeconds == 1_500)
+    }
+
+    @Test("Resuming excludes paused time even when the system date changes")
+    @MainActor
+    func excludesPausedTime() {
+        let suiteName = "com.hanazar.classgod.tests.focusflow.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let start = Date(timeIntervalSince1970: 1_000)
+        var elapsed: TimeInterval = 0
+        let service = FocusFlowService(defaults: defaults, now: start, clock: { elapsed })
+        defer { service.stop() }
+
+        #expect(service.startOrResume(now: start))
+        elapsed = 10
+        #expect(service.pause(now: start.addingTimeInterval(10)))
+        elapsed += 3_600
+        let resumedDate = start.addingTimeInterval(-3_600)
+        #expect(service.startOrResume(now: resumedDate))
+        #expect(service.remainingSeconds == 1_490)
+        elapsed += 20
+        #expect(service.pause(now: resumedDate.addingTimeInterval(20)))
+
+        #expect(service.phase == .focus)
+        #expect(service.remainingSeconds == 1_470)
+        #expect(service.dailyStats.completedSessions == 0)
+    }
+
+    @Test("Skipping a running phase starts a full duration at the current elapsed time")
+    @MainActor
+    func skipsFromCurrentInstant() {
+        let suiteName = "com.hanazar.classgod.tests.focusflow.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let start = Date(timeIntervalSince1970: 1_000)
+        var elapsed: TimeInterval = 0
+        let service = FocusFlowService(defaults: defaults, now: start, clock: { elapsed })
+        defer { service.stop() }
+
+        #expect(service.startOrResume(now: start))
+        elapsed = 1_000
+        #expect(service.skipPhase())
+        #expect(service.runState == .running)
+        #expect(service.phase == .shortBreak)
+        #expect(service.remainingSeconds == 300)
+        elapsed += 10
+        #expect(service.pause(now: start.addingTimeInterval(-3_600)))
+
+        #expect(service.remainingSeconds == 290)
+        #expect(service.dailyStats.completedSessions == 0)
+        #expect(service.completedSessionsInCycle == 0)
+    }
+
+    @Test("A session crossing midnight records completion on the current calendar day")
+    @MainActor
+    func recordsCompletionOnCurrentDay() {
+        let suiteName = "com.hanazar.classgod.tests.focusflow.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let calendar = Calendar.current
+        let midnight = calendar.startOfDay(for: Date())
+        let start = midnight.addingTimeInterval(-60)
+        var elapsed: TimeInterval = 0
+        let service = FocusFlowService(defaults: defaults, now: start, clock: { elapsed })
+        defer { service.stop() }
+
+        #expect(service.startOrResume(now: start))
+        elapsed = 1_500
+        #expect(service.pause(now: start.addingTimeInterval(elapsed)))
+
+        #expect(service.phase == .shortBreak)
+        #expect(service.dailyStats == FocusFlowDailyStats(
+            day: midnight,
+            completedSessions: 1,
+            focusedSeconds: 1_500
+        ))
+    }
+
     @Test("Session controls preserve exact remaining time and reject no-op actions")
     @MainActor
     func controlsSession() {
@@ -11,10 +129,12 @@ struct FocusFlowTests {
         let defaults = UserDefaults(suiteName: suiteName)!
         defer { defaults.removePersistentDomain(forName: suiteName) }
         let now = Date(timeIntervalSince1970: 1_000)
-        let service = FocusFlowService(defaults: defaults, now: now)
+        var elapsed: TimeInterval = 0
+        let service = FocusFlowService(defaults: defaults, now: now, clock: { elapsed })
 
         #expect(service.startOrResume(now: now))
         #expect(!service.startOrResume(now: now))
+        elapsed = 10
         #expect(service.pause(now: now.addingTimeInterval(10)))
         #expect(service.runState == .paused)
         #expect(service.remainingSeconds == 1_490)
@@ -29,11 +149,11 @@ struct FocusFlowTests {
         #expect(service.phase == .focus)
         #expect(service.remainingSeconds == 900)
         #expect(!service.selectPreset(.quick))
-        #expect(!service.skipPhase(now: now))
+        #expect(!service.skipPhase())
 
         #expect(service.startOrResume(now: now))
         #expect(service.pause(now: now))
-        #expect(service.skipPhase(now: now))
+        #expect(service.skipPhase())
         #expect(service.phase == .shortBreak)
         #expect(service.remainingSeconds == 180)
         service.stop()
@@ -60,12 +180,15 @@ struct FocusFlowTests {
         let suiteName = "com.hanazar.classgod.tests.focusflow.\(UUID().uuidString)"
         let defaults = UserDefaults(suiteName: suiteName)!
         defer { defaults.removePersistentDomain(forName: suiteName) }
-        let service = FocusFlowService(defaults: defaults)
+        var elapsed: TimeInterval = 0
+        let service = FocusFlowService(defaults: defaults, clock: { elapsed })
         var now = Date(timeIntervalSince1970: 2_000)
 
         for _ in 0..<4 {
             #expect(service.startOrResume(now: now))
+            elapsed += 0.25
             #expect(service.pause(now: now.addingTimeInterval(0.25)))
+            elapsed += 0.75
             now = now.addingTimeInterval(1)
         }
 
@@ -125,16 +248,16 @@ struct FocusFlowTests {
         #expect(FocusFlowPolicy.skippedPhase(after: .longBreak) == .focus)
     }
 
-    @Test("Countdown derives from an absolute deadline without drift")
+    @Test("Countdown derives from an elapsed-time deadline without drift")
     func resolvesRemainingTime() {
-        let now = Date(timeIntervalSince1970: 1_000)
+        let now: TimeInterval = 1_000
         #expect(FocusFlowPolicy.remainingSeconds(
-            deadline: now.addingTimeInterval(10.2),
+            deadline: now + 10.2,
             pausedRemaining: 99,
             now: now
         ) == 11)
         #expect(FocusFlowPolicy.remainingSeconds(
-            deadline: now.addingTimeInterval(-1),
+            deadline: now - 1,
             pausedRemaining: 99,
             now: now
         ) == 0)
@@ -200,7 +323,7 @@ struct FocusFlowTests {
         defer { defaults.removePersistentDomain(forName: suiteName) }
         let calendar = Calendar.current
         var now = calendar.startOfDay(for: Date()).addingTimeInterval(12 * 60 * 60)
-        let service = FocusFlowService(defaults: defaults, now: now)
+        let service = FocusFlowService(defaults: defaults, now: now, clock: { now.timeIntervalSince1970 })
         #expect(service.selectPreset(.quick))
 
         for _ in 0..<3 {
@@ -208,7 +331,7 @@ struct FocusFlowTests {
             now = now.addingTimeInterval(15 * 60)
             #expect(service.pause(now: now))
             #expect(service.phase == .shortBreak)
-            #expect(service.skipPhase(now: now))
+            #expect(service.skipPhase())
             #expect(service.phase == .focus)
         }
 

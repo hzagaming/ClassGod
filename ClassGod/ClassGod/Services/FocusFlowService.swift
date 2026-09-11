@@ -15,13 +15,19 @@ final class FocusFlowService: ObservableObject {
     private static let presetStorageKey = "com.hanazar.classgod.focusFlow.preset"
     private static let cycleStorageKey = "com.hanazar.classgod.focusFlow.cycleSessions"
     private let defaults: UserDefaults
+    private let clock: () -> TimeInterval
     @Published private var cycleCompletedSessions: Int
-    private var deadline: Date?
+    private var deadline: TimeInterval?
     private var pausedRemaining: TimeInterval
     private var timer: Timer?
 
-    init(defaults: UserDefaults = .standard, now: Date = Date()) {
+    init(defaults: UserDefaults = .standard, now: Date = Date(), clock: (() -> TimeInterval)? = nil) {
         self.defaults = defaults
+        let origin = ContinuousClock.now
+        self.clock = clock ?? {
+            let elapsed = origin.duration(to: .now).components
+            return Double(elapsed.seconds) + Double(elapsed.attoseconds) / 1e18
+        }
         let initialPreset = defaults.string(forKey: Self.presetStorageKey)
             .flatMap(FocusFlowPreset.init(rawValue:)) ?? .classic
         preset = initialPreset
@@ -70,19 +76,21 @@ final class FocusFlowService: ObservableObject {
         let remaining = runState == .paused
             ? max(0.001, pausedRemaining)
             : TimeInterval(max(1, remainingSeconds))
+        let instant = clock()
         pausedRemaining = remaining
-        deadline = now.addingTimeInterval(pausedRemaining)
+        deadline = instant + pausedRemaining
         runState = .running
         startTimer()
-        update(now: now)
+        update(now: now, instant: instant)
         return true
     }
 
     @discardableResult
     func pause(now: Date = Date()) -> Bool {
         guard runState == .running else { return false }
-        update(now: now)
-        let exactRemaining = deadline?.timeIntervalSince(now) ?? pausedRemaining
+        let instant = clock()
+        update(now: now, instant: instant)
+        let exactRemaining = deadline.map { $0 - instant } ?? pausedRemaining
         pausedRemaining = exactRemaining.isFinite ? max(0, exactRemaining) : 0
         remainingSeconds = Int(ceil(pausedRemaining))
         deadline = nil
@@ -115,13 +123,13 @@ final class FocusFlowService: ObservableObject {
     }
 
     @discardableResult
-    func skipPhase(now: Date = Date()) -> Bool {
+    func skipPhase() -> Bool {
         guard runState != .idle else { return false }
         phase = FocusFlowPolicy.skippedPhase(after: phase)
         let duration = phaseDurationSeconds
         remainingSeconds = duration
         pausedRemaining = TimeInterval(duration)
-        deadline = runState == .running ? now.addingTimeInterval(pausedRemaining) : nil
+        deadline = runState == .running ? clock() + pausedRemaining : nil
         return true
     }
 
@@ -144,7 +152,8 @@ final class FocusFlowService: ObservableObject {
         stopTimer()
         let timer = Timer(timeInterval: 1, repeats: true) { [weak self] _ in
             Task { @MainActor [weak self] in
-                self?.update(now: Date())
+                guard let self else { return }
+                self.update(now: Date(), instant: self.clock())
             }
         }
         self.timer = timer
@@ -156,22 +165,22 @@ final class FocusFlowService: ObservableObject {
         timer = nil
     }
 
-    private func update(now: Date) {
+    private func update(now: Date, instant: TimeInterval) {
         refreshDailyStats(now: now)
         guard runState == .running else { return }
         let remaining = FocusFlowPolicy.remainingSeconds(
             deadline: deadline,
             pausedRemaining: pausedRemaining,
-            now: now
+            now: instant
         )
         guard remaining == 0 else {
             remainingSeconds = remaining
             return
         }
-        completePhase(now: now)
+        completePhase(now: now, instant: instant)
     }
 
-    private func completePhase(now: Date) {
+    private func completePhase(now: Date, instant: TimeInterval) {
         let completedPhase = phase
         let transition = FocusFlowPolicy.completedTransition(
             after: completedPhase,
@@ -194,7 +203,7 @@ final class FocusFlowService: ObservableObject {
         let duration = phaseDurationSeconds
         remainingSeconds = duration
         pausedRemaining = TimeInterval(duration)
-        deadline = now.addingTimeInterval(pausedRemaining)
+        deadline = instant + pausedRemaining
         SoundEffectManager.shared.playFocusPhaseComplete(completedFocus: completedPhase.isFocus)
         HapticManager.shared.success()
     }
