@@ -29,13 +29,17 @@ final class ErrorKnowledgeBase: ObservableObject {
     private var categoryCounts: [ErrorCategory: Int] = [:]
     private var invertedIndex: [String: Set<UUID>] = [:]
     private var loadTask: Task<Void, Never>?
+    private var hasLoaded = false
+    private let resourceURL: URL?
     
-    private init() {}
+    init(resourceURL: URL? = Bundle.main.url(forResource: "ErrorKnowledgeBase", withExtension: "json")) {
+        self.resourceURL = resourceURL
+    }
     
     // MARK: - Loading
     
     func ensureLoaded() {
-        guard allEntries.isEmpty, loadingError == nil, loadTask == nil else { return }
+        guard !hasLoaded, loadingError == nil, loadTask == nil else { return }
         isLoading = true
         loadTask = Task { [weak self] in
             await self?.loadInBackground()
@@ -46,12 +50,19 @@ final class ErrorKnowledgeBase: ObservableObject {
         ensureLoaded()
         await loadTask?.value
     }
+
+    func retryLoading() {
+        guard loadingError != nil, loadTask == nil else { return }
+        loadingError = nil
+        ensureLoaded()
+    }
     
     @MainActor
     private func loadInBackground() async {
+        let resourceURL = resourceURL
         let result: Result<[ErrorEntry], Error> = await Task.detached(priority: .userInitiated) {
             do {
-                guard let url = Bundle.main.url(forResource: "ErrorKnowledgeBase", withExtension: "json") else {
+                guard let url = resourceURL else {
                     throw NSError(
                         domain: "ErrorKnowledgeBase",
                         code: 1,
@@ -69,8 +80,9 @@ final class ErrorKnowledgeBase: ObservableObject {
         
         switch result {
         case .success(let entries):
-            self.allEntries = entries
             buildIndexes(entries: entries)
+            self.hasLoaded = true
+            self.allEntries = entries
             self.isLoading = false
         case .failure(let error):
             self.loadingError = error.localizedDescription
@@ -159,17 +171,18 @@ final class ErrorKnowledgeBase: ObservableObject {
     
     // MARK: - Search
     
-    func search(query: String, category: ErrorCategory? = nil) -> [ErrorSearchResult] {
-        ensureLoaded()
-        guard let query = ErrorSearchQuery.normalized(query) else { return [] }
+    func search(query: String, category: ErrorCategory? = nil) async -> [ErrorSearchResult] {
+        guard !Task.isCancelled, let query = ErrorSearchQuery.normalized(query) else { return [] }
+        await ensureLoadedAndWait()
+        guard !Task.isCancelled else { return [] }
         let lowerQuery = query.lowercased()
         let queryTokens = lowerQuery
             .components(separatedBy: CharacterSet.alphanumerics.inverted)
             .filter { !$0.isEmpty }
         
         let pool: [ErrorEntry]
-        if let cat = category, cat != .all, let catEntries = entriesByCategory[cat] {
-            pool = catEntries
+        if let cat = category, cat != .all {
+            pool = entriesByCategory[cat] ?? []
         } else {
             pool = allEntries
         }

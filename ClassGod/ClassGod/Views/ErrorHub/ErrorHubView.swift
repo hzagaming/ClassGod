@@ -97,6 +97,7 @@ struct ErrorHubView: View {
         }
         .onAppear {
             knowledgeBase.ensureLoaded()
+            debouncedSearch(query: searchQuery)
         }
         .onChange(of: navState.targetEntryID, initial: true) { _, newID in
             guard let id = newID else { return }
@@ -216,6 +217,7 @@ struct ErrorHubView: View {
     
     private func debouncedSearch(query: String) {
         searchTask?.cancel()
+        searchTask = nil
         guard let query = ErrorSearchQuery.normalized(query) else {
             searchResults = []
             return
@@ -234,7 +236,7 @@ struct ErrorHubView: View {
         let severity = selectedSeverity
         let tag = selectedTag
         
-        var results = knowledgeBase.search(
+        var results = await knowledgeBase.search(
             query: query,
             category: category == .all ? nil : category
         )
@@ -245,7 +247,11 @@ struct ErrorHubView: View {
             results = results.filter { $0.entry.tags.contains(tag) }
         }
         
-        guard ErrorSearchQuery.normalized(searchQuery) == query else { return }
+        guard !Task.isCancelled,
+              ErrorSearchQuery.normalized(searchQuery) == query,
+              selectedCategory == category,
+              selectedSeverity == severity,
+              selectedTag == tag else { return }
         searchResults = results
     }
     
@@ -460,7 +466,8 @@ struct ErrorHubView: View {
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 20 * zoomScale)
             Button(String(localized: "button.retry")) {
-                knowledgeBase.ensureLoaded()
+                knowledgeBase.retryLoading()
+                debouncedSearch(query: searchQuery)
             }
             .font(.system(size: 10 * zoomScale, design: .monospaced))
             .padding(.horizontal, 14 * zoomScale)

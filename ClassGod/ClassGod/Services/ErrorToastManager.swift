@@ -124,8 +124,7 @@ final class ErrorToastManager: ObservableObject {
         let toastID = show(title: title, message: message, severity: .high, entry: nil)
         
         Task { @MainActor [weak self] in
-            await ErrorKnowledgeBase.shared.ensureLoadedAndWait()
-            let matching = ErrorKnowledgeBase.shared.search(query: "\(nsError.domain) \(nsError.code)")
+            let matching = await ErrorKnowledgeBase.shared.search(query: "\(nsError.domain) \(nsError.code)")
             guard let entry = matching.first?.entry else { return }
             self?.enrichToast(id: toastID, with: entry)
         }
