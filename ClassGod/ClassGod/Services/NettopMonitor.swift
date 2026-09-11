@@ -10,11 +10,12 @@
 
 import Foundation
 
-final class NettopMonitor {
+// Mutable state is confined to queue; currentDeltas() returns a synchronized snapshot.
+nonisolated final class NettopMonitor: @unchecked Sendable {
     static let shared = NettopMonitor()
 
     /// Latest per-process delta bytes/sec (already computed by nettop -d).
-    private(set) var deltaBytesPerSecond: [Int32: (deltaIn: UInt64, deltaOut: UInt64)] = [:]
+    private var deltaBytesPerSecond: [Int32: (deltaIn: UInt64, deltaOut: UInt64)] = [:]
 
     private var process: Process?
     private var pipe: Pipe?
@@ -49,7 +50,7 @@ final class NettopMonitor {
 
     private func _startUnsafe() {
         guard shouldBeRunning else { return }
-        guard process == nil || !process!.isRunning else { return }
+        guard process?.isRunning != true else { return }
 
         // Clean up any stale references from a previous failed launch.
         _cleanupReferences()
@@ -72,9 +73,14 @@ final class NettopMonitor {
         let outPipe = Pipe()
         task.standardOutput = outPipe
         task.standardError = FileHandle.nullDevice
-        task.terminationHandler = { [weak self] _ in
-            self?.queue.asyncAfter(deadline: .now() + 1) { [weak self] in
-                self?._startUnsafe()
+        task.terminationHandler = { [weak self] terminatedTask in
+            self?.queue.async { [weak self] in
+                guard let self, self.process === terminatedTask else { return }
+                self.deltaBytesPerSecond.removeAll()
+                self.queue.asyncAfter(deadline: .now() + 1) { [weak self] in
+                    guard let self, self.process === terminatedTask else { return }
+                    self._startUnsafe()
+                }
             }
         }
 
@@ -84,12 +90,16 @@ final class NettopMonitor {
             self?.deltaBytesPerSecond = snapshot.processes
         }
 
-        outPipe.fileHandleForReading.readabilityHandler = { [weak self] handle in
+        outPipe.fileHandleForReading.readabilityHandler = { [weak self, weak task] handle in
             let data = handle.availableData
-            guard let self, !data.isEmpty else { return }
-            if let text = String(data: data, encoding: .utf8) {
-                self.queue.async { [weak self] in
-                    self?.parser?.feed(text)
+            if data.isEmpty { handle.readabilityHandler = nil }
+            guard let self, let task else { return }
+            self.queue.async { [weak self] in
+                guard let self, self.process === task else { return }
+                if data.isEmpty {
+                    self.deltaBytesPerSecond.removeAll()
+                } else if task.isRunning {
+                    self.parser?.feed(data)
                 }
             }
         }
@@ -106,26 +116,29 @@ final class NettopMonitor {
         // Prevent the termination handler from restarting the process.
         process?.terminationHandler = nil
         process?.terminate()
-        pipe?.fileHandleForReading.readabilityHandler = nil
         _cleanupReferences()
     }
 
     private func _cleanupReferences() {
+        pipe?.fileHandleForReading.readabilityHandler = nil
+        process?.terminationHandler = nil
         process = nil
         pipe = nil
         parser = nil
+        deltaBytesPerSecond.removeAll()
     }
 }
 
 // MARK: - CSV Parser
 
-private struct NettopSnapshot {
+nonisolated struct NettopSnapshot: Sendable {
     var processes: [Int32: (deltaIn: UInt64, deltaOut: UInt64)]
 }
 
-private final class NettopCSVParser {
-    private var buffer = ""
-    private var flushedSampleCount = 0
+nonisolated final class NettopCSVParser {
+    private enum SamplePhase { case awaitingHeader, cumulative, delta }
+    private var buffer = Data()
+    private var phase = SamplePhase.awaitingHeader
     private var currentSample = NettopSnapshot(processes: [:])
     private let onSnapshot: (NettopSnapshot) -> Void
 
@@ -133,14 +146,19 @@ private final class NettopCSVParser {
         self.onSnapshot = onSnapshot
     }
 
-    func feed(_ text: String) {
-        buffer.append(text)
-        // nettop uses \n line endings in CSV logging mode
-        while let newlineIndex = buffer.firstIndex(of: "\n") {
-            let line = String(buffer[..<newlineIndex])
-            buffer.removeSubrange(...newlineIndex)
-            handle(line: line)
+    func feed(_ data: Data) {
+        var searchStart = buffer.endIndex
+        buffer.append(data)
+        var lineStart = buffer.startIndex
+        // Decode complete lines so a pipe read may end anywhere within a UTF-8 character.
+        while let newline = buffer[searchStart...].firstIndex(of: 10) {
+            if let line = String(data: buffer[lineStart..<newline], encoding: .utf8) {
+                handle(line: line)
+            }
+            lineStart = buffer.index(after: newline)
+            searchStart = lineStart
         }
+        if lineStart != buffer.startIndex { buffer.removeSubrange(..<lineStart) }
     }
 
     private func handle(line: String) {
@@ -159,19 +177,15 @@ private final class NettopCSVParser {
             return
         }
 
-        if let entry = parse(line: cleaned) {
+        if phase != .awaitingHeader, let entry = parse(line: cleaned) {
             currentSample.processes[entry.pid] = (deltaIn: entry.bytesIn, deltaOut: entry.bytesOut)
         }
     }
 
     private func flushCurrentSample() {
-        // Nettop emits one cumulative sample on startup (sample 0) and then delta
-        // samples each subsequent header. Emit from the first data sample onward
-        // so the UI shows per-second rates without discarding valid deltas.
-        if flushedSampleCount >= 1, !currentSample.processes.isEmpty {
-            onSnapshot(currentSample)
-        }
-        flushedSampleCount += 1
+        // A header closes the preceding sample; the first sample contains cumulative totals.
+        if phase == .delta { onSnapshot(currentSample) }
+        phase = phase == .awaitingHeader ? .cumulative : .delta
         currentSample.processes.removeAll()
     }
 
