@@ -23,26 +23,30 @@ nonisolated struct NumberQuestion: Hashable {
 nonisolated enum NumberSprintPolicy {
     static func questions<R: RandomNumberGenerator>(difficulty: NumberSprintDifficulty, using random: inout R) -> [NumberQuestion] {
         let limit = difficulty == .challenge ? 99 : 12
-        var additions: [NumberQuestion] = []
-        var subtractions: [NumberQuestion] = []
-        var multiplications: [NumberQuestion] = []
-        for left in 0...limit {
-            for right in 0...limit {
-                if left >= right { additions.append(.init(left: left, right: right, operation: .add)) }
-                if difficulty == .challenge || left >= right {
-                    subtractions.append(.init(left: left, right: right, operation: .subtract))
-                }
+        var questions: [NumberQuestion] = []
+        questions.reserveCapacity(10)
+        for operation in [NumberOperation.add, .subtract, .multiply] {
+            if operation == .multiply && difficulty == .warmUp { continue }
+            let operandCount = operation == .multiply ? (difficulty == .challenge ? 20 : 12) : limit + 1
+            let allowsNegative = operation == .subtract && difficulty == .challenge
+            let population = allowsNegative ? operandCount * operandCount : operandCount * (operandCount + 1) / 2
+            let count = difficulty == .warmUp ? 5 : (operation == .add ? 4 : 3)
+            let offset = operation == .multiply ? 1 : 0
+            var sampled: [Int] = []
+            sampled.reserveCapacity(count)
+            // Floyd sampling selects a uniform subset without constructing the candidate pool.
+            for upperBound in (population - count)..<population {
+                let candidate = Int.random(in: 0...upperBound, using: &random)
+                let index = sampled.contains(candidate) ? upperBound : candidate
+                sampled.append(index)
+                // Canonical pairs occupy triangular rows: (0,0), (1,0), (1,1), ...
+                let left = allowsNegative ? index / operandCount : Int((Double(8 * index + 1).squareRoot() - 1) / 2)
+                let right = allowsNegative ? index % operandCount : index - left * (left + 1) / 2
+                questions.append(.init(left: left + offset, right: right + offset, operation: operation))
             }
         }
-        if difficulty != .warmUp {
-            for left in 1...(difficulty == .challenge ? 20 : 12) {
-                for right in 1...left { multiplications.append(.init(left: left, right: right, operation: .multiply)) }
-            }
-        }
-        let questions = Array(additions.shuffled(using: &random).prefix(difficulty == .warmUp ? 5 : 4))
-            + Array(subtractions.shuffled(using: &random).prefix(difficulty == .warmUp ? 5 : 3))
-            + Array(multiplications.shuffled(using: &random).prefix(difficulty == .warmUp ? 0 : 3))
-        return questions.shuffled(using: &random)
+        questions.shuffle(using: &random)
+        return questions
     }
 }
 

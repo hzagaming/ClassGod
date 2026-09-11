@@ -20,17 +20,19 @@ nonisolated enum ReadingLanePolicy {
         }
         if !lines.isEmpty { paragraphs.append(lines.joined(separator: "\n")) }
         return paragraphs.flatMap { paragraph -> [String] in
-            var remaining = paragraph.trimmingCharacters(in: .whitespacesAndNewlines)
+            var remaining = Substring(paragraph.trimmingCharacters(in: .whitespacesAndNewlines))
             var pieces: [String] = []
-            while remaining.count > passageLength {
-                let boundary = remaining.index(remaining.startIndex, offsetBy: passageLength)
+            while let boundary = remaining.index(remaining.startIndex, offsetBy: passageLength, limitedBy: remaining.endIndex),
+                  boundary != remaining.endIndex {
                 let prefix = remaining[..<boundary]
                 let whitespace = prefix.lastIndex(where: \.isWhitespace)
                 let split = whitespace.flatMap { remaining.distance(from: remaining.startIndex, to: $0) >= passageLength / 2 ? $0 : nil } ?? boundary
                 pieces.append(String(remaining[..<split]).trimmingCharacters(in: .whitespacesAndNewlines))
-                remaining = String(remaining[split...]).trimmingCharacters(in: .whitespacesAndNewlines)
+                remaining = remaining[split...]
+                let start = remaining.unicodeScalars.firstIndex { !CharacterSet.whitespacesAndNewlines.contains($0) } ?? remaining.endIndex
+                remaining = remaining[start...]
             }
-            if !remaining.isEmpty { pieces.append(remaining) }
+            if !remaining.isEmpty { pieces.append(String(remaining)) }
             return pieces
         }
     }

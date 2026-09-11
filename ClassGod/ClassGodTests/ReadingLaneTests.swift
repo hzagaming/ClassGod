@@ -18,6 +18,35 @@ struct ReadingLaneTests {
         #expect(ReadingLanePolicy.boundedSource(String(repeating: "a", count: 60_000)).count == 50_000)
     }
 
+    @Test("Word boundaries are preferred only in the second half of a full passage")
+    func preservesWordBoundaries() {
+        let a = { String(repeating: "a", count: $0) }
+        let b = { String(repeating: "b", count: $0) }
+        #expect(ReadingLanePolicy.passages(a(399) + " " + b(801)) == [a(399) + " " + b(400), b(401)])
+        #expect(ReadingLanePolicy.passages(a(400) + " " + b(800)) == [a(400), b(800)])
+        #expect(ReadingLanePolicy.passages(a(799) + " " + b(401)) == [a(799), b(401)])
+        #expect(ReadingLanePolicy.passages(a(800) + " " + b(400)) == [a(800), b(400)])
+        #expect(ReadingLanePolicy.passages(a(800)) == [a(800)])
+    }
+
+    @Test("Splitting trims Unicode whitespace while retaining combining marks and internal line breaks")
+    func preservesUnicodeTrimming() {
+        let prefix = String(repeating: "学", count: 800)
+        let suffix = "e\u{301}👨‍👩‍👧‍👦\n第二行"
+        #expect(ReadingLanePolicy.passages("\t" + prefix + "\u{2003}\u{00A0}\t" + suffix + "\u{2003}") == [prefix, suffix])
+        #expect(ReadingLanePolicy.passages(prefix + " \u{301}text") == [prefix, "\u{301}text"])
+    }
+
+    @Test("Maximum-length Unicode input is preserved and overflow is excluded from the final passage")
+    func splitsMaximumInput() {
+        let source = String(repeating: "👨‍👩‍👧‍👦学e\u{301}🇨🇳", count: 12_500)
+        let passages = ReadingLanePolicy.passages(source + "excluded")
+        #expect(passages.count == 63)
+        #expect(passages.dropLast().allSatisfy { $0.count == 800 })
+        #expect(passages.last?.count == 400)
+        #expect(passages.joined() == source)
+    }
+
     @Test("Reading advances only on request and completes exactly once at the end")
     func progresses() {
         var session = ReadingLaneSession()

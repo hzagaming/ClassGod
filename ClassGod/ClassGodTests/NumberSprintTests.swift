@@ -29,6 +29,53 @@ struct NumberSprintTests {
         }
     }
 
+    @Test("Sampling preserves canonical pairs and each difficulty's operand ranges", arguments: NumberSprintDifficulty.allCases)
+    func preservesOperandRules(difficulty: NumberSprintDifficulty) {
+        let limit = difficulty == .challenge ? 99 : 12
+        let multiplicationLimit = difficulty == .challenge ? 20 : 12
+        var hasNegativeAnswer = false
+        for seed in 0..<256 {
+            var random = SeededNumbers(state: UInt64(seed))
+            let questions = NumberSprintPolicy.questions(difficulty: difficulty, using: &random)
+            #expect(questions.count == 10 && Set(questions).count == 10)
+            #expect(questions.allSatisfy { question in
+                switch question.operation {
+                case .add:
+                    (0...limit).contains(question.left) && (0...question.left).contains(question.right)
+                case .subtract:
+                    (0...limit).contains(question.left) && (0...limit).contains(question.right)
+                        && (difficulty == .challenge || question.left >= question.right)
+                case .multiply:
+                    difficulty != .warmUp && (1...multiplicationLimit).contains(question.left)
+                        && (1...question.left).contains(question.right)
+                }
+            })
+            hasNegativeAnswer = hasNegativeAnswer || questions.contains { $0.answer < 0 }
+        }
+        #expect(hasNegativeAnswer == (difficulty == .challenge))
+    }
+
+    @Test("A ten-question round does not consume randomness for the entire candidate pool", arguments: NumberSprintDifficulty.allCases)
+    func boundsRandomWork(difficulty: NumberSprintDifficulty) {
+        var random = SeededNumbers(state: 42)
+        _ = NumberSprintPolicy.questions(difficulty: difficulty, using: &random)
+        #expect(random.calls < 64)
+    }
+
+    @Test("Canonical addition pairs retain comparable sampling frequency, including equal operands")
+    func samplesCanonicalPairsUniformly() {
+        var random = SeededNumbers(state: 42)
+        var counts: [NumberQuestion: Int] = [:]
+        for _ in 0..<4_096 {
+            for question in NumberSprintPolicy.questions(difficulty: .warmUp, using: &random) where question.operation == .add {
+                counts[question, default: 0] += 1
+            }
+        }
+        #expect(counts.count == 91)
+        let expected = Double(4_096 * 5) / 91
+        #expect(counts.values.allSatisfy { abs(Double($0) - expected) < expected * 0.25 })
+    }
+
     @Test("Invalid input does not count as an attempt and duplicate answers cannot add points")
     func validatesAnswers() {
         var session = startedSession()
@@ -93,7 +140,9 @@ struct NumberSprintTests {
 
 private struct SeededNumbers: RandomNumberGenerator {
     var state: UInt64
+    var calls = 0
     mutating func next() -> UInt64 {
+        calls += 1
         state = state &* 6_364_136_223_846_793_005 &+ 1_442_695_040_888_963_407
         return state
     }
