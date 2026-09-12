@@ -19,6 +19,10 @@ nonisolated enum ShortcutCapturePolicy {
         guard !isNumericPad, !keyName.isEmpty, keyCode != nil else { return false }
         return isFunctionKey || modifiers != 0
     }
+
+    static func keyName(for event: NSEvent) -> String {
+        ShortcutKeyCatalog.keyName(for: UInt32(event.keyCode)) ?? ""
+    }
 }
 
 struct ShortcutPicker: View {
@@ -144,8 +148,8 @@ struct ShortcutPicker: View {
                     return nil
                 }
 
-                let isFunctionKey = functionKeyName(for: event.keyCode) != nil
-                let keyName = keyName(for: event)
+                let keyName = ShortcutCapturePolicy.keyName(for: event)
+                let isFunctionKey = keyName.hasPrefix("F") && keyName.count > 1
                 guard ShortcutCapturePolicy.shouldAccept(
                     keyName: keyName,
                     keyCode: ShortcutManager.shared.keyCode(for: keyName),
@@ -174,25 +178,6 @@ struct ShortcutPicker: View {
             NSEvent.removeMonitor(monitor)
             localMonitor = nil
         }
-    }
-
-    private func keyName(for event: NSEvent) -> String {
-        if event.keyCode == 0x31 { return "Space" }
-        if let functionKey = functionKeyName(for: event.keyCode) {
-            return functionKey
-        }
-
-        return (event.charactersIgnoringModifiers ?? "").uppercased()
-    }
-
-    private func functionKeyName(for keyCode: UInt16) -> String? {
-        let map: [UInt16: String] = [
-            0x7A: "F1", 0x78: "F2", 0x63: "F3",
-            0x76: "F4", 0x60: "F5", 0x61: "F6",
-            0x62: "F7", 0x64: "F8", 0x65: "F9",
-            0x6D: "F10", 0x67: "F11", 0x6F: "F12"
-        ]
-        return map[keyCode]
     }
 }
 

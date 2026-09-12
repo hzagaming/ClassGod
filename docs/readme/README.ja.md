@@ -4,7 +4,7 @@
 
 [English](../../README.md) · [简体中文](README.zh-Hans.md) · [繁體中文](README.zh-Hant.md) · **日本語** · [한국어](README.ko.md) · [Français](README.fr.md) · [Deutsch](README.de.md) · [Español](README.es.md) · [Português](README.pt.md) · [Русский](README.ru.md)
 
-> ソースコードのバージョン：**v1.5.57 (Build 82)**。公開済みのダウンロードは [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest) をご覧ください。
+> ソースコードのバージョン：**v1.5.58 (Build 83)**。公開済みのダウンロードは [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest) をご覧ください。
 
 ## ClassGod について
 
@@ -54,7 +54,7 @@ DMG は開いて **ClassGod** を **Applications** にドラッグします。PK
 3. **DestinTab** で現在のブラウザタブを保存し、ショートカットを記録します。
 4. 任意のアプリからショートカットを押すと、一致するタブを有効化するか保存 URL を開き直します。
 
-キーは英字、数字、F1–F12 に対応し、修飾キーは Command、Option、Control、Shift を登録できます。
+キーは英字、数字、Space、一般的な記号、F1–F12 に対応し、テンキーは対象外です。物理的なキー位置で記録し、固定のキー名を表示します。修飾キーは Command、Option、Control、Shift を登録できます。
 
 ## 権限の境界
 

@@ -4,7 +4,7 @@
 
 [English](../../README.md) · [简体中文](README.zh-Hans.md) · [繁體中文](README.zh-Hant.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · **Français** · [Deutsch](README.de.md) · [Español](README.es.md) · [Português](README.pt.md) · [Русский](README.ru.md)
 
-> Version du code source : **v1.5.57 (Build 82)**. Les téléchargements publiés sont disponibles sur [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest).
+> Version du code source : **v1.5.58 (Build 83)**. Les téléchargements publiés sont disponibles sur [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest).
 
 ## À propos de ClassGod
 
@@ -54,7 +54,7 @@ Les fichiers publics actuels utilisent une signature ad-hoc et ne sont pas notar
 3. Ouvrez **DestinTab**, enregistrez l’onglet actuel et définissez un raccourci.
 4. Utilisez ce raccourci depuis n’importe quelle app pour activer l’onglet ou rouvrir l’URL enregistrée.
 
-Les touches prises en charge sont les lettres, les chiffres et F1–F12. Les modificateurs enregistrables sont Command, Option, Control et Shift.
+Les touches prises en charge sont les lettres, les chiffres, l’espace, les signes de ponctuation courants et F1–F12, à l’exclusion du pavé numérique. L’enregistrement utilise les positions physiques avec des noms de touches fixes. Les modificateurs enregistrables sont Command, Option, Control et Shift.
 
 ## Limites des autorisations
 

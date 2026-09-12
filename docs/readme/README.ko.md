@@ -4,7 +4,7 @@
 
 [English](../../README.md) · [简体中文](README.zh-Hans.md) · [繁體中文](README.zh-Hant.md) · [日本語](README.ja.md) · **한국어** · [Français](README.fr.md) · [Deutsch](README.de.md) · [Español](README.es.md) · [Português](README.pt.md) · [Русский](README.ru.md)
 
-> 소스 코드 버전: **v1.5.57 (Build 82)**. 공개된 다운로드는 [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest)에서 확인하세요.
+> 소스 코드 버전: **v1.5.58 (Build 83)**. 공개된 다운로드는 [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest)에서 확인하세요.
 
 ## ClassGod 소개
 
@@ -54,7 +54,7 @@ DMG를 열어 **ClassGod**를 **Applications**로 드래그하거나, PKG 설치
 3. **DestinTab**에서 현재 브라우저 탭을 저장하고 단축키를 기록합니다.
 4. 어느 앱에서든 단축키를 누르면 일치하는 탭을 활성화하거나 저장한 URL을 다시 엽니다.
 
-지원 키는 문자, 숫자, F1–F12이며 등록 가능한 보조 키는 Command, Option, Control, Shift입니다.
+문자, 숫자, Space, 일반 문장 부호, F1–F12를 지원하며 숫자 키패드는 제외됩니다. 물리적 키 위치로 기록하고 고정된 키 이름을 표시합니다. 등록 가능한 보조 키는 Command, Option, Control, Shift입니다.
 
 ## 권한 경계
 

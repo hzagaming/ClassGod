@@ -2,7 +2,7 @@
 
 ## 项目定位
 
-ClassGod 本质上是一个**紧急切屏工具**——帮用户在关键时刻（比如老师来了、老板路过）瞬间切回指定页面。当前版本 v1.5.57 (Build 82)，核心逻辑是 AppleScript + Carbon HotKey + SwiftUI。
+ClassGod 本质上是一个**紧急切屏工具**——帮用户在关键时刻（比如老师来了、老板路过）瞬间切回指定页面。当前版本 v1.5.58 (Build 83)，核心逻辑是 AppleScript + Carbon HotKey + SwiftUI。
 
 ## 技术约束
 
@@ -106,7 +106,7 @@ xcodebuild -project ClassGod.xcodeproj -scheme ClassGod -destination 'platform=m
 
 ## 已知限制
 
-- 快捷键只支持字母、数字、F1-F12
+- 快捷键支持字母、数字、Space、常用标点和 F1–F12；按物理键位记录，不支持数字小键盘
 - Prefix 模式仍可能匹配相近 URL；Host-only 模式按完整 host 边界匹配
 - 不支持 Firefox
 - 音效由 `SoundEffectManager` 在内存中生成短 PCM/WAV 音色并通过 `NSSound(data:)` 缓存播放，不依赖未文档化 Sound ID 或外部音频文件

@@ -193,6 +193,31 @@ struct RegressionPolicyTests {
         #expect(ShortcutCapturePolicy.shouldAccept(keyName: "F7", keyCode: 0x62, modifiers: 0, isFunctionKey: true, isNumericPad: false))
     }
 
+    @Test("Shortcut capture preserves registration key codes across Shift and keyboard layouts")
+    @MainActor
+    func capturesShortcutKeyCodes() throws {
+        let cases: [(UInt16, String, String)] = [
+            (0x12, "!", "1"),
+            (0x18, "+", "="),
+            (0x21, "{", "["),
+            (0x00, "Q", "A"),
+            (0x00, "Ф", "A"),
+            (0x31, " ", "Space"),
+            (0x7A, "\u{f704}", "F1"),
+            (0x6F, "\u{f70f}", "F12"),
+        ]
+        for (code, characters, expected) in cases {
+            let event = try #require(NSEvent.keyEvent(
+                with: .keyDown, location: .zero, modifierFlags: [.command, .shift], timestamp: 0,
+                windowNumber: 0, context: nil, characters: characters,
+                charactersIgnoringModifiers: characters, isARepeat: false, keyCode: code
+            ))
+            let name = ShortcutCapturePolicy.keyName(for: event)
+            #expect(name == expected)
+            #expect(ShortcutKeyCatalog.keyCode(for: name) == UInt32(code))
+        }
+    }
+
     @Test("Shortcut modifiers discard unsupported event flags")
     func normalizesCapturedShortcutModifiers() {
         let supported = NSEvent.ModifierFlags([.command, .shift]).rawValue

@@ -4,7 +4,7 @@
 
 [English](../../README.md) · **简体中文** · [繁體中文](README.zh-Hant.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Français](README.fr.md) · [Deutsch](README.de.md) · [Español](README.es.md) · [Português](README.pt.md) · [Русский](README.ru.md)
 
-> 源码版本：**v1.5.57 (Build 82)**。已发布安装包请查看 [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest)。
+> 源码版本：**v1.5.58 (Build 83)**。已发布安装包请查看 [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest)。
 
 ## ClassGod 是什么
 
@@ -79,7 +79,7 @@ ClassGod 常驻 macOS 菜单栏。你可以保存浏览器目标、绑定全局�
 3. 打开 **DestinTab**，保存当前浏览器标签并录制快捷键。
 4. 在任意应用按下快捷键，ClassGod 会激活匹配标签或重新打开保存的网址。
 
-快捷键支持字母、数字和 F1–F12；可注册修饰键为 Command、Option、Control、Shift。
+快捷键支持字母、数字、Space、常用标点和 F1–F12，不支持数字小键盘；按物理键位录制并使用固定键名。可注册修饰键为 Command、Option、Control、Shift。
 
 ## 权限边界
 

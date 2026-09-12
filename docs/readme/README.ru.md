@@ -4,7 +4,7 @@
 
 [English](../../README.md) · [简体中文](README.zh-Hans.md) · [繁體中文](README.zh-Hant.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Français](README.fr.md) · [Deutsch](README.de.md) · [Español](README.es.md) · [Português](README.pt.md) · **Русский**
 
-> Версия исходного кода: **v1.5.57 (Build 82)**. Опубликованные загрузки доступны в [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest).
+> Версия исходного кода: **v1.5.58 (Build 83)**. Опубликованные загрузки доступны в [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest).
 
 ## Что такое ClassGod
 
@@ -54,7 +54,7 @@ ClassGod работает в строке меню macOS. Сохраните а�
 3. Откройте **DestinTab**, сохраните текущую вкладку и запишите сочетание клавиш.
 4. Нажмите сочетание из любого приложения, чтобы активировать вкладку или заново открыть сохранённый URL.
 
-Поддерживаются буквы, цифры и F1–F12; доступные модификаторы — Command, Option, Control и Shift.
+Поддерживаются буквы, цифры, пробел, распространённые знаки пунктуации и F1–F12, кроме цифрового блока. Запись использует физические позиции клавиш с фиксированными названиями. Доступные модификаторы — Command, Option, Control и Shift.
 
 ## Границы разрешений
 

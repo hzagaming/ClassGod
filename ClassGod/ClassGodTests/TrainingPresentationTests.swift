@@ -7,6 +7,53 @@ import Testing
 @Suite("Training presentation", .serialized)
 @MainActor
 struct TrainingPresentationTests {
+    private let renderWindow = NSWindow(contentRect: .zero, styleMask: [.borderless], backing: .buffered, defer: true)
+
+    @Test("Core tool windows render at minimum size and enlarged scale")
+    func rendersCoreToolWindows() async throws {
+        let original = PreferencesManager.shared.preferences
+        let clipoSettings = ClipoService.shared.settings
+        PreferencesManager.shared.preferences.enableSoundEffects = false
+        PreferencesManager.shared.preferences.enableHapticFeedback = false
+        PreferencesManager.shared.preferences.useInstantAnimations = true
+        PreferencesManager.shared.preferences.autoDetectOnShow = false
+        ClipoService.shared.settings.monitorClipboard = false
+        defer {
+            PreferencesManager.shared.preferences = original
+            ClipoService.shared.settings = clipoSettings
+            ClipoService.shared.stop()
+            GhostProtocolController.shared.shutdown()
+        }
+        let panels: [(FeatureWindowKind, () -> AnyView)] = [
+            (.preflight, { AnyView(PreflightView(onClose: {}, onOpenDestinTab: {}, onOpenSuperSwitch: {}, onOpenPermissionCenter: {})) }),
+            (.destinTab, { AnyView(DestinTabView(onClose: {})) }),
+            (.superSwitch, { AnyView(SuperSwitchView(onClose: {})) }),
+            (.ghostProtocol, { AnyView(GhostProtocolView(onClose: {})) }),
+            (.browserBypasser, { AnyView(BrowserBypasserView(onClose: {})) }),
+            (.assessPrepHack, { AnyView(AssessPrepHackView(onClose: {})) }),
+            (.fakeLock, { AnyView(FakeLockView(onClose: {})) }),
+            (.settings, { AnyView(SettingsWindowView(onClose: {})) }),
+            (.wallpaper, { AnyView(WallpaperBrowserView(onClose: {})) }),
+            (.hackerDesktop, { AnyView(HackerDesktopView(onClose: {})) }),
+            (.clipo, { AnyView(ClipoView(onClose: {})) }),
+            (.notes, { AnyView(NotesView(onClose: {})) }),
+            (.todo, { AnyView(TodoView(onClose: {})) }),
+            (.schedule, { AnyView(ScheduleView(onClose: {})) }),
+            (.focusFlow, { AnyView(FocusFlowView(onClose: {})) }),
+            (.errorHub, { AnyView(ErrorHubView(onClose: {})) }),
+            (.activityMonitor, { AnyView(ActivityMonitorView(onClose: {})) }),
+            (.permissionCenter, { AnyView(PermissionCenterView(onClose: {})) }),
+        ]
+        for zoom in [1.0, 2.0] {
+            PreferencesManager.shared.preferences.windowZoomScale = zoom
+            for (kind, panel) in panels {
+                let layout = FeatureWindowLayoutPolicy.layout(for: kind)
+                let size = NSSize(width: layout.minimumWidth * zoom, height: min(800, layout.minimumHeight * zoom))
+                try await render(panel(), name: "core-\(kind)-\(Int(zoom * 100))", size: size)
+            }
+        }
+    }
+
     @Test("Both student modes and shared tools render the expanded feature grid at supported scales")
     func rendersMainPanelModes() async throws {
         let preferences = PreferencesManager.shared.preferences
@@ -20,6 +67,7 @@ struct TrainingPresentationTests {
         PreferencesManager.shared.preferences.enableSoundEffects = false
         PreferencesManager.shared.preferences.enableHapticFeedback = false
         PreferencesManager.shared.preferences.enableFanControl = false
+        PreferencesManager.shared.preferences.autoDetectOnShow = false
         let editorModel = TabListViewModel()
         let draft = BrowserTab(title: "Learning notes / 学习笔记", url: "https://example.org/notes", browser: .safari,
                                shortcutKey: "K", shortcutModifiers: NSEvent.ModifierFlags([.command, .shift]).rawValue)
@@ -441,12 +489,23 @@ struct TrainingPresentationTests {
         let content = global ? AnyView(ShortcutsSettingsView()) : AnyView(ShortcutFixture(controls: controls))
         let host = NSHostingView(rootView: content.frame(width: 520, height: 400))
         window.contentView = host
-        window.makeKeyAndOrderFront(nil)
         NSApplication.shared.activate(ignoringOtherApps: true)
+        window.makeKeyAndOrderFront(nil)
         host.layoutSubtreeIfNeeded()
-        try await Task.sleep(for: .milliseconds(150))
+        for _ in 0..<100 {
+            if window.isKeyWindow { break }
+            try await Task.sleep(for: .milliseconds(20))
+            if NSApplication.shared.isActive { window.makeKey() }
+        }
         try #require(window.isKeyWindow)
+        try await Task.sleep(for: .milliseconds(150))
         func click(_ location: NSPoint) async throws {
+            var delivered = false
+            let monitor = try #require(NSEvent.addLocalMonitorForEvents(matching: .leftMouseUp) { event in
+                if event.window === window { delivered = true }
+                return event
+            })
+            defer { NSEvent.removeMonitor(monitor) }
             for type in [NSEvent.EventType.leftMouseDown, .leftMouseUp] {
                 let event = try #require(NSEvent.mouseEvent(
                     with: type, location: location,
@@ -455,7 +514,12 @@ struct TrainingPresentationTests {
                 ))
                 NSApplication.shared.postEvent(event, atStart: false)
             }
-            try await Task.sleep(for: .milliseconds(100))
+            for _ in 0..<100 {
+                if delivered { break }
+                try await Task.sleep(for: .milliseconds(20))
+            }
+            try #require(delivered)
+            try await Task.sleep(for: .milliseconds(50))
         }
         func startRecording() async throws {
             try await click(global ? NSPoint(x: 360, y: 320) : NSPoint(x: 180, y: 200))
@@ -470,10 +534,10 @@ struct TrainingPresentationTests {
             NSApplication.shared.sendEvent(event)
         }
         try await startRecording()
-        try sendKey("K", code: 0x28, to: window)
+        try sendKey("!", code: 0x12, to: window)
         try await Task.sleep(for: .milliseconds(50))
-        if global { try #require(PreferencesManager.shared.preferences.showPopoverKeyCode == 0x28) }
-        else { try #require(controls.key == "K"); #expect(!controls.isRecording) }
+        if global { try #require(PreferencesManager.shared.preferences.showPopoverKeyCode == 0x12) }
+        else { try #require(controls.key == "1"); #expect(!controls.isRecording) }
         try await startRecording()
         let sink = KeyEventSink()
         other.contentView = sink
@@ -490,10 +554,10 @@ struct TrainingPresentationTests {
         try sendKey("L", code: 0x25, to: interruption == "window" ? other : window)
         try await Task.sleep(for: .milliseconds(50))
         if global {
-            #expect(PreferencesManager.shared.preferences.showPopoverKeyCode == (interruption == "reset" ? AppPreferences.default.showPopoverKeyCode : 0x28))
+            #expect(PreferencesManager.shared.preferences.showPopoverKeyCode == (interruption == "reset" ? AppPreferences.default.showPopoverKeyCode : 0x12))
             #expect(PreferencesManager.shared.preferences.showPopoverModifiers == (interruption == "reset" ? AppPreferences.default.showPopoverModifiers : UInt32(NSEvent.ModifierFlags.shift.rawValue)))
         } else {
-            #expect(controls.key == (interruption == "reset" ? "" : "K"))
+            #expect(controls.key == (interruption == "reset" ? "" : "1"))
             #expect(controls.modifiers == (interruption == "reset" ? 0 : NSEvent.ModifierFlags.shift.rawValue))
         }
         if interruption == "window" { #expect(sink.keys == ["L"]) }
@@ -570,12 +634,12 @@ struct TrainingPresentationTests {
         PreferencesManager.shared.preferences.animationSpeed = .normal
         PreferencesManager.shared.preferences.useInstantAnimations = false
         let controls = MotionControls()
+        controls.isVisible = !bounce
         let probe = MotionProbe(controls: controls, bounce: bounce)
         defer { probe.window.close() }
-        if !bounce {
-            try await Task.sleep(for: .milliseconds(100))
-            controls.trigger = true
-        }
+        try await Task.sleep(for: .milliseconds(100))
+        if bounce { controls.isVisible = true }
+        else { controls.trigger = true }
         var moved = false
         for _ in 0..<15 {
             try await Task.sleep(for: .milliseconds(20))
@@ -618,8 +682,13 @@ struct TrainingPresentationTests {
     }
 
     private func render<Content: View>(_ content: Content, name: String, size: NSSize, prepare: () -> Void = {}) async throws {
-        let window = NSWindow(contentRect: NSRect(origin: .zero, size: size), styleMask: [.borderless], backing: .buffered, defer: false)
+        let window = renderWindow
+        window.setContentSize(size)
         window.isReleasedWhenClosed = false
+        defer {
+            window.contentView = nil
+            window.close()
+        }
         let host = NSHostingView(rootView: content)
         window.contentView = host
         host.frame = NSRect(origin: .zero, size: size)
@@ -637,13 +706,13 @@ struct TrainingPresentationTests {
             let png = try #require(bitmap.representation(using: .png, properties: [:]))
             try png.write(to: directory.appendingPathComponent(name + ".png"), options: .atomic)
         }
-        window.close()
     }
 }
 
 @MainActor
 private final class MotionControls: ObservableObject {
     @Published var trigger = false
+    @Published var isVisible = true
 }
 
 @MainActor
@@ -675,7 +744,9 @@ private struct MotionFixture: View {
     var body: some View {
         Group {
             if bounce {
-                Color.red.frame(width: 20, height: 20).bounce(intensity: 2)
+                if controls.isVisible {
+                    Color.red.frame(width: 20, height: 20).bounce(intensity: 2)
+                }
             } else {
                 Color.red.frame(width: 20, height: 20).shake(trigger: controls.trigger, intensity: 20)
             }

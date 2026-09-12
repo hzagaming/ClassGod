@@ -542,31 +542,51 @@ struct DestinTabView: View {
 
             Divider()
 
-            HStack(spacing: 14 * zoomScale) {
-                footerButton(title: "button.settings", icon: "gear") {
-                    SoundEffectManager.shared.playButtonClick()
-                    NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 14 * zoomScale) {
+                    footerPrimaryActions
+                    footerSecondaryActions
                 }
-
-                footerButton(title: "destintab.import_tabs", icon: "square.and.arrow.down") {
-                    SoundEffectManager.shared.playButtonClick()
-                    showImportPanel = true
+                .fixedSize(horizontal: true, vertical: false)
+                Grid(alignment: .leading, horizontalSpacing: 14 * zoomScale, verticalSpacing: 8 * zoomScale) {
+                    GridRow { footerPrimaryActions }
+                    GridRow { footerSecondaryActions }
                 }
-
-                footerButton(title: "destintab.export_tabs", icon: "square.and.arrow.up") {
-                    SoundEffectManager.shared.playButtonClick()
-                    showExportPanel = true
+                .fixedSize(horizontal: true, vertical: false)
+                VStack(alignment: .leading, spacing: 8 * zoomScale) {
+                    footerPrimaryActions
+                    footerSecondaryActions
                 }
-
-                footerButton(title: "button.automation", icon: "lock.shield") {
-                    SoundEffectManager.shared.playButtonClick()
-                    openAutomationSettings()
-                }
-
-                Spacer()
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, 16 * zoomScale)
             .padding(.vertical, 8 * zoomScale)
+        }
+    }
+
+    private var footerPrimaryActions: some View {
+        Group {
+            footerButton(title: "button.settings", icon: "gear") {
+                SoundEffectManager.shared.playButtonClick()
+                NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+            }
+            footerButton(title: "destintab.import_tabs", icon: "square.and.arrow.down") {
+                SoundEffectManager.shared.playButtonClick()
+                showImportPanel = true
+            }
+        }
+    }
+
+    private var footerSecondaryActions: some View {
+        Group {
+            footerButton(title: "destintab.export_tabs", icon: "square.and.arrow.up") {
+                SoundEffectManager.shared.playButtonClick()
+                showExportPanel = true
+            }
+            footerButton(title: "button.automation", icon: "lock.shield") {
+                SoundEffectManager.shared.playButtonClick()
+                openAutomationSettings()
+            }
         }
     }
 

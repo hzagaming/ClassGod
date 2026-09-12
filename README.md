@@ -25,7 +25,7 @@
   </p>
 </div>
 
-> Source version: **v1.5.57 (Build 82)**. Published downloads are available on [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest).
+> Source version: **v1.5.58 (Build 83)**. Published downloads are available on [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest).
 
 ## Why ClassGod
 
@@ -109,7 +109,7 @@ Current public artifacts are ad-hoc signed and are not Apple-notarized. On first
 3. Open **DestinTab**, capture the current browser tab, and assign a supported global shortcut.
 4. Press the shortcut from any app. ClassGod activates the matching tab or recreates it using the saved URL.
 
-Supported shortcut keys are letters, numbers, and F1–F12. Registerable modifiers are Command, Option, Control, and Shift.
+Supported shortcut keys are letters, numbers, Space, common punctuation, and F1–F12; the numeric keypad is excluded. Recording uses physical key positions with fixed key labels. Registerable modifiers are Command, Option, Control, and Shift.
 
 ## Permissions
 
@@ -189,9 +189,9 @@ ClassGod/ClassGodTests/    App tests
 ClassGodHelper/            Privileged helper Swift package and tests
 ```
 
-## Latest changes: v1.5.57
+## Latest changes: v1.5.58
 
-Shortcut recording now stays within the window that had keyboard focus when recording began. Switching windows or leaving the app cancels recording and preserves the saved combination, so typing elsewhere cannot overwrite shortcuts or trigger false success feedback. Resetting the global shortcut also ends recording. Native regressions cover both recorders, focus loss, reset/clear, input delivery to another window, and starting a new recording afterward.
+Shortcut recording now uses physical key codes, fixing Shift + number/punctuation combinations and mismatches across keyboard layouts. DestinTab adapts its footer actions to narrow windows without splitting labels into cramped columns. This version also includes bounded recall-card archives, clock-stable focus timers, reliable Error Hub retries, and reduced repeated work in training, lists, clipboard previews, and system monitoring. Native checks cover both student modes, core tool windows, audio lifecycle behavior, and enlarged layouts.
 
 Read [CHANGELOG.md](CHANGELOG.md) for current releases and [CHANGELOG_HISTORY.md](CHANGELOG_HISTORY.md) for older history.
 

@@ -4,7 +4,7 @@
 
 [English](../../README.md) · [简体中文](README.zh-Hans.md) · **繁體中文** · [日本語](README.ja.md) · [한국어](README.ko.md) · [Français](README.fr.md) · [Deutsch](README.de.md) · [Español](README.es.md) · [Português](README.pt.md) · [Русский](README.ru.md)
 
-> 原始碼版本：**v1.5.57 (Build 82)**。已發布安裝包請查看 [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest)。
+> 原始碼版本：**v1.5.58 (Build 83)**。已發布安裝包請查看 [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest)。
 
 ## ClassGod 是什麼
 
@@ -60,7 +60,7 @@ ClassGod 常駐 macOS 選單列。你可以儲存瀏覽器目標、綁定全域�
 3. 開啟 **DestinTab**，儲存目前瀏覽器分頁並錄製快捷鍵。
 4. 在任何 App 按下快捷鍵，ClassGod 會啟用符合的分頁或重新開啟儲存的網址。
 
-快捷鍵支援字母、數字與 F1–F12；可註冊修飾鍵為 Command、Option、Control、Shift。
+快捷鍵支援字母、數字、Space、常用標點與 F1–F12，不支援數字鍵盤；按實體鍵位錄製並使用固定鍵名。可註冊修飾鍵為 Command、Option、Control、Shift。
 
 ## 權限邊界
 

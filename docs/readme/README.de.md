@@ -4,7 +4,7 @@
 
 [English](../../README.md) · [简体中文](README.zh-Hans.md) · [繁體中文](README.zh-Hant.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Français](README.fr.md) · **Deutsch** · [Español](README.es.md) · [Português](README.pt.md) · [Русский](README.ru.md)
 
-> Quellcode-Version: **v1.5.57 (Build 82)**. Veröffentlichte Downloads finden Sie unter [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest).
+> Quellcode-Version: **v1.5.58 (Build 83)**. Veröffentlichte Downloads finden Sie unter [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest).
 
 ## Was ist ClassGod?
 
@@ -54,7 +54,7 @@ Die öffentlichen Artefakte sind derzeit ad-hoc signiert und nicht von Apple not
 3. Öffne **DestinTab**, speichere den aktuellen Browser-Tab und zeichne einen Kurzbefehl auf.
 4. Drücke ihn in einer beliebigen App, um den passenden Tab zu aktivieren oder die gespeicherte URL neu zu öffnen.
 
-Unterstützt werden Buchstaben, Zahlen und F1–F12; registrierbare Modifikatoren sind Command, Option, Control und Shift.
+Unterstützt werden Buchstaben, Zahlen, die Leertaste, gängige Satzzeichen und F1–F12, jedoch nicht der Ziffernblock. Die Aufnahme verwendet physische Tastenpositionen mit festen Tastenbezeichnungen. Registrierbare Modifikatoren sind Command, Option, Control und Shift.
 
 ## Berechtigungsgrenzen
 

@@ -27,6 +27,9 @@ nonisolated enum ShortcutKeyCatalog {
         "F7": 0x62, "F8": 0x64, "F9": 0x65,
         "F10": 0x6D, "F11": 0x67, "F12": 0x6F,
     ]
+    private static let keyNames = Dictionary(uniqueKeysWithValues: keyCodes.map {
+        ($0.value, $0.key == "SPACE" ? "Space" : $0.key)
+    })
 
     static func normalizedName(_ key: String) -> String? {
         let normalized = key.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
@@ -37,6 +40,10 @@ nonisolated enum ShortcutKeyCatalog {
     static func keyCode(for key: String) -> UInt32? {
         guard let normalized = normalizedName(key) else { return nil }
         return keyCodes[normalized.uppercased()]
+    }
+
+    static func keyName(for keyCode: UInt32) -> String? {
+        keyNames[keyCode]
     }
 }
 

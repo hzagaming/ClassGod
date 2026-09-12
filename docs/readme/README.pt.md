@@ -4,7 +4,7 @@
 
 [English](../../README.md) · [简体中文](README.zh-Hans.md) · [繁體中文](README.zh-Hant.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Français](README.fr.md) · [Deutsch](README.de.md) · [Español](README.es.md) · **Português** · [Русский](README.ru.md)
 
-> Versão do código-fonte: **v1.5.57 (Build 82)**. Os downloads publicados estão em [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest).
+> Versão do código-fonte: **v1.5.58 (Build 83)**. Os downloads publicados estão em [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest).
 
 ## O que é o ClassGod
 
@@ -54,7 +54,7 @@ Os artefatos públicos atuais usam assinatura ad-hoc e não têm notarização d
 3. Abra **DestinTab**, salve a aba atual e grave um atalho.
 4. Pressione o atalho em qualquer app para ativar a aba correspondente ou reabrir a URL salva.
 
-São aceitos letras, números e F1–F12; os modificadores registráveis são Command, Option, Control e Shift.
+São aceitos letras, números, espaço, sinais de pontuação comuns e F1–F12, exceto o teclado numérico. A gravação usa posições físicas com nomes fixos para as teclas. Os modificadores registráveis são Command, Option, Control e Shift.
 
 ## Limites de permissões
 

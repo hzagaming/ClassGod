@@ -4,7 +4,7 @@
 
 [English](../../README.md) · [简体中文](README.zh-Hans.md) · [繁體中文](README.zh-Hant.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Français](README.fr.md) · [Deutsch](README.de.md) · **Español** · [Português](README.pt.md) · [Русский](README.ru.md)
 
-> Versión del código fuente: **v1.5.57 (Build 82)**. Las descargas publicadas están en [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest).
+> Versión del código fuente: **v1.5.58 (Build 83)**. Las descargas publicadas están en [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest).
 
 ## Qué es ClassGod
 
@@ -54,7 +54,7 @@ Los artefactos públicos actuales usan firma ad-hoc y no están notarizados por 
 3. Abre **DestinTab**, guarda la pestaña actual y graba un atajo.
 4. Pulsa el atajo desde cualquier app para activar la pestaña coincidente o volver a abrir la URL guardada.
 
-Se admiten letras, números y F1–F12; los modificadores registrables son Command, Option, Control y Shift.
+Se admiten letras, números, espacio, signos de puntuación comunes y F1–F12, pero no el teclado numérico. La grabación usa posiciones físicas con nombres de tecla fijos. Los modificadores registrables son Command, Option, Control y Shift.
 
 ## Límites de permisos
 
