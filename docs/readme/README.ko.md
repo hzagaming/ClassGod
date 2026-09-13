@@ -36,7 +36,7 @@ ClassGod는 macOS 메뉴 막대에서 실행됩니다. 브라우저 대상을 �
 ## 요구 사항
 
 - macOS 14.0 이상
-- 현재 배포 빌드는 Apple Silicon(`arm64`)용
+- Apple Silicon(`arm64`) 또는 Intel(`x86_64`). 모든 배포 파일은 macOS 유니버설 빌드입니다
 - Safari, Google Chrome 또는 Microsoft Edge
 - 핵심 브라우저 작업에는 손쉬운 사용과 자동화 권한 필요
 - PKG, 팬 제어 Helper 설치 또는 완전 제거 시 관리자 승인이 필요할 수 있음

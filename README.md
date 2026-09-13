@@ -60,13 +60,13 @@ It has grown into a focused desktop toolkit while keeping the same rule: user da
 | **Desktop tools** | Includes Activity Monitor, dynamic wallpapers, Hacker Desktop, Error Hub, BrowserBypasser, and AssessPrep tools. |
 | **Personalization** | Uses a black visual base with a custom accent, scalable windows, animation controls, sound effects, and haptic feedback. |
 
-Recall Lab and Switch Drill are additions in the current development tree. Recall cards stay in Application Support; drill results last only for the current app session. A drill executes the selected shortcut with its existing settings, so it really switches apps or browser tabs.
+Recall cards stay in Application Support; drill results last only for the current app session. A drill executes the selected shortcut with its existing settings, so it really switches apps or browser tabs.
 
-Reading Lane and Screen Curtain also belong to the development build. Reading material and progress remain in memory until quit. The curtain is a visual cover, not a lock or recording blocker; switching apps, sleep, or display changes dismiss it.
+Reading material and progress remain in memory until quit. The curtain is a visual cover, not a lock or recording blocker; switching apps, sleep, or display changes dismiss it.
 
 Number Sprint and Return Dock keep session data in memory. Return Dock defaults to off, keeps five tickets, and clears them when disabled or on quit. It does not reopen closed apps or restore browser tabs, windows, or cursor positions.
 
-Teach Back and Quiet Desk bring the development menu to eleven features per student mode. Teach Back drafts stay in memory until quit; the worksheet provides self-checks, not automatic fact checking. Quiet Desk controls the writable main mute property of one output device and remembers its UID for restoration. Closing the panel keeps it muted; normal quit attempts restoration. Unsupported outputs, microphones, and independently routed audio are outside its scope.
+Teach Back and Quiet Desk bring the menu to eleven features per student mode. Teach Back drafts stay in memory until quit; the worksheet provides self-checks, not automatic fact checking. Quiet Desk controls the writable main mute property of one output device and remembers its UID for restoration. Closing the panel keeps it muted; normal quit attempts restoration. Unsupported outputs, microphones, and independently routed audio are outside its scope.
 
 ## Privacy by design
 
@@ -81,7 +81,7 @@ See [Permissions](#permissions) for the platform limits that no installer can by
 ## Requirements
 
 - macOS 14.0 or later
-- Apple Silicon (`arm64`) for the current downloadable builds
+- Apple Silicon (`arm64`) or Intel (`x86_64`); all downloads are universal macOS builds
 - Safari, Google Chrome, or Microsoft Edge for browser switching
 - Accessibility and Automation approval for the core browser workflow
 - Administrator approval may be required for PKG installation, the optional fan-control helper, or a complete uninstall
@@ -99,6 +99,10 @@ See [Permissions](#permissions) for the platform limits that no installer can by
 1. Download the latest `.pkg` from [Releases](https://github.com/hzagaming/ClassGod/releases/latest).
 2. Run the installer; ClassGod is installed in `/Applications`.
 3. Launch ClassGod and complete or temporarily skip the permission guide.
+
+### App ZIP
+
+Download `.app.zip`, extract `ClassGod.app`, and move it to **Applications**. The ZIP, DMG, and PKG contain the same universal app. There are no iOS/iPadOS, Windows, or Linux builds; the macOS app cannot be installed as an IPA.
 
 Current public artifacts are ad-hoc signed and are not Apple-notarized. On first launch, macOS may require **System Settings → Privacy & Security → Open Anyway**. Never install a package whose source or checksum you cannot verify.
 
@@ -153,6 +157,14 @@ DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer \
 ```
 
 The project build phase compiles `ClassGodHelper` and embeds it in the app. App Sandbox is intentionally disabled because browser AppleEvents, Accessibility, the wallpaper controller, and the approved privileged helper require capabilities that a sandboxed build cannot provide.
+
+Build universal DMG, PKG, app ZIP, and SHA-256 checksums with:
+
+```bash
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer bash scripts/build-release.sh
+```
+
+The script prints its temporary output directory, builds both architectures for the app, widget, and helper, and verifies their signatures. It uses ad-hoc app signing and an unsigned installer; it does not notarize or publish. An optional output directory argument retains build caches between attempts; existing release artifacts are never overwritten.
 
 Run the app tests with:
 

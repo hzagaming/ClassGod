@@ -167,6 +167,16 @@ struct WidgetDataStoreTests {
         ) == 0)
     }
 
+    @Test("The app registers widget links and keeps metadata out of resources")
+    func registersWidgetLinks() {
+        let types = Bundle.main.object(forInfoDictionaryKey: "CFBundleURLTypes") as? [[String: Any]] ?? []
+        let schemes = types.flatMap { $0["CFBundleURLSchemes"] as? [String] ?? [] }
+        #expect(schemes.contains("classgod"))
+        #expect(Bundle.main.object(forInfoDictionaryKey: "NSQuitAlwaysKeepsWindows") as? Bool == false)
+        let duplicate = Bundle.main.bundleURL.appendingPathComponent("Contents/Resources/Info.plist")
+        #expect(!FileManager.default.fileExists(atPath: duplicate.path))
+    }
+
     @Test("App Launcher deep links round-trip safe bundle identifiers")
     func validatesWidgetLaunchDeepLink() {
         let bundleID = "com.apple.TextEdit"

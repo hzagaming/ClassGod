@@ -36,7 +36,7 @@ ClassGod 常駐 macOS 選單列。你可以儲存瀏覽器目標、綁定全域�
 ## 系統需求
 
 - macOS 14.0 或以上版本
-- 目前下載版本面向 Apple Silicon（`arm64`）
+- Apple Silicon（`arm64`）或 Intel（`x86_64`）；下載均為 macOS 通用版本
 - 瀏覽器切換支援 Safari、Google Chrome 與 Microsoft Edge
 - 核心瀏覽器流程需要輔助使用與自動化權限
 - 安裝 PKG、風扇 Helper 或執行完整解除安裝時可能需要管理員批准

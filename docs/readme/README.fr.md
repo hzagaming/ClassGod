@@ -36,7 +36,7 @@ Elle réunit aussi un presse-papiers local, un sélecteur d’apps, des modes de
 ## Configuration requise
 
 - macOS 14.0 ou version ultérieure
-- Builds téléchargeables actuels pour Apple Silicon (`arm64`)
+- Apple Silicon (`arm64`) ou Intel (`x86_64`) ; tous les téléchargements sont des builds macOS universels
 - Safari, Google Chrome ou Microsoft Edge
 - Accessibilité et Automatisation pour le flux principal de navigation
 - Une approbation administrateur peut être requise pour le PKG, le Helper de ventilation ou une désinstallation complète

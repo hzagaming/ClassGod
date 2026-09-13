@@ -36,7 +36,7 @@ Zusätzlich bündelt ClassGod eine lokale Zwischenablage, App-Wechsel, geschütz
 ## Voraussetzungen
 
 - macOS 14.0 oder neuer
-- Aktuelle Downloads für Apple Silicon (`arm64`)
+- Apple Silicon (`arm64`) oder Intel (`x86_64`); alle Downloads sind universelle macOS-Builds
 - Safari, Google Chrome oder Microsoft Edge
 - Bedienungshilfen und Automation für den zentralen Browserablauf
 - Eine Administratorfreigabe kann für das PKG, den Lüfter-Helper oder die vollständige Deinstallation erforderlich sein

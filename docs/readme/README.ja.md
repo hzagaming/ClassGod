@@ -36,7 +36,7 @@ ClassGod は macOS のメニューバーに常駐します。ブラウザの移�
 ## 動作要件
 
 - macOS 14.0 以降
-- 現在の配布ビルドは Apple Silicon（`arm64`）向け
+- Apple Silicon（`arm64`）または Intel（`x86_64`）。配布物はすべて macOS ユニバーサルビルドです
 - Safari、Google Chrome、Microsoft Edge
 - 中核のブラウザ操作にはアクセシビリティとオートメーション権限が必要
 - PKG、ファン制御 Helper の導入、または完全アンインストールで管理者承認が必要になる場合があります

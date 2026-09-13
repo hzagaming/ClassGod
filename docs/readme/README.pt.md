@@ -36,7 +36,7 @@ Ele também reúne área de transferência local, troca de apps, modos de navega
 ## Requisitos
 
 - macOS 14.0 ou posterior
-- Downloads atuais para Apple Silicon (`arm64`)
+- Apple Silicon (`arm64`) ou Intel (`x86_64`); todos os downloads são builds universais para macOS
 - Safari, Google Chrome ou Microsoft Edge
 - Acessibilidade e Automação para o fluxo principal do navegador
 - Pode ser necessária aprovação de administrador para o PKG, o Helper das ventoinhas ou a desinstalação completa

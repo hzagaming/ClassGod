@@ -36,7 +36,7 @@ También integra portapapeles local, cambio de apps, modos de navegador protegid
 ## Requisitos
 
 - macOS 14.0 o posterior
-- Descargas actuales para Apple Silicon (`arm64`)
+- Apple Silicon (`arm64`) o Intel (`x86_64`); todas las descargas son versiones universales para macOS
 - Safari, Google Chrome o Microsoft Edge
 - Accesibilidad y Automatización para el flujo principal del navegador
 - Puede requerirse aprobación de administrador para el PKG, el Helper de ventiladores o una desinstalación completa
