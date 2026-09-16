@@ -345,6 +345,46 @@ struct TrainingPresentationTests {
         #expect(advances == 1)
     }
 
+    @Test("Native wallpaper audio follows mute, volume, pause, and display ownership")
+    func synchronizesWallpaperAudio() async throws {
+        let engine = WallpaperEngine.shared
+        let original = (engine.isEnabled, engine.isPlaying, engine.isMuted, engine.volume)
+        let file = try silentMediaFile()
+        let view = VideoWallpaperNSView()
+        defer {
+            view.stopPlayback()
+            (engine.isEnabled, engine.isPlaying, engine.isMuted, engine.volume) = original
+            try? FileManager.default.removeItem(at: file)
+        }
+        engine.isEnabled = true
+        engine.isPlaying = false
+        engine.isMuted = false
+        engine.volume = 0.25
+        view.loadVideo(url: file, coordinatesPlayback: false)
+        var loaded: AVPlayer?
+        for _ in 0..<100 {
+            loaded = view.layer?.sublayers?.compactMap { ($0 as? AVPlayerLayer)?.player }.first
+            if loaded != nil { break }
+            try await Task.sleep(for: .milliseconds(20))
+        }
+        let player = try #require(loaded)
+        #expect(player.isMuted)
+        #expect(player.rate == 0)
+        #expect(player.volume == 0.25)
+        view.loadVideo(url: file, coordinatesPlayback: true)
+        #expect(!player.isMuted)
+        engine.isMuted = true
+        engine.volume = 0.65
+        engine.isPlaying = true
+        NotificationCenter.default.post(name: .wallpaperStateDidChange, object: nil)
+        #expect(player.isMuted)
+        #expect(abs(player.volume - 0.65) < 0.001)
+        #expect(player.rate > 0)
+        engine.isEnabled = false
+        NotificationCenter.default.post(name: .wallpaperStateDidChange, object: nil)
+        #expect(player.rate == 0)
+    }
+
     @Test("Queued wallpaper navigation respects pause, disable, and manual selection")
     func cancelsQueuedWallpaperNavigation() async throws {
         let engine = WallpaperEngine.shared
@@ -499,7 +539,9 @@ struct TrainingPresentationTests {
         }
         try #require(window.isKeyWindow)
         try await Task.sleep(for: .milliseconds(150))
+        var clickNumber = 0
         func click(_ location: NSPoint) async throws {
+            try #require(window.isKeyWindow)
             var delivered = false
             let monitor = try #require(NSEvent.addLocalMonitorForEvents(matching: .leftMouseUp) { event in
                 if event.window === window { delivered = true }
@@ -507,23 +549,29 @@ struct TrainingPresentationTests {
             })
             defer { NSEvent.removeMonitor(monitor) }
             for type in [NSEvent.EventType.leftMouseDown, .leftMouseUp] {
+                clickNumber += 1
                 let event = try #require(NSEvent.mouseEvent(
                     with: type, location: location,
                     modifierFlags: [], timestamp: ProcessInfo.processInfo.systemUptime,
-                    windowNumber: window.windowNumber, context: nil, eventNumber: 1, clickCount: 1, pressure: 1
+                    windowNumber: window.windowNumber, context: nil, eventNumber: clickNumber,
+                    clickCount: 1, pressure: type == .leftMouseDown ? 1 : 0
                 ))
                 NSApplication.shared.postEvent(event, atStart: false)
+                try await Task.sleep(for: .milliseconds(80))
             }
-            for _ in 0..<100 {
-                if delivered { break }
+            for _ in 0..<100 where !delivered {
                 try await Task.sleep(for: .milliseconds(20))
             }
             try #require(delivered)
-            try await Task.sleep(for: .milliseconds(50))
         }
         func startRecording() async throws {
             try await click(global ? NSPoint(x: 360, y: 320) : NSPoint(x: 180, y: 200))
-            if !global { try #require(controls.isRecording) }
+            if !global {
+                for _ in 0..<100 where !controls.isRecording {
+                    try await Task.sleep(for: .milliseconds(20))
+                }
+                try #require(controls.isRecording)
+            }
         }
         func sendKey(_ name: String, code: UInt16, to target: NSWindow) throws {
             let event = try #require(NSEvent.keyEvent(
@@ -662,6 +710,47 @@ struct TrainingPresentationTests {
                 PreferencesManager.shared.preferences.animationSpeed = .normal
             }
         }
+    }
+
+    @Test("Moving between long recall cards returns the viewport to the new question", arguments: [true, false])
+    func resetsRecallScrollPosition(instant: Bool) async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent("ClassGodRecallScroll-\(UUID())")
+        let service = RecallLabService(directory: directory)
+        let preferences = PreferencesManager.shared.preferences
+        defer {
+            service.flush()
+            try? FileManager.default.removeItem(at: directory)
+            PreferencesManager.shared.preferences = preferences
+        }
+        PreferencesManager.shared.preferences.windowZoomScale = 1
+        PreferencesManager.shared.preferences.useInstantAnimations = instant
+        PreferencesManager.shared.preferences.animationSpeed = .normal
+        for index in 0..<3 {
+            #expect(service.saveCard(question: String(repeating: "Question \(index)\n", count: 25),
+                                     answer: String(repeating: "Detailed answer\n", count: 120), topic: "Scroll fixture") != nil)
+        }
+        #expect(service.startReview())
+        #expect(service.reveal())
+        let window = renderWindow
+        window.isReleasedWhenClosed = false
+        window.setContentSize(.init(width: 520, height: 460))
+        let host = NSHostingView(rootView: RecallLabView(service: service, onClose: {}))
+        window.contentView = host
+        defer { window.contentView = nil; window.close() }
+        try await Task.sleep(for: .milliseconds(250))
+        func scrollView(in view: NSView) -> NSScrollView? {
+            (view as? NSScrollView) ?? view.subviews.lazy.compactMap { scrollView(in: $0) }.first
+        }
+        let scroll = try #require(scrollView(in: host))
+        let document = try #require(scroll.documentView)
+        document.scroll(.init(x: 0, y: document.bounds.height - scroll.contentView.bounds.height))
+        #expect(scroll.contentView.bounds.minY > 100)
+        #expect(service.grade(.remembered))
+        try await Task.sleep(for: .milliseconds(250))
+        for _ in 0..<50 where scroll.contentView.bounds.minY >= 40 {
+            try await Task.sleep(for: .milliseconds(20))
+        }
+        #expect(scroll.contentView.bounds.minY < 40)
     }
 
     private func silentMediaFile() throws -> URL {

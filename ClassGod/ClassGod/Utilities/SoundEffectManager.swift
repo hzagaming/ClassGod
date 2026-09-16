@@ -218,9 +218,10 @@ final class SoundEffectManager {
             NSSound.beep()
             return
         }
-        lastPlayedSound = (name, uptime)
         sound.stop()
-        sound.play()
+        if sound.play() {
+            lastPlayedSound = (name, uptime)
+        }
     }
 
     private func makeToneData(named name: String) -> Data {

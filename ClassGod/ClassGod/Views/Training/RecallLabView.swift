@@ -31,20 +31,25 @@ struct RecallLabView: View {
     }
 
     var body: some View {
-        TrainingPanel(title: "recall.title", subtitle: "recall.subtitle", icon: MainPanelFeature.recallLab.icon, accent: accent, onClose: onClose) {
-            VStack(alignment: .leading, spacing: 20 * zoom) {
-                if let issue = service.storageIssue { storageNotice(issue) }
-                if service.isReviewing {
-                    reviewWorkspace
-                } else {
-                    TimelineView(.periodic(from: .now, by: 60)) { context in
-                        overview(now: context.date)
+        ScrollViewReader { scroll in
+            TrainingPanel(title: "recall.title", subtitle: "recall.subtitle", icon: MainPanelFeature.recallLab.icon, accent: accent, onClose: onClose) {
+                VStack(alignment: .leading, spacing: 20 * zoom) {
+                    if let issue = service.storageIssue { storageNotice(issue) }
+                    if service.isReviewing {
+                        reviewWorkspace
+                    } else {
+                        TimelineView(.periodic(from: .now, by: 60)) { context in
+                            overview(now: context.date)
+                        }
+                        library
                     }
-                    library
                 }
+                .font(.system(size: 12 * zoom))
+                .animation(motion, value: service.isRevealed)
+                .id("recall.top")
             }
-            .font(.system(size: 12 * zoom))
-            .animation(motion, value: service.isRevealed)
+            .onChange(of: service.activeCard?.id) { _, _ in scroll.scrollTo("recall.top", anchor: .top) }
+            .onChange(of: service.isReviewing) { _, _ in scroll.scrollTo("recall.top", anchor: .top) }
         }
         .sheet(item: $draft) { draft in
             RecallCardEditor(card: draft.card, zoom: zoom, accent: accent) { question, answer, topic in

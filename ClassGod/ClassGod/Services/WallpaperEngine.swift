@@ -6,6 +6,7 @@
 import SwiftUI
 import AVFoundation
 import Combine
+import ImageIO
 
 extension Notification.Name {
     static let wallpaperVideoDidLoop = Notification.Name("com.hanazar.classgod.wallpaperVideoDidLoop")
@@ -64,6 +65,28 @@ enum WallpaperFilePolicy {
 }
 
 enum WallpaperImportPolicy {
+    nonisolated static func canDisplay(_ url: URL, type: WallpaperType) async -> Bool {
+        guard url.isFileURL,
+              (try? url.resourceValues(forKeys: [.isRegularFileKey]).isRegularFile) == true else { return false }
+        switch type {
+        case .video:
+            do {
+                let asset = AVURLAsset(url: url)
+                guard try await asset.load(.isPlayable) else { return false }
+                return try await !asset.loadTracks(withMediaType: .video).isEmpty
+            } catch { return false }
+        case .image:
+            return await Task.detached(priority: .userInitiated) {
+                guard let source = CGImageSourceCreateWithURL(url as CFURL, nil) else { return false }
+                let options = [
+                    kCGImageSourceCreateThumbnailFromImageAlways: true,
+                    kCGImageSourceThumbnailMaxPixelSize: 64,
+                ] as CFDictionary
+                return CGImageSourceCreateThumbnailAtIndex(source, 0, options) != nil
+            }.value
+        }
+    }
+
     static func type(forExtension pathExtension: String) -> WallpaperType? {
         switch pathExtension.lowercased() {
         case "mp4", "mov", "m4v", "avi", "mkv", "webm": return .video
@@ -133,12 +156,16 @@ final class WallpaperEngine: ObservableObject {
     // MARK: - Storage
     private let playlistKey = "com.hanazar.classgod.wallpaper.playlist"
     private let settingsKey = "com.hanazar.classgod.wallpaper.settings"
+    private let defaults: UserDefaults
+    private let directory: URL?
     private let encoder = JSONEncoder()
     private let decoder = JSONDecoder()
     private var loopObserver: NSObjectProtocol?
     private var loopTask: Task<Void, Never>?
     
-    private init() {
+    init(defaults: UserDefaults = .standard, directory: URL? = nil) {
+        self.defaults = defaults
+        self.directory = directory
         encoder.dateEncodingStrategy = .iso8601
         decoder.dateDecodingStrategy = .iso8601
         loadPlaylist()
@@ -171,7 +198,8 @@ final class WallpaperEngine: ObservableObject {
     // MARK: - Playlist Management
     
     func addWallpaper(from url: URL) async -> Bool {
-        guard let type = WallpaperImportPolicy.type(forExtension: url.pathExtension) else { return false }
+        guard !Task.isCancelled,
+              let type = WallpaperImportPolicy.type(forExtension: url.pathExtension) else { return false }
         let hasSecurityScope = url.startAccessingSecurityScopedResource()
         defer {
             if hasSecurityScope {
@@ -179,8 +207,10 @@ final class WallpaperEngine: ObservableObject {
             }
         }
 
-        guard let copiedURL = await copyWallpaperToAppSupport(original: url) else { return false }
-        if Task.isCancelled {
+        guard (try? url.resourceValues(forKeys: [.isRegularFileKey]).isRegularFile) == true,
+              let copiedURL = await copyWallpaperToAppSupport(original: url) else { return false }
+        let canDisplay = await WallpaperImportPolicy.canDisplay(copiedURL, type: type)
+        if !canDisplay || Task.isCancelled {
             try? FileManager.default.removeItem(at: copiedURL)
             return false
         }
@@ -217,6 +247,10 @@ final class WallpaperEngine: ObservableObject {
     }
     
     private func wallpapersDirectory() -> URL? {
+        if let directory {
+            try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+            return directory
+        }
         guard let supportDir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else { return nil }
         let dir = supportDir.appendingPathComponent("com.hanazar.classgod/Wallpapers", isDirectory: true)
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true, attributes: nil)
@@ -376,7 +410,7 @@ final class WallpaperEngine: ObservableObject {
     // MARK: - Persistence
     
     private func loadPlaylist() {
-        guard let data = UserDefaults.standard.data(forKey: playlistKey) else { return }
+        guard let data = defaults.data(forKey: playlistKey) else { return }
         do {
             let decoded = try decoder.decode([WallpaperItem].self, from: data)
             playlist = WallpaperRestorePolicy.availableItems(decoded) {
@@ -393,14 +427,14 @@ final class WallpaperEngine: ObservableObject {
     private func savePlaylist() {
         do {
             let data = try encoder.encode(playlist)
-            UserDefaults.standard.set(data, forKey: playlistKey)
+            defaults.set(data, forKey: playlistKey)
         } catch {
             print("[WallpaperEngine] Failed to save playlist: \(error)")
         }
     }
     
     private func loadSettings() {
-        guard let data = UserDefaults.standard.data(forKey: settingsKey) else { return }
+        guard let data = defaults.data(forKey: settingsKey) else { return }
         do {
             let settings = try decoder.decode(WallpaperSettings.self, from: data)
             isEnabled = settings.isEnabled
@@ -433,7 +467,7 @@ final class WallpaperEngine: ObservableObject {
         )
         do {
             let data = try encoder.encode(settings)
-            UserDefaults.standard.set(data, forKey: settingsKey)
+            defaults.set(data, forKey: settingsKey)
         } catch {
             print("[WallpaperEngine] Failed to save settings: \(error)")
         }

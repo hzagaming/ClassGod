@@ -27627,6 +27627,12 @@
         }
       }
     },
+    "wallpaper.importing" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Checking and importing media…" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "正在检查并导入媒体…" } }
+      }
+    },
     "wallpaper.import" : {
       "localizations" : {
         "en" : {

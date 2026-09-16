@@ -6,6 +6,19 @@ import Testing
 @Suite("Sound effect lifecycle")
 @MainActor
 struct SoundEffectTests {
+    @Test("A failed sound start does not suppress an immediate retry")
+    func retriesFailedPlayback() {
+        let sound = FakeEffectSound()
+        sound.canPlay = false
+        let manager = SoundEffectManager(enabled: Just(true).eraseToAnyPublisher(), makeSound: { _ in sound })
+        manager.play(.switchSuccess)
+        #expect(!sound.isPlaying)
+        sound.canPlay = true
+        manager.play(.switchSuccess)
+        #expect(sound.isPlaying)
+        #expect(sound.playCount == 2)
+    }
+
     @Test("Disabling sound stops active audio and invalidates bursts across re-enabling")
     func disablingCancelsPlayback() {
         let rig = SoundRig()
@@ -74,9 +87,10 @@ private final class SoundRig {
 
 @MainActor
 private final class FakeEffectSound: EffectSound {
+    var canPlay = true
     var isPlaying = false
     var volume: Float = 1
     var playCount = 0
-    @discardableResult func play() -> Bool { isPlaying = true; playCount += 1; return true }
+    @discardableResult func play() -> Bool { isPlaying = canPlay; playCount += 1; return canPlay }
     @discardableResult func stop() -> Bool { isPlaying = false; return true }
 }

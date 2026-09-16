@@ -25,7 +25,7 @@
   </p>
 </div>
 
-> Source version: **v1.5.58 (Build 83)**. Published downloads are available on [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest).
+> Source version: **v1.5.59 (Build 84)**. Published downloads are available on [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest).
 
 ## Why ClassGod
 
@@ -201,9 +201,9 @@ ClassGod/ClassGodTests/    App tests
 ClassGodHelper/            Privileged helper Swift package and tests
 ```
 
-## Latest changes: v1.5.58
+## Latest changes: v1.5.59
 
-Shortcut recording now uses physical key codes, fixing Shift + number/punctuation combinations and mismatches across keyboard layouts. DestinTab adapts its footer actions to narrow windows without splitting labels into cramped columns. This version also includes bounded recall-card archives, clock-stable focus timers, reliable Error Hub retries, and reduced repeated work in training, lists, clipboard previews, and system monitoring. Native checks cover both student modes, core tool windows, audio lifecycle behavior, and enlarged layouts.
+Wallpaper imports now validate images and playable video tracks, reject corrupt or audio-only media, clean up failed copies, and show progress during import. Recall Lab returns to the top of the next question after grading a long answer. Failed sound playback can retry immediately. Regression checks cover these changes alongside both student modes, native audio controls, keyboard behavior, and enlarged layouts.
 
 Read [CHANGELOG.md](CHANGELOG.md) for current releases and [CHANGELOG_HISTORY.md](CHANGELOG_HISTORY.md) for older history.
 

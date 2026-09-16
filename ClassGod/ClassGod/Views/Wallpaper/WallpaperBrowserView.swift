@@ -384,6 +384,17 @@ struct WallpaperBrowserView: View {
                     )
                 }
                 .buttonStyle(.plain)
+                .disabled(importTask != nil)
+            }
+
+            if importTask != nil {
+                HStack(spacing: 8 * zoomScale) {
+                    ProgressView().controlSize(.small)
+                    Text("wallpaper.importing")
+                        .font(.system(size: 11 * zoomScale))
+                        .foregroundStyle(.white.opacity(0.65))
+                }
+                .accessibilityElement(children: .combine)
             }
             
             if engine.playlist.isEmpty {
