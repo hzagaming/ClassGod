@@ -6,6 +6,64 @@ import Testing
 @Suite("Wallpaper media validation")
 @MainActor
 struct WallpaperImportTests {
+    @Test("Deleting the current wallpaper preserves disabled playback, including missing fallback files", arguments: [false, true])
+    func deletionPreservesDisabledState(missingFallback: Bool) throws {
+        let rig = try ImportRig()
+        defer { rig.cleanUp() }
+        let first = try rig.wallpaper("first")
+        let missing = try rig.wallpaper("missing")
+        let next = try rig.wallpaper("next")
+        rig.engine.playlist = missingFallback ? [first, missing, next] : [first, next]
+        #expect(rig.engine.selectWallpaper(first))
+        #expect(rig.engine.setEnabled(false))
+        rig.engine.isMuted = false
+        rig.engine.volume = 0.6
+        if missingFallback { try FileManager.default.removeItem(at: #require(missing.fileURL)) }
+        rig.engine.removeWallpaper(first)
+        #expect(rig.engine.currentWallpaper?.id == next.id)
+        #expect(!rig.engine.isEnabled)
+        #expect(rig.engine.isPlaying)
+        #expect(!rig.engine.isMuted)
+        #expect(rig.engine.volume == 0.6)
+        let restored = WallpaperEngine(defaults: rig.defaults, directory: rig.root.appendingPathComponent("imports"))
+        #expect(!restored.isEnabled)
+        #expect(restored.currentWallpaper?.id == next.id)
+    }
+
+    @Test("Selecting the current disabled wallpaper enables it without resetting pause or mute")
+    func reselectsDisabledWallpaper() throws {
+        let rig = try ImportRig()
+        defer { rig.cleanUp() }
+        let item = try rig.wallpaper("current")
+        rig.engine.playlist = [item]
+        #expect(rig.engine.selectWallpaper(item))
+        #expect(rig.engine.togglePlayPause())
+        #expect(rig.engine.setEnabled(false))
+        #expect(rig.engine.selectWallpaper(item))
+        #expect(rig.engine.isEnabled)
+        #expect(!rig.engine.isPlaying)
+        #expect(rig.engine.isMuted)
+        #expect(!rig.engine.selectWallpaper(item))
+    }
+
+    @Test("Removing an active wallpaper preserves transport until the playlist becomes empty", arguments: [false, true])
+    func deletionPreservesActiveTransport(paused: Bool) throws {
+        let rig = try ImportRig()
+        defer { rig.cleanUp() }
+        let first = try rig.wallpaper("first")
+        let next = try rig.wallpaper("next")
+        rig.engine.playlist = [first, next]
+        #expect(rig.engine.selectWallpaper(first))
+        if paused { #expect(rig.engine.togglePlayPause()) }
+        rig.engine.removeWallpaper(first)
+        #expect(rig.engine.isEnabled)
+        #expect(rig.engine.isPlaying == !paused)
+        #expect(rig.engine.currentWallpaper?.id == next.id)
+        rig.engine.removeWallpaper(next)
+        #expect(!rig.engine.isEnabled)
+        #expect(rig.engine.currentWallpaper == nil)
+    }
+
     @Test("Corrupt images, corrupt movies, and directories cannot become wallpapers", arguments: ["png", "mov", "directory.png"])
     func rejectsInvalidMedia(_ name: String) async throws {
         let rig = try ImportRig()
@@ -132,5 +190,11 @@ private final class ImportRig {
     func cleanUp() {
         defaults.removePersistentDomain(forName: suite)
         try? FileManager.default.removeItem(at: root)
+    }
+
+    func wallpaper(_ name: String) throws -> WallpaperItem {
+        let file = root.appendingPathComponent(name + ".png")
+        try Data().write(to: file)
+        return WallpaperItem(name: name, filePath: file.path, type: .image)
     }
 }

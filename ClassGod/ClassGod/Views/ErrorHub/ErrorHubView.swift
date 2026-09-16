@@ -95,7 +95,7 @@ struct ErrorHubView: View {
             ErrorDetailView(entry: entry, onDismiss: { selectedEntry = nil })
                 .frame(minWidth: 500 * zoomScale, minHeight: 400 * zoomScale)
         }
-        .onAppear {
+        .task {
             knowledgeBase.ensureLoaded()
             debouncedSearch(query: searchQuery)
         }

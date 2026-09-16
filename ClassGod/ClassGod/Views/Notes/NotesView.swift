@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct NotesView: View {
-    @ObservedObject private var service = NotesService.shared
+    @ObservedObject var service = NotesService.shared
     @ObservedObject private var prefs = PreferencesManager.shared
     @State private var searchText = ""
     @State private var confirmDelete = false
@@ -15,6 +15,7 @@ struct NotesView: View {
         VStack(spacing: 0) {
             header
             Divider().background(Color.white.opacity(0.1))
+            if let issue = service.storageIssue { storageNotice(issue) }
             HStack(spacing: 0) {
                 sidebar
                     .frame(width: 230 * zoomScale)
@@ -67,13 +68,43 @@ struct NotesView: View {
                     .foregroundStyle(.white.opacity(0.42))
             }
             Spacer()
-            Text("notes.autosave")
+            Text(storageStatus)
                 .font(.system(size: 9 * zoomScale, design: .monospaced))
-                .foregroundStyle(.green.opacity(0.75))
+                .foregroundStyle(service.storageIssue != nil || service.hasUnsavedChanges ? .orange : .green.opacity(0.75))
         }
         .padding(.horizontal, 14 * zoomScale)
         .padding(.vertical, 10 * zoomScale)
         .background(Color(white: 0.025))
+    }
+
+    private var storageStatus: LocalizedStringKey {
+        if !service.canEdit { return "notes.read_only" }
+        if service.storageIssue == .saveFailed { return "notes.unsaved" }
+        return service.hasUnsavedChanges ? "notes.saving" : "notes.autosave"
+    }
+
+    private func storageNotice(_ issue: NotesService.StorageIssue) -> some View {
+        let message: LocalizedStringKey = switch issue {
+        case .recovered: "notes.storage.recovered"
+        case .loadFailed: "notes.storage.load_failed"
+        case .saveFailed: "notes.save_failed"
+        case .unsupportedVersion: "notes.storage.unsupported_version"
+        }
+        return HStack(alignment: .top, spacing: 10 * zoomScale) {
+            Image(systemName: "exclamationmark.triangle")
+            Text(message)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            if issue != .recovered {
+                Button("button.retry") { service.retryStorage() }
+                    .buttonStyle(.bordered)
+                    .fixedSize()
+            }
+        }
+        .font(.system(size: 10 * zoomScale, design: .monospaced))
+        .foregroundStyle(.orange)
+        .padding(12 * zoomScale)
+        .background(Color.orange.opacity(0.08))
     }
 
     private var sidebar: some View {
@@ -101,6 +132,7 @@ struct NotesView: View {
                 .buttonStyle(.plain)
                 .foregroundStyle(accent)
                 .accessibilityLabel(Text("notes.new"))
+                .disabled(!service.canEdit)
             }
             .padding(8 * zoomScale)
             .background(Color.white.opacity(0.05))
@@ -111,7 +143,7 @@ struct NotesView: View {
                 VStack(spacing: 7 * zoomScale) {
                     Image(systemName: "note.text")
                         .font(.system(size: 24 * zoomScale))
-                    Text(searchText.isEmpty ? "notes.empty" : "notes.no_results")
+                    Text(!service.canEdit ? "notes.read_only" : searchText.isEmpty ? "notes.empty" : "notes.no_results")
                         .font(.system(size: 10 * zoomScale, design: .monospaced))
                 }
                 .foregroundStyle(.white.opacity(0.35))
@@ -173,7 +205,16 @@ struct NotesView: View {
 
     @ViewBuilder
     private var editor: some View {
-        if let note = service.selectedNote {
+        if !service.canEdit {
+            VStack(spacing: 12 * zoomScale) {
+                Image(systemName: "lock.doc")
+                    .font(.system(size: 38 * zoomScale))
+                Text("notes.read_only")
+                    .font(.system(size: 12 * zoomScale, design: .monospaced))
+            }
+            .foregroundStyle(.orange)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else if let note = service.selectedNote {
             VStack(spacing: 0) {
                 HStack(spacing: 8 * zoomScale) {
                     TextField("notes.title_placeholder", text: titleBinding)

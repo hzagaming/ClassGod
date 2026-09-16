@@ -9,6 +9,47 @@ import Testing
 struct TrainingPresentationTests {
     private let renderWindow = NSWindow(contentRect: .zero, styleMask: [.borderless], backing: .buffered, defer: true)
 
+    @Test("Notes explain read, recovery, version, and save failures at minimum and enlarged sizes")
+    func rendersNotesStorageStates() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("ClassGodNotesRender-\(UUID())")
+        let original = PreferencesManager.shared.preferences
+        defer {
+            PreferencesManager.shared.preferences = original
+            try? FileManager.default.removeItem(at: root)
+        }
+        PreferencesManager.shared.preferences.enableSoundEffects = false
+        PreferencesManager.shared.preferences.enableHapticFeedback = false
+        for state in ["unreadable", "recovered", "unsupported", "unsaved"] {
+            let support = root.appendingPathComponent(state)
+            let url = NotesStoragePolicy.storageURL(applicationSupportRoot: support)
+            try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+            if state == "unreadable" {
+                try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
+            } else if state == "recovered" {
+                try Data("broken archive".utf8).write(to: url)
+            } else if state == "unsupported" {
+                try Data(#"{"version":99,"notes":[]}"#.utf8).write(to: url)
+            }
+            let service = NotesService(applicationSupportRoot: support)
+            if state == "unsaved" {
+                #expect(service.addNote() != nil)
+                service.updateSelectedTitle("Study notes / 学习笔记")
+                service.updateSelectedBody("These edits stay in memory until saving succeeds.\n保存成功前保留当前修改，方便重试。")
+                try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
+                service.stop()
+                for _ in 0..<100 where service.storageIssue != .saveFailed {
+                    try await Task.sleep(for: .milliseconds(10))
+                }
+                #expect(service.storageIssue == .saveFailed)
+            }
+            for zoom in [1.0, 2.0] {
+                PreferencesManager.shared.preferences.windowZoomScale = zoom
+                try await render(NotesView(service: service, onClose: {}), name: "notes-\(state)-\(Int(zoom * 100))",
+                                 size: .init(width: 520 * zoom, height: 380 * zoom))
+            }
+        }
+    }
+
     @Test("Core tool windows render at minimum size and enlarged scale")
     func rendersCoreToolWindows() async throws {
         let original = PreferencesManager.shared.preferences

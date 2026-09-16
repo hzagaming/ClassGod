@@ -40,9 +40,10 @@ final class ErrorKnowledgeBase: ObservableObject {
     
     func ensureLoaded() {
         guard !hasLoaded, loadingError == nil, loadTask == nil else { return }
-        isLoading = true
         loadTask = Task { [weak self] in
-            await self?.loadInBackground()
+            guard let self else { return }
+            isLoading = true
+            await loadInBackground()
         }
     }
 

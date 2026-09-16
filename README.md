@@ -25,7 +25,7 @@
   </p>
 </div>
 
-> Source version: **v1.5.59 (Build 84)**. Published downloads are available on [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest).
+> Source version: **v1.5.60 (Build 85)**. Published downloads are available on [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest).
 
 ## Why ClassGod
 
@@ -201,9 +201,9 @@ ClassGod/ClassGodTests/    App tests
 ClassGodHelper/            Privileged helper Swift package and tests
 ```
 
-## Latest changes: v1.5.59
+## Latest changes: v1.5.60
 
-Wallpaper imports now validate images and playable video tracks, reject corrupt or audio-only media, clean up failed copies, and show progress during import. Recall Lab returns to the top of the next question after grading a long answer. Failed sound playback can retry immediately. Regression checks cover these changes alongside both student modes, native audio controls, keyboard behavior, and enlarged layouts.
+Wallpaper deletion now preserves disabled playback and audio settings; selecting the current disabled wallpaper works consistently. Notes protect unreadable files, keep separate recovery backups, show unsaved edits and retry actions, and skip unchanged writes on quit. Error Encyclopedia starts loading asynchronously to avoid publishing state during view updates. Regression checks cover file failures and recovery alongside both student modes, sound controls, and enlarged layouts.
 
 Read [CHANGELOG.md](CHANGELOG.md) for current releases and [CHANGELOG_HISTORY.md](CHANGELOG_HISTORY.md) for older history.
 

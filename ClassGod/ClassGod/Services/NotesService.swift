@@ -5,8 +5,15 @@ import Combine
 final class NotesService: ObservableObject {
     static let shared = NotesService()
 
+    enum StorageIssue: Sendable {
+        case recovered, loadFailed, saveFailed, unsupportedVersion
+    }
+
     @Published private(set) var notes: [ClassGodNote] = []
     @Published private(set) var selectedNoteID: UUID?
+    @Published private(set) var storageIssue: StorageIssue?
+    @Published private(set) var canEdit = true
+    @Published private(set) var hasUnsavedChanges = false
 
     private let storageDirectory: URL
     private let storageURL: URL
@@ -15,15 +22,15 @@ final class NotesService: ObservableObject {
         qos: .utility
     )
     private var saveTask: Task<Void, Never>?
-    private var isLoading = false
+    private var revision: UInt = 0
 
     var selectedNote: ClassGodNote? {
         guard let selectedNoteID else { return nil }
         return notes.first { $0.id == selectedNoteID }
     }
 
-    private init() {
-        let root = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
+    init(applicationSupportRoot: URL? = nil) {
+        let root = applicationSupportRoot ?? FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
             ?? FileManager.default.temporaryDirectory
         storageURL = NotesStoragePolicy.storageURL(applicationSupportRoot: root)
         storageDirectory = storageURL.deletingLastPathComponent()
@@ -41,7 +48,7 @@ final class NotesService: ObservableObject {
 
     @discardableResult
     func addNote() -> UUID? {
-        guard notes.count < NotesContentPolicy.maximumNoteCount else { return nil }
+        guard canEdit, notes.count < NotesContentPolicy.maximumNoteCount else { return nil }
         let note = ClassGodNote()
         notes.append(note)
         selectedNoteID = note.id
@@ -51,7 +58,7 @@ final class NotesService: ObservableObject {
 
     @discardableResult
     func select(_ id: UUID) -> Bool {
-        guard notes.contains(where: { $0.id == id }), selectedNoteID != id else { return false }
+        guard canEdit, notes.contains(where: { $0.id == id }), selectedNoteID != id else { return false }
         selectedNoteID = id
         save()
         return true
@@ -77,7 +84,7 @@ final class NotesService: ObservableObject {
 
     @discardableResult
     func togglePin(_ id: UUID) -> Bool {
-        guard let index = notes.firstIndex(where: { $0.id == id }) else { return false }
+        guard canEdit, let index = notes.firstIndex(where: { $0.id == id }) else { return false }
         notes[index].isPinned.toggle()
         notes[index].updatedAt = Date()
         save()
@@ -86,7 +93,7 @@ final class NotesService: ObservableObject {
 
     @discardableResult
     func delete(_ id: UUID, visibleNotes: [ClassGodNote]? = nil) -> Bool {
-        guard notes.contains(where: { $0.id == id }) else { return false }
+        guard canEdit, notes.contains(where: { $0.id == id }) else { return false }
         let orderedNotes = visibleNotes ?? NotesCollectionPolicy.sorted(notes)
         let replacement = NotesCollectionPolicy.selectionAfterDeleting(
             id,
@@ -99,6 +106,15 @@ final class NotesService: ObservableObject {
         return true
     }
 
+    func retryStorage() {
+        if canEdit {
+            guard hasUnsavedChanges else { return }
+            save()
+        } else {
+            load()
+        }
+    }
+
     func stop() {
         saveTask?.cancel()
         saveTask = nil
@@ -107,7 +123,7 @@ final class NotesService: ObservableObject {
     }
 
     private func updateSelected(_ change: (inout ClassGodNote) -> Bool) {
-        guard let selectedNoteID,
+        guard canEdit, let selectedNoteID,
               let index = notes.firstIndex(where: { $0.id == selectedNoteID }) else { return }
         guard change(&notes[index]) else { return }
         notes[index].updatedAt = Date()
@@ -115,26 +131,41 @@ final class NotesService: ObservableObject {
     }
 
     private func load() {
-        guard let data = try? Data(contentsOf: storageURL) else { return }
         do {
-            let snapshot = NotesContentPolicy.normalized(try NotesStoragePolicy.decode(data))
-            isLoading = true
+            let data = try Data(contentsOf: storageURL)
+            let snapshot: NotesSnapshot
+            do {
+                struct Header: Decodable { let version: Int }
+                guard try JSONDecoder().decode(Header.self, from: data).version == 1 else {
+                    canEdit = false
+                    storageIssue = .unsupportedVersion
+                    return
+                }
+                snapshot = NotesContentPolicy.normalized(try NotesStoragePolicy.decode(data))
+            } catch {
+                let backup = storageDirectory.appendingPathComponent("notes-corrupted-\(UUID()).json")
+                try FileManager.default.copyItem(at: storageURL, to: backup)
+                storageIssue = .recovered
+                canEdit = true
+                return
+            }
             notes = snapshot.notes
             selectedNoteID = snapshot.selectedNoteID
-            isLoading = false
+            storageIssue = nil
+            canEdit = true
+        } catch let error as CocoaError where error.code == .fileReadNoSuchFile {
+            storageIssue = nil
+            canEdit = true
         } catch {
-            try? FileManager.default.createDirectory(
-                at: storageDirectory,
-                withIntermediateDirectories: true
-            )
-            let backup = storageDirectory.appendingPathComponent("notes-corrupted.json")
-            try? FileManager.default.removeItem(at: backup)
-            try? FileManager.default.copyItem(at: storageURL, to: backup)
+            canEdit = false
+            storageIssue = .loadFailed
         }
     }
 
     private func save() {
-        guard !isLoading else { return }
+        guard canEdit else { return }
+        hasUnsavedChanges = true
+        revision &+= 1
         saveTask?.cancel()
         saveTask = Task { [weak self] in
             try? await Task.sleep(for: .milliseconds(200))
@@ -145,20 +176,25 @@ final class NotesService: ObservableObject {
     }
 
     private func enqueueSave() {
+        guard canEdit, hasUnsavedChanges else { return }
+        revision &+= 1
+        let revision = revision
         let directory = storageDirectory
         let url = storageURL
         let snapshot = NotesSnapshot(notes: notes, selectedNoteID: selectedNoteID)
-        persistenceQueue.async {
+        persistenceQueue.async { [weak self] in
+            let issue: StorageIssue?
             do {
                 try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
                 try NotesStoragePolicy.encode(snapshot).write(to: url, options: .atomic)
+                issue = nil
             } catch {
-                Task { @MainActor in
-                    ErrorToastManager.shared.show(
-                        title: String(localized: "notes.title"),
-                        message: String(localized: "notes.save_failed")
-                    )
-                }
+                issue = .saveFailed
+            }
+            Task { @MainActor [weak self] in
+                guard let self, self.revision == revision else { return }
+                self.storageIssue = issue
+                self.hasUnsavedChanges = issue != nil
             }
         }
     }

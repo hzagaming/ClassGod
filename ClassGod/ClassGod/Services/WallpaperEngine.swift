@@ -236,7 +236,7 @@ final class WallpaperEngine: ObservableObject {
         if removedCurrent {
             currentWallpaper = nil
             if let next = playlist.first {
-                selectWallpaper(next)
+                selectWallpaper(next, enable: isEnabled)
             } else {
                 isEnabled = false
                 saveSettings()
@@ -280,26 +280,27 @@ final class WallpaperEngine: ObservableObject {
     }
     
     @discardableResult
-    func selectWallpaper(_ item: WallpaperItem) -> Bool {
+    func selectWallpaper(_ item: WallpaperItem, enable: Bool = true) -> Bool {
         let previousID = currentWallpaper?.id
+        let wasEnabled = isEnabled
         guard item.fileExists else {
             playlist.removeAll { $0.id == item.id }
             savePlaylist()
             if let next = playlist.first {
-                selectWallpaper(next)
+                selectWallpaper(next, enable: enable)
             } else {
                 currentWallpaper = nil
                 isEnabled = false
                 saveSettings()
                 NotificationCenter.default.post(name: .wallpaperStateDidChange, object: nil)
             }
-            return currentWallpaper?.id != previousID
+            return currentWallpaper?.id != previousID || isEnabled != wasEnabled
         }
 
-        guard previousID != item.id else { return false }
+        guard previousID != item.id || isEnabled != enable else { return false }
         
         currentWallpaper = item
-        isEnabled = true
+        isEnabled = enable
         saveSettings()
         NotificationCenter.default.post(name: .wallpaperStateDidChange, object: nil)
         return true

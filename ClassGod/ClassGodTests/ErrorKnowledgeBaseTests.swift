@@ -6,6 +6,31 @@ import Testing
 @Suite("Error knowledge base loading")
 @MainActor
 struct ErrorKnowledgeBaseTests {
+    @Test("Synchronous lookups do not publish loading state while a view is being evaluated")
+    func defersLookupPublications() async throws {
+        let directory = try temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let url = directory.appendingPathComponent("errors.json")
+        let entry = sampleEntry()
+        try JSONEncoder().encode([entry]).write(to: url)
+        let base = ErrorKnowledgeBase(resourceURL: url)
+        var publications = 0
+        let subscription = base.objectWillChange.sink { publications += 1 }
+        defer { subscription.cancel() }
+
+        #expect(base.entries(for: .network).isEmpty)
+        #expect(base.entriesBySeverity(.high).isEmpty)
+        #expect(base.findRelated(to: entry).isEmpty)
+        #expect(publications == 0)
+        await base.ensureLoadedAndWait()
+        #expect(!base.isLoading)
+        #expect(base.loadingError == nil)
+        let loadedPublications = publications
+        #expect(base.entries(for: .network) == [entry])
+        #expect(base.entriesBySeverity(.high) == [entry])
+        #expect(publications == loadedPublications)
+    }
+
     @Test("The first search waits for the resource and its indexes")
     func awaitsFirstSearch() async throws {
         let directory = try temporaryDirectory()
