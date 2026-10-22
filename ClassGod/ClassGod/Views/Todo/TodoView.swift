@@ -119,6 +119,7 @@ struct TodoView: View {
                 .accessibilityLabel(Text("button.close"))
 
                 Image(systemName: "checkmark.circle.fill")
+                    .font(.system(size: 13 * zoomScale))
                     .foregroundStyle(accent)
                 Text("todo.title")
                     .font(.system(size: 14 * zoomScale, weight: .bold, design: .rounded))
@@ -345,6 +346,7 @@ struct TodoView: View {
 
             HStack(spacing: 6 * zoomScale) {
                 Image(systemName: "magnifyingglass")
+                    .font(.system(size: 13 * zoomScale))
                     .foregroundStyle(.white.opacity(0.32))
                 TextField("todo.search", text: $searchText)
                     .textFieldStyle(.plain)
@@ -357,6 +359,7 @@ struct TodoView: View {
                         HapticManager.shared.generic()
                     } label: {
                         Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 13 * zoomScale))
                     }
                     .buttonStyle(.plain)
                     .foregroundStyle(.white.opacity(0.3))
@@ -370,19 +373,7 @@ struct TodoView: View {
             .background(Color.white.opacity(0.055))
             .clipShape(RoundedRectangle(cornerRadius: 8 * zoomScale))
 
-            Button {
-                openEditor(draftForCurrentSelection(title: ""))
-            } label: {
-                Label("todo.new_task", systemImage: "plus")
-                    .font(.system(size: 10 * zoomScale, weight: .semibold, design: .rounded))
-                    .padding(.horizontal, 10 * zoomScale)
-                    .frame(height: 30 * zoomScale)
-            }
-            .buttonStyle(.plain)
-            .foregroundStyle(.black)
-            .background(accent)
-            .clipShape(RoundedRectangle(cornerRadius: 8 * zoomScale))
-            .pressScale(1.025)
+            newTaskButton
         }
         .padding(.horizontal, 18 * zoomScale)
         .padding(.vertical, 13 * zoomScale)
@@ -553,14 +544,26 @@ struct TodoView: View {
             Text(searchText.isEmpty ? "todo.empty_hint" : "todo.search_hint")
                 .font(.system(size: 9 * zoomScale, design: .rounded))
                 .foregroundStyle(.white.opacity(0.36))
-            if searchText.isEmpty {
-                Button("todo.new_task") { openEditor(draftForCurrentSelection(title: "")) }
-                    .buttonStyle(.borderedProminent)
-                    .pressScale(1.025)
-            }
+            if searchText.isEmpty { newTaskButton }
         }
         .animation(motionAnimation, value: searchText.isEmpty)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    private var newTaskButton: some View {
+        Button {
+            openEditor(draftForCurrentSelection(title: ""))
+        } label: {
+            Label("todo.new_task", systemImage: "plus")
+                .font(.system(size: 10 * zoomScale, weight: .semibold, design: .rounded))
+                .padding(.horizontal, 10 * zoomScale)
+                .frame(height: 30 * zoomScale)
+        }
+        .buttonStyle(.plain)
+        .foregroundStyle(.black)
+        .background(accent)
+        .clipShape(RoundedRectangle(cornerRadius: 8 * zoomScale))
+        .pressScale(1.025)
     }
 
     private var quickAddBar: some View {

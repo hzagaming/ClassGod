@@ -59,6 +59,7 @@ struct NotesView: View {
             .accessibilityLabel(Text("button.close"))
 
             Image(systemName: "note.text")
+                .font(.system(size: 13 * zoomScale))
                 .foregroundStyle(accent)
             VStack(alignment: .leading, spacing: zoomScale) {
                 Text("notes.title")

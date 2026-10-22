@@ -142,6 +142,7 @@ struct AssessPrepHackView: View {
                 showAddSheet = true
             }) {
                 Image(systemName: "plus.circle.fill")
+                    .font(.system(size: 13 * zoomScale))
                     .foregroundStyle(.white)
                     .symbolRenderingMode(.monochrome)
             }

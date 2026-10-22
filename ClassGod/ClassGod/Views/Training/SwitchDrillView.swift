@@ -216,7 +216,7 @@ struct SwitchDrillView: View {
 
     private func refreshTargets(state: ShortcutCatalogState) {
         let tabs = StorageManager.shared.loadTabs().map {
-            SwitchDrillTarget(id: $0.id, name: $0.title, shortcut: $0.shortcutDisplayString, kind: .browser, destination: $0.browser.rawValue + ":" + $0.url)
+            SwitchDrillTarget(id: $0.id, name: $0.displayTitle, shortcut: $0.shortcutDisplayString, kind: .browser, destination: $0.browser.rawValue + ":" + $0.url)
         }
         let apps = StorageManager.shared.loadSwitchTargets().map {
             SwitchDrillTarget(id: $0.id, name: $0.name, shortcut: $0.shortcutDisplayString, kind: .application, destination: $0.bundleIdentifier)

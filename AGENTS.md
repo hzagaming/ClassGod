@@ -2,7 +2,7 @@
 
 ## 项目定位
 
-ClassGod 本质上是一个**紧急切屏工具**——帮用户在关键时刻（比如老师来了、老板路过）瞬间切回指定页面。当前版本 v1.5.60 (Build 85)，核心逻辑是 AppleScript + Carbon HotKey + SwiftUI。
+ClassGod 本质上是一个**紧急切屏工具**——帮用户在关键时刻（比如老师来了、老板路过）瞬间切回指定页面。当前版本 v1.5.61 (Build 86)，核心逻辑是 AppleScript + Carbon HotKey + SwiftUI。
 
 ## 技术约束
 
@@ -32,6 +32,8 @@ ClassGod 本质上是一个**紧急切屏工具**——帮用户在关键时刻�
 - `ReturnApplication` / `ReturnDockPolicy`：以 PID、bundle ID 和启动时间识别原应用进程
 - `TeachBackSession`：四步讲解草稿、Unicode 输入限制与人工自检
 - `QuietDevice`：音频输出 UID 与显示名称；恢复以 UID 定位
+- `DictationSession` / `DictationPolicy`：听写词表解析（换行、逗号、顿号分隔，去重，50 词 / 60 字上限）、答案核对（忽略大小写、全半角、空格与句末标点）、按文字识别朗读语言与错词重练
+- `HeadphoneGuardTrip`：耳机哨兵的改道拦截记录（已静音、原本静音、不支持、失败）
 - `GitHubRelease` / `GitHubReleaseAsset` / `AppVersion`：更新元数据、安装资产与版本比较模型
 
 ### Services
@@ -55,6 +57,8 @@ ClassGod 本质上是一个**紧急切屏工具**——帮用户在关键时刻�
 - `ReturnDockService`：默认关闭，目标快捷键成功跨应用切换后保留最近五条返回记录；只激活原进程，关闭功能或退出应用清空
 - `TeachBackService`：本次会话的概念讲解、例子、疑问与自检，不写入磁盘
 - `QuietDeskService` / `QuietAudioHardware`：Core Audio 输出主声道静音，写入后读回验证；原设备恢复失败保留重试入口，正常退出时尝试恢复，监测计时器随面板关闭清理
+- `DictationService` / `SystemDictationSpeaker`：本次会话的听写词表与进度，不写入磁盘；每次朗读新建 `AVSpeechSynthesizer`，轮询 `isSpeaking` 更新状态；仅在朗读期间监听应用失活、睡眠与切换用户并立即停止朗读
+- `HeadphoneGuardService` / `HeadphoneGuardHardware`：默认关闭；布防后以 Core Audio 监听默认输出改道，复用 `QuietAudioHardware` 静音新输出并读回确认，只恢复自己静音的设备；退出或权限门失效时撤防并尝试恢复
 - `UpdateService`：启动时及每 6 小时检查 GitHub 最新正式 Release，验证 HTTPS、大小与 SHA-256 后打开 macOS 安装器
 
 ### Utilities
@@ -85,6 +89,7 @@ ClassGod 本质上是一个**紧急切屏工具**——帮用户在关键时刻�
 - `ReadingLaneView` / `ScreenCurtainView`：蓝色逐段阅读与红色幕布控制页；`ScreenCurtainOverlay` 为不透明的临时遮挡层。
 - `NumberSprintView` / `ReturnDockView`：蓝色心算练习与红色返回台，共用 `TrainingPanel` 的缩放与关闭规则。
 - `TeachBackView` / `QuietDeskView`：蓝色讲解工坊与红色静音台；静音台开关窗口不播放音效。
+- `DictationView` / `HeadphoneGuardView`：蓝色听写练习与红色耳机哨兵；会触发朗读的操作只给触感反馈，耳机哨兵开关窗口不播放音效。
 - `UpdateSettingsView`：软件更新状态、Release 说明、下载进度与安装入口。
 
 ## 开发规范
@@ -103,6 +108,8 @@ ClassGod 本质上是一个**紧急切屏工具**——帮用户在关键时刻�
 cd ClassGod
 xcodebuild -project ClassGod.xcodeproj -scheme ClassGod -destination 'platform=macOS' build
 ```
+
+测试在应用进程内运行：`LaunchWindowPresentationPolicy.isHostingTests` 识别 XCTest 注入的 `XCTestSessionIdentifier` 后不启动应用界面。系统开发者目录未指向 Xcode 时，命令前加 `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer`。
 
 通用发布包：`DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer bash scripts/build-release.sh`，生成 DMG、PKG、App ZIP 和 SHA-256 校验文件；产物位于脚本输出的临时目录。
 

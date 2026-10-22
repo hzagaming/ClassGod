@@ -139,6 +139,12 @@ struct BrowserTab: Codable, Identifiable, Equatable {
         return formatter.localizedString(for: lastAccessedAt, relativeTo: Date())
     }
     
+    var displayTitle: String {
+        let trimmed = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmed.isEmpty else { return trimmed }
+        return URLComponents(string: url)?.host ?? url
+    }
+
     var displayTag: String {
         tag.trimmingCharacters(in: .whitespacesAndNewlines)
     }

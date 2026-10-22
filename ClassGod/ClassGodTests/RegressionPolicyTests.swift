@@ -9,7 +9,7 @@ struct RegressionPolicyTests {
     @Test("Main panel modes partition every feature without overlap")
     func categorizesMainPanelFeatures() {
         #expect(MainPanelMode.goodStudent.features == [
-            .clipo, .notes, .todo, .schedule, .focusFlow, .recallLab, .readingLane, .numberSprint, .teachBack, .wallpaper, .widgets,
+            .clipo, .notes, .todo, .schedule, .focusFlow, .recallLab, .readingLane, .numberSprint, .teachBack, .dictation, .wallpaper, .widgets,
         ])
         #expect(MainPanelMode.other.features == [.errorHub, .activityMonitor, .fanControl, .permissionCenter])
         #expect(MainPanelMode.badStudent.features == [
@@ -18,6 +18,7 @@ struct RegressionPolicyTests {
             .screenCurtain,
             .returnDock,
             .quietDesk,
+            .headphoneGuard,
             .destinTab,
             .superSwitch,
             .ghostProtocol,
@@ -30,6 +31,20 @@ struct RegressionPolicyTests {
         #expect(categorized.count == MainPanelFeature.allCases.count)
         #expect(Set(categorized) == Set(MainPanelFeature.allCases))
         #expect(MainPanelMode.goodStudent.features.count == MainPanelMode.badStudent.features.count)
+    }
+
+    @Test("Hosted test runs never launch the app's own windows")
+    func recognizesTestHost() {
+        #expect(LaunchWindowPresentationPolicy.isHostingTests(environment: ProcessInfo.processInfo.environment))
+        #expect(!LaunchWindowPresentationPolicy.isHostingTests(environment: ["XCTestConfigurationFilePath": ""]))
+        #expect(!LaunchWindowPresentationPolicy.isHostingTests(environment: [:]))
+    }
+
+    @Test("Saved tabs without a page title still show a readable name")
+    func fallsBackForUntitledTabs() {
+        #expect(BrowserTab(title: "  Study notes ", url: "https://example.org/a", browser: .safari).displayTitle == "Study notes")
+        #expect(BrowserTab(title: "", url: "https://www.tampermonkey.net/installed", browser: .edge).displayTitle == "www.tampermonkey.net")
+        #expect(BrowserTab(title: " \n", url: "not a url", browser: .chrome).displayTitle == "not a url")
     }
 
     @Test("Browser switching requests automation only when searching existing tabs")
@@ -717,6 +732,8 @@ struct RegressionPolicyTests {
         #expect(ClickOutsideWindowPolicy.shouldClose(.returnDock))
         #expect(ClickOutsideWindowPolicy.shouldClose(.teachBack))
         #expect(ClickOutsideWindowPolicy.shouldClose(.quietDesk))
+        #expect(ClickOutsideWindowPolicy.shouldClose(.dictation))
+        #expect(ClickOutsideWindowPolicy.shouldClose(.headphoneGuard))
         #expect(!ClickOutsideWindowPolicy.shouldClose(.notes))
         #expect(!ClickOutsideWindowPolicy.shouldClose(.fanControl))
         #expect(FeatureWindowKind.allCases.filter(ClickOutsideWindowPolicy.shouldClose).count

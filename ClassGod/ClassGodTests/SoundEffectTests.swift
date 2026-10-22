@@ -60,6 +60,8 @@ struct SoundEffectTests {
         let manager = rig.manager()
         manager.playWindowOpen(feature: "quietdesk")
         manager.playWindowClose(feature: "quietdesk")
+        manager.playWindowOpen(feature: "headphoneguard")
+        manager.playWindowClose(feature: "headphoneguard")
         manager.playGlitchBurst(count: -1)
         manager.playCloseBurst(count: 0)
         rig.enabled.send(false)
@@ -67,6 +69,21 @@ struct SoundEffectTests {
         manager.playGlitchBurst(count: 3)
         #expect(rig.sounds.isEmpty)
         #expect(rig.pending.isEmpty)
+    }
+
+    @Test("Every training window has a deliberate open and close tone or stays silent")
+    func coversTrainingWindowSounds() {
+        for kind in [FeatureWindowKind.recallLab, .switchDrill, .readingLane, .screenCurtain, .numberSprint,
+                     .returnDock, .teachBack, .quietDesk, .dictation, .headphoneGuard] {
+            let feature = String(describing: kind).lowercased()
+            let silent = WindowSoundPolicy.isSilent(feature: feature)
+            #expect(silent == (kind == .quietDesk || kind == .headphoneGuard))
+            if !silent {
+                #expect(WindowSoundPolicy.openSoundName(feature: feature) != nil)
+                #expect(WindowSoundPolicy.closeSoundName(feature: feature) == "Tink")
+            }
+        }
+        #expect(WindowSoundPolicy.openSoundName(feature: "dictation") == "Bottle")
     }
 }
 

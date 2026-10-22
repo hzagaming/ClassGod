@@ -351,7 +351,7 @@ struct WallpaperBrowserView: View {
     
     private var playlistSection: some View {
         VStack(alignment: .leading, spacing: 10 * zoomScale) {
-            HStack(spacing: 0) {
+            HStack(spacing: 8 * zoomScale) {
                 Text(String(localized: "wallpaper.library"))
                     .font(.system(size: 10 * zoomScale, weight: .bold, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.4))

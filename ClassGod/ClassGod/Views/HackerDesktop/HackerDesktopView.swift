@@ -469,6 +469,7 @@ struct HackerDesktopView: View {
             ConfigSection(title: "hackerdesktop.native_widgets.title", icon: "square.grid.2x2") {
                 HStack(spacing: 8 * zoomScale) {
                     Image(systemName: "checkmark.seal.fill")
+                        .font(.system(size: 13 * zoomScale))
                         .foregroundStyle(.green)
                     VStack(alignment: .leading, spacing: 2 * zoomScale) {
                         Text("hackerdesktop.native_widgets.active")

@@ -83,6 +83,7 @@ struct FakeLockView: View {
     private var statusCard: some View {
         HStack(spacing: 10 * zoomScale) {
             Image(systemName: service.isError ? "exclamationmark.triangle.fill" : "shield.lefthalf.filled")
+                .font(.system(size: 13 * zoomScale))
                 .foregroundStyle(service.isError ? .orange : accent)
             VStack(alignment: .leading, spacing: 2 * zoomScale) {
                 Text(service.statusMessage)

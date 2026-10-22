@@ -47,7 +47,7 @@ nonisolated enum UserInteractionFeedbackPolicy {
 }
 
 nonisolated enum WindowSoundPolicy {
-    static func isSilent(feature: String) -> Bool { feature == "quietdesk" }
+    static func isSilent(feature: String) -> Bool { feature == "quietdesk" || feature == "headphoneguard" }
 
     static func openSoundName(feature: String) -> String? {
         switch feature {
@@ -58,7 +58,7 @@ nonisolated enum WindowSoundPolicy {
         case "assessprephack": "Funk"
         case "activitymonitor": "Tink"
         case "permissioncenter", "clipo", "notes", "settings": "Glass"
-        case "focusflow", "recalllab", "readinglane", "numbersprint", "teachback": "Bottle"
+        case "focusflow", "recalllab", "readinglane", "numbersprint", "teachback", "dictation": "Bottle"
         case "wallpaper": "Blow"
         case "ghostprotocol", "fakelock", "screencurtain", "returndock": "Submarine"
         default: nil
@@ -70,7 +70,8 @@ nonisolated enum WindowSoundPolicy {
         case "preflight", "destintab", "superswitch", "browserbypasser", "assessprephack",
              "hackerdesktop", "fancontrol", "activitymonitor", "permissioncenter", "errorhub",
              "ghostprotocol", "clipo", "notes", "todo", "schedule", "focusflow", "settings",
-             "wallpaper", "fakelock", "recalllab", "switchdrill", "readinglane", "screencurtain", "numbersprint", "returndock", "teachback":
+             "wallpaper", "fakelock", "recalllab", "switchdrill", "readinglane", "screencurtain", "numbersprint", "returndock", "teachback",
+             "dictation":
             "Tink"
         default:
             nil

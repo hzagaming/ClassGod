@@ -87,7 +87,7 @@ final class TabListViewModel: ObservableObject {
         let query = searchQuery.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         if query.isEmpty { return base }
         return base.filter {
-            $0.title.lowercased().contains(query) ||
+            $0.displayTitle.lowercased().contains(query) ||
             $0.url.lowercased().contains(query) ||
             $0.tag.lowercased().contains(query)
         }
@@ -152,7 +152,7 @@ final class TabListViewModel: ObservableObject {
         tabs.append(tab)
         applySort()
         saveTabs()
-        onShowToast?(String(format: String(localized: "toast.saved"), tab.title))
+        onShowToast?(String(format: String(localized: "toast.saved"), tab.displayTitle))
     }
     
     func updateTab(_ tab: BrowserTab) {
@@ -160,7 +160,7 @@ final class TabListViewModel: ObservableObject {
             tabs[index] = tab
             applySort()
             saveTabs()
-            onShowToast?(String(format: String(localized: "toast.updated"), tab.title))
+            onShowToast?(String(format: String(localized: "toast.updated"), tab.displayTitle))
         }
     }
     
@@ -415,7 +415,7 @@ final class TabListViewModel: ObservableObject {
         case .recentlyUsed:
             tabs.sort { $0.lastAccessedAt > $1.lastAccessedAt }
         case .alphabetical:
-            tabs.sort { $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending }
+            tabs.sort { $0.displayTitle.localizedCaseInsensitiveCompare($1.displayTitle) == .orderedAscending }
         case .byBrowser:
             tabs.sort { $0.browser.displayName < $1.browser.displayName }
         }
@@ -429,7 +429,7 @@ final class TabListViewModel: ObservableObject {
         case .recentlyUsed:
             return list.sorted { $0.lastAccessedAt > $1.lastAccessedAt }
         case .alphabetical:
-            return list.sorted { $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending }
+            return list.sorted { $0.displayTitle.localizedCaseInsensitiveCompare($1.displayTitle) == .orderedAscending }
         case .byBrowser:
             return list.sorted { $0.browser.displayName < $1.browser.displayName }
         }

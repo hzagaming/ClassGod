@@ -158,6 +158,29 @@ struct LocalizationRegressionTests {
         #expect(chinese.localizedString(forKey: "update.security_notice", value: nil, table: nil).contains("管理员授权"))
     }
 
+    @Test("Dictation and Headphone Guard are localized in English and Chinese")
+    func validatesDictationAndHeadphoneGuardLabels() throws {
+        let english = Locale(identifier: "en")
+        let chineseURL = try #require(Bundle.main.url(forResource: "zh-Hans", withExtension: "lproj"))
+        let chinese = try #require(Bundle(url: chineseURL))
+
+        #expect(String(localized: "dictation.title", bundle: .main, locale: english) == "Dictation")
+        #expect(String(localized: "headphone.title", bundle: .main, locale: english) == "Headphone Guard")
+        #expect(String(format: String(localized: "dictation.score_format", bundle: .main, locale: english), 4, 5, 3)
+            == "4 of 5 written correctly · 3 on the first try")
+        #expect(chinese.localizedString(forKey: "dictation.title", value: nil, table: nil) == "听写练习")
+        #expect(chinese.localizedString(forKey: "headphone.title", value: nil, table: nil) == "耳机哨兵")
+        #expect(String(format: chinese.localizedString(forKey: "dictation.word_format", value: nil, table: nil), 2, 9) == "第 2 / 9 个词")
+        for key in ["dictation.subtitle", "dictation.voice.automatic", "dictation.retry_format", "headphone.subtitle",
+                    "headphone.status.armed", "headphone.trip.silenced", "headphone.restore_warning",
+                    "menu.dictation.description", "menu.headphone.description"] {
+            let value = String(localized: String.LocalizationValue(key), bundle: .main, locale: english)
+            #expect(value != key)
+            #expect(value.range(of: "\\p{Han}", options: .regularExpression) == nil)
+            #expect(chinese.localizedString(forKey: key, value: nil, table: nil) != key)
+        }
+    }
+
     @Test("Settings never expose localization keys in English")
     func validatesSettingsLabels() {
         let english = Locale(identifier: "en")

@@ -122,6 +122,7 @@ struct ClipoView: View {
             .accessibilityLabel(Text("button.close"))
 
             Image(systemName: "clipboard.fill")
+                .font(.system(size: 13 * zoomScale))
                 .foregroundStyle(accent)
             VStack(alignment: .leading, spacing: 1 * zoomScale) {
                 Text("Clipo")

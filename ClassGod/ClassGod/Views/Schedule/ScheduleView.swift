@@ -87,6 +87,7 @@ struct ScheduleView: View {
                 .accessibilityLabel(Text("button.close"))
 
                 Image(systemName: "calendar.badge.clock")
+                    .font(.system(size: 13 * zoomScale))
                     .foregroundStyle(accent)
                 Text("schedule.title")
                     .font(.system(size: 14 * zoomScale, weight: .bold, design: .rounded))

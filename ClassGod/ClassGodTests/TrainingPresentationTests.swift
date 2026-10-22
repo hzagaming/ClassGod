@@ -314,6 +314,91 @@ struct TrainingPresentationTests {
         try await render(QuietDeskView(service: quiet, onClose: {}), name: "quiet-unsupported", size: .init(width: 720, height: 700))
     }
 
+    @Test("Dictation and Headphone Guard render setup, practice, review, and protection states")
+    func rendersDictationAndHeadphoneGuard() async throws {
+        for symbol in [MainPanelFeature.dictation.icon, MainPanelFeature.headphoneGuard.icon, "ear.fill", "headphones",
+                       "speaker.wave.3.fill", "shield.lefthalf.filled", "arrow.triangle.2.circlepath"] {
+            #expect(NSImage(systemSymbolName: symbol, accessibilityDescription: nil) != nil)
+        }
+        let original = PreferencesManager.shared.preferences
+        defer { PreferencesManager.shared.preferences = original }
+        PreferencesManager.shared.preferences.windowZoomScale = 1
+        PreferencesManager.shared.preferences.enableSoundEffects = false
+        PreferencesManager.shared.preferences.enableHapticFeedback = false
+        let speaker = SilentDictationSpeaker()
+        let dictation = DictationService(speaker: speaker, notificationCenter: NotificationCenter(),
+                                         workspaceCenter: NotificationCenter(), shuffle: { $0 })
+        try await render(DictationView(service: dictation, onClose: {}), name: "dictation-empty", size: .init(width: 720, height: 700))
+        dictation.updateSource("苹果\nphotosynthesis, ice cream、学习方法\nかたかな\n" + String(repeating: "长", count: 61))
+        try await render(DictationView(service: dictation, onClose: {}), name: "dictation-setup", size: .init(width: 720, height: 700))
+        try await render(DictationView(service: dictation, onClose: {}), name: "dictation-setup-minimum", size: .init(width: 520, height: 460))
+        #expect(dictation.start())
+        try await render(DictationView(service: dictation, onClose: {}), name: "dictation-speaking", size: .init(width: 720, height: 700))
+        try await render(DictationView(service: dictation, onClose: {}), name: "dictation-minimum", size: .init(width: 520, height: 460))
+        PreferencesManager.shared.preferences.windowZoomScale = 2
+        try await render(DictationView(service: dictation, onClose: {}), name: "dictation-200", size: .init(width: 1_040, height: 760))
+        PreferencesManager.shared.preferences.windowZoomScale = 1
+        dictation.stopSpeaking()
+        dictation.reveal()
+        try await render(DictationView(service: dictation, onClose: {}), name: "dictation-revealed", size: .init(width: 720, height: 700))
+        speaker.result = .fallbackVoice
+        dictation.advance()
+        try await render(DictationView(service: dictation, onClose: {}), name: "dictation-fallback", size: .init(width: 720, height: 700))
+        #expect(dictation.submit("Photosynthesis.") == .correct)
+        dictation.advance()
+        while let word = dictation.session.currentWord {
+            #expect(dictation.submit(word) == .correct)
+            dictation.advance()
+        }
+        try await render(DictationView(service: dictation, onClose: {}), name: "dictation-complete", size: .init(width: 720, height: 700))
+        PreferencesManager.shared.preferences.windowZoomScale = 2
+        try await render(DictationView(service: dictation, onClose: {}), name: "dictation-complete-200", size: .init(width: 1_040, height: 760))
+        PreferencesManager.shared.preferences.windowZoomScale = 1
+        let engine = WallpaperEngine.shared
+        let wallpaperState = (engine.isEnabled, engine.isPlaying, engine.isMuted, engine.volume, engine.currentWallpaper)
+        defer { (engine.isEnabled, engine.isPlaying, engine.isMuted, engine.volume, engine.currentWallpaper) = wallpaperState }
+        (engine.isEnabled, engine.isPlaying, engine.isMuted, engine.volume) = (true, true, false, 0.4)
+        engine.currentWallpaper = WallpaperItem(name: "Rain / 雨声", filePath: "/dev/null", type: .video)
+        #expect(dictation.retryReview())
+        try await render(DictationView(service: dictation, onClose: {}), name: "dictation-wallpaper-audio", size: .init(width: 720, height: 700))
+        dictation.newRound()
+        try await render(DictationView(service: dictation, onClose: {}), name: "dictation-setup-wallpaper-audio", size: .init(width: 720, height: 1_150))
+        (engine.isEnabled, engine.isPlaying, engine.isMuted, engine.volume, engine.currentWallpaper) = wallpaperState
+
+        let phones = QuietDevice(uid: "phones", name: "AirPods Pro / 耳机")
+        let speakers = QuietDevice(uid: "speakers", name: "MacBook Pro Speakers / 扬声器")
+        var output: QuietDevice? = phones
+        var states = ["phones": false, "speakers": false]
+        var handler: (@MainActor () -> Void)?
+        let guardian = HeadphoneGuardService(
+            defaultOutput: { output }, readMute: { states[$0.uid] },
+            writeMute: { device, value in
+                guard states[device.uid] != nil else { return false }
+                states[device.uid] = value
+                return true
+            },
+            observeOutput: { callback in handler = callback; return { handler = nil } },
+            clock: { Date(timeIntervalSince1970: 1_800_000_000) }
+        )
+        defer { guardian.stopMonitoring(); guardian.disarm() }
+        try await render(HeadphoneGuardView(service: guardian, onClose: {}), name: "guard-ready", size: .init(width: 720, height: 700))
+        #expect(guardian.arm())
+        try await render(HeadphoneGuardView(service: guardian, onClose: {}), name: "guard-armed", size: .init(width: 720, height: 700))
+        output = speakers
+        handler?()
+        #expect(guardian.lastTrip?.outcome == .silenced)
+        try await render(HeadphoneGuardView(service: guardian, onClose: {}), name: "guard-tripped", size: .init(width: 720, height: 700))
+        try await render(HeadphoneGuardView(service: guardian, onClose: {}), name: "guard-minimum", size: .init(width: 520, height: 460))
+        PreferencesManager.shared.preferences.windowZoomScale = 2
+        try await render(HeadphoneGuardView(service: guardian, onClose: {}), name: "guard-200", size: .init(width: 1_040, height: 760))
+        PreferencesManager.shared.preferences.windowZoomScale = 1
+        output = QuietDevice(uid: "projector", name: "Classroom projector / 投影仪")
+        handler?()
+        #expect(guardian.lastTrip?.outcome == .unsupported)
+        guardian.disarm()
+        try await render(HeadphoneGuardView(service: guardian, onClose: {}), name: "guard-unsupported", size: .init(width: 720, height: 700))
+    }
+
     @Test("Native curtains cover every connected screen and Escape releases every window")
     func nativeCurtainEscape() async throws {
         let display = NativeScreenCurtainDisplay()
@@ -837,6 +922,14 @@ struct TrainingPresentationTests {
             try png.write(to: directory.appendingPathComponent(name + ".png"), options: .atomic)
         }
     }
+}
+
+@MainActor
+private final class SilentDictationSpeaker: DictationSpeaking {
+    var isSpeaking = false
+    var result = DictationSpeech.preferredVoice
+    func speak(_ text: String, language: String, rate: Float, repeats: Int) -> DictationSpeech { isSpeaking = true; return result }
+    func stop() { isSpeaking = false }
 }
 
 @MainActor

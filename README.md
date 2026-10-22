@@ -25,7 +25,7 @@
   </p>
 </div>
 
-> Source version: **v1.5.60 (Build 85)**. Published downloads are available on [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest).
+> Source version: **v1.5.61 (Build 86)**. Published downloads are available on [GitHub Releases](https://github.com/hzagaming/ClassGod/releases/latest).
 
 ## Why ClassGod
 
@@ -53,6 +53,8 @@ It has grown into a focused desktop toolkit while keeping the same rule: user da
 | **Return Dock** | Bad Student: opt-in return tickets after successful DestinTab or SuperSwitch target shortcuts, returning to the original running app. |
 | **Teach Back** | Good Student: develops a concept through an explanation, example, and open questions, with a self-check and plain-text copy. |
 | **Quiet Desk** | Bad Student: temporarily mutes a supported default audio output and keeps a restoration for that exact device without changing its volume. |
+| **Dictation** | Good Student: reads each word or short phrase aloud, checks what you type, and lets you retry missed words, with automatic or chosen voices. |
+| **Headphone Guard** | Bad Student: when audio leaves your headphones for speakers, a display, or a projector, silently mutes the new output and keeps a restoration for it. |
 | **Software Update** | Checks stable GitHub releases automatically, verifies installer metadata and SHA-256, then opens the macOS Installer. |
 | **Permission Center** | Shows every supported macOS permission, its live state, why it is used, and the exact system settings destination. |
 | **Fan Control** | Reads available temperature and fan data, supports System, Max, Manual, and Custom policies, and uses a privileged helper when approved. |
@@ -66,7 +68,9 @@ Reading material and progress remain in memory until quit. The curtain is a visu
 
 Number Sprint and Return Dock keep session data in memory. Return Dock defaults to off, keeps five tickets, and clears them when disabled or on quit. It does not reopen closed apps or restore browser tabs, windows, or cursor positions.
 
-Teach Back and Quiet Desk bring the menu to eleven features per student mode. Teach Back drafts stay in memory until quit; the worksheet provides self-checks, not automatic fact checking. Quiet Desk controls the writable main mute property of one output device and remembers its UID for restoration. Closing the panel keeps it muted; normal quit attempts restoration. Unsupported outputs, microphones, and independently routed audio are outside its scope.
+Teach Back drafts stay in memory until quit; the worksheet provides self-checks, not automatic fact checking. Quiet Desk controls the writable main mute property of one output device and remembers its UID for restoration. Closing the panel keeps it muted; normal quit attempts restoration. Unsupported outputs, microphones, and independently routed audio are outside its scope.
+
+Dictation and Headphone Guard bring the menu to twelve features per student mode. Dictation keeps word lists and progress in memory until quit, and stops speaking when ClassGod loses focus, the Mac sleeps, or the panel closes. Headphone Guard is off by default and watches only the default output route; it restores only outputs it muted, when you ask or on normal quit. It cannot pause apps or mute outputs without a mute control.
 
 ## Privacy by design
 
@@ -201,9 +205,9 @@ ClassGod/ClassGodTests/    App tests
 ClassGodHelper/            Privileged helper Swift package and tests
 ```
 
-## Latest changes: v1.5.60
+## Latest changes: v1.5.61
 
-Wallpaper deletion now preserves disabled playback and audio settings; selecting the current disabled wallpaper works consistently. Notes protect unreadable files, keep separate recovery backups, show unsaved edits and retry actions, and skip unchanged writes on quit. Error Encyclopedia starts loading asynchronously to avoid publishing state during view updates. Regression checks cover file failures and recovery alongside both student modes, sound controls, and enlarged layouts.
+Two paired tools join the student modes: Dictation reads words aloud and checks what you write, and Headphone Guard silently mutes audio that escapes to speakers when headphones disconnect. Dictation never keeps speaking after you switch away, and warns when wallpaper audio could drown it out. Hosted tests no longer launch the app's own windows, icons and titles now scale correctly at enlarged sizes, Activity Monitor columns line up with their headers, and untitled saved tabs show their host instead of a blank row.
 
 Read [CHANGELOG.md](CHANGELOG.md) for current releases and [CHANGELOG_HISTORY.md](CHANGELOG_HISTORY.md) for older history.
 

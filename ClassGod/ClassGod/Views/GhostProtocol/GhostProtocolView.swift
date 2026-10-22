@@ -244,6 +244,7 @@ struct GhostProtocolView: View {
 
             HStack(spacing: 5 * zoomScale) {
                 Image(systemName: controller.isShortcutRegistered ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
+                    .font(.system(size: 13 * zoomScale))
                     .foregroundStyle(controller.isShortcutRegistered ? .green : .orange)
                 Text(shortcutStatusTitle)
                     .font(.system(size: 9 * zoomScale, design: .monospaced))
@@ -255,6 +256,7 @@ struct GhostProtocolView: View {
     private var safetyNote: some View {
         HStack(alignment: .top, spacing: 8 * zoomScale) {
             Image(systemName: "lock.shield.fill")
+                .font(.system(size: 13 * zoomScale))
                 .foregroundStyle(accent.opacity(0.8))
             Text("ghost.safety_note")
                 .font(.system(size: 9 * zoomScale, design: .monospaced))
@@ -280,6 +282,7 @@ struct GhostProtocolView: View {
                     ProgressView().controlSize(.small)
                 } else {
                     Image(systemName: controller.state == .deployed ? "arrow.uturn.backward.circle.fill" : "bolt.shield.fill")
+                        .font(.system(size: 13 * zoomScale))
                 }
                 Text(actionTitle)
                     .font(.system(size: 12 * zoomScale, weight: .bold, design: .monospaced))

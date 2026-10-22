@@ -16,12 +16,13 @@ struct TrainingPanel<Content: View>: View {
             HStack(spacing: 12 * zoom) {
                 Button(action: onClose) {
                     Image(systemName: "minus")
+                        .font(.system(size: 13 * zoom))
                         .frame(width: 28 * zoom, height: 28 * zoom)
                         .background(.white.opacity(0.07), in: Circle())
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("button.close")
-                Image(systemName: icon).foregroundStyle(accent)
+                Image(systemName: icon).font(.system(size: 13 * zoom)).foregroundStyle(accent)
                 VStack(alignment: .leading, spacing: 3 * zoom) {
                     Text(title).font(.system(size: 15 * zoom, weight: .bold, design: .rounded))
                     Text(subtitle)

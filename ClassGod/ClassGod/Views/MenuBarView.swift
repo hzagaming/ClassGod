@@ -23,6 +23,8 @@ enum MainPanelFeature: String, CaseIterable, Hashable {
     case returnDock
     case teachBack
     case quietDesk
+    case dictation
+    case headphoneGuard
     case superSwitch
     case ghostProtocol
     case browserBypasser
@@ -52,6 +54,8 @@ enum MainPanelFeature: String, CaseIterable, Hashable {
         case .returnDock: "arrow.uturn.backward.circle.fill"
         case .teachBack: "text.bubble.fill"
         case .quietDesk: "speaker.slash.fill"
+        case .dictation: "ear.fill"
+        case .headphoneGuard: "headphones.circle.fill"
         case .superSwitch: "arrow.left.arrow.right"
         case .ghostProtocol: "eye.slash.circle.fill"
         case .browserBypasser: "lock.open.fill"
@@ -83,6 +87,8 @@ enum MainPanelFeature: String, CaseIterable, Hashable {
         case .returnDock: "return.title"
         case .teachBack: "teach.title"
         case .quietDesk: "quiet.title"
+        case .dictation: "dictation.title"
+        case .headphoneGuard: "headphone.title"
         case .superSwitch: "SuperSwitch"
         case .ghostProtocol: "ghost.title"
         case .browserBypasser: "BrowserBypasser"
@@ -114,6 +120,8 @@ enum MainPanelFeature: String, CaseIterable, Hashable {
         case .returnDock: "menu.return.description"
         case .teachBack: "menu.teach.description"
         case .quietDesk: "menu.quiet.description"
+        case .dictation: "menu.dictation.description"
+        case .headphoneGuard: "menu.headphone.description"
         case .superSwitch: "menu.superswitch.description"
         case .ghostProtocol: "menu.ghost_protocol.description"
         case .browserBypasser: "menu.browser_bypasser.description"
@@ -139,9 +147,9 @@ enum MainPanelMode: String, CaseIterable, Identifiable {
     var features: [MainPanelFeature] {
         switch self {
         case .goodStudent:
-            [.clipo, .notes, .todo, .schedule, .focusFlow, .recallLab, .readingLane, .numberSprint, .teachBack, .wallpaper, .widgets]
+            [.clipo, .notes, .todo, .schedule, .focusFlow, .recallLab, .readingLane, .numberSprint, .teachBack, .dictation, .wallpaper, .widgets]
         case .badStudent:
-            [.preflight, .switchDrill, .screenCurtain, .returnDock, .quietDesk, .destinTab, .superSwitch, .ghostProtocol, .browserBypasser, .fakeLock, .assessPrepHack]
+            [.preflight, .switchDrill, .screenCurtain, .returnDock, .quietDesk, .headphoneGuard, .destinTab, .superSwitch, .ghostProtocol, .browserBypasser, .fakeLock, .assessPrepHack]
         case .other:
             [.errorHub, .activityMonitor, .fanControl, .permissionCenter]
         }
@@ -357,6 +365,8 @@ struct MenuBarView: View {
     var onOpenReturnDock: () -> Void
     var onOpenTeachBack: () -> Void
     var onOpenQuietDesk: () -> Void
+    var onOpenDictation: () -> Void
+    var onOpenHeadphoneGuard: () -> Void
     var onOpenFanControl: () -> Void
     var onOpenErrorHub: () -> Void
     var onOpenActivityMonitor: () -> Void
@@ -608,6 +618,8 @@ struct MenuBarView: View {
         case .returnDock: onOpenReturnDock
         case .teachBack: onOpenTeachBack
         case .quietDesk: onOpenQuietDesk
+        case .dictation: onOpenDictation
+        case .headphoneGuard: onOpenHeadphoneGuard
         case .superSwitch: onOpenSuperSwitch
         case .ghostProtocol: onOpenGhostProtocol
         case .browserBypasser: onOpenBrowserBypasser
@@ -927,5 +939,5 @@ struct FeatureButton: View {
 }
 
 #Preview {
-    MenuBarView(onClose: {}, onOpenPreflight: {}, onOpenDestinTab: {}, onOpenSuperSwitch: {}, onOpenGhostProtocol: {}, onOpenBrowserBypasser: {}, onOpenAssessPrepHack: {}, onOpenSettings: {}, onOpenWallpaper: {}, onOpenHackerDesktop: {}, onOpenClipo: {}, onOpenNotes: {}, onOpenTodo: {}, onOpenSchedule: {}, onOpenFocusFlow: {}, onOpenRecallLab: {}, onOpenSwitchDrill: {}, onOpenReadingLane: {}, onOpenScreenCurtain: {}, onOpenNumberSprint: {}, onOpenReturnDock: {}, onOpenTeachBack: {}, onOpenQuietDesk: {}, onOpenFanControl: {}, onOpenErrorHub: {}, onOpenActivityMonitor: {}, onOpenPermissionCenter: {}, onOpenFakeLock: {})
+    MenuBarView(onClose: {}, onOpenPreflight: {}, onOpenDestinTab: {}, onOpenSuperSwitch: {}, onOpenGhostProtocol: {}, onOpenBrowserBypasser: {}, onOpenAssessPrepHack: {}, onOpenSettings: {}, onOpenWallpaper: {}, onOpenHackerDesktop: {}, onOpenClipo: {}, onOpenNotes: {}, onOpenTodo: {}, onOpenSchedule: {}, onOpenFocusFlow: {}, onOpenRecallLab: {}, onOpenSwitchDrill: {}, onOpenReadingLane: {}, onOpenScreenCurtain: {}, onOpenNumberSprint: {}, onOpenReturnDock: {}, onOpenTeachBack: {}, onOpenQuietDesk: {}, onOpenDictation: {}, onOpenHeadphoneGuard: {}, onOpenFanControl: {}, onOpenErrorHub: {}, onOpenActivityMonitor: {}, onOpenPermissionCenter: {}, onOpenFakeLock: {})
 }

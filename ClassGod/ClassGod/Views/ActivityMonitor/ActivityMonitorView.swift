@@ -211,25 +211,25 @@ struct ActivityMonitorView: View {
         HStack(spacing: 0) {
             sortableHeader("Process Name", key: .name, width: 180)
             sortableHeader("PID", key: .pid, width: 60)
-            sortableHeader("User", key: .user, width: 80)
+            sortableHeader("User", key: .user, width: 100)
             sortableHeader("Threads", key: .threads, width: 60)
             
             switch viewModel.selectedTab {
             case .cpu:
-                sortableHeader("CPU %", key: .cpu, width: 70)
-                sortableHeader("Memory", key: .memory, width: 80)
+                sortableHeader("CPU %", key: .cpu, width: 70, alignment: .trailing)
+                sortableHeader("Memory", key: .memory, width: 80, alignment: .trailing)
             case .memory:
-                sortableHeader("Memory", key: .memory, width: 80)
-                sortableHeader("CPU %", key: .cpu, width: 70)
+                sortableHeader("Memory", key: .memory, width: 80, alignment: .trailing)
+                sortableHeader("CPU %", key: .cpu, width: 70, alignment: .trailing)
             case .energy:
-                sortableHeader("Power", key: .energy, width: 90)
-                sortableHeader("CPU %", key: .cpu, width: 70)
+                sortableHeader("Power", key: .energy, width: 90, alignment: .trailing)
+                sortableHeader("CPU %", key: .cpu, width: 70, alignment: .trailing)
             case .disk:
-                sortableHeader("Read/s", key: .diskRead, width: 80)
-                sortableHeader("Write/s", key: .diskWrite, width: 80)
+                sortableHeader("Read/s", key: .diskRead, width: 80, alignment: .trailing)
+                sortableHeader("Write/s", key: .diskWrite, width: 80, alignment: .trailing)
             case .network:
-                sortableHeader("Recv/s", key: .netRecv, width: 80)
-                sortableHeader("Sent/s", key: .netSent, width: 80)
+                sortableHeader("Recv/s", key: .netRecv, width: 80, alignment: .trailing)
+                sortableHeader("Sent/s", key: .netSent, width: 80, alignment: .trailing)
             }
             
             Spacer(minLength: 0)
@@ -241,7 +241,7 @@ struct ActivityMonitorView: View {
         .foregroundStyle(.white.opacity(0.5))
     }
     
-    private func sortableHeader(_ title: LocalizedStringKey, key: ActivitySortKey, width: CGFloat) -> some View {
+    private func sortableHeader(_ title: LocalizedStringKey, key: ActivitySortKey, width: CGFloat, alignment: Alignment = .leading) -> some View {
         Button(action: { viewModel.toggleSort(key) }) {
             HStack(spacing: 2 * zoomScale) {
                 Text(title)
@@ -251,7 +251,7 @@ struct ActivityMonitorView: View {
                         .font(.system(size: 7 * zoomScale))
                 }
             }
-            .frame(width: width * zoomScale, alignment: .leading)
+            .frame(width: width * zoomScale, alignment: alignment)
         }
         .buttonStyle(.plain)
         .foregroundStyle(viewModel.sortKey == key ? accent.opacity(0.9) : Color.white.opacity(0.5))
@@ -263,14 +263,15 @@ struct ActivityMonitorView: View {
                 processIcon(for: proc.name)
                 Text(proc.name)
                     .lineLimit(1)
-                    .frame(width: 160 * zoomScale, alignment: .leading)
+                    .frame(width: 156 * zoomScale, alignment: .leading)
             }
             
             Text("\(proc.pid)")
                 .frame(width: 60 * zoomScale, alignment: .leading)
             
             Text(viewModel.userName(proc.uid))
-                .frame(width: 80 * zoomScale, alignment: .leading)
+                .lineLimit(1)
+                .frame(width: 100 * zoomScale, alignment: .leading)
             
             Text("\(proc.threads)")
                 .frame(width: 60 * zoomScale, alignment: .leading)

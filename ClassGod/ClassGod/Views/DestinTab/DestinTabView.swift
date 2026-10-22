@@ -214,7 +214,8 @@ struct DestinTabView: View {
 
             VStack(alignment: .leading, spacing: 0) {
                 Text("DestinTab")
-                    .font(.system(prefs.preferences.useCompactMode ? .subheadline : .headline, design: .monospaced))
+                    .font(.system(size: (prefs.preferences.useCompactMode ? 11 : 13) * zoomScale,
+                                  weight: prefs.preferences.useCompactMode ? .regular : .bold, design: .monospaced))
                     .foregroundStyle(.white)
                 Text("destintab.subtitle")
                     .font(.system(size: 8 * zoomScale, design: .monospaced))
@@ -246,6 +247,7 @@ struct DestinTabView: View {
                 showAddSheet = true
             }) {
                 Image(systemName: "plus.circle.fill")
+                    .font(.system(size: 13 * zoomScale))
                     .foregroundStyle(.white)
                     .symbolRenderingMode(.monochrome)
             }
@@ -499,11 +501,11 @@ struct DestinTabView: View {
             .bounce(intensity: 1.03)
 
             Text(viewModel.searchQuery.isEmpty ? String(localized: "empty.title") : String(localized: "destintab.no_matches"))
-                .font(.system(.subheadline, design: .monospaced))
+                .font(.system(size: 11 * zoomScale, design: .monospaced))
                 .foregroundStyle(.white.opacity(0.7))
 
             Text(viewModel.searchQuery.isEmpty ? String(localized: "empty.subtitle") : String(localized: "destintab.try_different_search"))
-                .font(.system(.caption, design: .monospaced))
+                .font(.system(size: 10 * zoomScale, design: .monospaced))
                 .foregroundStyle(.white.opacity(0.5))
                 .multilineTextAlignment(.center)
         }
@@ -704,7 +706,7 @@ struct TabRow: View {
 
                 VStack(alignment: .leading, spacing: (prefs.preferences.useCompactMode ? 0 : 2) * zoomScale) {
                     HStack(spacing: 4 * zoomScale) {
-                        Text(tab.title)
+                        Text(tab.displayTitle)
                             .font(.system(size: (prefs.preferences.useCompactMode ? 12 : 13) * zoomScale, weight: .medium, design: .monospaced))
                             .foregroundStyle(.white)
                             .lineLimit(1)
